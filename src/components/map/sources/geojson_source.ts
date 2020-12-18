@@ -13,6 +13,10 @@ export default class GeoJSONSource extends DataSource {
     this.mapLanguage();
   }
 
+  create(feature: Feature) {
+    this.data.features.push(feature);
+  }
+
   mapLanguage() {
     const features = this.data.features.filter(f => typeof f.properties.title_i18n === 'object');
     features.forEach(feature => this.mapFeatureLanguage(feature, this.language));

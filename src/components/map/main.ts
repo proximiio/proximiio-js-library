@@ -5,14 +5,14 @@ import { FloorModel } from '../../models/floor';
 import StyleModel from '../../models/style';
 import GeoJSONSource from './sources/geojson_source';
 import SyntheticSource from './sources/synthetic_source';
-import Feature, { FeatureCollection } from '../../models/feature';
+import Feature, { FeatureCollection, Geometry } from '../../models/feature';
 import DataSource from './sources/data_source';
 import RoutingSource from './sources/routing_source';
 import ClusterSource from './sources/cluster_source';
 import ImageSourceManager from './sources/image_source_manager';
 import { AmenityModel } from '../../models/amenity';
-import { getImageFromBase64 } from '../../common';
-import { chevron } from './icons';
+import { getBase64FromImage, getImageFromBase64, uuidv4 } from '../../common';
+import { chevron, defaultIcon } from './icons';
 import { MapboxEvent } from 'mapbox-gl';
 import { getPlaceFloors } from '../../controllers/floors';
 import { getPlaceById } from '../../controllers/places';
@@ -31,6 +31,7 @@ interface State {
   readonly styles: StyleModel[];
   readonly amenities: AmenityModel[];
   readonly features: FeatureCollection;
+  readonly dynamicFeatures: FeatureCollection;
   readonly latitude: number;
   readonly longitude: number;
   readonly loadingRoute: boolean;
@@ -74,6 +75,7 @@ export class Map {
       styles: [],
       amenities: [],
       features: new FeatureCollection({}),
+      dynamicFeatures: new FeatureCollection({}),
       latitude: 60.1669635,
       longitude: 24.9217484,
       loadingRoute: false,
@@ -136,60 +138,9 @@ export class Map {
     });
     if (this.defaultOptions.allowNewFeatures) {
       this.map.on(this.defaultOptions.newFeatureEvent, (e: MapboxEvent) => {
-        this.onAddFeature(e)
+        this.newFeatureDialog(e)
       });
     }
-  }
-
-  private onAddFeature(e: MapboxEvent) {
-    // instanciate new modal
-    const modal = new tingle.modal({
-      footer: true,
-      stickyFooter: false,
-      closeMethods: ['overlay', 'button', 'escape'],
-      closeLabel: "Close",
-      cssClass: ['custom-class-1', 'custom-class-2'],
-      onOpen: () => {
-        console.log('modal open');
-      },
-      onClose: () => {
-        console.log('modal closed');
-        modal.destroy();
-      },
-      beforeClose: () => {
-        // here's goes some logic
-        // e.g. save content before closing the modal
-        console.log('modal before close');
-        const formData = new FormData((document.querySelector('#modal-form')) as HTMLFormElement)
-        console.log(formData.get('title'));
-        return true; // close the modal
-        // return false; // nothing happens
-      }
-    });
-
-    // set content
-    modal.setContent(`
-      <h1>Modal Header</h1>
-      <form name="form" id="modal-form">
-        <label>Title</label>
-        <input type="text" name="title">
-      </form>
-    `);
-
-    // add a button
-    modal.addFooterBtn('Button label', 'tingle-btn tingle-btn--primary', () => {
-      // here goes some logic
-      modal.close();
-    });
-
-    // add another button
-    modal.addFooterBtn('Dangerous action !', 'tingle-btn tingle-btn--danger', () => {
-      // here goes some logic
-      modal.close();
-    });
-
-    modal.open();
-    console.log('map click', e);
   }
 
   private async onMapReady(e: MapboxEvent) {
@@ -227,6 +178,91 @@ export class Map {
       await this.onPlaceSelect(this.state.place);
       this.onMapReadyListener.next(true);
     }
+  }
+
+  private newFeatureDialog(e: any) {
+    const modal = new tingle.modal({
+      footer: true,
+      stickyFooter: false,
+      closeMethods: ['overlay', 'button', 'escape'],
+      closeLabel: "Close",
+      onClose: () => {
+        modal.destroy();
+      }
+    });
+
+    // set content
+    modal.setContent(`
+      <h1>Modal Header</h1>
+      <form name="form" id="modal-form">
+        <label>Title*</label>
+        <input type="text" name="title" required>
+        
+        <label>Level*</label>
+        <input type="number" name="level" value='${this.state.floor?.level ? this.state.floor.level : 0}' required>
+        
+        <label>Latitude*</label>
+        <input type="number" name="lat" value='${e.lngLat.lat}' required>
+        
+        <label>Longitude*</label>
+        <input type="number" name="lng" value='${e.lngLat.lng}' required>
+        
+        <label>Icon</label>
+        <input type="file" name="icon">
+      </form>
+    `);
+
+    modal.addFooterBtn('Submit', 'tingle-btn tingle-btn--primary', async () => {
+      const id = uuidv4();
+      const formData = new FormData((document.querySelector('#modal-form')) as HTMLFormElement)
+      const data = {
+        title: formData.get('title'),
+        level: formData.get('level'),
+        lat: formData.get('lat'),
+        lng: formData.get('lng'),
+        icon: (formData.get('icon') as File).size ? await getBase64FromImage(formData.get('icon') as File) : defaultIcon
+      }
+      if (data.title && data.level && data.lat && data.lng) {
+        const feature = new Feature({
+          type: 'Feature',
+          id,
+          geometry: new Geometry({
+            type: 'Point',
+            coordinates: [+data.lng!, +data.lat!]
+          }),
+          properties: {
+            type: 'poi',
+            usecase: 'poi',
+            id,
+            minzoom: 15,
+            visibility: 'visible',
+            amenity: 'default',
+            title: data.title,
+            level: +data.level!,
+            images: [data.icon]
+          }
+        })
+        this.onAddNewFeature(feature);
+        modal.close();
+      } else {
+        alert('Please fill all the required fields!');
+      }
+    });
+
+    modal.addFooterBtn('Cancel', 'tingle-btn tingle-btn--danger', () => {
+      modal.close();
+    });
+
+    modal.open();
+  }
+
+  private onAddNewFeature(feature: Feature) {
+    this.state.dynamicFeatures.features.push(feature)
+    this.geojsonSource.create(feature);
+    this.onSourceChange();
+    const featureCollection = new FeatureCollection({ features: [...this.state.features.features, ...this.state.dynamicFeatures.features] })
+    this.routingSource.routing.setData(featureCollection);
+    this.updateMapSource(this.routingSource);
   }
 
   private prepareStyle(style: StyleModel) {

@@ -9,7 +9,7 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    Proximiio.Auth.login('devs@proximi.io', 'pr0x1m33')
+    Proximiio.Auth.login('email', 'password')
       .then(res => {
         console.log('Logged in', res);
 
@@ -29,7 +29,9 @@ class App extends React.Component {
           console.log(err);
         })
 
-        const map = new Proximiio.Map();
+        const map = new Proximiio.Map({
+          allowNewFeatures: true
+        });
 
         map.getMapReadyListener().subscribe(res => {
           console.log('map ready', res);

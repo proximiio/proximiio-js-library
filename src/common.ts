@@ -26,3 +26,20 @@ export const getImageFromBase64 = (encoded: string) => {
     img.onerror = (e: any) => resolve(img as HTMLImageElement);
   });
 };
+
+export const getBase64FromImage = (file: File) => {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
+}
+
+export const uuidv4 = () => {
+  // @ts-ignore
+  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+    // @ts-ignore
+    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+  );
+}
