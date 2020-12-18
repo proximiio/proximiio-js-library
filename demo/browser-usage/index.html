@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Proximi.io JS Library Demo</title>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
+    <link rel="stylesheet" href="../../assets/proximiio-js-library.css">
+</head>
+<body>
+<div class="autoComplete_wrapper">
+  <input id="place-select" class="proximiio-select" type="text" tabIndex="1"/>
+  <input id="floor-select" class="proximiio-select" type="text" tabIndex="1"/>
+  <input id="from-poi-select" class="proximiio-select" type="text" tabIndex="1"/>
+  <input id="to-poi-select" class="proximiio-select" type="text" tabIndex="1"/>
+</div>
+<div id="proximiioMap" style="height: 500px;"></div>
+</body>
+<script src="../../lib/proximiio.js"></script>
+<script>
+    Proximiio.default.Auth.login('email', 'password')
+      .then(res => {
+        console.log('Logged in', res);
+
+        Proximiio.default.Places.getPlaces(5)
+        .then(res => {
+          console.log('places fetched', res);
+        })
+        .catch(err => {
+          console.log(err);
+        })
+
+        Proximiio.default.Floors.getFloors(5)
+        .then(res => {
+          console.log('floors fetched', res);
+        })
+        .catch(err => {
+          console.log(err);
+        })
+
+        const map = new Proximiio.default.Map();
+
+        map.getMapReadyListener().subscribe(res => {
+          console.log('map ready', res);
+        });
+
+        const placeSelect = new Proximiio.default.Select('Places', { placeHolder: 'Pick the place', highlight: true, selector: '#place-select' });
+        placeSelect.getSelectListener().subscribe(place => {
+          map.setPlace(place.id);
+          console.log('place selected', place);
+        })
+
+        const floorSelect = new Proximiio.default.Select('Floors', { placeHolder: 'Pick the floor', highlight: true, selector: '#floor-select' });
+        floorSelect.getSelectListener().subscribe(floor => {
+          map.setFloorById(floor.id);
+          console.log('floor selected', floor);
+        })
+
+        let fromPoi = null;
+        let toPoi = null;
+
+        const fromPoiSelect = new Proximiio.default.Select('Pois', { placeHolder: 'Pick the start poi', highlight: true, selector: '#from-poi-select' });
+        fromPoiSelect.getSelectListener().subscribe(poi => {
+          fromPoi = poi;
+          map.centerToFeature(poi.id);
+          console.log('from poi selected', poi);
+          if (fromPoi && toPoi) {
+            map.findRouteByIds(fromPoi.id, toPoi.id);
+          }
+        })
+
+        const toPoiSelect = new Proximiio.default.Select('Pois', { placeHolder: 'Pick the end poi', highlight: true, selector: '#to-poi-select' });
+        toPoiSelect.getSelectListener().subscribe(poi => {
+          toPoi = poi;
+          map.centerToFeature(poi.id);
+          console.log('to poi selected', poi);
+          if (fromPoi && toPoi) {
+            map.findRouteByIds(fromPoi.id, toPoi.id);
+          }
+        })
+      })
+      .catch(err => {
+        console.log(err);
+      });
+</script>
+</html>
