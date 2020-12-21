@@ -12,7 +12,7 @@ import ClusterSource from './sources/cluster_source';
 import ImageSourceManager from './sources/image_source_manager';
 import { AmenityModel } from '../../models/amenity';
 import { getBase64FromImage, getImageFromBase64, uuidv4 } from '../../common';
-import { chevron, defaultIcon } from './icons';
+import { chevron } from './icons';
 import { MapboxEvent } from 'mapbox-gl';
 import { getPlaceFloors } from '../../controllers/floors';
 import { getPlaceById } from '../../controllers/places';
@@ -20,6 +20,7 @@ import { Subject } from 'rxjs';
 import * as turf from '@turf/turf';
 // @ts-ignore
 import * as tingle from "tingle.js/dist/tingle";
+import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
 
 interface State {
   readonly initializing: boolean;
@@ -32,6 +33,7 @@ interface State {
   readonly amenities: AmenityModel[];
   readonly features: FeatureCollection;
   readonly dynamicFeatures: FeatureCollection;
+  readonly allFeatures: FeatureCollection;
   readonly latitude: number;
   readonly longitude: number;
   readonly loadingRoute: boolean;
@@ -40,13 +42,31 @@ interface State {
 
 interface Options {
   selector: string;
-  allowNewFeatures?: boolean;
-  newFeatureEvent: string;
+  allowNewFeatureModal?: boolean;
+  newFeatureModalEvent: string;
 }
+
+export const globalState: State = {
+  initializing: true,
+  floor: new FloorModel({}),
+  floors: [],
+  place: new PlaceModel({}),
+  places: [],
+  style: new StyleModel({}),
+  styles: [],
+  amenities: [],
+  features: new FeatureCollection({}),
+  dynamicFeatures: new FeatureCollection({}),
+  allFeatures: new FeatureCollection({}),
+  latitude: 60.1669635,
+  longitude: 24.9217484,
+  loadingRoute: false,
+  noPlaces: false
+};
 
 export class Map {
   private map: mapboxgl.Map;
-  private state: State;
+  private state;
   private geojsonSource: GeoJSONSource = new GeoJSONSource(new FeatureCollection({}));
   private syntheticSource: SyntheticSource = new SyntheticSource(new FeatureCollection({}));
   private routingSource: RoutingSource = new RoutingSource();
@@ -58,29 +78,17 @@ export class Map {
   private onRouteFoundListener = new Subject();
   private onRouteFailedListener = new Subject();
   private onRouteCancelListener = new Subject();
+  private onFeatureAddListener = new Subject<Feature>();
+  private onFeatureUpdateListener = new Subject<Feature>();
+  private onFeatureDeleteListener = new Subject();
   private defaultOptions: Options = {
     selector: 'proximiioMap',
-    allowNewFeatures: false,
-    newFeatureEvent: 'click'
+    allowNewFeatureModal: false,
+    newFeatureModalEvent: 'click'
   }
   constructor(options: Options) {
     this.defaultOptions = {...this.defaultOptions, ...options}
-    this.state = {
-      initializing: true,
-      floor: new FloorModel({}),
-      floors: [],
-      place: new PlaceModel({}),
-      places: [],
-      style: new StyleModel({}),
-      styles: [],
-      amenities: [],
-      features: new FeatureCollection({}),
-      dynamicFeatures: new FeatureCollection({}),
-      latitude: 60.1669635,
-      longitude: 24.9217484,
-      loadingRoute: false,
-      noPlaces: false
-    };
+    this.state = globalState;
 
     this.onSourceChange = this.onSourceChange.bind(this);
     this.onSyntheticChange = this.onSyntheticChange.bind(this);
@@ -127,6 +135,7 @@ export class Map {
       styles,
       amenities,
       features,
+      allFeatures: new FeatureCollection(features),
       latitude: place.location.lat,
       longitude: place.location.lng,
       noPlaces: places.length === 0
@@ -136,9 +145,9 @@ export class Map {
     this.map.on('load', (e) => {
       this.onMapReady(e);
     });
-    if (this.defaultOptions.allowNewFeatures) {
-      this.map.on(this.defaultOptions.newFeatureEvent, (e: MapboxEvent) => {
-        this.newFeatureDialog(e)
+    if (this.defaultOptions.allowNewFeatureModal) {
+      this.map.on(this.defaultOptions.newFeatureModalEvent, (e: MapboxEvent | any) => {
+        this.featureDialog(e)
       });
     }
   }
@@ -180,7 +189,9 @@ export class Map {
     }
   }
 
-  private newFeatureDialog(e: any) {
+  private featureDialog(e: any) {
+    const features = this.map.queryRenderedFeatures(e.point, { layers: ['proximiio-pois-icons'] });
+    const edit = features.length > 0;
     const modal = new tingle.modal({
       footer: true,
       stickyFooter: false,
@@ -192,77 +203,135 @@ export class Map {
     });
 
     // set content
-    modal.setContent(`
-      <h1>Modal Header</h1>
-      <form name="form" id="modal-form">
-        <label>Title*</label>
-        <input type="text" name="title" required>
-        
-        <label>Level*</label>
-        <input type="number" name="level" value='${this.state.floor?.level ? this.state.floor.level : 0}' required>
-        
-        <label>Latitude*</label>
-        <input type="number" name="lat" value='${e.lngLat.lat}' required>
-        
-        <label>Longitude*</label>
-        <input type="number" name="lng" value='${e.lngLat.lng}' required>
-        
-        <label>Icon</label>
-        <input type="file" name="icon">
-      </form>
-    `);
+    modal.setContent(edit ? EDIT_FEATURE_DIALOG(e, features[0]) : NEW_FEATURE_DIALOG(e, this.state.floor?.level));
 
     modal.addFooterBtn('Submit', 'tingle-btn tingle-btn--primary', async () => {
-      const id = uuidv4();
       const formData = new FormData((document.querySelector('#modal-form')) as HTMLFormElement)
       const data = {
-        title: formData.get('title'),
+        id: `${formData.get('id')}`,
+        title: `${formData.get('title')}`,
         level: formData.get('level'),
         lat: formData.get('lat'),
         lng: formData.get('lng'),
-        icon: (formData.get('icon') as File).size ? await getBase64FromImage(formData.get('icon') as File) : defaultIcon
+        icon: (formData.get('icon') as File).size ? await getBase64FromImage(formData.get('icon') as File) : undefined
       }
       if (data.title && data.level && data.lat && data.lng) {
-        const feature = new Feature({
-          type: 'Feature',
-          id,
-          geometry: new Geometry({
-            type: 'Point',
-            coordinates: [+data.lng!, +data.lat!]
-          }),
-          properties: {
-            type: 'poi',
-            usecase: 'poi',
-            id,
-            minzoom: 15,
-            visibility: 'visible',
-            amenity: 'default',
-            title: data.title,
-            level: +data.level!,
-            images: [data.icon]
-          }
-        })
-        this.onAddNewFeature(feature);
+        if (edit) {
+          await this.onUpdateFeature(data.id, data.title, +data.level!, +data.lat!, +data.lng!, data.icon);
+        } else {
+          await this.onAddNewFeature(data.title, +data.level!, +data.lat!, +data.lng!, data.icon, data.id);
+        }
         modal.close();
       } else {
         alert('Please fill all the required fields!');
       }
     });
 
-    modal.addFooterBtn('Cancel', 'tingle-btn tingle-btn--danger', () => {
+    if (edit) {
+      modal.addFooterBtn('Delete', 'tingle-btn tingle-btn--danger', () => {
+        this.onDeleteFeature(features[0]?.properties?.id);
+        modal.close();
+      });
+    }
+
+    modal.addFooterBtn('Cancel', 'tingle-btn tingle-btn--default tingle-btn--pull-right', () => {
       modal.close();
     });
 
     modal.open();
   }
 
-  private onAddNewFeature(feature: Feature) {
+  private async onAddNewFeature(title: string, level: number, lat: number, lng: number, icon?: string, id?: string, placeId?: string, floorId?: string) {
+    const featureId = id ? id : uuidv4();
+    if (this.state.allFeatures.features.findIndex(f => f.id === featureId || f.properties.id === featureId) > 0) {
+      console.error(`Create feature failed: Feature with id '${featureId}' already exists!`);
+      throw new Error(`Create feature failed: Feature with id '${featureId}' already exists!`);
+    }
+    const feature = new Feature({
+      type: 'Feature',
+      id: featureId,
+      geometry: new Geometry({
+        type: 'Point',
+        coordinates: [lng, lat]
+      }),
+      properties: {
+        type: 'poi',
+        usecase: 'poi',
+        id: featureId,
+        minzoom: 15,
+        visibility: 'visible',
+        amenity: icon ? id : 'default',
+        title,
+        level,
+        images: [icon],
+        place_id: placeId,
+        floor_id: floorId
+      }
+    })
+    if (icon && icon.length > 0) {
+      const decodedIcon = await getImageFromBase64(icon);
+      this.map.addImage(featureId, decodedIcon as any);
+    }
+
     this.state.dynamicFeatures.features.push(feature)
+    this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features];
     this.geojsonSource.create(feature);
     this.onSourceChange();
-    const featureCollection = new FeatureCollection({ features: [...this.state.features.features, ...this.state.dynamicFeatures.features] })
-    this.routingSource.routing.setData(featureCollection);
+    this.routingSource.routing.setData(this.state.allFeatures);
     this.updateMapSource(this.routingSource);
+    this.onFeatureAddListener.next(feature);
+    return feature;
+  }
+
+  private async onUpdateFeature(id: string, title?: string, level?: number, lat?: number, lng?: number, icon?: string, placeId?: string, floorId?: string) {
+    const foundFeature = this.state.allFeatures.features.find(f => f.id === id || f.properties.id === id);
+    if (!foundFeature) {
+      console.error(`Update feature failed: Feature with id '${id}' has not been found!`);
+      throw new Error(`Update feature failed: Feature with id '${id}' has not been found!`);
+    }
+    const feature = new Feature(foundFeature);
+    feature.geometry.coordinates = [lng ? lng : feature.geometry.coordinates[0], lat ? lat : feature.geometry.coordinates[1]];
+    feature.properties = {
+      ...feature.properties,
+      title: title ? title : feature.properties.title,
+      level: level ? level : feature.properties.level,
+      amenity: icon ? id : feature.properties.amenity,
+      images: icon ? [icon] :  feature.properties.images,
+      place_id: placeId ? placeId : feature.properties.place_id,
+      floor_id: floorId ? floorId :  feature.properties.floor_id
+    }
+
+    if (icon && icon.length > 0) {
+      const decodedIcon = await getImageFromBase64(icon);
+      this.map.addImage(id, decodedIcon as any);
+    }
+
+    const dynamicIndex = this.state.dynamicFeatures.features.findIndex(x => x.id === feature.id || x.properties.id === feature.id);
+    this.state.dynamicFeatures.features[dynamicIndex] = feature;
+    this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features]; // this is not probably updated with non dynamic feature update TODO
+    this.geojsonSource.update(feature);
+    this.onSourceChange();
+    this.routingSource.routing.setData(this.state.allFeatures);
+    this.updateMapSource(this.routingSource);
+    this.onFeatureUpdateListener.next(feature);
+    return feature;
+  }
+
+  private async onDeleteFeature(id: string) {
+    const foundFeature = this.state.allFeatures.features.find(f => f.id === id || f.properties.id === id);
+    if (!foundFeature) {
+      console.error(`Deleting feature failed: Feature with id '${id}' has not been found!`);
+      throw new Error(`Deleting feature failed: Feature with id '${id}' has not been found!`);
+    }
+
+    const dynamicIndex = this.state.dynamicFeatures.features.findIndex(x => x.id === id || x.properties.id === id);
+    this.state.dynamicFeatures.features.splice(dynamicIndex, 1);
+    this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features]; // this is not probably updated with non dynamic feature delete TODO
+    this.geojsonSource.delete(id);
+    this.onSourceChange();
+    this.routingSource.routing.setData(this.state.allFeatures);
+    this.updateMapSource(this.routingSource);
+    this.onFeatureDeleteListener.next();
   }
 
   private prepareStyle(style: StyleModel) {
@@ -687,8 +756,8 @@ export class Map {
    *  });
    */
   public findRouteByIds(idFrom: string, idTo: string) {
-    const fromFeature = this.state.features.features.find(f => f.id === idFrom || f.properties.id === idFrom) as Feature;
-    const toFeature = this.state.features.features.find(f => f.id === idTo || f.properties.id === idTo) as Feature;
+    const fromFeature = this.state.allFeatures.features.find(f => f.id === idFrom || f.properties.id === idFrom) as Feature;
+    const toFeature = this.state.allFeatures.features.find(f => f.id === idTo || f.properties.id === idTo) as Feature;
     this.onRouteUpdate(fromFeature, toFeature);
   }
 
@@ -706,8 +775,8 @@ export class Map {
    *  });
    */
   public findRouteByTitle(titleFrom: string, titleTo: string) {
-    const fromFeature = this.state.features.features.find(f => f.properties.title === titleFrom) as Feature;
-    const toFeature = this.state.features.features.find(f => f.properties.title === titleTo) as Feature;
+    const fromFeature = this.state.allFeatures.features.find(f => f.properties.title === titleFrom) as Feature;
+    const toFeature = this.state.allFeatures.features.find(f => f.properties.title === titleTo) as Feature;
     this.onRouteUpdate(fromFeature, toFeature);
   }
 
@@ -833,7 +902,7 @@ export class Map {
    *  });
    */
   public centerToFeature(featureId: string) {
-    const feature = this.state.features.features.find(f => f.id === featureId || f.properties.id === featureId) as Feature;
+    const feature = this.state.allFeatures.features.find(f => f.id === featureId || f.properties.id === featureId) as Feature;
     if (feature) {
       this.centerOnPoi(feature);
       return feature;
@@ -841,4 +910,130 @@ export class Map {
       throw new Error(`Feature not found`);
     }
   }
+
+  /**
+   * Add new feature to map.
+   *  @memberof Map
+   *  @name addCustomFeature
+   *  @param title {string} feature title, required
+   *  @param level {number} feature floor level, required
+   *  @param lat {number} feature latitude coordinate, required
+   *  @param lng {number} feature longitude coordinate, required
+   *  @param icon {string} feature icon image in base64 format, optional
+   *  @param id {string} feature id, optional, will be autogenerated if not defined
+   *  @param placeId {string} feature place_id, optional
+   *  @param floorId {string} feature floor_id, optional
+   *  @return <Promise>{Feature} newly added feature
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    const myFeature = map.addCustomFeature('myPOI', 0, 48.606703739771774, 17.833092384506614);
+   *  });
+   */
+  public async addCustomFeature(title: string, level: number, lat: number, lng: number, icon?: string, id?: string, placeId?: string, floorId?: string) {
+    return await this.onAddNewFeature(title, +level, +lat, +lng, icon, id, placeId, floorId);
+  }
+
+  /**
+   * Update existing map feature.
+   *  @memberof Map
+   *  @name updateFeature
+   *  @param id {string} feature id
+   *  @param title {string} feature title, optional
+   *  @param level {number} feature floor level, optional
+   *  @param lat {number} feature latitude coordinate, optional
+   *  @param lng {number} feature longitude coordinate, optional
+   *  @param icon {string} feature icon image in base64 format, optional
+   *  @param placeId {string} feature place_id, optional
+   *  @param floorId {string} feature floor_id, optional
+   *  @return <Promise>{Feature} newly added feature
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    const myFeature = map.updateFeature('poiId', 'myPOI', 0, 48.606703739771774, 17.833092384506614);
+   *  });
+   */
+  public async updateFeature(id: string, title?: string, level?: number, lat?: number, lng?: number, icon?: string, placeId?: string, floorId?: string) {
+    return await this.onUpdateFeature(id, title, level, lat, lng, icon, placeId, floorId);
+  }
+
+  /**
+   * Delete existing map feature.
+   *  @memberof Map
+   *  @name deleteFeature
+   *  @param id {string} feature id
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.deleteFeature('poiId');
+   *  });
+   */
+  public deleteFeature(id: string) {
+    return this.onDeleteFeature(id);
+  }
+
+  /**
+   * This method will return list of custom added points.
+   *  @memberof Map
+   *  @name getCustomFeaturesList
+   *  @return {FeatureCollection} of custom features
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    const features = map.getCustomFeaturesList();
+   *  });
+   */
+  public getCustomFeaturesList() {
+    return this.state.dynamicFeatures;
+  }
+
+  /**
+   *  @memberof Map
+   *  @name getFeatureAddListener
+   *  @returns returns feature add listener
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getFeatureAddListener().subscribe(feature => {
+   *    console.log('feature added', feature);
+   *  });
+   */
+  public getFeatureAddListener() {
+    return this.onFeatureAddListener.asObservable();
+  }
+
+  /**
+   *  @memberof Map
+   *  @name getFeatureUpdateListener
+   *  @returns returns feature update listener
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getFeatureUpdateListener().subscribe(feature => {
+   *    console.log('feature updated', feature);
+   *  });
+   */
+  public getFeatureUpdateListener() {
+    return this.onFeatureUpdateListener.asObservable();
+  }
+
+  /**
+   *  @memberof Map
+   *  @name getFeatureDeleteListener
+   *  @returns returns feature delete listener
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getFeatureDeleteListener().subscribe(() => {
+   *    console.log('feature deleted');
+   *  });
+   */
+  public getFeatureDeleteListener() {
+    return this.onFeatureDeleteListener.asObservable();
+  }
 }
+
+/* TODO
+* - check clusters
+* */

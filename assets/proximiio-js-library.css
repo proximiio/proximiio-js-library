@@ -1,3 +1,98 @@
+/*
+/* MODAL FORM
+ */
+
+.modal-form {
+  --background: white;
+  --border: rgba(0, 0, 0, 0.125);
+  --borderDark: rgba(0, 0, 0, 0.25);
+  --borderDarker: rgba(0, 0, 0, 0.5);
+  --bgColorH: 0;
+  --bgColorS: 0%;
+  --bgColorL: 98%;
+  --fgColorH: 210;
+  --fgColorS: 50%;
+  --fgColorL: 38%;
+  --shadeDark: 0.3;
+  --shadeLight: 0.7;
+  --shadeNormal: 0.5;
+  --borderRadius: 0.125rem;
+  --highlight: #306090;
+  background: white;
+  border-radius: var(--borderRadius);
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-form > div {
+  order: 2;
+}
+
+.modal-form label {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-form label > span {
+  color: var(--borderDarker);
+  display: block;
+  font-size: 0.825rem;
+  margin-top: 0.625rem;
+  order: 1;
+  transition: all 0.25s;
+}
+
+.modal-form label > span.required::after {
+  content: "*";
+  color: #dd6666;
+  margin-left: 0.125rem;
+}
+
+.modal-form label input {
+  order: 2;
+  outline: none;
+}
+
+.modal-form label input::placeholder {
+  color: var(--borderDark);
+}
+
+.modal-form label:hover span {
+  color: hsl(var(--fgColorH), var(--fgColorS), var(--fgColorL));
+}
+
+.modal-form input[type="checkbox"] + div label:hover span::before,
+.modal-form label:hover input.text {
+  border-color: hsl(var(--fgColorH), var(--fgColorS), var(--fgColorL));
+}
+
+.modal-form label input.text:focus,
+.modal-form label input.text:active {
+  border-color:  hsl(var(--fgColorH), calc(var(--fgColorS) * 2), calc(var(--fgColorL) * 1.15));
+  box-shadow: 0 1px  hsl(var(--fgColorH), calc(var(--fgColorS) * 2), calc(var(--fgColorL) * 1.15));
+}
+
+.modal-form input.text:focus + span,
+.modal-form input.text:active + span {
+  color:  hsl(var(--fgColorH), calc(var(--fgColorS) * 2), calc(var(--fgColorL) * 1.15));
+}
+
+.modal-form input {
+  border: 1px solid var(--border);
+  border-radius: var(--borderRadius);
+  box-sizing: border-box;
+  font-size: 1rem;
+  height: 2.25rem;
+  line-height: 1.25rem;
+  margin-top: 0.25rem;
+  order: 2;
+  padding: 0.25rem 0.5rem;
+  transition: all 0.25s;
+}
+
 /* ----------------------------------------------------------- */
 /* == tingle v0.15.2 */
 /* ----------------------------------------------------------- */
@@ -74,7 +169,7 @@
   flex-shrink: 0;
   margin-top: auto;
   margin-bottom: auto;
-  width: 60%;
+  width: 520px;
   border-radius: 4px;
   background: #fff;
   opacity: 1;
@@ -147,30 +242,45 @@
 .tingle-btn {
   display: inline-block;
   margin: 0 .5rem;
-  padding: 1rem 2rem;
+  padding: .8rem 2rem;
   border: none;
   background-color: grey;
   box-shadow: none;
   color: #fff;
   vertical-align: middle;
   text-decoration: none;
-  font-size: inherit;
   font-family: inherit;
   line-height: normal;
   cursor: pointer;
   transition: background-color .4s ease;
+  border-radius: 6px;
+  font-weight: 100;
+  text-transform: uppercase;
+  font-size: 13px;
 }
 
 .tingle-btn--primary {
   background-color: #3498db;
 }
 
+.tingle-btn--primary:hover {
+  background-color: #1a75b0;
+}
+
 .tingle-btn--danger {
   background-color: #e74c3c;
 }
 
+.tingle-btn--danger:hover {
+  background-color: #ae271b;
+}
+
 .tingle-btn--default {
   background-color: #34495e;
+}
+
+.tingle-btn--default:hover {
+  background-color: #2b3a47;
 }
 
 .tingle-btn--pull-left {

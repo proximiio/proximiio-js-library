@@ -30,12 +30,20 @@ class App extends React.Component {
         })
 
         const map = new Proximiio.Map({
-          allowNewFeatures: true
+          allowNewFeatureModal: true
         });
 
-        map.getMapReadyListener().subscribe(res => {
+        map.getMapReadyListener().subscribe(async (res) => {
           console.log('map ready', res);
         });
+
+        map.getFeatureAddListener().subscribe(feature => {
+          console.log('feature added ', feature);
+        })
+
+         map.getFeatureDeleteListener().subscribe(() => {
+          console.log('feature deleted ');
+        })
 
         const placeSelect = new Proximiio.Select('Places', { placeHolder: 'Pick the place', highlight: true, selector: '#place-select' });
         placeSelect.getSelectListener().subscribe(place => {

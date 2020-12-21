@@ -17,6 +17,16 @@ export default class GeoJSONSource extends DataSource {
     this.data.features.push(feature);
   }
 
+  update(feature: Feature) {
+    const foundIndex = this.data.features.findIndex(x => x.id === feature.id || x.properties.id === feature.id);
+    this.data.features[foundIndex] = feature;
+  }
+
+  delete(id: string) {
+    const foundIndex = this.data.features.findIndex(x => x.id === id || x.properties.id === id);
+    this.data.features.splice(foundIndex, 1);
+  }
+
   mapLanguage() {
     const features = this.data.features.filter(f => typeof f.properties.title_i18n === 'object');
     features.forEach(feature => this.mapFeatureLanguage(feature, this.language));
