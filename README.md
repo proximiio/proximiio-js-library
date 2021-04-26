@@ -8,7 +8,7 @@ This requires to load js file into script tag of html file.
 <script src="lib/proximiio.js"></script>
 ```
 
-### Using in node.js 
+### Using in node.js
 ```
 const Proximiio = require('lib/index').default;
 ```
@@ -86,7 +86,7 @@ To generate map, create div element with id param defined
 ```
 <div id="proximiioMap"></div>
 ```
-Now you can call 
+Now you can call
 ```
 const map = new Proximiio.Map({
     selector: 'customMap', // optional, id of map container, default 'proximiioMap'
@@ -330,7 +330,7 @@ To generate select widget, create input element with id param defined, for styli
 ```
 <input id="proximiioSelect" class="proximiio-select" type="text" tabIndex="1"/>
 ```
-Now you can call 
+Now you can call
 ```
 // @param dataset { Datasets } predefined proximi.io dataset to search on, could be Places | Floors | Pois
 // @param options { AutocompleteOptions } autocomplete.js options, check https://tarekraafat.github.io/autoComplete.js/#/?id=api-configuration for more info
@@ -396,4 +396,71 @@ HTML
 ```
 <input id="from-poi-select" class="proximiio-select" type="text" tabIndex="1"/>
 <input id="to-poi-select" class="proximiio-select" type="text" tabIndex="1"/>
+```
+
+### Adding new features and updating their positions
+We are using some variables and turf to generate static data for demo purposes, you probably want to use your own api for that instead but the core idea of using `map.addCustomFeature()` to add feature to map and `map.updateFeature()` to update them, remains the same.
+
+
+JS
+```
+// lets assume you have a list of custom poi features
+const customPoiList = [{
+  id: 'custom-poi-1',
+  title: 'Custom Poi',
+  level: 0
+}, {
+  id: 'custom-poi-2',
+  title: 'Custom Poi 2',
+  level: 0
+}, {
+  id: 'custom-poi-3',
+  title: 'Custom Poi 3',
+  level: 0
+}, {
+  id: 'custom-poi-4',
+  title: 'Custom Poi 4',
+  level: 0
+}, {
+  id: 'custom-poi-5',
+  title: 'Custom Poi 5',
+  level: 0
+}];
+
+// initiate map component
+const map = new Proximiio.Map();
+
+// listen to event when map component is loaded
+map.getMapReadyListener().subscribe(res => {
+  console.log('map ready', res);
+  
+  // get current mapbox instance bounds
+  let bounds = map.getMapboxInstance().getBounds();
+  
+  // loop for each point of our features list
+  for (let poi of customPoiList) {
+    // for demo purposes we use turf to get random position based on the current map bounds
+    const position = turf.randomPosition([bounds._ne.lng, bounds._ne.lat, bounds._sw.lng, bounds._sw.lat]);
+    
+    // finally add feature to map
+    map.addCustomFeature(poi.title, poi.level, position[1], position[0], '', poi.id);
+  }
+
+  // setting interval to update position each 5 seconds
+  setInterval(() => {
+    // again loop through the list of features
+    for (let poi of customPoiList) {
+      // use turf to get new random position
+      const position = turf.randomPosition([bounds._ne.lng, bounds._ne.lat, bounds._sw.lng, bounds._sw.lat]);
+      
+      // update the feature position
+      map.updateFeature(poi.id, poi.title, poi.level, position[1], position[0]);
+    }
+  }, 5000);
+});
+```
+
+HTML
+```
+<div id="proximiioMap" style="height: 500px;"></div>
 ```

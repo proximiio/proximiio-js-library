@@ -2,6 +2,7 @@ import logo from './logo.svg';
 import './App.css';
 import React from 'react';
 import Proximiio from 'proximiio-js-library/lib/index'
+import * as turf from '@turf/turf';
 
 class App extends React.Component {
   constructor(props) {
@@ -9,6 +10,28 @@ class App extends React.Component {
   }
 
   componentDidMount() {
+    const customPoiList = [{
+      id: 'custom-poi-1',
+      title: 'Custom Poi',
+      level: 0
+    }, {
+      id: 'custom-poi-2',
+      title: 'Custom Poi 2',
+      level: 0
+    }, {
+      id: 'custom-poi-3',
+      title: 'Custom Poi 3',
+      level: 0
+    }, {
+      id: 'custom-poi-4',
+      title: 'Custom Poi 4',
+      level: 0
+    }, {
+      id: 'custom-poi-5',
+      title: 'Custom Poi 5',
+      level: 0
+    }];
+
     Proximiio.Auth.login('email', 'password')
       .then(res => {
         console.log('Logged in', res);
@@ -35,6 +58,19 @@ class App extends React.Component {
 
         map.getMapReadyListener().subscribe(async (res) => {
           console.log('map ready', res);
+
+          let bounds = map.getMapboxInstance().getBounds();
+          for (let poi of customPoiList) {
+            const position = turf.randomPosition([bounds._ne.lng, bounds._ne.lat, bounds._sw.lng, bounds._sw.lat]);
+            map.addCustomFeature(poi.title, poi.level, position[1], position[0], '', poi.id);
+          }
+
+          setInterval(() => {
+            for (let poi of customPoiList) {
+              const position = turf.randomPosition([bounds._ne.lng, bounds._ne.lat, bounds._sw.lng, bounds._sw.lat]);
+              map.updateFeature(poi.id, poi.title, poi.level, position[1], position[0]);
+            }
+          }, 5000);
         });
 
         map.getFeatureAddListener().subscribe(feature => {

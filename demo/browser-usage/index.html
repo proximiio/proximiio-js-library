@@ -15,8 +15,31 @@
 </div>
 <div id="proximiioMap" style="height: 500px;"></div>
 </body>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@5/turf.min.js"></script>
 <script src="../../lib/proximiio.js"></script>
 <script>
+    const customPoiList = [{
+      id: 'custom-poi-1',
+      title: 'Custom Poi',
+      level: 0
+    }, {
+      id: 'custom-poi-2',
+      title: 'Custom Poi 2',
+      level: 0
+    }, {
+      id: 'custom-poi-3',
+      title: 'Custom Poi 3',
+      level: 0
+    }, {
+      id: 'custom-poi-4',
+      title: 'Custom Poi 4',
+      level: 0
+    }, {
+      id: 'custom-poi-5',
+      title: 'Custom Poi 5',
+      level: 0
+    }];
+
     Proximiio.default.Auth.login('email', 'password')
       .then(res => {
         console.log('Logged in', res);
@@ -41,6 +64,19 @@
 
         map.getMapReadyListener().subscribe(res => {
           console.log('map ready', res);
+
+          let bounds = map.getMapboxInstance().getBounds();
+          for (let poi of customPoiList) {
+            const position = turf.randomPosition([bounds._ne.lng, bounds._ne.lat, bounds._sw.lng, bounds._sw.lat]);
+            map.addCustomFeature(poi.title, poi.level, position[1], position[0], '', poi.id);
+          }
+
+          setInterval(() => {
+            for (let poi of customPoiList) {
+              const position = turf.randomPosition([bounds._ne.lng, bounds._ne.lat, bounds._sw.lng, bounds._sw.lat]);
+              map.updateFeature(poi.id, poi.title, poi.level, position[1], position[0]);
+            }
+          }, 5000);
         });
 
         const placeSelect = new Proximiio.default.Select('Places', { placeHolder: 'Pick the place', highlight: true, selector: '#place-select' });
