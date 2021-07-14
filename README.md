@@ -349,10 +349,10 @@ To generate select widget, create input element with id param defined, for styli
 Now you can call
 ```
 // @param dataset { Datasets } predefined proximi.io dataset to search on, could be Places | Floors | Pois
-// @param options { AutocompleteOptions } autocomplete.js options, check https://tarekraafat.github.io/autoComplete.js/#/?id=api-configuration for more info
+// @param options { AutocompleteOptions } autocomplete.js options, check https://tarekraafat.github.io/autoComplete.js/#/configuration for more info
 // @param useApiSearch { boolean } use this option if you want to use api to filter the results, necessary if you have 100+ places | floors.
 
-const select = new Proximiio.Select('Places', { placeHolder: 'Pick the place', highlight: true });
+const select = new Proximiio.Select('Places', { placeHolder: 'Pick the place', resultItem: { highlight: { render: true } } });
 ```
 
 #### Available Listeners

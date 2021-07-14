@@ -79,13 +79,13 @@
           }, 5000);
         });
 
-        const placeSelect = new Proximiio.default.Select('Places', { placeHolder: 'Pick the place', highlight: true, selector: '#place-select' });
+        const placeSelect = new Proximiio.default.Select('Places', { placeHolder: 'Pick the place', resultItem: { highlight: { render: true } }, selector: '#place-select' });
         placeSelect.getSelectListener().subscribe(place => {
           map.setPlace(place.id);
           console.log('place selected', place);
         })
 
-        const floorSelect = new Proximiio.default.Select('Floors', { placeHolder: 'Pick the floor', highlight: true, selector: '#floor-select' });
+        const floorSelect = new Proximiio.default.Select('Floors', { placeHolder: 'Pick the floor', resultItem: { highlight: { render: true } }, selector: '#floor-select' });
         floorSelect.getSelectListener().subscribe(floor => {
           map.setFloorById(floor.id);
           console.log('floor selected', floor);
@@ -94,7 +94,7 @@
         let fromPoi = null;
         let toPoi = null;
 
-        const fromPoiSelect = new Proximiio.default.Select('Pois', { placeHolder: 'Pick the start poi', highlight: true, selector: '#from-poi-select' });
+        const fromPoiSelect = new Proximiio.default.Select('Pois', { placeHolder: 'Pick the start poi', resultItem: { highlight: { render: true } }, selector: '#from-poi-select' });
         fromPoiSelect.getSelectListener().subscribe(poi => {
           fromPoi = poi;
           map.centerToFeature(poi.id);
@@ -104,7 +104,7 @@
           }
         })
 
-        const toPoiSelect = new Proximiio.default.Select('Pois', { placeHolder: 'Pick the end poi', highlight: true, selector: '#to-poi-select' });
+        const toPoiSelect = new Proximiio.default.Select('Pois', { placeHolder: 'Pick the end poi', resultItem: { highlight: { render: true } }, selector: '#to-poi-select' });
         toPoiSelect.getSelectListener().subscribe(poi => {
           toPoi = poi;
           map.centerToFeature(poi.id);
