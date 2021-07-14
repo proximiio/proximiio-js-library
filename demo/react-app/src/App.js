@@ -81,13 +81,13 @@ class App extends React.Component {
           console.log('feature deleted ');
         })
 
-        const placeSelect = new Proximiio.Select('Places', { placeHolder: 'Pick the place', highlight: true, selector: '#place-select' });
+        const placeSelect = new Proximiio.Select('Places', { placeHolder: 'Pick the place', resultItem: { highlight: { render: true } }, selector: '#place-select' });
         placeSelect.getSelectListener().subscribe(place => {
           map.setPlace(place.id);
           console.log('place selected', place);
         })
 
-        const floorSelect = new Proximiio.Select('Floors', { placeHolder: 'Pick the floor', highlight: true, selector: '#floor-select' });
+        const floorSelect = new Proximiio.Select('Floors', { placeHolder: 'Pick the floor', resultItem: { highlight: { render: true } }, selector: '#floor-select' });
         floorSelect.getSelectListener().subscribe(floor => {
           map.setFloorById(floor.id);
           console.log('floor selected', floor);
@@ -96,7 +96,7 @@ class App extends React.Component {
         let fromPoi = null;
         let toPoi = null;
 
-        const fromPoiSelect = new Proximiio.Select('Pois', { placeHolder: 'Pick the start poi', highlight: true, selector: '#from-poi-select' });
+        const fromPoiSelect = new Proximiio.Select('Pois', { placeHolder: 'Pick the start poi', resultItem: { highlight: { render: true } }, selector: '#from-poi-select' });
         fromPoiSelect.getSelectListener().subscribe(poi => {
           fromPoi = poi;
           map.centerToFeature(poi.id);
@@ -106,7 +106,7 @@ class App extends React.Component {
           }
         })
 
-        const toPoiSelect = new Proximiio.Select('Pois', { placeHolder: 'Pick the end poi', highlight: true, selector: '#to-poi-select' });
+        const toPoiSelect = new Proximiio.Select('Pois', { placeHolder: 'Pick the end poi', resultItem: { highlight: { render: true } }, selector: '#to-poi-select' });
         toPoiSelect.getSelectListener().subscribe(poi => {
           toPoi = poi;
           map.centerToFeature(poi.id);
