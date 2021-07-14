@@ -1,3 +1,4 @@
+// @ts-ignore
 import { Wayfinding } from '../../../assets/wayfinding';
 import Feature, { FeatureCollection } from '../../models/feature';
 import { lineString, point } from '@turf/helpers';
@@ -72,6 +73,6 @@ export default class Routing {
       }
 
     });
-    return levelPaths;
+    return {levelPaths, points};
   }
 }

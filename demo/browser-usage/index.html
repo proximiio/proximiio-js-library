@@ -113,6 +113,11 @@
             map.findRouteByIds(fromPoi.id, toPoi.id);
           }
         })
+
+        map.getRouteFoundListener().subscribe(res => {
+          console.log('route found successfully', res.route);
+          console.log('turn by turn text navigation output', res.TBTNav);
+        })
       })
       .catch(err => {
         console.log(err);

@@ -20,6 +20,8 @@ import { Subject } from 'rxjs';
 import * as turf from '@turf/turf';
 // @ts-ignore
 import * as tingle from "tingle.js/dist/tingle";
+// @ts-ignore
+import * as TBTNav from '../../../assets/tbtnav';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
 
 interface State {
@@ -38,12 +40,14 @@ interface State {
   readonly longitude: number;
   readonly loadingRoute: boolean;
   readonly noPlaces: boolean;
+  readonly textNavigation: any;
 }
 
 interface Options {
   selector: string;
   allowNewFeatureModal?: boolean;
   newFeatureModalEvent: string;
+  enableTBTNavigation?: boolean;
 }
 
 export const globalState: State = {
@@ -61,7 +65,8 @@ export const globalState: State = {
   latitude: 60.1669635,
   longitude: 24.9217484,
   loadingRoute: false,
-  noPlaces: false
+  noPlaces: false,
+  textNavigation: null
 };
 
 export class Map {
@@ -75,7 +80,7 @@ export class Map {
   private onMapReadyListener = new Subject<boolean>();
   private onPlaceSelectListener = new Subject<PlaceModel>();
   private onFloorSelectListener = new Subject<FloorModel>();
-  private onRouteFoundListener = new Subject();
+  private onRouteFoundListener = new Subject<any>();
   private onRouteFailedListener = new Subject();
   private onRouteCancelListener = new Subject();
   private onFeatureAddListener = new Subject<Feature>();
@@ -84,8 +89,12 @@ export class Map {
   private defaultOptions: Options = {
     selector: 'proximiioMap',
     allowNewFeatureModal: false,
-    newFeatureModalEvent: 'click'
+    newFeatureModalEvent: 'click',
+    enableTBTNavigation: true
   }
+  private routeFactory: any;
+  private startPoint?: Feature;
+  private endPoint?: Feature;
   constructor(options: Options) {
     this.defaultOptions = {...this.defaultOptions, ...options}
     this.state = globalState;
@@ -149,6 +158,9 @@ export class Map {
       this.map.on(this.defaultOptions.newFeatureModalEvent, (e: MapboxEvent | any) => {
         this.featureDialog(e)
       });
+    }
+    if (this.defaultOptions.enableTBTNavigation) {
+      this.routeFactory = new TBTNav.RouteFactory(JSON.stringify(this.state.allFeatures.features), 'en')
     }
   }
 
@@ -274,11 +286,12 @@ export class Map {
     }
 
     this.state.dynamicFeatures.features.push(feature)
-    this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features];
+    // this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features];
     this.geojsonSource.create(feature);
-    this.onSourceChange();
-    this.routingSource.routing.setData(this.state.allFeatures);
-    this.updateMapSource(this.routingSource);
+    // this.onSourceChange();
+    // this.routingSource.routing.setData(this.state.allFeatures);
+    // this.updateMapSource(this.routingSource);
+    this.onFeaturesChange();
     this.onFeatureAddListener.next(feature);
     return feature;
   }
@@ -308,11 +321,12 @@ export class Map {
 
     const dynamicIndex = this.state.dynamicFeatures.features.findIndex(x => x.id === feature.id || x.properties.id === feature.id);
     this.state.dynamicFeatures.features[dynamicIndex] = feature;
-    this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features]; // this is not probably updated with non dynamic feature update TODO
+    // this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features]; // this is not probably updated with non dynamic feature update TODO
     this.geojsonSource.update(feature);
-    this.onSourceChange();
-    this.routingSource.routing.setData(this.state.allFeatures);
-    this.updateMapSource(this.routingSource);
+    // this.onSourceChange();
+    // this.routingSource.routing.setData(this.state.allFeatures);
+    // this.updateMapSource(this.routingSource);
+    this.onFeaturesChange();
     this.onFeatureUpdateListener.next(feature);
     return feature;
   }
@@ -326,12 +340,23 @@ export class Map {
 
     const dynamicIndex = this.state.dynamicFeatures.features.findIndex(x => x.id === id || x.properties.id === id);
     this.state.dynamicFeatures.features.splice(dynamicIndex, 1);
-    this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features]; // this is not probably updated with non dynamic feature delete TODO
+    // this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features]; // this is not probably updated with non dynamic feature delete TODO
     this.geojsonSource.delete(id);
+    // this.onSourceChange();
+    // this.routingSource.routing.setData(this.state.allFeatures);
+    // this.updateMapSource(this.routingSource);
+    this.onFeaturesChange();
+    this.onFeatureDeleteListener.next(foundFeature);
+  }
+
+  private onFeaturesChange() {
+    this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features];
     this.onSourceChange();
     this.routingSource.routing.setData(this.state.allFeatures);
     this.updateMapSource(this.routingSource);
-    this.onFeatureDeleteListener.next();
+    if (this.defaultOptions.enableTBTNavigation) {
+      this.routeFactory = new TBTNav.RouteFactory(JSON.stringify(this.state.allFeatures.features), 'en')
+    }
   }
 
   private prepareStyle(style: StyleModel) {
@@ -351,17 +376,18 @@ export class Map {
     if (event === 'loading-finished') {
       if (this.routingSource.route) {
         const routeStart = this.routingSource.route[this.routingSource.start?.properties.level];
+        const textNavigation = this.routeFactory.generateRoute(JSON.stringify(this.routingSource.points), JSON.stringify(this.endPoint));
         this.centerOnRoute(routeStart);
-        this.onRouteFoundListener.next();
+        this.state = {...this.state, loadingRoute: false, textNavigation};
+        this.onRouteFoundListener.next({route: this.routingSource.route, TBTNav: this.defaultOptions.enableTBTNavigation ? textNavigation : null});
       }
-      this.state = {...this.state, loadingRoute: false};
       return;
     }
 
     if (event === 'route-undefined') {
       console.log('route not found');
       this.state = {...this.state, loadingRoute: false};
-      this.onRouteFailedListener.next();
+      this.onRouteFailedListener.next('route not found');
       return;
     }
 
@@ -542,6 +568,8 @@ export class Map {
   }
 
   private onRouteUpdate(start?: Feature, finish?: Feature) {
+    this.startPoint = start;
+    this.endPoint = finish;
     try {
       this.routingSource.update(start, finish);
     } catch (e) {
@@ -551,8 +579,9 @@ export class Map {
   }
 
   private onRouteCancel() {
+    this.state = {...this.state, textNavigation: null};
     this.routingSource.cancel();
-    this.onRouteCancelListener.next();
+    this.onRouteCancelListener.next('route cancelled');
   }
 
   private centerOnPoi(poi: any) {
@@ -825,13 +854,30 @@ export class Map {
   }
 
   /**
+   * This method will return turn by turn text navigation object.
+   *  @memberof Map
+   *  @name getTBTNav
+   *  @return turn by turn text navigation object
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    const TBTNav = map.getTBTNav();
+   *  });
+   */
+  public getTBTNav() {
+    return this.state.textNavigation;
+  }
+
+  /**
    *  @memberof Map
    *  @name getRouteFoundListener
    *  @returns returns route found listener
    *  @example
    *  const map = new Proximiio.Map();
-   *  map.getRouteFoundListener().subscribe(() => {
-   *    console.log('route found successfully');
+   *  map.getRouteFoundListener().subscribe(res => {
+   *    console.log('route found successfully', res.route);
+   *    console.log('turn by turn text navigation output', res.TBTNav);
    *  });
    */
   public getRouteFoundListener() {

@@ -37,7 +37,7 @@ export class Select {
    *  @memberof Select
    *  @name constructor
    *  @param dataset { Datasets } predefined proximi.io dataset to search on, could be Places | Floors | Pois
-   *  @param options { AutocompleteOptions } autocomplete.js options, check https://tarekraafat.github.io/autoComplete.js/#/?id=api-configuration for more info
+   *  @param options { AutocompleteOptions } autocomplete.js options, check https://tarekraafat.github.io/autoComplete.js/#/configuration for more info
    *  @param useApiSearch { boolean } use this option if you want to use api to filter the results, necessary if you have 100+ places | floors.
    *  @example
    *  const select = new Proximiio.Select('Places');

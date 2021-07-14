@@ -1,7 +1,7 @@
 import logo from './logo.svg';
 import './App.css';
 import React from 'react';
-import Proximiio from 'proximiio-js-library/lib/index'
+import Proximiio from 'proximiio-js-library'
 import * as turf from '@turf/turf';
 
 class App extends React.Component {
@@ -112,9 +112,13 @@ class App extends React.Component {
           map.centerToFeature(poi.id);
           console.log('to poi selected', poi);
           if (fromPoi && toPoi) {
-            console.log()
             map.findRouteByIds(fromPoi.id, toPoi.id);
           }
+        })
+
+        map.getRouteFoundListener().subscribe(res => {
+          console.log('route found successfully', res.route);
+          console.log('turn by turn text navigation output', res.TBTNav);
         })
       })
       .catch(err => {

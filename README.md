@@ -1,6 +1,7 @@
 # Proximi.io JS Library
 
 ## Getting work
+In case of cloning the repo from GitHub please run `npm install` afterwards.
 
 ### Using just in browser
 This requires to load js file into script tag of html file.
@@ -14,9 +15,13 @@ const Proximiio = require('lib/index').default;
 ```
 
 ### Using with modern javascript frameworks (Angular, React)
-Install with npm and then import with
+Install with npm
 ```
-import Proximiio from 'proximiio-js-library/lib/index'
+npm install https://github.com/proximiio/proximiio-js-library
+```
+and then import into project with
+```
+import Proximiio from 'proximiio-js-library'
 ```
 
 ## Available methods
@@ -92,6 +97,7 @@ const map = new Proximiio.Map({
     selector: 'customMap', // optional, id of map container, default 'proximiioMap'
     allowNewFeatureModal: false, // optional, if true, you'll be able to add new features via modal dialog, default false
     newFeatureModalEvent: 'click' // optional, choose which event should open the modal for adding new features (should be map event https://docs.mapbox.com/mapbox-gl-js/api/map/#map-events), default 'click'
+    enableTBTNavigation: true // optional, you'll receive turn-by-turn text navigation object in found route listener response, default: true 
 });
 ```
 #### Available Methods
@@ -178,6 +184,15 @@ Use this method to cancel generated route.
 map.getMapReadyListener().subscribe(ready => {
    console.log('map ready', ready);
    map.cancelRoute();
+});
+```
+
+##### Get turn by turn navigation object
+Retrieves the turn by turn navigation object.
+```
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   const TBTNav = map.getTBTNav();
 });
 ```
 
@@ -282,8 +297,9 @@ map.getFloorSelectListener().subscribe(floor => {
 
 ##### Listen to route found event
 ```
-map.getRouteFoundListener().subscribe(() => {
-   console.log('route found successfully');
+map.getRouteFoundListener().subscribe(res => {
+   console.log('route found successfully', res.route);
+   console.log('turn by turn text navigation output', res.TBTNav);
 });
 ```
 
@@ -463,4 +479,10 @@ map.getMapReadyListener().subscribe(res => {
 HTML
 ```
 <div id="proximiioMap" style="height: 500px;"></div>
+```
+
+## Build
+In case of any changes of library itself (means at `./src` folder), you can rebuild with 
+```
+npm run build
 ```
