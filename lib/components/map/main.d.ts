@@ -4,6 +4,7 @@ import { FloorModel } from '../../models/floor';
 import StyleModel from '../../models/style';
 import Feature, { FeatureCollection } from '../../models/feature';
 import { AmenityModel } from '../../models/amenity';
+import { MapboxOptions } from 'mapbox-gl';
 interface State {
     readonly initializing: boolean;
     readonly floor: FloorModel;
@@ -18,6 +19,7 @@ interface State {
     readonly allFeatures: FeatureCollection;
     readonly latitude: number;
     readonly longitude: number;
+    readonly zoom?: number;
     readonly loadingRoute: boolean;
     readonly noPlaces: boolean;
     readonly textNavigation: any;
@@ -27,6 +29,9 @@ interface Options {
     allowNewFeatureModal?: boolean;
     newFeatureModalEvent: string;
     enableTBTNavigation?: boolean;
+    mapboxOptions?: MapboxOptions;
+    zoomIntoPlace?: boolean;
+    defaultPlaceId?: string;
 }
 export declare const globalState: State;
 export declare class Map {
@@ -75,6 +80,7 @@ export declare class Map {
     private onRouteCancel;
     private centerOnPoi;
     private centerOnRoute;
+    private centerOnCoords;
     private updateImages;
     private getUpcomingFloorNumber;
     /**
@@ -298,7 +304,7 @@ export declare class Map {
      *  @memberof Map
      *  @name centerToFeature
      *  @param featureId {string} feature id
-     *  @return error {string} in case there is no route or {Feature} otherwise
+     *  @return error {string} in case there is no feature or {Feature} otherwise
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -307,6 +313,21 @@ export declare class Map {
      *  });
      */
     centerToFeature(featureId: string): Feature;
+    /**
+     * This method will center the map to provided coordinates.
+     *  @memberof Map
+     *  @name centerToCoordinates
+     *  @param lat {number} latitude coordinate, required
+     *  @param lng {number} longitude coordinate, required
+     *  @param zoom {number} zoom level, optional, 18 as default
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.centerToCoordinates(48.60678469647394, 17.833135351538658, 20);
+     *  });
+     */
+    centerToCoordinates(lat: number, lng: number, zoom?: number): void;
     /**
      * Add new feature to map.
      *  @memberof Map

@@ -96,8 +96,11 @@ Now you can call
 const map = new Proximiio.Map({
     selector: 'customMap', // optional, id of map container, default 'proximiioMap'
     allowNewFeatureModal: false, // optional, if true, you'll be able to add new features via modal dialog, default false
-    newFeatureModalEvent: 'click' // optional, choose which event should open the modal for adding new features (should be map event https://docs.mapbox.com/mapbox-gl-js/api/map/#map-events), default 'click'
-    enableTBTNavigation: true // optional, you'll receive turn-by-turn text navigation object in found route listener response, default: true 
+    newFeatureModalEvent: 'click', // optional, choose which event should open the modal for adding new features (should be map event https://docs.mapbox.com/mapbox-gl-js/api/map/#map-events), default 'click'
+    enableTBTNavigation: true, // optional, you'll receive turn-by-turn text navigation object in found route listener response, default: true 
+    mapboxOptions: { MapboxOptions }, // optional, you can pass mapbox initial options like center or zoom here, all options can be found at https://docs.mapbox.com/mapbox-gl-js/api/map/
+    defaultPlaceId: 'my_place_id', // optional, you can specify default place, if not specified the first place found will be used as default
+    zoomIntoPlace: false // optional, the map will center and zoom into the default place location, default: true
 });
 ```
 #### Available Methods
@@ -211,6 +214,19 @@ This method will center the map to feature coordinates.
 map.getMapReadyListener().subscribe(ready => {
    console.log('map ready', ready);
    map.centerToFeature('featureId');
+});
+```
+
+##### Center to coordinates
+This method will center the map to provided coordinates.
+```
+// @param lat {number} latitude coordinate, required
+// @param lng {number} longitude coordinate, required
+// @param zoom {number} zoom level, optional, 18 as default
+   
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   map.centerToCoordinates(48.60678469647394, 17.833135351538658, 20);
 });
 ```
 

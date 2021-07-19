@@ -13,7 +13,7 @@ import ImageSourceManager from './sources/image_source_manager';
 import { AmenityModel } from '../../models/amenity';
 import { getBase64FromImage, getImageFromBase64, uuidv4 } from '../../common';
 import { chevron } from './icons';
-import { MapboxEvent } from 'mapbox-gl';
+import { MapboxEvent, MapboxOptions } from 'mapbox-gl';
 import { getPlaceFloors } from '../../controllers/floors';
 import { getPlaceById } from '../../controllers/places';
 import { Subject } from 'rxjs';
@@ -38,6 +38,7 @@ interface State {
   readonly allFeatures: FeatureCollection;
   readonly latitude: number;
   readonly longitude: number;
+  readonly zoom?: number;
   readonly loadingRoute: boolean;
   readonly noPlaces: boolean;
   readonly textNavigation: any;
@@ -48,6 +49,9 @@ interface Options {
   allowNewFeatureModal?: boolean;
   newFeatureModalEvent: string;
   enableTBTNavigation?: boolean;
+  mapboxOptions?: MapboxOptions;
+  zoomIntoPlace?: boolean;
+  defaultPlaceId?: string;
 }
 
 export const globalState: State = {
@@ -90,7 +94,8 @@ export class Map {
     selector: 'proximiioMap',
     allowNewFeatureModal: false,
     newFeatureModalEvent: 'click',
-    enableTBTNavigation: true
+    enableTBTNavigation: true,
+    zoomIntoPlace: true
   }
   private routeFactory: any;
   private startPoint?: Feature;
@@ -108,6 +113,7 @@ export class Map {
     this.onRouteCancel = this.onRouteCancel.bind(this);
 
     this.map = new mapboxgl.Map({
+      ...this.defaultOptions.mapboxOptions,
       container: this.defaultOptions.selector
     });
     this.initialize()
@@ -128,8 +134,10 @@ export class Map {
 
   private async fetch() {
     const { places, style, styles, features, amenities } = await Repository.getPackage();
-    const place = places.length > 0 ? places[0] : new PlaceModel({});
-    style.center = [place.location.lng, place.location.lat];
+    const defaultPlace = places.find(p => p.id === this.defaultOptions.defaultPlaceId);
+    const place = places.length > 0 ? (defaultPlace ? defaultPlace : places[0]) : new PlaceModel({});
+    const center = this.defaultOptions.mapboxOptions?.center ? this.defaultOptions.mapboxOptions.center as any : [place.location.lng, place.location.lat]
+    style.center = center;
     this.geojsonSource.fetch(features);
     this.routingSource.routing.setData(new FeatureCollection(features));
     this.prepareStyle(style);
@@ -145,8 +153,9 @@ export class Map {
       amenities,
       features,
       allFeatures: new FeatureCollection(features),
-      latitude: place.location.lat,
-      longitude: place.location.lng,
+      latitude: center[1],
+      longitude: center[0],
+      zoom: this.defaultOptions.mapboxOptions?.zoom,
       noPlaces: places.length === 0
     };
     style.on(this.onStyleChange);
@@ -196,7 +205,9 @@ export class Map {
       this.updateCluster();
       this.updateImages();
       this.imageSourceManager.setLevel(map, this.state.floor?.level);
-      await this.onPlaceSelect(this.state.place);
+      if (this.defaultOptions.zoomIntoPlace) {
+        await this.onPlaceSelect(this.state.place);
+      }
       this.onMapReadyListener.next(true);
     }
   }
@@ -608,6 +619,12 @@ export class Map {
     }
   }
 
+  private centerOnCoords(lat: number, lng: number, zoom?: number) {
+    if (this.map) {
+      this.map.flyTo({ center: [lng, lat], zoom: zoom ? zoom : 18 });
+    }
+  }
+
   private updateImages() {
     this.state.amenities
       .filter(a => a.icon)
@@ -939,7 +956,7 @@ export class Map {
    *  @memberof Map
    *  @name centerToFeature
    *  @param featureId {string} feature id
-   *  @return error {string} in case there is no route or {Feature} otherwise
+   *  @return error {string} in case there is no feature or {Feature} otherwise
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -955,6 +972,24 @@ export class Map {
     } else {
       throw new Error(`Feature not found`);
     }
+  }
+
+  /**
+   * This method will center the map to provided coordinates.
+   *  @memberof Map
+   *  @name centerToCoordinates
+   *  @param lat {number} latitude coordinate, required
+   *  @param lng {number} longitude coordinate, required
+   *  @param zoom {number} zoom level, optional, 18 as default
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.centerToCoordinates(48.60678469647394, 17.833135351538658, 20);
+   *  });
+   */
+  public centerToCoordinates(lat: number, lng: number, zoom?: number) {
+    this.centerOnCoords(lat, lng, zoom);
   }
 
   /**

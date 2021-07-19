@@ -53,7 +53,12 @@ class App extends React.Component {
         })
 
         const map = new Proximiio.Map({
-          allowNewFeatureModal: true
+          allowNewFeatureModal: true,
+          zoomIntoPlace: false,
+          mapboxOptions: {
+            center: [17.833135351538658, 48.60678469647394],
+            zoom: 20
+          }
         });
 
         map.getMapReadyListener().subscribe(async (res) => {
