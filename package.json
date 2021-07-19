@@ -46,5 +46,16 @@
     "rxjs": "^7.2.0",
     "tingle.js": "^0.16.0",
     "tslib": "^2.3.0"
-  }
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/proximiio/proximiio-js-library.git"
+  },
+  "bugs": {
+    "url": "https://github.com/proximiio/proximiio-js-library/issues"
+  },
+  "homepage": "https://github.com/proximiio/proximiio-js-library#readme"
 }

@@ -17,7 +17,7 @@ const Proximiio = require('lib/index').default;
 ### Using with modern javascript frameworks (Angular, React)
 Install with npm
 ```
-npm install https://github.com/proximiio/proximiio-js-library
+npm install proximiio-js-library
 ```
 and then import into project with
 ```
