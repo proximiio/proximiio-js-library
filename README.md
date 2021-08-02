@@ -172,29 +172,35 @@ map.getMapReadyListener().subscribe(ready => {
 ###### by features id
 This method will generate route based on selected features by their ids.
 ```
+// @param idTo {string} finish feature id
+// @param idFrom {string} start feature id, optional for kiosk
+
 map.getMapReadyListener().subscribe(ready => {
    console.log('map ready', ready);
-   map.findRouteByIds('startId', 'finishId);
+   map.findRouteByIds('idTo', 'idFrom');
 });
 ```
 ###### by features title
 This method will generate route based on selected features by their titles.
 ```
+// @param titleTo {string} finish feature title
+// @param titleFrom {string} start feature title, optional for kiosk
+
 map.getMapReadyListener().subscribe(ready => {
    console.log('map ready', ready);
-   map.findRouteByTitle('myFeatureTitle', 'anotherFeatureTitle');
+   map.findRouteByTitle('titleTo', 'titleFrom');
 });
 ```
 
 ###### by coords
 This method will generate route based on attached coords.
 ```
-// @param latFrom {number} start latitude coordinate
-// @param lngFrom {number} start longitude coordinate
-// @param levelFrom {number} start level
 // @param latTo {number} finish latitude coordinate
 // @param lngTo {number} finish longitude coordinate
 // @param levelTo {number} finish level
+// @param latFrom {number} start latitude coordinate, optional for kiosk
+// @param lngFrom {number} start longitude coordinate, optional for kiosk
+// @param levelFrom {number} start level, optional for kiosk
 
 map.getMapReadyListener().subscribe(ready => {
    console.log('map ready', ready);
