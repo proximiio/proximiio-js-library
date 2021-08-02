@@ -101,6 +101,11 @@ const map = new Proximiio.Map({
     mapboxOptions: { MapboxOptions }, // optional, you can pass mapbox initial options like center or zoom here, all options can be found at https://docs.mapbox.com/mapbox-gl-js/api/map/
     defaultPlaceId: 'my_place_id', // optional, you can specify default place, if not specified the first place found will be used as default
     zoomIntoPlace: false // optional, the map will center and zoom into the default place location, default: true
+    isKiosk: false, // optional, this will enable kiosk like behavior for the map (will add dot at spiecified coordinates in kioskSettings and this point will be set as a starting point for generated routes)
+    kioskSettings: {
+        coordinates: [number, number], // coordinates for a kiosk start point
+        level: number // floor level of a kiosk starting point
+    }
 });
 ```
 #### Available Methods
@@ -143,6 +148,22 @@ This method will set an active floor based on the way of the next floor, e.g if 
 map.getMapReadyListener().subscribe(ready => {
    console.log('map ready', ready);
    map.setFloorByWay('up');
+});
+```
+
+#### Set new kiosk settings
+With this method you can override kiosk coordinates position and it's floor level
+```
+const map = new Proximiio.Map({
+    isKiosk: true,
+    kioskSettings: {
+        coordinates: [17.833135351538658, 48.60678469647394],
+        level: 0
+    }
+});
+map.getMapReadyListener().subscribe(ready => {
+    console.log('map ready', ready);
+    map.setKiosk(48.606703739771774, 17.833092384506614, 1);
 });
 ```
 
@@ -498,7 +519,7 @@ HTML
 ```
 
 ## Build
-In case of any changes of library itself (means at `./src` folder), you can rebuild with 
+In case of any changes of library itself (means at `./src` folder), you can rebuild with
 ```
 npm run build
 ```

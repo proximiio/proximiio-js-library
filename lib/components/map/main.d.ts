@@ -4,7 +4,7 @@ import { FloorModel } from '../../models/floor';
 import StyleModel from '../../models/style';
 import Feature, { FeatureCollection } from '../../models/feature';
 import { AmenityModel } from '../../models/amenity';
-import { MapboxOptions } from 'mapbox-gl';
+import { MapboxOptions } from '../../models/mapbox-options';
 interface State {
     readonly initializing: boolean;
     readonly floor: FloorModel;
@@ -25,13 +25,18 @@ interface State {
     readonly textNavigation: any;
 }
 interface Options {
-    selector: string;
+    selector?: string;
     allowNewFeatureModal?: boolean;
-    newFeatureModalEvent: string;
+    newFeatureModalEvent?: string;
     enableTBTNavigation?: boolean;
     mapboxOptions?: MapboxOptions;
     zoomIntoPlace?: boolean;
     defaultPlaceId?: string;
+    isKiosk?: boolean;
+    kioskSettings?: {
+        coordinates: [number, number];
+        level: number;
+    };
 }
 export declare const globalState: State;
 export declare class Map {
@@ -55,11 +60,14 @@ export declare class Map {
     private routeFactory;
     private startPoint?;
     private endPoint?;
+    private showStartPoint;
     constructor(options: Options);
     private initialize;
     private cancelObservers;
     private fetch;
     private onMapReady;
+    private initKiosk;
+    private onSetKiosk;
     private featureDialog;
     private onAddNewFeature;
     private onUpdateFeature;
@@ -185,22 +193,22 @@ export declare class Map {
      * This method will generate route based on selected features by their ids
      *  @memberof Map
      *  @name findRouteByIds
-     *  @param idFrom {string} start feature id
      *  @param idTo {string} finish feature id
+     *  @param idFrom {string} start feature id, optional for kiosk
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
      *    console.log('map ready', ready);
-     *    map.findRouteByIds('startId', 'finishId);
+     *    map.findRouteByIds('finishId, 'startId');
      *  });
      */
-    findRouteByIds(idFrom: string, idTo: string): void;
+    findRouteByIds(idTo: string, idFrom?: string): void;
     /**
      * This method will generate route based on selected features by their titles
      *  @memberof Map
      *  @name findRouteByTitle
-     *  @param titleFrom {string} start feature title
      *  @param titleTo {string} finish feature title
+     *  @param titleFrom {string} start feature title, optional for kiosk
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -208,17 +216,17 @@ export declare class Map {
      *    map.findRouteByTitle('myFeatureTitle', 'anotherFeatureTitle');
      *  });
      */
-    findRouteByTitle(titleFrom: string, titleTo: string): void;
+    findRouteByTitle(titleTo: string, titleFrom?: string): void;
     /**
      * This method will generate route based on selected features by their titles
      *  @memberof Map
      *  @name findRouteByCoords
-     *  @param latFrom {number} start latitude coordinate
-     *  @param lngFrom {number} start longitude coordinate
-     *  @param levelFrom {number} start level
      *  @param latTo {number} finish latitude coordinate
      *  @param lngTo {number} finish longitude coordinate
      *  @param levelTo {number} finish level
+     *  @param latFrom {number} start latitude coordinate, optional for kiosk
+     *  @param lngFrom {number} start longitude coordinate, optional for kiosk
+     *  @param levelFrom {number} start level, optional for kiosk
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -226,7 +234,7 @@ export declare class Map {
      *    map.findRouteByCoords(48.606703739771774, 17.833092384506614, 0, 48.60684545080579, 17.833450676669543, 0);
      *  });
      */
-    findRouteByCoords(latFrom: number, lngFrom: number, levelFrom: number, latTo: number, lngTo: number, levelTo: number): void;
+    findRouteByCoords(latTo: number, lngTo: number, levelTo: number, latFrom?: number, lngFrom?: number, levelFrom?: number): void;
     /**
      * This method will cancel generated route
      *  @memberof Map
@@ -429,5 +437,26 @@ export declare class Map {
      *  });
      */
     getFeatureDeleteListener(): import("rxjs").Observable<unknown>;
+    /**
+     * This method will set new kiosk settings.
+     *  @memberof Map
+     *  @name setKiosk
+     *  @param lat {number} latitude coordinate for kiosk position
+     *  @param lng {number} longitude coordinate for kiosk position
+     *  @param level {number} floor level for kiosk position
+     *  @example
+     *  const map = new Proximiio.Map({
+     *    isKiosk: true,
+     *    kioskSettings: {
+     *       coordinates: [17.833135351538658, 48.60678469647394],
+     *       level: 0
+     *     }
+     *  });
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.setKiosk(48.606703739771774, 17.833092384506614, 0);
+     *  });
+     */
+    setKiosk(lat: number, lng: number, level: number): void;
 }
 export {};

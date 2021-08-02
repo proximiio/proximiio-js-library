@@ -7,6 +7,7 @@ import * as turf from '@turf/turf';
 class App extends React.Component {
   constructor(props) {
     super(props)
+    this.map = {};
   }
 
   componentDidMount() {
@@ -52,49 +53,58 @@ class App extends React.Component {
           console.log(err);
         })
 
-        const map = new Proximiio.Map({
+        this.map = new Proximiio.Map({
           allowNewFeatureModal: true,
           zoomIntoPlace: false,
-          mapboxOptions: {
+          isKiosk: true,
+          kioskSettings: {
+            coordinates: [17.833135351538658, 48.60678469647394],
+            level: 0
+          }
+          /*mapboxOptions: {
             center: [17.833135351538658, 48.60678469647394],
             zoom: 20
-          }
+          }*/
         });
 
-        map.getMapReadyListener().subscribe(async (res) => {
+        this.map.getMapReadyListener().subscribe(async (res) => {
           console.log('map ready', res);
 
-          let bounds = map.getMapboxInstance().getBounds();
+          let bounds = this.map.getMapboxInstance().getBounds();
           for (let poi of customPoiList) {
             const position = turf.randomPosition([bounds._ne.lng, bounds._ne.lat, bounds._sw.lng, bounds._sw.lat]);
-            map.addCustomFeature(poi.title, poi.level, position[1], position[0], '', poi.id);
+            this.map.addCustomFeature(poi.title, poi.level, position[1], position[0], '', poi.id);
           }
 
           setInterval(() => {
             for (let poi of customPoiList) {
               const position = turf.randomPosition([bounds._ne.lng, bounds._ne.lat, bounds._sw.lng, bounds._sw.lat]);
-              map.updateFeature(poi.id, poi.title, poi.level, position[1], position[0]);
+              this.map.updateFeature(poi.id, poi.title, poi.level, position[1], position[0]);
             }
           }, 5000);
+
+          setTimeout(() => {
+            this.map.setKiosk(48.60615461642394, 17.833135351598658, 0)
+          }, 3000)
         });
 
-        map.getFeatureAddListener().subscribe(feature => {
+        this.map.getFeatureAddListener().subscribe(feature => {
           console.log('feature added ', feature);
         })
 
-         map.getFeatureDeleteListener().subscribe(() => {
+         this.map.getFeatureDeleteListener().subscribe(() => {
           console.log('feature deleted ');
         })
 
         const placeSelect = new Proximiio.Select('Places', { placeHolder: 'Pick the place', resultItem: { highlight: { render: true } }, selector: '#place-select' });
         placeSelect.getSelectListener().subscribe(place => {
-          map.setPlace(place.id);
+          this.map.setPlace(place.id);
           console.log('place selected', place);
         })
 
         const floorSelect = new Proximiio.Select('Floors', { placeHolder: 'Pick the floor', resultItem: { highlight: { render: true } }, selector: '#floor-select' });
         floorSelect.getSelectListener().subscribe(floor => {
-          map.setFloorById(floor.id);
+          this.map.setFloorById(floor.id);
           console.log('floor selected', floor);
         })
 
@@ -104,24 +114,24 @@ class App extends React.Component {
         const fromPoiSelect = new Proximiio.Select('Pois', { placeHolder: 'Pick the start poi', resultItem: { highlight: { render: true } }, selector: '#from-poi-select' });
         fromPoiSelect.getSelectListener().subscribe(poi => {
           fromPoi = poi;
-          map.centerToFeature(poi.id);
+          this.map.centerToFeature(poi.id);
           console.log('from poi selected', poi);
           if (fromPoi && toPoi) {
-            map.findRouteByIds(fromPoi.id, toPoi.id);
+            this.map.findRouteByIds(toPoi.id, fromPoi.id);
           }
         })
 
         const toPoiSelect = new Proximiio.Select('Pois', { placeHolder: 'Pick the end poi', resultItem: { highlight: { render: true } }, selector: '#to-poi-select' });
         toPoiSelect.getSelectListener().subscribe(poi => {
           toPoi = poi;
-          map.centerToFeature(poi.id);
+          this.map.centerToFeature(poi.id);
           console.log('to poi selected', poi);
-          if (fromPoi && toPoi) {
-            map.findRouteByIds(fromPoi.id, toPoi.id);
+          if (toPoi) {
+            this.map.findRouteByIds(toPoi.id);
           }
         })
 
-        map.getRouteFoundListener().subscribe(res => {
+        this.map.getRouteFoundListener().subscribe(res => {
           console.log('route found successfully', res.route);
           console.log('turn by turn text navigation output', res.TBTNav);
         })
@@ -129,6 +139,14 @@ class App extends React.Component {
       .catch(err => {
         console.log(err);
       });
+  }
+
+  onFloorUp = () => {
+    this.map.setFloorByWay('up');
+  }
+
+  onFloorDown = () => {
+    this.map.setFloorByWay('down');
   }
 
   render() {
@@ -153,6 +171,8 @@ class App extends React.Component {
             <input id="from-poi-select" className="proximiio-select" type="text" tabIndex="1"/>
             <input id="to-poi-select" className="proximiio-select" type="text" tabIndex="1"/>
           </div>
+          <button onClick={this.onFloorUp}>Floor Up</button>
+          <button onClick={this.onFloorDown}>Floor Down</button>
         </header>
         <div id="proximiioMap"></div>
       </div>

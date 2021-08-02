@@ -334,6 +334,10 @@ export default class StyleModel {
     return typeof this.layers.find(layer => layer.id === 'proximiio-paths') !== 'undefined';
   }
 
+  addLayer(layer: any) {
+    this.layers.push(layer);
+  }
+
   getLayer(id: string) {
     return this.layers.find(layer => layer.id === id);
   }
@@ -344,6 +348,10 @@ export default class StyleModel {
 
   getLayers(sourceId: string): BaseLayer[] {
     return this.layers.filter(layer => layer.source && layer.source === sourceId);
+  }
+
+  addSource(sourceId: string, source: any) {
+    this.sources[sourceId] = source;
   }
 
   getSources(): BaseSource[] {

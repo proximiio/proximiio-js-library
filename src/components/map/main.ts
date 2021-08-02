@@ -12,8 +12,8 @@ import ClusterSource from './sources/cluster_source';
 import ImageSourceManager from './sources/image_source_manager';
 import { AmenityModel } from '../../models/amenity';
 import { getBase64FromImage, getImageFromBase64, uuidv4 } from '../../common';
-import { chevron } from './icons';
-import { MapboxEvent, MapboxOptions } from 'mapbox-gl';
+import { chevron, pulsingDot } from './icons';
+import { MapboxEvent } from 'mapbox-gl';
 import { getPlaceFloors } from '../../controllers/floors';
 import { getPlaceById } from '../../controllers/places';
 import { Subject } from 'rxjs';
@@ -23,6 +23,7 @@ import * as tingle from "tingle.js/dist/tingle";
 // @ts-ignore
 import * as TBTNav from '../../../assets/tbtnav';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
+import { MapboxOptions } from '../../models/mapbox-options';
 
 interface State {
   readonly initializing: boolean;
@@ -45,13 +46,18 @@ interface State {
 }
 
 interface Options {
-  selector: string;
+  selector?: string;
   allowNewFeatureModal?: boolean;
-  newFeatureModalEvent: string;
+  newFeatureModalEvent?: string;
   enableTBTNavigation?: boolean;
   mapboxOptions?: MapboxOptions;
   zoomIntoPlace?: boolean;
   defaultPlaceId?: string;
+  isKiosk?: boolean;
+  kioskSettings?: {
+    coordinates: [number, number],
+    level: number
+  }
 }
 
 export const globalState: State = {
@@ -66,8 +72,8 @@ export const globalState: State = {
   features: new FeatureCollection({}),
   dynamicFeatures: new FeatureCollection({}),
   allFeatures: new FeatureCollection({}),
-  latitude: 60.1669635,
-  longitude: 24.9217484,
+  latitude: 0,
+  longitude: 0,
   loadingRoute: false,
   noPlaces: false,
   textNavigation: null
@@ -95,11 +101,13 @@ export class Map {
     allowNewFeatureModal: false,
     newFeatureModalEvent: 'click',
     enableTBTNavigation: true,
-    zoomIntoPlace: true
+    zoomIntoPlace: true,
+    isKiosk: false
   }
   private routeFactory: any;
   private startPoint?: Feature;
   private endPoint?: Feature;
+  private showStartPoint = false;
   constructor(options: Options) {
     this.defaultOptions = {...this.defaultOptions, ...options}
     this.state = globalState;
@@ -114,7 +122,7 @@ export class Map {
 
     this.map = new mapboxgl.Map({
       ...this.defaultOptions.mapboxOptions,
-      container: this.defaultOptions.selector
+      container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map'
     });
     this.initialize()
   }
@@ -136,7 +144,12 @@ export class Map {
     const { places, style, styles, features, amenities } = await Repository.getPackage();
     const defaultPlace = places.find(p => p.id === this.defaultOptions.defaultPlaceId);
     const place = places.length > 0 ? (defaultPlace ? defaultPlace : places[0]) : new PlaceModel({});
-    const center = this.defaultOptions.mapboxOptions?.center ? this.defaultOptions.mapboxOptions.center as any : [place.location.lng, place.location.lat]
+    const center =
+      this.defaultOptions.mapboxOptions?.center ?
+        this.defaultOptions.mapboxOptions.center as any :
+        this.defaultOptions.isKiosk ?
+          this.defaultOptions.kioskSettings?.coordinates :
+          [place.location.lng, place.location.lat];
     style.center = center;
     this.geojsonSource.fetch(features);
     this.routingSource.routing.setData(new FeatureCollection(features));
@@ -164,7 +177,7 @@ export class Map {
       this.onMapReady(e);
     });
     if (this.defaultOptions.allowNewFeatureModal) {
-      this.map.on(this.defaultOptions.newFeatureModalEvent, (e: MapboxEvent | any) => {
+      this.map.on(this.defaultOptions.newFeatureModalEvent ? this.defaultOptions.newFeatureModalEvent : 'dblclick', (e: MapboxEvent | any) => {
         this.featureDialog(e)
       });
     }
@@ -199,16 +212,69 @@ export class Map {
       map.setMaxZoom(30);
       const decodedChevron = await getImageFromBase64(chevron);
       map.addImage('chevron_right', decodedChevron as any);
+      map.addImage('pulsing-dot', pulsingDot, { pixelRatio: 2 });
       this.onSourceChange();
       this.updateMapSource(this.geojsonSource);
       this.updateMapSource(this.routingSource);
       this.updateCluster();
       this.updateImages();
       this.imageSourceManager.setLevel(map, this.state.floor?.level);
-      if (this.defaultOptions.zoomIntoPlace) {
-        await this.onPlaceSelect(this.state.place);
-      }
+      await this.onPlaceSelect(this.state.place, this.defaultOptions.zoomIntoPlace);
       this.onMapReadyListener.next(true);
+      if (this.defaultOptions.isKiosk) {
+        this.initKiosk();
+      }
+    }
+  }
+
+  private initKiosk() {
+    if (this.map) {
+      this.showStartPoint = false;
+      if (this.defaultOptions.kioskSettings) {
+        this.startPoint = turf.point(this.defaultOptions.kioskSettings.coordinates, { level: this.defaultOptions.kioskSettings.level }) as Feature;
+        this.showStartPoint = true;
+        this.state.style.addSource('my-location', {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: [ this.startPoint as any ]
+          }
+        })
+        this.state.style.addLayer({
+          id: 'my-location-layer',
+          type: 'symbol',
+          source: 'my-location',
+          layout: {
+            'icon-image': 'pulsing-dot'
+          },
+          filter: [
+            'all',
+            ['==', ['to-number', ['get','level']], this.state.floor.level]
+          ]
+        });
+        this.map.setStyle(this.state.style);
+        this.centerOnPoi(this.startPoint);
+      }
+    }
+  }
+
+  private onSetKiosk(lat: number, lng: number, level: number) {
+    if (this.map && this.defaultOptions.isKiosk) {
+      this.defaultOptions.kioskSettings = {
+        coordinates: [lng, lat],
+        level
+      };
+      this.startPoint = turf.point(this.defaultOptions.kioskSettings.coordinates, { level: this.defaultOptions.kioskSettings.level }) as Feature;
+      this.state.style.sources['my-location'].data = {
+        type: 'FeatureCollection',
+        features: [ this.startPoint as any ]
+      }
+      this.map.setFilter('my-location-layer', [
+        'all',
+        ['==', ['to-number', ['get','level']], level]
+      ])
+      this.map.setStyle(this.state.style);
+      this.centerOnPoi(this.startPoint);
     }
   }
 
@@ -531,7 +597,7 @@ export class Map {
     }
   }
 
-  private async onPlaceSelect(place: PlaceModel) {
+  private async onPlaceSelect(place: PlaceModel, zoomIntoPlace: boolean | undefined) {
     this.state = {...this.state, place};
     const floors = await getPlaceFloors(place.id);
     const state: any = { floors: floors.sort((a, b) => a.level - b.level) };
@@ -546,7 +612,7 @@ export class Map {
     }
     this.state = {...this.state, ...state};
     const map = this.map;
-    if (map) {
+    if (map && zoomIntoPlace) {
       map.flyTo({ center: [ place.location.lng, place.location.lat ] });
     }
     this.onPlaceSelectListener.next(place);
@@ -571,6 +637,12 @@ export class Map {
         const bbox = turf.bbox(route.geometry);
         // @ts-ignore;
         map.fitBounds(bbox, { padding: 50 });
+      }
+      if (this.defaultOptions.isKiosk && map.getLayer('my-location-layer')) {
+        map.setFilter('my-location-layer', [
+          'all',
+          ['==', ['to-number', ['get','level']], floor.level]
+        ])
       }
     }
     this.state = {...this.state, floor, style: this.state.style};
@@ -688,7 +760,7 @@ export class Map {
    */
   public async setPlace(placeId: string) {
     const place = await getPlaceById(placeId);
-    await this.onPlaceSelect(place);
+    await this.onPlaceSelect(place, true);
     return place;
   }
 
@@ -792,17 +864,17 @@ export class Map {
    * This method will generate route based on selected features by their ids
    *  @memberof Map
    *  @name findRouteByIds
-   *  @param idFrom {string} start feature id
    *  @param idTo {string} finish feature id
+   *  @param idFrom {string} start feature id, optional for kiosk
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
    *    console.log('map ready', ready);
-   *    map.findRouteByIds('startId', 'finishId);
+   *    map.findRouteByIds('finishId, 'startId');
    *  });
    */
-  public findRouteByIds(idFrom: string, idTo: string) {
-    const fromFeature = this.state.allFeatures.features.find(f => f.id === idFrom || f.properties.id === idFrom) as Feature;
+  public findRouteByIds(idTo: string, idFrom?: string) {
+    const fromFeature = this.defaultOptions.isKiosk ? this.startPoint : this.state.allFeatures.features.find(f => f.id === idFrom || f.properties.id === idFrom) as Feature;
     const toFeature = this.state.allFeatures.features.find(f => f.id === idTo || f.properties.id === idTo) as Feature;
     this.onRouteUpdate(fromFeature, toFeature);
   }
@@ -811,8 +883,8 @@ export class Map {
    * This method will generate route based on selected features by their titles
    *  @memberof Map
    *  @name findRouteByTitle
-   *  @param titleFrom {string} start feature title
    *  @param titleTo {string} finish feature title
+   *  @param titleFrom {string} start feature title, optional for kiosk
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -820,22 +892,22 @@ export class Map {
    *    map.findRouteByTitle('myFeatureTitle', 'anotherFeatureTitle');
    *  });
    */
-  public findRouteByTitle(titleFrom: string, titleTo: string) {
-    const fromFeature = this.state.allFeatures.features.find(f => f.properties.title === titleFrom) as Feature;
+  public findRouteByTitle(titleTo: string, titleFrom?: string) {
+    const fromFeature = this.defaultOptions.isKiosk ? this.startPoint : this.state.allFeatures.features.find(f => f.properties.title === titleFrom) as Feature;
     const toFeature = this.state.allFeatures.features.find(f => f.properties.title === titleTo) as Feature;
-    this.onRouteUpdate(fromFeature, toFeature);
+    this.onRouteUpdate(this.defaultOptions.isKiosk ? this.startPoint : fromFeature, toFeature);
   }
 
   /**
    * This method will generate route based on selected features by their titles
    *  @memberof Map
    *  @name findRouteByCoords
-   *  @param latFrom {number} start latitude coordinate
-   *  @param lngFrom {number} start longitude coordinate
-   *  @param levelFrom {number} start level
    *  @param latTo {number} finish latitude coordinate
    *  @param lngTo {number} finish longitude coordinate
    *  @param levelTo {number} finish level
+   *  @param latFrom {number} start latitude coordinate, optional for kiosk
+   *  @param lngFrom {number} start longitude coordinate, optional for kiosk
+   *  @param levelFrom {number} start level, optional for kiosk
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -843,8 +915,8 @@ export class Map {
    *    map.findRouteByCoords(48.606703739771774, 17.833092384506614, 0, 48.60684545080579, 17.833450676669543, 0);
    *  });
    */
-  public findRouteByCoords(latFrom: number, lngFrom: number, levelFrom: number, latTo: number, lngTo: number, levelTo: number) {
-    const fromFeature = turf.feature(
+  public findRouteByCoords(latTo: number, lngTo: number, levelTo: number, latFrom?: number, lngFrom?: number, levelFrom?: number) {
+    const fromFeature = this.defaultOptions.isKiosk ? this.startPoint : turf.feature(
       { type: 'Point', coordinates: [lngFrom, latFrom] },
       { level: levelFrom }
     ) as Feature;
@@ -852,7 +924,7 @@ export class Map {
       { type: 'Point', coordinates: [lngTo, latTo] },
       { level: levelTo }
     ) as Feature;
-    this.onRouteUpdate(fromFeature, toFeature);
+    this.onRouteUpdate(this.defaultOptions.isKiosk ? this.startPoint : fromFeature, toFeature);
   }
 
   /**
@@ -1112,6 +1184,34 @@ export class Map {
    */
   public getFeatureDeleteListener() {
     return this.onFeatureDeleteListener.asObservable();
+  }
+
+  /**
+   * This method will set new kiosk settings.
+   *  @memberof Map
+   *  @name setKiosk
+   *  @param lat {number} latitude coordinate for kiosk position
+   *  @param lng {number} longitude coordinate for kiosk position
+   *  @param level {number} floor level for kiosk position
+   *  @example
+   *  const map = new Proximiio.Map({
+   *    isKiosk: true,
+   *    kioskSettings: {
+   *       coordinates: [17.833135351538658, 48.60678469647394],
+   *       level: 0
+   *     }
+   *  });
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.setKiosk(48.606703739771774, 17.833092384506614, 0);
+   *  });
+   */
+  public setKiosk(lat: number, lng: number, level: number) {
+    if (this.defaultOptions.isKiosk) {
+      this.onSetKiosk(lat, lng, level);
+    } else {
+      throw new Error(`Map is not initiated as kiosk`);
+    }
   }
 }
 
