@@ -3,6 +3,7 @@ import './App.css';
 import React from 'react';
 import Proximiio from 'proximiio-js-library'
 import * as turf from '@turf/turf';
+import mapboxgl from 'mapbox-gl';
 
 class App extends React.Component {
   constructor(props) {
@@ -33,7 +34,7 @@ class App extends React.Component {
       level: 0
     }];
 
-    Proximiio.Auth.login('email', 'password')
+    Proximiio.Auth.login('devs@proximi.io', 'pr0x1m33')
       .then(res => {
         console.log('Logged in', res);
 
@@ -60,15 +61,18 @@ class App extends React.Component {
           kioskSettings: {
             coordinates: [17.833135351538658, 48.60678469647394],
             level: 0
+          },
+          mapboxOptions: {
+            zoom: 20,
+            bearing: 10,
+            pitch: 40
           }
-          /*mapboxOptions: {
-            center: [17.833135351538658, 48.60678469647394],
-            zoom: 20
-          }*/
         });
 
         this.map.getMapReadyListener().subscribe(async (res) => {
           console.log('map ready', res);
+
+          this.map.getMapboxInstance().addControl(new mapboxgl.NavigationControl());
 
           let bounds = this.map.getMapboxInstance().getBounds();
           for (let poi of customPoiList) {
@@ -84,6 +88,9 @@ class App extends React.Component {
           }, 5000);
 
           setTimeout(() => {
+            this.map.getMapboxInstance().setZoom(15);
+            this.map.getMapboxInstance().setPitch(60);
+            this.map.getMapboxInstance().setBearing(5);
             this.map.setKiosk(48.60615461642394, 17.833135351598658, 0)
           }, 3000)
         });

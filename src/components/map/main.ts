@@ -109,6 +109,12 @@ export class Map {
   private endPoint?: Feature;
   private showStartPoint = false;
   constructor(options: Options) {
+
+    // fix centering in case of kiosk with defined pitch/bearing/etc. in mapbox options
+    if (options.isKiosk && options.mapboxOptions && options.kioskSettings && !options.mapboxOptions.center) {
+      options.mapboxOptions.center = options.kioskSettings.coordinates;
+    }
+
     this.defaultOptions = {...this.defaultOptions, ...options}
     this.state = globalState;
 
@@ -119,6 +125,7 @@ export class Map {
     this.onRouteUpdate = this.onRouteUpdate.bind(this);
     this.onRouteChange = this.onRouteChange.bind(this);
     this.onRouteCancel = this.onRouteCancel.bind(this);
+
 
     this.map = new mapboxgl.Map({
       ...this.defaultOptions.mapboxOptions,
@@ -151,6 +158,7 @@ export class Map {
           this.defaultOptions.kioskSettings?.coordinates :
           [place.location.lng, place.location.lat];
     style.center = center;
+    console.log(style.center);
     this.geojsonSource.fetch(features);
     this.routingSource.routing.setData(new FeatureCollection(features));
     this.prepareStyle(style);
