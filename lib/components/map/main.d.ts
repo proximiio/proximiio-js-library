@@ -195,6 +195,7 @@ export declare class Map {
      *  @name findRouteByIds
      *  @param idTo {string} finish feature id
      *  @param idFrom {string} start feature id, optional for kiosk
+     *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -202,13 +203,14 @@ export declare class Map {
      *    map.findRouteByIds('finishId, 'startId');
      *  });
      */
-    findRouteByIds(idTo: string, idFrom?: string): void;
+    findRouteByIds(idTo: string, idFrom?: string, accessibleRoute?: boolean): void;
     /**
      * This method will generate route based on selected features by their titles
      *  @memberof Map
      *  @name findRouteByTitle
      *  @param titleTo {string} finish feature title
      *  @param titleFrom {string} start feature title, optional for kiosk
+     *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -216,7 +218,7 @@ export declare class Map {
      *    map.findRouteByTitle('myFeatureTitle', 'anotherFeatureTitle');
      *  });
      */
-    findRouteByTitle(titleTo: string, titleFrom?: string): void;
+    findRouteByTitle(titleTo: string, titleFrom?: string, accessibleRoute?: boolean): void;
     /**
      * This method will generate route based on selected features by their titles
      *  @memberof Map
@@ -227,6 +229,7 @@ export declare class Map {
      *  @param latFrom {number} start latitude coordinate, optional for kiosk
      *  @param lngFrom {number} start longitude coordinate, optional for kiosk
      *  @param levelFrom {number} start level, optional for kiosk
+     *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -234,7 +237,7 @@ export declare class Map {
      *    map.findRouteByCoords(48.606703739771774, 17.833092384506614, 0, 48.60684545080579, 17.833450676669543, 0);
      *  });
      */
-    findRouteByCoords(latTo: number, lngTo: number, levelTo: number, latFrom?: number, lngFrom?: number, levelFrom?: number): void;
+    findRouteByCoords(latTo: number, lngTo: number, levelTo: number, latFrom?: number, lngFrom?: number, levelFrom?: number, accessibleRoute?: boolean): void;
     /**
      * This method will cancel generated route
      *  @memberof Map

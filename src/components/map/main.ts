@@ -694,7 +694,7 @@ export class Map {
       if (this.map) {
         const bbox = turf.bbox(route.geometry);
         // @ts-ignore
-        this.map.fitBounds(bbox, { padding: 50 });
+        this.map.fitBounds(bbox, { padding: 50, bearing: this.map.getBearing(), pitch: this.map.getPitch() });
       }
     }
   }
@@ -874,6 +874,7 @@ export class Map {
    *  @name findRouteByIds
    *  @param idTo {string} finish feature id
    *  @param idFrom {string} start feature id, optional for kiosk
+   *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -881,9 +882,10 @@ export class Map {
    *    map.findRouteByIds('finishId, 'startId');
    *  });
    */
-  public findRouteByIds(idTo: string, idFrom?: string) {
+  public findRouteByIds(idTo: string, idFrom?: string, accessibleRoute?: boolean) {
     const fromFeature = this.defaultOptions.isKiosk ? this.startPoint : this.state.allFeatures.features.find(f => f.id === idFrom || f.properties.id === idFrom) as Feature;
     const toFeature = this.state.allFeatures.features.find(f => f.id === idTo || f.properties.id === idTo) as Feature;
+    this.routingSource.toggleAccessible(accessibleRoute);
     this.onRouteUpdate(fromFeature, toFeature);
   }
 
@@ -893,6 +895,7 @@ export class Map {
    *  @name findRouteByTitle
    *  @param titleTo {string} finish feature title
    *  @param titleFrom {string} start feature title, optional for kiosk
+   *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -900,9 +903,10 @@ export class Map {
    *    map.findRouteByTitle('myFeatureTitle', 'anotherFeatureTitle');
    *  });
    */
-  public findRouteByTitle(titleTo: string, titleFrom?: string) {
+  public findRouteByTitle(titleTo: string, titleFrom?: string, accessibleRoute?: boolean) {
     const fromFeature = this.defaultOptions.isKiosk ? this.startPoint : this.state.allFeatures.features.find(f => f.properties.title === titleFrom) as Feature;
     const toFeature = this.state.allFeatures.features.find(f => f.properties.title === titleTo) as Feature;
+    this.routingSource.toggleAccessible(accessibleRoute);
     this.onRouteUpdate(this.defaultOptions.isKiosk ? this.startPoint : fromFeature, toFeature);
   }
 
@@ -916,6 +920,7 @@ export class Map {
    *  @param latFrom {number} start latitude coordinate, optional for kiosk
    *  @param lngFrom {number} start longitude coordinate, optional for kiosk
    *  @param levelFrom {number} start level, optional for kiosk
+   *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -923,7 +928,7 @@ export class Map {
    *    map.findRouteByCoords(48.606703739771774, 17.833092384506614, 0, 48.60684545080579, 17.833450676669543, 0);
    *  });
    */
-  public findRouteByCoords(latTo: number, lngTo: number, levelTo: number, latFrom?: number, lngFrom?: number, levelFrom?: number) {
+  public findRouteByCoords(latTo: number, lngTo: number, levelTo: number, latFrom?: number, lngFrom?: number, levelFrom?: number, accessibleRoute?: boolean) {
     const fromFeature = this.defaultOptions.isKiosk ? this.startPoint : turf.feature(
       { type: 'Point', coordinates: [lngFrom, latFrom] },
       { level: levelFrom }
@@ -932,6 +937,7 @@ export class Map {
       { type: 'Point', coordinates: [lngTo, latTo] },
       { level: levelTo }
     ) as Feature;
+    this.routingSource.toggleAccessible(accessibleRoute);
     this.onRouteUpdate(this.defaultOptions.isKiosk ? this.startPoint : fromFeature, toFeature);
   }
 

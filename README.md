@@ -174,6 +174,7 @@ This method will generate route based on selected features by their ids.
 ```
 // @param idTo {string} finish feature id
 // @param idFrom {string} start feature id, optional for kiosk
+// @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
 
 map.getMapReadyListener().subscribe(ready => {
    console.log('map ready', ready);
@@ -185,6 +186,7 @@ This method will generate route based on selected features by their titles.
 ```
 // @param titleTo {string} finish feature title
 // @param titleFrom {string} start feature title, optional for kiosk
+// @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
 
 map.getMapReadyListener().subscribe(ready => {
    console.log('map ready', ready);
@@ -201,6 +203,7 @@ This method will generate route based on attached coords.
 // @param latFrom {number} start latitude coordinate, optional for kiosk
 // @param lngFrom {number} start longitude coordinate, optional for kiosk
 // @param levelFrom {number} start level, optional for kiosk
+// @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
 
 map.getMapReadyListener().subscribe(ready => {
    console.log('map ready', ready);
