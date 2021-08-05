@@ -96,6 +96,7 @@ export class Map {
   private onFeatureAddListener = new Subject<Feature>();
   private onFeatureUpdateListener = new Subject<Feature>();
   private onFeatureDeleteListener = new Subject();
+  private onAmenityFilterListener = new Subject();
   private defaultOptions: Options = {
     selector: 'proximiioMap',
     allowNewFeatureModal: false,
@@ -108,6 +109,11 @@ export class Map {
   private startPoint?: Feature;
   private endPoint?: Feature;
   private showStartPoint = false;
+  private amenityIds: string[] = [];
+  private filteredAmenities: string[] = [];
+  private amenityFilters: string[] = [];
+  private amenityCategories: any = {};
+
   constructor(options: Options) {
 
     // fix centering in case of kiosk with defined pitch/bearing/etc. in mapbox options
@@ -158,7 +164,6 @@ export class Map {
           this.defaultOptions.kioskSettings?.coordinates :
           [place.location.lng, place.location.lat];
     style.center = center;
-    console.log(style.center);
     this.geojsonSource.fetch(features);
     this.routingSource.routing.setData(new FeatureCollection(features));
     this.prepareStyle(style);
@@ -226,6 +231,7 @@ export class Map {
       this.updateMapSource(this.routingSource);
       this.updateCluster();
       this.updateImages();
+      this.filteredAmenities = this.amenityIds;
       this.imageSourceManager.setLevel(map, this.state.floor?.level);
       await this.onPlaceSelect(this.state.place, this.defaultOptions.zoomIntoPlace);
       this.onMapReadyListener.next(true);
@@ -444,6 +450,74 @@ export class Map {
     }
   }
 
+  private onSetAmenityFilter(amenityId: string, category?: string) {
+    if (category) {
+      this.amenityCategories[category].active = true;
+      this.amenityCategories[category].activeId = amenityId;
+      let amenities: string[] = [];
+      for (const key in this.amenityCategories) {
+        if (this.amenityCategories.hasOwnProperty(key)) {
+          const cat = this.amenityCategories[key];
+          if (cat.active) {
+            amenities = amenities.concat(cat.amenities.filter((i: string) => i !== cat.activeId));
+          }
+        }
+      }
+      this.amenityFilters = this.amenityIds.filter( ( el ) => !amenities.includes( el ) );;
+    } else {
+      if (this.amenityFilters.findIndex(i => i === amenityId) === -1) {
+        this.amenityFilters.push(amenityId);
+      }
+    }
+    this.filteredAmenities = this.amenityFilters;
+    this.filterOutFeatures();
+  }
+
+  private onRemoveAmenityFilter(amenityId: string, category?: string) {
+    if (category && this.amenityCategories[category].active && this.amenityCategories[category].activeId === amenityId) {
+      const amenities = this.amenityCategories[category].amenities.filter((i: string) => i !== amenityId);
+      this.amenityFilters = this.amenityFilters.concat(amenities);
+      this.amenityCategories[category].active = false;
+    } else if (!category) {
+      this.amenityFilters = this.amenityFilters.filter(i => i !== amenityId);
+    }
+    this.filteredAmenities = this.amenityFilters.length > 0 ? this.amenityFilters : this.amenityIds;
+    this.filterOutFeatures();
+  }
+
+  private onResetAmenityFilters() {
+    this.amenityFilters = [];
+    for (const key in this.amenityCategories) {
+      if (this.amenityCategories.hasOwnProperty(key)) {
+        this.amenityCategories[key].active = false;
+      }
+    }
+    this.filteredAmenities = this.amenityIds;
+    this.filterOutFeatures();
+  }
+
+  private filterOutFeatures() {
+    // proximiio-pois-icons, proximiio-pois-labels
+    const layers = ['proximiio-pois-icons', 'proximiio-pois-labels'];
+    layers.forEach(layer => {
+      if (this.map.getLayer(layer)) {
+        setTimeout(() => {
+          const l = this.map.getLayer(layer) as any;
+          const filters = [...l.filter];
+          const amenityFilter = filters.findIndex(f => f[1][1] === 'amenity');
+          if (amenityFilter !== -1) {
+            filters[amenityFilter] = ['match', ['get', 'amenity'], this.filteredAmenities ? this.filteredAmenities : ['undefined'], true, false];
+          } else {
+            filters.push(['match', ['get', 'amenity'], this.filteredAmenities ? this.filteredAmenities : ['undefined'], true, false]);
+          }
+          this.state.style.getLayer(layer).filter = filters;
+          this.map.setFilter(layer, filters);
+        });
+      }
+    });
+    this.state.style.notify('filter-change');
+  }
+
   private prepareStyle(style: StyleModel) {
     style.setSource('main', this.geojsonSource);
     style.setSource('synthetic', this.syntheticSource);
@@ -647,10 +721,12 @@ export class Map {
         map.fitBounds(bbox, { padding: 50 });
       }
       if (this.defaultOptions.isKiosk && map.getLayer('my-location-layer')) {
-        map.setFilter('my-location-layer', [
+        const filter = [
           'all',
           ['==', ['to-number', ['get','level']], floor.level]
-        ])
+        ];
+        map.setFilter('my-location-layer', filter);
+        this.state.style.getLayer('my-location-layer').filter = filter;
       }
     }
     this.state = {...this.state, floor, style: this.state.style};
@@ -709,6 +785,7 @@ export class Map {
     this.state.amenities
       .filter(a => a.icon)
       .forEach(amenity => {
+        this.amenityIds.push(amenity.id);
         this.map.loadImage(amenity.icon, (error: any, image: any) => {
           if (error) throw error;
           this.map.addImage(amenity.id, image);
@@ -1226,6 +1303,117 @@ export class Map {
     } else {
       throw new Error(`Map is not initiated as kiosk`);
     }
+  }
+
+  /**
+   * You'll be able to show features only for defined amenity id on map with this method, also with defining the category (NOTE: you have to create them before with setAmenitiesCategory() method), filtering will be set only for defined array of amenities in the category. With category set, only one amenity filter can be active at the time, while without the category they stack so multiple amenities can be active.
+   *  @memberof Map
+   *  @name setAmenityFilter
+   *  @param amenityId {string} only features of defined amenityId will be visible
+   *  @param category {string} id of the amenities category added via setAmenitiesCategory, optional, if defined filtering will be set only for defined array of amenities in same method
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.setAmenityFilter('myamenity');
+   *  });
+   */
+  public setAmenityFilter(amenityId: string, category?: string) {
+    if (!category || (category && this.amenityCategories[category])) {
+      this.onSetAmenityFilter(amenityId, category);
+    } else {
+      throw new Error(`It seems there is no '${category}' amenities category created, please set category with 'setAmenitiesCategory()' method`);
+    }
+  }
+
+  /**
+   * Method for removing previously created amenity filters. In case amenity filter has been set with the category parameter, you have to use same param for removing the filter.
+   *  @memberof Map
+   *  @name removeAmenityFilter
+   *  @param amenityId {string} remove the filter for a defined amenityId
+   *  @param category {string} id of the amenities category added via setAmenitiesCategory, optional, if defined filtering will be removed only for defined array of amenities in same method
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.removeAmenityFilter('myamenity');
+   *  });
+   */
+  public removeAmenityFilter(amenityId: string, category?: string) {
+    if (!category || (category && this.amenityCategories[category])) {
+      this.onRemoveAmenityFilter(amenityId, category);
+    } else {
+      throw new Error(`It seems there is no '${category}' amenities category created, please set category with 'setAmenitiesCategory()' method`);
+    }
+  }
+
+  /**
+   * Method for removing all active filters.
+   *  @memberof Map
+   *  @name resetAmenityFilters
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.resetAmenityFilters();
+   *  });
+   */
+  public resetAmenityFilters() {
+    this.onResetAmenityFilters();
+  }
+
+  /**
+   * You can define your own categories of amenities, which you can then use for advanced filtering.
+   *  @memberof Map
+   *  @name setAmenitiesCategory
+   *  @param id {string} category id, have to be used when calling setAmenityFilter() method as second param.
+   *  @param amenities {Array of strings} list of the amenities id
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.setAmenitiesCategory('shops', ['id1', 'id2']);
+   *  });
+   */
+  public setAmenitiesCategory(id: string, amenities: string[]) {
+    this.amenityCategories[id] = {
+      amenities
+    };
+  }
+
+  /**
+   * Method for removing previously created categories.
+   *  @memberof Map
+   *  @name removeAmenitiesCategory
+   *  @param id {string} category id.
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.removeAmenitiesCategory('shops');
+   *  });
+   */
+  public removeAmenitiesCategory(id: string) {
+    if (this.amenityCategories[id]) {
+      delete this.amenityCategories[id];
+    } else {
+      throw new Error(`It seems there is no '${id}' amenities category created, please set category with 'setAmenitiesCategory()' method`);
+    }
+  }
+
+  /**
+   * Method for removing all active amenity categories.
+   *  @memberof Map
+   *  @name resetAmenitiesCategory
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.resetAmenitiesCategory();
+   *  });
+   */
+  public resetAmenitiesCategory() {
+    this.amenityCategories = {};
   }
 }
 

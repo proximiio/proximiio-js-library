@@ -34,7 +34,7 @@ class App extends React.Component {
       level: 0
     }];
 
-    Proximiio.Auth.login('devs@proximi.io', 'pr0x1m33')
+    Proximiio.Auth.loginWithToken('token')
       .then(res => {
         console.log('Logged in', res);
 
@@ -59,7 +59,7 @@ class App extends React.Component {
           zoomIntoPlace: false,
           isKiosk: true,
           kioskSettings: {
-            coordinates: [17.833135351538658, 48.60678469647394],
+            coordinates: [51.48091652702158, 25.336680584406395],
             level: 0
           },
           mapboxOptions: {
@@ -74,7 +74,23 @@ class App extends React.Component {
 
           this.map.getMapboxInstance().addControl(new mapboxgl.NavigationControl());
 
-          let bounds = this.map.getMapboxInstance().getBounds();
+          this.map.setAmenitiesCategory('shop', [
+            '44010f6f-9963-4433-ad86-40b89b829c41:c693d414-4613-4c6c-95da-771e52759873',
+            '44010f6f-9963-4433-ad86-40b89b829c41:d111c5e4-1a63-48b3-94de-5fa7b309daaf',
+            '44010f6f-9963-4433-ad86-40b89b829c41:da5435e2-9179-4ca6-86e4-652b7e8d109b',
+            '44010f6f-9963-4433-ad86-40b89b829c41:c96e80d7-6683-4ca0-bc64-b6ed3fc824e2',
+            '44010f6f-9963-4433-ad86-40b89b829c41:f62dd757-4057-4015-97a0-c66d8934f7d8'
+          ]);
+
+          this.map.setAmenitiesCategory('amenities', [
+            '44010f6f-9963-4433-ad86-40b89b829c41:e762ea14-70e2-49b7-9938-f6870f9ab18f',
+            '44010f6f-9963-4433-ad86-40b89b829c41:61042c8a-87a3-40e4-afa8-3a2c3c09fbf8',
+            '44010f6f-9963-4433-ad86-40b89b829c41:62c605cc-75c0-449a-987c-3bdfef2c1642',
+            '44010f6f-9963-4433-ad86-40b89b829c41:57ef933b-ff2e-4db1-bc99-d21f2053abb2',
+            '44010f6f-9963-4433-ad86-40b89b829c41:2cd016a5-8703-417c-af07-d49aef074ad3'
+          ]);
+
+          /*let bounds = this.map.getMapboxInstance().getBounds();
           for (let poi of customPoiList) {
             const position = turf.randomPosition([bounds._ne.lng, bounds._ne.lat, bounds._sw.lng, bounds._sw.lat]);
             this.map.addCustomFeature(poi.title, poi.level, position[1], position[0], '', poi.id);
@@ -85,14 +101,7 @@ class App extends React.Component {
               const position = turf.randomPosition([bounds._ne.lng, bounds._ne.lat, bounds._sw.lng, bounds._sw.lat]);
               this.map.updateFeature(poi.id, poi.title, poi.level, position[1], position[0]);
             }
-          }, 5000);
-
-          setTimeout(() => {
-            this.map.getMapboxInstance().setZoom(15);
-            this.map.getMapboxInstance().setPitch(60);
-            this.map.getMapboxInstance().setBearing(5);
-            this.map.setKiosk(48.60615461642394, 17.833135351598658, 0)
-          }, 3000)
+          }, 5000);*/
         });
 
         this.map.getFeatureAddListener().subscribe(feature => {
@@ -156,6 +165,18 @@ class App extends React.Component {
     this.map.setFloorByWay('down');
   }
 
+  onSetFilter = (amenityId, category) => {
+    this.map.setAmenityFilter(amenityId, category);
+  }
+
+  onRemoveFilter = (amenityId, category) => {
+    this.map.removeAmenityFilter(amenityId, category);
+  }
+
+  onResetFilters = () => {
+    this.map.resetAmenityFilters();
+  }
+
   render() {
     return (
       <div className="App">
@@ -180,6 +201,13 @@ class App extends React.Component {
           </div>
           <button onClick={this.onFloorUp}>Floor Up</button>
           <button onClick={this.onFloorDown}>Floor Down</button>
+          <button onClick={this.onSetFilter.bind(this, '44010f6f-9963-4433-ad86-40b89b829c41:c693d414-4613-4c6c-95da-771e52759873', 'shop')}>Set Cafe Filter</button>
+          <button onClick={this.onSetFilter.bind(this, '44010f6f-9963-4433-ad86-40b89b829c41:d111c5e4-1a63-48b3-94de-5fa7b309daaf', 'shop')}>Set Clothing Filter</button>
+          <button onClick={this.onSetFilter.bind(this, '44010f6f-9963-4433-ad86-40b89b829c41:e762ea14-70e2-49b7-9938-f6870f9ab18f', 'amenities')}>Set Toilets Filter</button>
+          <button onClick={this.onRemoveFilter.bind(this, '44010f6f-9963-4433-ad86-40b89b829c41:c693d414-4613-4c6c-95da-771e52759873', 'shop')}>Remove Cafe Filter</button>
+          <button onClick={this.onRemoveFilter.bind(this, '44010f6f-9963-4433-ad86-40b89b829c41:d111c5e4-1a63-48b3-94de-5fa7b309daaf', 'shop')}>Remove Clothing Filter</button>
+          <button onClick={this.onRemoveFilter.bind(this, '44010f6f-9963-4433-ad86-40b89b829c41:e762ea14-70e2-49b7-9938-f6870f9ab18f', 'amenities')}>Remove Toilets Filter</button>
+          <button onClick={this.onResetFilters}>Reset Filters</button>
         </header>
         <div id="proximiioMap"></div>
       </div>

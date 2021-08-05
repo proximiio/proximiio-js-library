@@ -318,6 +318,85 @@ map.getMapReadyListener().subscribe(ready => {
 });
 ```
 
+##### Map Features Filtering
+
+###### Setting new filter
+You'll be able to show features only for defined amenity id on map with this method, also with defining the category _(NOTE: you have to create them before with [setAmenitiesCategory()](#setting-new-amenities-category) method)_, filtering will be set only for defined array of amenities in the category. With category set, only one amenity filter can be active at the time, while without the category they stack so multiple amenities can be active.
+
+```
+// param amenityId {string} only features of defined amenityId will be visible
+// param category {string} id of the amenities category added via setAmenitiesCategory, optional, if defined filtering will be set only for defined array of amenities in same method
+   
+const map = new Proximiio.Map();
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   map.setAmenityFilter('myamenity');
+});
+```
+
+###### Removing created filter
+Method for removing previously created amenity filters. In case amenity filter has been set with the category parameter, you have to use same param for removing the filter.
+
+```
+// param amenityId {string} remove the filter for a defined amenityId
+// param category {string} id of the amenities category added via setAmenitiesCategory, optional, if defined filtering will be removed only for defined array of amenities in same method
+   
+const map = new Proximiio.Map();
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   map.removeAmenityFilter('myamenity');
+});
+```
+
+###### Resetting all filters
+Method for removing all active filters.
+
+```  
+const map = new Proximiio.Map();
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   map.resetAmenityFilters();
+});
+```
+
+###### Setting new amenities category
+You can define your own categories of amenities, which you can then use for advanced filtering.
+
+```
+// param id {string} category id, have to be used when calling setAmenityFilter() method as second param.
+// param amenities {Array of strings} list of the amenities id
+   
+const map = new Proximiio.Map();
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   map.setAmenitiesCategory('shops', ['id1', 'id2']);
+});
+```
+
+###### Removing amenities category
+Method for removing previously created categories.
+
+```
+// param id {string} category id.
+   
+const map = new Proximiio.Map();
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   map.removeAmenitiesCategory('shops');
+});
+```
+
+###### Resetting all amenity categories
+Method for removing all active amenity categories.
+
+```  
+const map = new Proximiio.Map();
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   map.resetAmenitiesCategory();
+});
+```
+
 #### Available Listeners
 
 ##### Listen to map ready event

@@ -56,11 +56,16 @@ export declare class Map {
     private onFeatureAddListener;
     private onFeatureUpdateListener;
     private onFeatureDeleteListener;
+    private onAmenityFilterListener;
     private defaultOptions;
     private routeFactory;
     private startPoint?;
     private endPoint?;
     private showStartPoint;
+    private amenityIds;
+    private filteredAmenities;
+    private amenityFilters;
+    private amenityCategories;
     constructor(options: Options);
     private initialize;
     private cancelObservers;
@@ -73,6 +78,10 @@ export declare class Map {
     private onUpdateFeature;
     private onDeleteFeature;
     private onFeaturesChange;
+    private onSetAmenityFilter;
+    private onRemoveAmenityFilter;
+    private onResetAmenityFilters;
+    private filterOutFeatures;
     private prepareStyle;
     private onRouteChange;
     private onSourceChange;
@@ -461,5 +470,24 @@ export declare class Map {
      *  });
      */
     setKiosk(lat: number, lng: number, level: number): void;
+    /**
+     *  @memberof Map
+     *  @name setAmenityFilter
+     *  @param amenityId {string} only features of defined amenityId will be visible
+     *  @param category {string} id of the amenities category added via setAmenitiesCategory, optional, if defined filtering will be set only for defined array of amenities in same method
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.setAmenityFilter('myamenity');
+     *  });
+     */
+    setAmenityFilter(amenityId: string, category?: string): void;
+    removeAmenityFilter(amenityId: string, category?: string): void;
+    resetAmenityFilters(): void;
+    setAmenitiesCategory(id: string, amenities: string[]): void;
+    removeAmenitiesCategory(id: string): void;
+    resetAmenitiesCategory(): void;
+    getAmenityFilterListener(): import("rxjs").Observable<unknown>;
 }
 export {};
