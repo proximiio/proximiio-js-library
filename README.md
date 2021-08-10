@@ -105,8 +105,56 @@ const map = new Proximiio.Map({
     kioskSettings: {
         coordinates: [number, number], // coordinates for a kiosk start point
         level: number // floor level of a kiosk starting point
-    }
+    },
+    initPolygons: false // optional, default: false, if enabled and yours geojson includes required data the map will show defined features as polygons with hover/click effect.
 });
+```
+#### Required Data for 3D Polygons
+As first there must be a MultiPolygon feature created which will be a polygon itself, it's also nice to have a label-line property in properties set. Label-line is just imaginary line alongside which poi title will be drawn. At last, you have to connect poi to polygon via adding its id to poi metadata like polygon_id property.
+
+Polygon Feature Example:
+```
+{
+    "type": "Feature",
+    "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": coordinates of all corner points
+    },
+    "properties": {
+        "id": "my-poi-polygon-id",
+        "label-line": [
+            [
+                longitude,
+                latitude
+            ],
+            [
+                longitude,
+                latitude
+            ]
+        ],
+        ...
+    }
+}
+```
+POI Feature Example:
+```
+{
+    "type": "Feature",
+    "geometry": {
+        "type": "Point",
+        "coordinates": [longitude, latitude]
+    },
+    "properties": {
+        "usecase": "poi",
+        "type": "poi",
+        "id": "my-poi-id",
+        ...
+        "metadata": {
+            "polygon_id": "my-poi-polygon-id",
+            ...
+        }
+    }
+}
 ```
 #### Available Methods
 

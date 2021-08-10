@@ -55,7 +55,7 @@ class App extends React.Component {
         })
 
         this.map = new Proximiio.Map({
-          allowNewFeatureModal: true,
+          allowNewFeatureModal: false,
           zoomIntoPlace: false,
           isKiosk: true,
           kioskSettings: {
@@ -66,7 +66,8 @@ class App extends React.Component {
             zoom: 20,
             bearing: 10,
             pitch: 40
-          }
+          },
+          initPolygons: true
         });
 
         this.map.getMapReadyListener().subscribe(async (res) => {

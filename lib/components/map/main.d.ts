@@ -37,6 +37,7 @@ interface Options {
         coordinates: [number, number];
         level: number;
     };
+    initPolygons?: boolean;
 }
 export declare const globalState: State;
 export declare class Map {
@@ -66,6 +67,8 @@ export declare class Map {
     private filteredAmenities;
     private amenityFilters;
     private amenityCategories;
+    private hoveredPolygon;
+    private selectedPolygon;
     constructor(options: Options);
     private initialize;
     private cancelObservers;
@@ -73,6 +76,12 @@ export declare class Map {
     private onMapReady;
     private initKiosk;
     private onSetKiosk;
+    private initPolygons;
+    private onShopClick;
+    handlePolygonSelection(poi: Feature): void;
+    private onShopMouseEnter;
+    private onShopMouseMove;
+    private onShopMouseLeave;
     private featureDialog;
     private onAddNewFeature;
     private onUpdateFeature;
@@ -471,6 +480,7 @@ export declare class Map {
      */
     setKiosk(lat: number, lng: number, level: number): void;
     /**
+     * You'll be able to show features only for defined amenity id on map with this method, also with defining the category (NOTE: you have to create them before with setAmenitiesCategory() method), filtering will be set only for defined array of amenities in the category. With category set, only one amenity filter can be active at the time, while without the category they stack so multiple amenities can be active.
      *  @memberof Map
      *  @name setAmenityFilter
      *  @param amenityId {string} only features of defined amenityId will be visible
@@ -483,11 +493,70 @@ export declare class Map {
      *  });
      */
     setAmenityFilter(amenityId: string, category?: string): void;
+    /**
+     * Method for removing previously created amenity filters. In case amenity filter has been set with the category parameter, you have to use same param for removing the filter.
+     *  @memberof Map
+     *  @name removeAmenityFilter
+     *  @param amenityId {string} remove the filter for a defined amenityId
+     *  @param category {string} id of the amenities category added via setAmenitiesCategory, optional, if defined filtering will be removed only for defined array of amenities in same method
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.removeAmenityFilter('myamenity');
+     *  });
+     */
     removeAmenityFilter(amenityId: string, category?: string): void;
+    /**
+     * Method for removing all active filters.
+     *  @memberof Map
+     *  @name resetAmenityFilters
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.resetAmenityFilters();
+     *  });
+     */
     resetAmenityFilters(): void;
+    /**
+     * You can define your own categories of amenities, which you can then use for advanced filtering.
+     *  @memberof Map
+     *  @name setAmenitiesCategory
+     *  @param id {string} category id, have to be used when calling setAmenityFilter() method as second param.
+     *  @param amenities {Array of strings} list of the amenities id
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.setAmenitiesCategory('shops', ['id1', 'id2']);
+     *  });
+     */
     setAmenitiesCategory(id: string, amenities: string[]): void;
+    /**
+     * Method for removing previously created categories.
+     *  @memberof Map
+     *  @name removeAmenitiesCategory
+     *  @param id {string} category id.
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.removeAmenitiesCategory('shops');
+     *  });
+     */
     removeAmenitiesCategory(id: string): void;
+    /**
+     * Method for removing all active amenity categories.
+     *  @memberof Map
+     *  @name resetAmenitiesCategory
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.resetAmenitiesCategory();
+     *  });
+     */
     resetAmenitiesCategory(): void;
-    getAmenityFilterListener(): import("rxjs").Observable<unknown>;
 }
 export {};

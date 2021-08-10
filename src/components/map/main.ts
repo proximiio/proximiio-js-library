@@ -24,6 +24,8 @@ import * as tingle from "tingle.js/dist/tingle";
 import * as TBTNav from '../../../assets/tbtnav';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
 import { MapboxOptions } from '../../models/mapbox-options';
+import FillExtrusionLayer from './layers/fill_extrusion_layer';
+import { PolygonIconsLayer, PolygonsLayer, PolygonTitlesLayer } from './custom-layers';
 
 interface State {
   readonly initializing: boolean;
@@ -57,7 +59,8 @@ interface Options {
   kioskSettings?: {
     coordinates: [number, number],
     level: number
-  }
+  };
+  initPolygons?: boolean;
 }
 
 export const globalState: State = {
@@ -103,7 +106,8 @@ export class Map {
     newFeatureModalEvent: 'click',
     enableTBTNavigation: true,
     zoomIntoPlace: true,
-    isKiosk: false
+    isKiosk: false,
+    initPolygons: false
   }
   private routeFactory: any;
   private startPoint?: Feature;
@@ -113,6 +117,8 @@ export class Map {
   private filteredAmenities: string[] = [];
   private amenityFilters: string[] = [];
   private amenityCategories: any = {};
+  private hoveredPolygon: any;
+  private selectedPolygon: any;
 
   constructor(options: Options) {
 
@@ -154,7 +160,7 @@ export class Map {
   }
 
   private async fetch() {
-    const { places, style, styles, features, amenities } = await Repository.getPackage();
+    const { places, style, styles, features, amenities } = await Repository.getPackage(this.defaultOptions.initPolygons);
     const defaultPlace = places.find(p => p.id === this.defaultOptions.defaultPlaceId);
     const place = places.length > 0 ? (defaultPlace ? defaultPlace : places[0]) : new PlaceModel({});
     const center =
@@ -238,6 +244,9 @@ export class Map {
       if (this.defaultOptions.isKiosk) {
         this.initKiosk();
       }
+      if (this.defaultOptions.initPolygons) {
+        this.initPolygons();
+      }
     }
   }
 
@@ -290,6 +299,146 @@ export class Map {
       this.map.setStyle(this.state.style);
       this.centerOnPoi(this.startPoint);
     }
+  }
+
+  private initPolygons() {
+    if (this.map) {
+      PolygonsLayer.setFilterLevel(this.state.floor.level);
+      this.state.style.addLayer(PolygonsLayer.json);
+
+      PolygonIconsLayer.setFilterLevel(this.state.floor.level);
+      this.state.style.addLayer(PolygonIconsLayer.json);
+
+      PolygonTitlesLayer.setFilterLevel(this.state.floor.level);
+      this.state.style.addLayer(PolygonTitlesLayer.json);
+
+      this.map.setStyle(this.state.style);
+
+      this.map.on('click', 'shop-custom', (e) => {
+        this.onShopClick(e);
+      });
+
+      this.map.on('mouseenter', 'shop-custom', () => {
+        this.onShopMouseEnter();
+      });
+
+      this.map.on('mousemove', 'shop-custom', (e) => {
+        this.onShopMouseMove(e);
+      });
+
+      this.map.on('mouseleave', 'shop-custom', (e) => {
+        this.onShopMouseLeave(e);
+      });
+    }
+  }
+
+  private onShopClick(e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined; } & mapboxgl.EventData) {
+    if (e.features && e.features[0] && e.features[0].properties) {
+      // @ts-ignore
+      const poi = this.state.allFeatures.features.find(i => i.properties.id === e.features[0].properties.poi_id) as Feature;
+      this.handlePolygonSelection(poi);
+      if (this.defaultOptions.isKiosk) {
+        this.findRouteByIds(e.features[0].properties.poi_id)
+      }
+    }
+  }
+
+  handlePolygonSelection(poi: Feature) {
+    const connectedPolygonId = poi && poi.properties.metadata ? poi.properties.metadata.polygon_id : null;
+    if (this.selectedPolygon) {
+      this.map.setFeatureState({
+        source: 'main',
+        id: this.selectedPolygon.id
+      }, {
+        selected: false
+      });
+      if (this.selectedPolygon.properties.label_id) {
+        this.map.setFeatureState({
+          source: 'main',
+          id: this.selectedPolygon.properties.label_id
+        }, {
+          selected: false
+        });
+      }
+    }
+    if (connectedPolygonId) {
+      this.selectedPolygon = this.state.allFeatures.features.find(i => i.properties.id === connectedPolygonId);
+      this.map.setFeatureState({
+        source: 'main',
+        id: this.selectedPolygon.id
+      }, {
+        selected: true
+      });
+      if (this.selectedPolygon.properties.label_id) {
+        this.map.setFeatureState({
+          source: 'main',
+          id: this.selectedPolygon.properties.label_id
+        }, {
+          selected: true
+        });
+      }
+    }
+  }
+
+  private onShopMouseEnter() {
+    this.map.getCanvas().style.cursor = 'pointer';
+  }
+
+  private onShopMouseMove(e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined; } & mapboxgl.EventData) {
+    if (e.features && e.features.length > 0) {
+      if (this.hoveredPolygon) {
+        this.map.setFeatureState({
+          source: 'main',
+          id: this.hoveredPolygon.id
+        }, {
+          hover: false
+        });
+        if (this.hoveredPolygon.properties.label_id) {
+          this.map.setFeatureState({
+            source: 'main',
+            id: this.hoveredPolygon.properties.label_id
+          }, {
+            hover: false
+          });
+        }
+      }
+      this.hoveredPolygon = e.features[0];
+      this.map.setFeatureState({
+        source: 'main',
+        id: this.hoveredPolygon.id
+      }, {
+        hover: true
+      });
+      if (this.hoveredPolygon.properties.label_id) {
+        this.map.setFeatureState({
+          source: 'main',
+          id: this.hoveredPolygon.properties.label_id
+        }, {
+          hover: true
+        });
+      }
+    }
+  }
+
+  private onShopMouseLeave(e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined; } & mapboxgl.EventData) {
+    this.map.getCanvas().style.cursor = '';
+    if (this.hoveredPolygon) {
+      this.map.setFeatureState({
+        source: 'main',
+        id: this.hoveredPolygon.id
+      }, {
+        hover: false
+      });
+      if (this.hoveredPolygon.properties.label_id) {
+        this.map.setFeatureState({
+          source: 'main',
+          id: this.hoveredPolygon.properties.label_id
+        }, {
+          hover: false
+        });
+      }
+    }
+    this.hoveredPolygon = null;
   }
 
   private featureDialog(e: any) {
@@ -499,6 +648,9 @@ export class Map {
   private filterOutFeatures() {
     // proximiio-pois-icons, proximiio-pois-labels
     const layers = ['proximiio-pois-icons', 'proximiio-pois-labels'];
+    if (this.defaultOptions.initPolygons) {
+      layers.push('poi-custom-icons', 'shop-labels');
+    }
     layers.forEach(layer => {
       if (this.map.getLayer(layer)) {
         setTimeout(() => {
@@ -718,7 +870,7 @@ export class Map {
       if (route) {
         const bbox = turf.bbox(route.geometry);
         // @ts-ignore;
-        map.fitBounds(bbox, { padding: 50 });
+        map.fitBounds(bbox, { padding: 250 });
       }
       if (this.defaultOptions.isKiosk && map.getLayer('my-location-layer')) {
         const filter = [
@@ -770,7 +922,7 @@ export class Map {
       if (this.map) {
         const bbox = turf.bbox(route.geometry);
         // @ts-ignore
-        this.map.fitBounds(bbox, { padding: 50, bearing: this.map.getBearing(), pitch: this.map.getPitch() });
+        this.map.fitBounds(bbox, { padding: 250, bearing: this.map.getBearing(), pitch: this.map.getPitch() });
       }
     }
   }
