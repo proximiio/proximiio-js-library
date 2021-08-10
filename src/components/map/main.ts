@@ -24,7 +24,6 @@ import * as tingle from "tingle.js/dist/tingle";
 import * as TBTNav from '../../../assets/tbtnav';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
 import { MapboxOptions } from '../../models/mapbox-options';
-import FillExtrusionLayer from './layers/fill_extrusion_layer';
 import { PolygonIconsLayer, PolygonsLayer, PolygonTitlesLayer } from './custom-layers';
 
 interface State {
@@ -99,7 +98,7 @@ export class Map {
   private onFeatureAddListener = new Subject<Feature>();
   private onFeatureUpdateListener = new Subject<Feature>();
   private onFeatureDeleteListener = new Subject();
-  private onAmenityFilterListener = new Subject();
+  private onPolygonClickListener = new Subject<Feature>();
   private defaultOptions: Options = {
     selector: 'proximiioMap',
     allowNewFeatureModal: false,
@@ -336,14 +335,11 @@ export class Map {
     if (e.features && e.features[0] && e.features[0].properties) {
       // @ts-ignore
       const poi = this.state.allFeatures.features.find(i => i.properties.id === e.features[0].properties.poi_id) as Feature;
-      this.handlePolygonSelection(poi);
-      if (this.defaultOptions.isKiosk) {
-        this.findRouteByIds(e.features[0].properties.poi_id)
-      }
+      this.onPolygonClickListener.next(poi);
     }
   }
 
-  handlePolygonSelection(poi: Feature) {
+  handlePolygonSelection(poi?: Feature) {
     const connectedPolygonId = poi && poi.properties.metadata ? poi.properties.metadata.polygon_id : null;
     if (this.selectedPolygon) {
       this.map.setFeatureState({
@@ -690,7 +686,7 @@ export class Map {
         const textNavigation = this.routeFactory.generateRoute(JSON.stringify(this.routingSource.points), JSON.stringify(this.endPoint));
         this.centerOnRoute(routeStart);
         this.state = {...this.state, loadingRoute: false, textNavigation};
-        this.onRouteFoundListener.next({route: this.routingSource.route, TBTNav: this.defaultOptions.enableTBTNavigation ? textNavigation : null});
+        this.onRouteFoundListener.next({route: this.routingSource.route, TBTNav: this.defaultOptions.enableTBTNavigation ? textNavigation : null, start: this.startPoint, end: this.endPoint});
       }
       return;
     }
@@ -870,7 +866,7 @@ export class Map {
       if (route) {
         const bbox = turf.bbox(route.geometry);
         // @ts-ignore;
-        map.fitBounds(bbox, { padding: 250 });
+        map.fitBounds(bbox, { padding: 250, bearing: this.map.getBearing(), pitch: this.map.getPitch() });
       }
       if (this.defaultOptions.isKiosk && map.getLayer('my-location-layer')) {
         const filter = [
@@ -890,6 +886,9 @@ export class Map {
     this.startPoint = start;
     this.endPoint = finish;
     try {
+      if (finish && this.defaultOptions.initPolygons) {
+        this.handlePolygonSelection(finish);
+      }
       this.routingSource.update(start, finish);
     } catch (e) {
       console.log('catched', e);
@@ -899,6 +898,9 @@ export class Map {
 
   private onRouteCancel() {
     this.state = {...this.state, textNavigation: null};
+    if (this.defaultOptions.initPolygons) {
+      this.handlePolygonSelection();
+    }
     this.routingSource.cancel();
     this.onRouteCancelListener.next('route cancelled');
   }
@@ -1566,6 +1568,20 @@ export class Map {
    */
   public resetAmenitiesCategory() {
     this.amenityCategories = {};
+  }
+
+  /**
+   *  @memberof Map
+   *  @name getPolygonClickListener
+   *  @returns returns polygon click listener
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getPolygonClickListener().subscribe((poi) => {
+   *    console.log('polygon clicked', poi);
+   *  });
+   */
+  public getPolygonClickListener() {
+    return this.onPolygonClickListener.asObservable();
   }
 }
 

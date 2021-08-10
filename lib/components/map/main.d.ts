@@ -57,7 +57,7 @@ export declare class Map {
     private onFeatureAddListener;
     private onFeatureUpdateListener;
     private onFeatureDeleteListener;
-    private onAmenityFilterListener;
+    private onPolygonClickListener;
     private defaultOptions;
     private routeFactory;
     private startPoint?;
@@ -78,7 +78,7 @@ export declare class Map {
     private onSetKiosk;
     private initPolygons;
     private onShopClick;
-    handlePolygonSelection(poi: Feature): void;
+    handlePolygonSelection(poi?: Feature): void;
     private onShopMouseEnter;
     private onShopMouseMove;
     private onShopMouseLeave;
@@ -558,5 +558,16 @@ export declare class Map {
      *  });
      */
     resetAmenitiesCategory(): void;
+    /**
+     *  @memberof Map
+     *  @name getPolygonClickListener
+     *  @returns returns polygon click listener
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getPolygonClickListener().subscribe((poi) => {
+     *    console.log('polygon clicked', poi);
+     *  });
+     */
+    getPolygonClickListener(): import("rxjs").Observable<Feature>;
 }
 export {};

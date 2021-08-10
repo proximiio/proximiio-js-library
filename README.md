@@ -511,6 +511,13 @@ map.getFeatureDeleteListener().subscribe(() => {
 });
 ```
 
+##### Listen to polygon click event
+```
+map.getPolygonClickListener().subscribe((poi) => {
+   console.log('polygon clicked', poi);
+});
+```
+
 ### Select Component
 
 Select component is generated using the [Autocomplete.js](https://tarekraafat.github.io/autoComplete.js) library. Optionally load [css file](assets/proximiio-js-library.css) into your project from assets folder, feel free to fit it to your requirements.
