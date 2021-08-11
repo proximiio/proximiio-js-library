@@ -167,7 +167,7 @@ export declare class Map {
      *    map.setFloorById(myFloorId);
      *  });
      */
-    setFloorById(floorId: string): FloorModel;
+    setFloorById(floorId: string): any;
     /**
      * This method will set an active floor based on it's level. Have to be called after map is ready, see getMapReadyListener.
      *  @memberof Map
@@ -181,7 +181,7 @@ export declare class Map {
      *    map.setFloorByLevel(0);
      *  });
      */
-    setFloorByLevel(level: number): FloorModel;
+    setFloorByLevel(level: number): any;
     /**
      * This method will set an active floor based on the way of the next floor, e.g if we wanna go up or down. Have to be called after map is ready, see getMapReadyListener.
      *  @memberof Map
@@ -195,7 +195,7 @@ export declare class Map {
      *    map.setFloorByWay('up');
      *  });
      */
-    setFloorByWay(way: 'up' | 'down'): FloorModel;
+    setFloorByWay(way: 'up' | 'down'): any;
     /**
      *  @memberof Map
      *  @name getFloorSelectListener
@@ -424,7 +424,7 @@ export declare class Map {
      *    const features = map.getCustomFeaturesList();
      *  });
      */
-    getCustomFeaturesList(): FeatureCollection;
+    getCustomFeaturesList(): any;
     /**
      *  @memberof Map
      *  @name getFeatureAddListener

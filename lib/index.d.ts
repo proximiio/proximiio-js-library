@@ -6,14 +6,14 @@ declare const _default: {
         loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any>>;
     };
     Places: {
-        getPlaces: (limit?: number | undefined, skip?: number | undefined, order?: string | undefined, dir?: string | undefined, filterByIndex?: string | undefined, q?: string | undefined, filter?: string | undefined) => Promise<{
+        getPlaces: (limit?: number, skip?: number, order?: string, dir?: string, filterByIndex?: string, q?: string, filter?: string) => Promise<{
             data: import("./models/place").PlaceModel[];
             total: number;
         }>;
         getPlaceById: (placeId: string) => Promise<import("./models/place").PlaceModel>;
     };
     Floors: {
-        getFloors: (limit?: number | undefined, skip?: number | undefined, order?: string | undefined, dir?: string | undefined, filterByIndex?: string | undefined, q?: string | undefined) => Promise<{
+        getFloors: (limit?: number, skip?: number, order?: string, dir?: string, filterByIndex?: string, q?: string) => Promise<{
             data: import("./models/floor").FloorModel[];
             total: number;
         }>;

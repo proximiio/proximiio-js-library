@@ -8,5 +8,5 @@ export default class Routing {
     route(start: Feature, finish: Feature): {
         levelPaths: any;
         points: any;
-    } | null;
+    };
 }

@@ -17,7 +17,7 @@ export default class StyleModel {
     };
     glyphs: string;
     layers: any[];
-    overlay?: boolean | undefined;
+    overlay?: boolean;
     segments: boolean;
     routable: boolean;
     cluster: boolean;
