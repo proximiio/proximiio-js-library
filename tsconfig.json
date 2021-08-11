@@ -5,7 +5,7 @@
     "declaration": true,
     "allowJs": false,
     "outDir": "./lib",
-    "strict": true,
+    "strict": false,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true
   },
