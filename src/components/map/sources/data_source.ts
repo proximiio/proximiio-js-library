@@ -19,7 +19,7 @@ export default class DataSource extends BaseSource {
       data: this.data,
       cluster: this.cluster,
       clusterMaxZoom: this.clusterMaxZoom,
-      clusterRadius: this.clusterRadius
+      clusterRadius: this.clusterRadius,
     };
   }
 }

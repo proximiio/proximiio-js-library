@@ -10,6 +10,6 @@ export default class SyntheticSource extends DataSource {
   }
 
   get(id: string) {
-    return this.data.features.find(f => f.properties.id === id) as Feature;
+    return this.data.features.find((f) => f.properties.id === id) as Feature;
   }
 }

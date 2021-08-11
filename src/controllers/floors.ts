@@ -7,8 +7,8 @@ export const getFloors = async (
   order?: string,
   dir?: string,
   filterByIndex?: string,
-  q?: string
-): Promise<{ data: FloorModel[], total: number }> => {
+  q?: string,
+): Promise<{ data: FloorModel[]; total: number }> => {
   let queryParams = ``;
   if (limit) {
     queryParams += `?limit=${limit}`;
@@ -29,28 +29,26 @@ export const getFloors = async (
     queryParams += `&q=${q}`;
   }
   try {
-    const res =  await axios.get(`core/floors${queryParams}`);
+    const res = await axios.get(`core/floors${queryParams}`);
     return {
       data: res.data.map((item: any) => new FloorModel(item)) as FloorModel[],
-      total: +res.headers.searchcount
+      total: +res.headers.searchcount,
     };
   } catch (e) {
     throw new Error(`Retrieving floors failed, ${e.message}`);
   }
-}
+};
 
-export const getPlaceFloors = async(
-  placeId: string
-): Promise<FloorModel[]> => {
+export const getPlaceFloors = async (placeId: string): Promise<FloorModel[]> => {
   try {
-    const res =  await axios.get(`core/floors?skip=0&limit=1000&filter=place_id:${placeId}`);
+    const res = await axios.get(`core/floors?skip=0&limit=1000&filter=place_id:${placeId}`);
     return res.data.map((item: any) => new FloorModel(item)) as FloorModel[];
   } catch (e) {
     throw new Error(`Retrieving floors for place '${placeId}' failed, ${e.message}`);
   }
-}
+};
 
 export default {
   getFloors,
-  getPlaceFloors
-}
+  getPlaceFloors,
+};

@@ -44,42 +44,44 @@ export default class StyleModel {
     this.version = data.version || 1;
     this.name = data.name || 'New Style';
     this.metadata = Object.assign(DEFAULT_METADATA, data.metadata || {});
-    this.center = data.center || [18.5550, 48.4437];
+    this.center = data.center || [18.555, 48.4437];
     this.zoom = data.zoom || 8;
     this.bearing = data.bearing || 0;
     this.pitch = data.pitch || 0;
     this.sources = data.sources || [];
     this.glyphs = data.glyphs || '';
-    this.layers = (data.layers || []).map((layer: any) => {
-      if (layer.type === 'background') {
-        return new BackgroundLayer(layer).json;
-      }
-      if (layer.type === 'raster') {
-        return new RasterLayer(layer).json;
-      }
-      if (layer.type === 'fill') {
-        return new FillLayer(layer).json;
-      }
-      if (layer.type === 'line') {
-        return new LineLayer(layer).json;
-      }
-      if (layer.type === 'fill-extrusion') {
-        return new FillExtrusionLayer(layer).json;
-      }
-      if (layer.type === 'symbol') {
-        return new SymbolLayer(layer).json;
-      }
-      if (layer.type === 'heatmap') {
-        return new HeatmapLayer(layer).json;
-      }
-      if (layer.type === 'circle') {
-        return new CircleLayer(layer).json;
-      }
-      if (layer.type === 'hillshade') {
-        return new HillshadeLayer(layer).json;
-      }
-      return new BaseLayer(layer);
-    }).concat(this.getUniversalLayers('main'))
+    this.layers = (data.layers || [])
+      .map((layer: any) => {
+        if (layer.type === 'background') {
+          return new BackgroundLayer(layer).json;
+        }
+        if (layer.type === 'raster') {
+          return new RasterLayer(layer).json;
+        }
+        if (layer.type === 'fill') {
+          return new FillLayer(layer).json;
+        }
+        if (layer.type === 'line') {
+          return new LineLayer(layer).json;
+        }
+        if (layer.type === 'fill-extrusion') {
+          return new FillExtrusionLayer(layer).json;
+        }
+        if (layer.type === 'symbol') {
+          return new SymbolLayer(layer).json;
+        }
+        if (layer.type === 'heatmap') {
+          return new HeatmapLayer(layer).json;
+        }
+        if (layer.type === 'circle') {
+          return new CircleLayer(layer).json;
+        }
+        if (layer.type === 'hillshade') {
+          return new HillshadeLayer(layer).json;
+        }
+        return new BaseLayer(layer);
+      })
+      .concat(this.getUniversalLayers('main'))
       .concat(this.getSyntheticLayers());
   }
 
@@ -90,7 +92,7 @@ export default class StyleModel {
   }
 
   off(observer: Observer) {
-    const index = this._observers ? this._observers.findIndex(o => o === observer) : 0;
+    const index = this._observers ? this._observers.findIndex((o) => o === observer) : 0;
     if (index >= 0) {
       if (this._observers) {
         this._observers.splice(index, 1);
@@ -100,57 +102,47 @@ export default class StyleModel {
 
   notify(event?: string, data?: any) {
     if (this._observers) {
-      this._observers.forEach(observer => observer(event, data, this));
+      this._observers.forEach((observer) => observer(event, data, this));
     }
   }
 
   getUniversalLayers(source: string) {
     const filter = [
       'all',
-      [ '==', [ 'geometry-type' ], 'Polygon' ],
-      [ 'any',
-        [ '==', [ 'get', 'segment' ], false ],
-        [ '!',
-          [ 'has', 'segment' ]
-        ],
-      ],
-      [ 'any',
-        [ '==', [ 'get', 'routable' ], false ],
-        [ '!',
-          [ 'has', 'routable' ]
-        ]
-      ],
-      [ '==', [ 'get', 'level' ], 0 ]
+      ['==', ['geometry-type'], 'Polygon'],
+      ['any', ['==', ['get', 'segment'], false], ['!', ['has', 'segment']]],
+      ['any', ['==', ['get', 'routable'], false], ['!', ['has', 'routable']]],
+      ['==', ['get', 'level'], 0],
     ];
 
     const segmentFilter = [
       'all',
-      [ '==', [ 'geometry-type' ], 'Polygon' ],
-      [ 'has', 'segment' ],
-      [ '==', [ 'get', 'segment' ], true ],
-      [ '==', [ 'get', 'level' ], 0 ]
+      ['==', ['geometry-type'], 'Polygon'],
+      ['has', 'segment'],
+      ['==', ['get', 'segment'], true],
+      ['==', ['get', 'level'], 0],
     ];
 
     const routableFilter = [
       'all',
-      [ '==', [ 'geometry-type' ], 'Polygon' ],
-      [ 'has', 'routable' ],
-      [ '==', [ 'get', 'routable' ], true ],
-      [ '==', [ 'get', 'level' ], 0 ]
+      ['==', ['geometry-type'], 'Polygon'],
+      ['has', 'routable'],
+      ['==', ['get', 'routable'], true],
+      ['==', ['get', 'level'], 0],
     ];
 
     const roomFilter = [
       'all',
-      [ '==', [ 'geometry-type' ], 'Polygon' ],
-      [ 'has', 'room' ],
-      [ '==', [ 'get', 'room' ], true ],
-      [ '==', [ 'get', 'level' ], 0 ]
+      ['==', ['geometry-type'], 'Polygon'],
+      ['has', 'room'],
+      ['==', ['get', 'room'], true],
+      ['==', ['get', 'level'], 0],
     ];
 
     const base = {
       minzoom: 1,
       maxzoom: 24,
-      source
+      source,
     };
 
     return [
@@ -160,12 +152,12 @@ export default class StyleModel {
         type: 'fill',
         filter,
         layout: {
-          'visibility': 'none'
+          visibility: 'none',
         },
         paint: {
           'fill-color': '#08c',
-          'fill-opacity': 0.3
-        }
+          'fill-opacity': 0.3,
+        },
       }).json,
       new LineLayer({
         ...base,
@@ -174,13 +166,13 @@ export default class StyleModel {
         filter,
         layout: {
           'line-join': 'bevel',
-          'visibility': 'none'
+          visibility: 'none',
         },
         paint: {
           'line-color': '#08c',
           'line-width': 1,
-          'line-opacity': 1
-        }
+          'line-opacity': 1,
+        },
       }).json,
       new LineLayer({
         ...base,
@@ -189,13 +181,13 @@ export default class StyleModel {
         roomFilter,
         layout: {
           'line-join': 'bevel',
-          'visibility': 'none'
+          visibility: 'none',
         },
         paint: {
           'line-color': ['get', 'color'],
           'line-width': 1,
-          'line-opacity': 1
-        }
+          'line-opacity': 1,
+        },
       }).json,
       new FillLayer({
         ...base,
@@ -203,12 +195,12 @@ export default class StyleModel {
         type: 'fill',
         filter: roomFilter,
         layout: {
-          'visibility': 'none'
+          visibility: 'none',
         },
         paint: {
           'fill-color': ['get', 'color'],
-          'fill-opacity': 0.3
-        }
+          'fill-opacity': 0.3,
+        },
       }).json,
       // segments
       new FillLayer({
@@ -217,12 +209,12 @@ export default class StyleModel {
         type: 'fill',
         filter: segmentFilter,
         layout: {
-          'visibility': 'none'
+          visibility: 'none',
         },
         paint: {
           'fill-color': '#0c8',
-          'fill-opacity': 0.3
-        }
+          'fill-opacity': 0.3,
+        },
       }).json,
       new LineLayer({
         ...base,
@@ -231,13 +223,13 @@ export default class StyleModel {
         filter: segmentFilter,
         layout: {
           'line-join': 'bevel',
-          'visibility': 'none'
+          visibility: 'none',
         },
         paint: {
           'line-color': '#0c8',
           'line-width': 1,
-          'line-opacity': 1
-        }
+          'line-opacity': 1,
+        },
       }).json,
       // routables
       new FillLayer({
@@ -246,12 +238,12 @@ export default class StyleModel {
         type: 'fill',
         filter: routableFilter,
         layout: {
-          'visibility': 'none'
+          visibility: 'none',
         },
         paint: {
           'fill-color': '#c80',
-          'fill-opacity': 0.3
-        }
+          'fill-opacity': 0.3,
+        },
       }).json,
       new LineLayer({
         ...base,
@@ -260,14 +252,14 @@ export default class StyleModel {
         filter: routableFilter,
         layout: {
           'line-join': 'bevel',
-          'visibility': 'none'
+          visibility: 'none',
         },
         paint: {
           'line-color': '#c80',
           'line-width': 1,
-          'line-opacity': 1
-        }
-      }).json
+          'line-opacity': 1,
+        },
+      }).json,
     ];
   }
 
@@ -278,23 +270,14 @@ export default class StyleModel {
       maxzoom: 24,
       source: 'synthetic',
       id: 'synthetic-polygon-fill',
-      filter: [
-        'all',
-        [
-          '==',
-          [
-            'geometry-type'
-          ],
-          'Polygon'
-        ]
-      ],
+      filter: ['all', ['==', ['geometry-type'], 'Polygon']],
       layout: {
-        'visibility': 'visible'
+        visibility: 'visible',
       },
       paint: {
         'fill-color': '#08c',
-        'fill-opacity': 0.3
-      }
+        'fill-opacity': 0.3,
+      },
     }).json;
 
     const polygonOutline = new LineLayer({
@@ -303,35 +286,23 @@ export default class StyleModel {
       maxzoom: 24,
       source: 'synthetic',
       id: 'synthetic-polygon-outline',
-      filter: [
-        'all',
-        [
-          '==',
-          [
-            'geometry-type'
-          ],
-          'Polygon'
-        ]
-      ],
+      filter: ['all', ['==', ['geometry-type'], 'Polygon']],
       layout: {
         'line-join': 'bevel',
-        'visibility': 'visible'
+        visibility: 'visible',
       },
       paint: {
         'line-color': '#08c',
         'line-width': 1,
-        'line-opacity': 1
-      }
+        'line-opacity': 1,
+      },
     }).json;
 
-    return [
-      polygonFill,
-      polygonOutline,
-    ];
+    return [polygonFill, polygonOutline];
   }
 
   usesPrefixes() {
-    return typeof this.layers.find(layer => layer.id === 'proximiio-paths') !== 'undefined';
+    return typeof this.layers.find((layer) => layer.id === 'proximiio-paths') !== 'undefined';
   }
 
   addLayer(layer: any) {
@@ -339,15 +310,15 @@ export default class StyleModel {
   }
 
   getLayer(id: string) {
-    return this.layers.find(layer => layer.id === id);
+    return this.layers.find((layer) => layer.id === id);
   }
 
   getLayerIndex(id: string) {
-    return this.layers.findIndex(layer => layer.id === id);
+    return this.layers.findIndex((layer) => layer.id === id);
   }
 
   getLayers(sourceId: string): BaseLayer[] {
-    return this.layers.filter(layer => layer.source && layer.source === sourceId);
+    return this.layers.filter((layer) => layer.source && layer.source === sourceId);
   }
 
   addSource(sourceId: string, source: any) {
@@ -356,7 +327,7 @@ export default class StyleModel {
 
   getSources(): BaseSource[] {
     const sources = [] as BaseSource[];
-    Object.keys(this.sources).forEach(id => {
+    Object.keys(this.sources).forEach((id) => {
       const source = this.sources[id];
       source.id = id;
       sources.push(source);
@@ -369,7 +340,7 @@ export default class StyleModel {
   }
 
   setLevel(level: number) {
-    [...this.getLayers('main'), ...this.getLayers('route')].forEach(layer => {
+    [...this.getLayers('main'), ...this.getLayers('route')].forEach((layer) => {
       if (!layer.filter) {
         return;
       }
@@ -482,7 +453,7 @@ export default class StyleModel {
 
   togglePaths(enabled: boolean) {
     // tslint:disable-next-line:no-shadowed-variable
-    const layer = this.layers.find(layer => layer.id === 'proximiio-paths' || layer.id === 'paths');
+    const layer = this.layers.find((layer) => layer.id === 'proximiio-paths' || layer.id === 'paths');
     if (layer) {
       const updated = new LineLayer(Object.assign({}, layer.json));
       updated.layout.visibility = enabled ? 'visible' : 'none';
@@ -514,22 +485,22 @@ export default class StyleModel {
 
   get namespaces(): string[] {
     const keys = Object.keys(this.metadata);
-    const pairs = keys.filter(key => key.indexOf(':') > 0);
-    const unique = new Set(pairs.map(pair => pair.split(':')[0]));
+    const pairs = keys.filter((key) => key.indexOf(':') > 0);
+    const unique = new Set(pairs.map((pair) => pair.split(':')[0]));
     return Array.from(unique).sort((a, b) => a.localeCompare(b));
   }
 
   namespaceItems(namespace: string) {
     return Object.keys(this.metadata)
-      .filter(key => key.indexOf(`${namespace}:`) === 0)
-      .map(key => (key.split(':').slice(1)).join(':'));
+      .filter((key) => key.indexOf(`${namespace}:`) === 0)
+      .map((key) => key.split(':').slice(1).join(':'));
   }
 
   get json(): any {
     const style = Object.assign({}, this);
     delete style._observers;
     delete style.overlay;
-    style.layers = this.layers.map(layer => layer.json);
+    style.layers = this.layers.map((layer) => layer.json);
     return JSON.parse(JSON.stringify(style));
   }
 }

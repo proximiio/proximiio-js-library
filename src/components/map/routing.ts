@@ -17,9 +17,9 @@ export default class Routing {
     this.wayfinding.preprocess();
     // pathfinding.load(neighbourList, wallOffsets);
     // this.pathFinder.setConfiguration({
-        // avoidEscalators: true,
-        // avoidNarrowPaths: true,
-        // avoidRevolvingDoors: true
+    // avoidEscalators: true,
+    // avoidNarrowPaths: true,
+    // avoidRevolvingDoors: true
     // });
   }
 
@@ -30,7 +30,7 @@ export default class Routing {
         avoidBarriers: true,
         avoidNarrowPaths: true,
         avoidRevolvingDoors: true,
-        avoidTicketGates: true
+        avoidTicketGates: true,
       });
     } else {
       this.wayfinding.setConfiguration({
@@ -41,7 +41,7 @@ export default class Routing {
         avoidNarrowPaths: false,
         avoidRevolvingDoors: false,
         avoidTicketGates: false,
-        avoidBarriers: false
+        avoidBarriers: false,
       });
     }
   }
@@ -63,7 +63,7 @@ export default class Routing {
 
     const levels = Object.keys(levelPoints);
     const levelPaths = {} as any;
-    levels.forEach(level => {
+    levels.forEach((level) => {
       if (levelPoints[level].length > 1) {
         // tslint:disable-next-line:no-shadowed-variable
         levelPaths[level] = new Feature(lineString(levelPoints[level].map((point: any) => point.geometry.coordinates)));
@@ -71,8 +71,7 @@ export default class Routing {
         // tslint:disable-next-line:no-shadowed-variable
         levelPaths[level] = new Feature(point(levelPoints[level].map((point: any) => point.geometry.coordinates)));
       }
-
     });
-    return {levelPaths, points};
+    return { levelPaths, points };
   }
 }

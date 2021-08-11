@@ -19,7 +19,7 @@ import { getPlaceById } from '../../controllers/places';
 import { Subject } from 'rxjs';
 import * as turf from '@turf/turf';
 // @ts-ignore
-import * as tingle from "tingle.js/dist/tingle";
+import * as tingle from 'tingle.js/dist/tingle';
 // @ts-ignore
 import * as TBTNav from '../../../assets/tbtnav';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
@@ -56,8 +56,8 @@ interface Options {
   defaultPlaceId?: string;
   isKiosk?: boolean;
   kioskSettings?: {
-    coordinates: [number, number],
-    level: number
+    coordinates: [number, number];
+    level: number;
   };
   initPolygons?: boolean;
 }
@@ -78,7 +78,7 @@ export const globalState: State = {
   longitude: 0,
   loadingRoute: false,
   noPlaces: false,
-  textNavigation: null
+  textNavigation: null,
 };
 
 export class Map {
@@ -106,8 +106,8 @@ export class Map {
     enableTBTNavigation: true,
     zoomIntoPlace: true,
     isKiosk: false,
-    initPolygons: false
-  }
+    initPolygons: false,
+  };
   private routeFactory: any;
   private startPoint?: Feature;
   private endPoint?: Feature;
@@ -120,13 +120,12 @@ export class Map {
   private selectedPolygon: any;
 
   constructor(options: Options) {
-
     // fix centering in case of kiosk with defined pitch/bearing/etc. in mapbox options
     if (options.isKiosk && options.mapboxOptions && options.kioskSettings && !options.mapboxOptions.center) {
       options.mapboxOptions.center = options.kioskSettings.coordinates;
     }
 
-    this.defaultOptions = {...this.defaultOptions, ...options}
+    this.defaultOptions = { ...this.defaultOptions, ...options };
     this.state = globalState;
 
     this.onSourceChange = this.onSourceChange.bind(this);
@@ -137,12 +136,11 @@ export class Map {
     this.onRouteChange = this.onRouteChange.bind(this);
     this.onRouteCancel = this.onRouteCancel.bind(this);
 
-
     this.map = new mapboxgl.Map({
       ...this.defaultOptions.mapboxOptions,
-      container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map'
+      container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map',
     });
-    this.initialize()
+    this.initialize();
   }
 
   private async initialize() {
@@ -159,15 +157,16 @@ export class Map {
   }
 
   private async fetch() {
-    const { places, style, styles, features, amenities } = await Repository.getPackage(this.defaultOptions.initPolygons);
-    const defaultPlace = places.find(p => p.id === this.defaultOptions.defaultPlaceId);
+    const { places, style, styles, features, amenities } = await Repository.getPackage(
+      this.defaultOptions.initPolygons,
+    );
+    const defaultPlace = places.find((p) => p.id === this.defaultOptions.defaultPlaceId);
     const place = places.length > 0 ? (defaultPlace ? defaultPlace : places[0]) : new PlaceModel({});
-    const center =
-      this.defaultOptions.mapboxOptions?.center ?
-        this.defaultOptions.mapboxOptions.center as any :
-        this.defaultOptions.isKiosk ?
-          this.defaultOptions.kioskSettings?.coordinates :
-          [place.location.lng, place.location.lat];
+    const center = this.defaultOptions.mapboxOptions?.center
+      ? (this.defaultOptions.mapboxOptions.center as any)
+      : this.defaultOptions.isKiosk
+      ? this.defaultOptions.kioskSettings?.coordinates
+      : [place.location.lng, place.location.lat];
     style.center = center;
     this.geojsonSource.fetch(features);
     this.routingSource.routing.setData(new FeatureCollection(features));
@@ -187,7 +186,7 @@ export class Map {
       latitude: center[1],
       longitude: center[0],
       zoom: this.defaultOptions.mapboxOptions?.zoom,
-      noPlaces: places.length === 0
+      noPlaces: places.length === 0,
     };
     style.on(this.onStyleChange);
     this.map.setStyle(this.state.style);
@@ -195,12 +194,15 @@ export class Map {
       this.onMapReady(e);
     });
     if (this.defaultOptions.allowNewFeatureModal) {
-      this.map.on(this.defaultOptions.newFeatureModalEvent ? this.defaultOptions.newFeatureModalEvent : 'dblclick', (e: MapboxEvent | any) => {
-        this.featureDialog(e)
-      });
+      this.map.on(
+        this.defaultOptions.newFeatureModalEvent ? this.defaultOptions.newFeatureModalEvent : 'dblclick',
+        (e: MapboxEvent | any) => {
+          this.featureDialog(e);
+        },
+      );
     }
     if (this.defaultOptions.enableTBTNavigation) {
-      this.routeFactory = new TBTNav.RouteFactory(JSON.stringify(this.state.allFeatures.features), 'en')
+      this.routeFactory = new TBTNav.RouteFactory(JSON.stringify(this.state.allFeatures.features), 'en');
     }
   }
 
@@ -211,7 +213,8 @@ export class Map {
       this.state.style?.togglePaths(true);
       // routing layers
       const routingLayer = map.getLayer('routing-line-completed');
-      const usePrefixed = typeof routingLayer === 'undefined' && typeof map.getLayer('proximiio-routing-line-completed') !== 'undefined';
+      const usePrefixed =
+        typeof routingLayer === 'undefined' && typeof map.getLayer('proximiio-routing-line-completed') !== 'undefined';
       const shopsLayer = map.getLayer('shops');
 
       if (usePrefixed) {
@@ -253,26 +256,25 @@ export class Map {
     if (this.map) {
       this.showStartPoint = false;
       if (this.defaultOptions.kioskSettings) {
-        this.startPoint = turf.point(this.defaultOptions.kioskSettings.coordinates, { level: this.defaultOptions.kioskSettings.level }) as Feature;
+        this.startPoint = turf.point(this.defaultOptions.kioskSettings.coordinates, {
+          level: this.defaultOptions.kioskSettings.level,
+        }) as Feature;
         this.showStartPoint = true;
         this.state.style.addSource('my-location', {
           type: 'geojson',
           data: {
             type: 'FeatureCollection',
-            features: [ this.startPoint as any ]
-          }
-        })
+            features: [this.startPoint as any],
+          },
+        });
         this.state.style.addLayer({
           id: 'my-location-layer',
           type: 'symbol',
           source: 'my-location',
           layout: {
-            'icon-image': 'pulsing-dot'
+            'icon-image': 'pulsing-dot',
           },
-          filter: [
-            'all',
-            ['==', ['to-number', ['get','level']], this.state.floor.level]
-          ]
+          filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
         });
         this.map.setStyle(this.state.style);
         this.centerOnPoi(this.startPoint);
@@ -284,17 +286,16 @@ export class Map {
     if (this.map && this.defaultOptions.isKiosk) {
       this.defaultOptions.kioskSettings = {
         coordinates: [lng, lat],
-        level
+        level,
       };
-      this.startPoint = turf.point(this.defaultOptions.kioskSettings.coordinates, { level: this.defaultOptions.kioskSettings.level }) as Feature;
+      this.startPoint = turf.point(this.defaultOptions.kioskSettings.coordinates, {
+        level: this.defaultOptions.kioskSettings.level,
+      }) as Feature;
       this.state.style.sources['my-location'].data = {
         type: 'FeatureCollection',
-        features: [ this.startPoint as any ]
-      }
-      this.map.setFilter('my-location-layer', [
-        'all',
-        ['==', ['to-number', ['get','level']], level]
-      ])
+        features: [this.startPoint as any],
+      };
+      this.map.setFilter('my-location-layer', ['all', ['==', ['to-number', ['get', 'level']], level]]);
       this.map.setStyle(this.state.style);
       this.centerOnPoi(this.startPoint);
     }
@@ -331,10 +332,14 @@ export class Map {
     }
   }
 
-  private onShopClick(e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined; } & mapboxgl.EventData) {
+  private onShopClick(
+    e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined } & mapboxgl.EventData,
+  ) {
     if (e.features && e.features[0] && e.features[0].properties) {
       // @ts-ignore
-      const poi = this.state.allFeatures.features.find(i => i.properties.id === e.features[0].properties.poi_id) as Feature;
+      const poi = this.state.allFeatures.features.find(
+        (i) => i.properties.id === e.features[0].properties.poi_id,
+      ) as Feature;
       this.onPolygonClickListener.next(poi);
     }
   }
@@ -342,36 +347,48 @@ export class Map {
   handlePolygonSelection(poi?: Feature) {
     const connectedPolygonId = poi && poi.properties.metadata ? poi.properties.metadata.polygon_id : null;
     if (this.selectedPolygon) {
-      this.map.setFeatureState({
-        source: 'main',
-        id: this.selectedPolygon.id
-      }, {
-        selected: false
-      });
-      if (this.selectedPolygon.properties.label_id) {
-        this.map.setFeatureState({
+      this.map.setFeatureState(
+        {
           source: 'main',
-          id: this.selectedPolygon.properties.label_id
-        }, {
-          selected: false
-        });
+          id: this.selectedPolygon.id,
+        },
+        {
+          selected: false,
+        },
+      );
+      if (this.selectedPolygon.properties.label_id) {
+        this.map.setFeatureState(
+          {
+            source: 'main',
+            id: this.selectedPolygon.properties.label_id,
+          },
+          {
+            selected: false,
+          },
+        );
       }
     }
     if (connectedPolygonId) {
-      this.selectedPolygon = this.state.allFeatures.features.find(i => i.properties.id === connectedPolygonId);
-      this.map.setFeatureState({
-        source: 'main',
-        id: this.selectedPolygon.id
-      }, {
-        selected: true
-      });
-      if (this.selectedPolygon.properties.label_id) {
-        this.map.setFeatureState({
+      this.selectedPolygon = this.state.allFeatures.features.find((i) => i.properties.id === connectedPolygonId);
+      this.map.setFeatureState(
+        {
           source: 'main',
-          id: this.selectedPolygon.properties.label_id
-        }, {
-          selected: true
-        });
+          id: this.selectedPolygon.id,
+        },
+        {
+          selected: true,
+        },
+      );
+      if (this.selectedPolygon.properties.label_id) {
+        this.map.setFeatureState(
+          {
+            source: 'main',
+            id: this.selectedPolygon.properties.label_id,
+          },
+          {
+            selected: true,
+          },
+        );
       }
     }
   }
@@ -380,58 +397,80 @@ export class Map {
     this.map.getCanvas().style.cursor = 'pointer';
   }
 
-  private onShopMouseMove(e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined; } & mapboxgl.EventData) {
+  private onShopMouseMove(
+    e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined } & mapboxgl.EventData,
+  ) {
     if (e.features && e.features.length > 0) {
       if (this.hoveredPolygon) {
-        this.map.setFeatureState({
-          source: 'main',
-          id: this.hoveredPolygon.id
-        }, {
-          hover: false
-        });
-        if (this.hoveredPolygon.properties.label_id) {
-          this.map.setFeatureState({
+        this.map.setFeatureState(
+          {
             source: 'main',
-            id: this.hoveredPolygon.properties.label_id
-          }, {
-            hover: false
-          });
+            id: this.hoveredPolygon.id,
+          },
+          {
+            hover: false,
+          },
+        );
+        if (this.hoveredPolygon.properties.label_id) {
+          this.map.setFeatureState(
+            {
+              source: 'main',
+              id: this.hoveredPolygon.properties.label_id,
+            },
+            {
+              hover: false,
+            },
+          );
         }
       }
       this.hoveredPolygon = e.features[0];
-      this.map.setFeatureState({
-        source: 'main',
-        id: this.hoveredPolygon.id
-      }, {
-        hover: true
-      });
-      if (this.hoveredPolygon.properties.label_id) {
-        this.map.setFeatureState({
+      this.map.setFeatureState(
+        {
           source: 'main',
-          id: this.hoveredPolygon.properties.label_id
-        }, {
-          hover: true
-        });
+          id: this.hoveredPolygon.id,
+        },
+        {
+          hover: true,
+        },
+      );
+      if (this.hoveredPolygon.properties.label_id) {
+        this.map.setFeatureState(
+          {
+            source: 'main',
+            id: this.hoveredPolygon.properties.label_id,
+          },
+          {
+            hover: true,
+          },
+        );
       }
     }
   }
 
-  private onShopMouseLeave(e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined; } & mapboxgl.EventData) {
+  private onShopMouseLeave(
+    e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined } & mapboxgl.EventData,
+  ) {
     this.map.getCanvas().style.cursor = '';
     if (this.hoveredPolygon) {
-      this.map.setFeatureState({
-        source: 'main',
-        id: this.hoveredPolygon.id
-      }, {
-        hover: false
-      });
-      if (this.hoveredPolygon.properties.label_id) {
-        this.map.setFeatureState({
+      this.map.setFeatureState(
+        {
           source: 'main',
-          id: this.hoveredPolygon.properties.label_id
-        }, {
-          hover: false
-        });
+          id: this.hoveredPolygon.id,
+        },
+        {
+          hover: false,
+        },
+      );
+      if (this.hoveredPolygon.properties.label_id) {
+        this.map.setFeatureState(
+          {
+            source: 'main',
+            id: this.hoveredPolygon.properties.label_id,
+          },
+          {
+            hover: false,
+          },
+        );
       }
     }
     this.hoveredPolygon = null;
@@ -444,25 +483,25 @@ export class Map {
       footer: true,
       stickyFooter: false,
       closeMethods: ['overlay', 'button', 'escape'],
-      closeLabel: "Close",
+      closeLabel: 'Close',
       onClose: () => {
         modal.destroy();
-      }
+      },
     });
 
     // set content
     modal.setContent(edit ? EDIT_FEATURE_DIALOG(e, features[0]) : NEW_FEATURE_DIALOG(e, this.state.floor?.level));
 
     modal.addFooterBtn('Submit', 'tingle-btn tingle-btn--primary', async () => {
-      const formData = new FormData((document.querySelector('#modal-form')) as HTMLFormElement)
+      const formData = new FormData(document.querySelector('#modal-form') as HTMLFormElement);
       const data = {
         id: `${formData.get('id')}`,
         title: `${formData.get('title')}`,
         level: formData.get('level'),
         lat: formData.get('lat'),
         lng: formData.get('lng'),
-        icon: (formData.get('icon') as File).size ? await getBase64FromImage(formData.get('icon') as File) : undefined
-      }
+        icon: (formData.get('icon') as File).size ? await getBase64FromImage(formData.get('icon') as File) : undefined,
+      };
       if (data.title && data.level && data.lat && data.lng) {
         if (edit) {
           await this.onUpdateFeature(data.id, data.title, +data.level!, +data.lat!, +data.lng!, data.icon);
@@ -489,9 +528,18 @@ export class Map {
     modal.open();
   }
 
-  private async onAddNewFeature(title: string, level: number, lat: number, lng: number, icon?: string, id?: string, placeId?: string, floorId?: string) {
+  private async onAddNewFeature(
+    title: string,
+    level: number,
+    lat: number,
+    lng: number,
+    icon?: string,
+    id?: string,
+    placeId?: string,
+    floorId?: string,
+  ) {
     const featureId = id ? id : uuidv4();
-    if (this.state.allFeatures.features.findIndex(f => f.id === featureId || f.properties.id === featureId) > 0) {
+    if (this.state.allFeatures.features.findIndex((f) => f.id === featureId || f.properties.id === featureId) > 0) {
       console.error(`Create feature failed: Feature with id '${featureId}' already exists!`);
       throw new Error(`Create feature failed: Feature with id '${featureId}' already exists!`);
     }
@@ -500,7 +548,7 @@ export class Map {
       id: featureId,
       geometry: new Geometry({
         type: 'Point',
-        coordinates: [lng, lat]
+        coordinates: [lng, lat],
       }),
       properties: {
         type: 'poi',
@@ -513,15 +561,15 @@ export class Map {
         level,
         images: [icon],
         place_id: placeId,
-        floor_id: floorId
-      }
-    })
+        floor_id: floorId,
+      },
+    });
     if (icon && icon.length > 0) {
       const decodedIcon = await getImageFromBase64(icon);
       this.map.addImage(featureId, decodedIcon as any);
     }
 
-    this.state.dynamicFeatures.features.push(feature)
+    this.state.dynamicFeatures.features.push(feature);
     // this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features];
     this.geojsonSource.create(feature);
     // this.onSourceChange();
@@ -532,30 +580,44 @@ export class Map {
     return feature;
   }
 
-  private async onUpdateFeature(id: string, title?: string, level?: number, lat?: number, lng?: number, icon?: string, placeId?: string, floorId?: string) {
-    const foundFeature = this.state.allFeatures.features.find(f => f.id === id || f.properties.id === id);
+  private async onUpdateFeature(
+    id: string,
+    title?: string,
+    level?: number,
+    lat?: number,
+    lng?: number,
+    icon?: string,
+    placeId?: string,
+    floorId?: string,
+  ) {
+    const foundFeature = this.state.allFeatures.features.find((f) => f.id === id || f.properties.id === id);
     if (!foundFeature) {
       console.error(`Update feature failed: Feature with id '${id}' has not been found!`);
       throw new Error(`Update feature failed: Feature with id '${id}' has not been found!`);
     }
     const feature = new Feature(foundFeature);
-    feature.geometry.coordinates = [lng ? lng : feature.geometry.coordinates[0], lat ? lat : feature.geometry.coordinates[1]];
+    feature.geometry.coordinates = [
+      lng ? lng : feature.geometry.coordinates[0],
+      lat ? lat : feature.geometry.coordinates[1],
+    ];
     feature.properties = {
       ...feature.properties,
       title: title ? title : feature.properties.title,
       level: level ? level : feature.properties.level,
       amenity: icon ? id : feature.properties.amenity,
-      images: icon ? [icon] :  feature.properties.images,
+      images: icon ? [icon] : feature.properties.images,
       place_id: placeId ? placeId : feature.properties.place_id,
-      floor_id: floorId ? floorId :  feature.properties.floor_id
-    }
+      floor_id: floorId ? floorId : feature.properties.floor_id,
+    };
 
     if (icon && icon.length > 0) {
       const decodedIcon = await getImageFromBase64(icon);
       this.map.addImage(id, decodedIcon as any);
     }
 
-    const dynamicIndex = this.state.dynamicFeatures.features.findIndex(x => x.id === feature.id || x.properties.id === feature.id);
+    const dynamicIndex = this.state.dynamicFeatures.features.findIndex(
+      (x) => x.id === feature.id || x.properties.id === feature.id,
+    );
     this.state.dynamicFeatures.features[dynamicIndex] = feature;
     // this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features]; // this is not probably updated with non dynamic feature update TODO
     this.geojsonSource.update(feature);
@@ -568,13 +630,13 @@ export class Map {
   }
 
   private async onDeleteFeature(id: string) {
-    const foundFeature = this.state.allFeatures.features.find(f => f.id === id || f.properties.id === id);
+    const foundFeature = this.state.allFeatures.features.find((f) => f.id === id || f.properties.id === id);
     if (!foundFeature) {
       console.error(`Deleting feature failed: Feature with id '${id}' has not been found!`);
       throw new Error(`Deleting feature failed: Feature with id '${id}' has not been found!`);
     }
 
-    const dynamicIndex = this.state.dynamicFeatures.features.findIndex(x => x.id === id || x.properties.id === id);
+    const dynamicIndex = this.state.dynamicFeatures.features.findIndex((x) => x.id === id || x.properties.id === id);
     this.state.dynamicFeatures.features.splice(dynamicIndex, 1);
     // this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features]; // this is not probably updated with non dynamic feature delete TODO
     this.geojsonSource.delete(id);
@@ -591,7 +653,7 @@ export class Map {
     this.routingSource.routing.setData(this.state.allFeatures);
     this.updateMapSource(this.routingSource);
     if (this.defaultOptions.enableTBTNavigation) {
-      this.routeFactory = new TBTNav.RouteFactory(JSON.stringify(this.state.allFeatures.features), 'en')
+      this.routeFactory = new TBTNav.RouteFactory(JSON.stringify(this.state.allFeatures.features), 'en');
     }
   }
 
@@ -608,9 +670,9 @@ export class Map {
           }
         }
       }
-      this.amenityFilters = this.amenityIds.filter( ( el ) => !amenities.includes( el ) );;
+      this.amenityFilters = this.amenityIds.filter((el) => !amenities.includes(el));
     } else {
-      if (this.amenityFilters.findIndex(i => i === amenityId) === -1) {
+      if (this.amenityFilters.findIndex((i) => i === amenityId) === -1) {
         this.amenityFilters.push(amenityId);
       }
     }
@@ -619,12 +681,16 @@ export class Map {
   }
 
   private onRemoveAmenityFilter(amenityId: string, category?: string) {
-    if (category && this.amenityCategories[category].active && this.amenityCategories[category].activeId === amenityId) {
+    if (
+      category &&
+      this.amenityCategories[category].active &&
+      this.amenityCategories[category].activeId === amenityId
+    ) {
       const amenities = this.amenityCategories[category].amenities.filter((i: string) => i !== amenityId);
       this.amenityFilters = this.amenityFilters.concat(amenities);
       this.amenityCategories[category].active = false;
     } else if (!category) {
-      this.amenityFilters = this.amenityFilters.filter(i => i !== amenityId);
+      this.amenityFilters = this.amenityFilters.filter((i) => i !== amenityId);
     }
     this.filteredAmenities = this.amenityFilters.length > 0 ? this.amenityFilters : this.amenityIds;
     this.filterOutFeatures();
@@ -647,16 +713,28 @@ export class Map {
     if (this.defaultOptions.initPolygons) {
       layers.push('poi-custom-icons', 'shop-labels');
     }
-    layers.forEach(layer => {
+    layers.forEach((layer) => {
       if (this.map.getLayer(layer)) {
         setTimeout(() => {
           const l = this.map.getLayer(layer) as any;
           const filters = [...l.filter];
-          const amenityFilter = filters.findIndex(f => f[1][1] === 'amenity');
+          const amenityFilter = filters.findIndex((f) => f[1][1] === 'amenity');
           if (amenityFilter !== -1) {
-            filters[amenityFilter] = ['match', ['get', 'amenity'], this.filteredAmenities ? this.filteredAmenities : ['undefined'], true, false];
+            filters[amenityFilter] = [
+              'match',
+              ['get', 'amenity'],
+              this.filteredAmenities ? this.filteredAmenities : ['undefined'],
+              true,
+              false,
+            ];
           } else {
-            filters.push(['match', ['get', 'amenity'], this.filteredAmenities ? this.filteredAmenities : ['undefined'], true, false]);
+            filters.push([
+              'match',
+              ['get', 'amenity'],
+              this.filteredAmenities ? this.filteredAmenities : ['undefined'],
+              true,
+              false,
+            ]);
           }
           this.state.style.getLayer(layer).filter = filters;
           this.map.setFilter(layer, filters);
@@ -676,31 +754,39 @@ export class Map {
 
   private onRouteChange(event?: string) {
     if (event === 'loading-start') {
-      this.state = {...this.state, loadingRoute: true};
+      this.state = { ...this.state, loadingRoute: true };
       return;
     }
 
     if (event === 'loading-finished') {
       if (this.routingSource.route) {
         const routeStart = this.routingSource.route[this.routingSource.start?.properties.level];
-        const textNavigation = this.routeFactory.generateRoute(JSON.stringify(this.routingSource.points), JSON.stringify(this.endPoint));
+        const textNavigation = this.routeFactory.generateRoute(
+          JSON.stringify(this.routingSource.points),
+          JSON.stringify(this.endPoint),
+        );
         this.centerOnRoute(routeStart);
-        this.state = {...this.state, loadingRoute: false, textNavigation};
-        this.onRouteFoundListener.next({route: this.routingSource.route, TBTNav: this.defaultOptions.enableTBTNavigation ? textNavigation : null, start: this.startPoint, end: this.endPoint});
+        this.state = { ...this.state, loadingRoute: false, textNavigation };
+        this.onRouteFoundListener.next({
+          route: this.routingSource.route,
+          TBTNav: this.defaultOptions.enableTBTNavigation ? textNavigation : null,
+          start: this.startPoint,
+          end: this.endPoint,
+        });
       }
       return;
     }
 
     if (event === 'route-undefined') {
       console.log('route not found');
-      this.state = {...this.state, loadingRoute: false};
+      this.state = { ...this.state, loadingRoute: false };
       this.onRouteFailedListener.next('route not found');
       return;
     }
 
     const style = this.state.style;
     style.setSource('route', this.routingSource);
-    this.state = {...this.state, style};
+    this.state = { ...this.state, style };
 
     this.updateMapSource(this.routingSource);
   }
@@ -708,7 +794,7 @@ export class Map {
   private onSourceChange() {
     this.state = {
       ...this.state,
-      style: this.state.style
+      style: this.state.style,
     };
     this.updateMapSource(this.geojsonSource);
     // this.routingSource.routing.setData(this.geojsonSource.collection)
@@ -737,7 +823,7 @@ export class Map {
       map.setStyle(style.json);
     }
 
-    this.state = {...this.state, style};
+    this.state = { ...this.state, style };
   }
 
   private onStyleChange(event?: string, data?: any) {
@@ -769,17 +855,17 @@ export class Map {
 
     if (event === 'layer-update' && data) {
       const { layer, changes }: any = data;
-      const layoutChanges = (changes as any[]).filter(diff => diff.kind === 'E' && diff.path[0] === 'layout');
-      const paintChanges = (changes as any[]).filter(diff => diff.kind === 'E' && diff.path[0] === 'paint');
+      const layoutChanges = (changes as any[]).filter((diff) => diff.kind === 'E' && diff.path[0] === 'layout');
+      const paintChanges = (changes as any[]).filter((diff) => diff.kind === 'E' && diff.path[0] === 'paint');
       // tslint:disable-next-line:no-shadowed-variable
       const map = this.map;
       if (map) {
-        layoutChanges.forEach(change => {
+        layoutChanges.forEach((change) => {
           if (change.kind === 'E') {
             map.setLayoutProperty(layer.id, change.path[1], change.rhs);
           }
         });
-        paintChanges.forEach(change => {
+        paintChanges.forEach((change) => {
           if (change.kind === 'E') {
             map.setPaintProperty(layer.id, change.path[1], change.rhs);
           }
@@ -790,7 +876,7 @@ export class Map {
     if (event === 'filter-change') {
       // tslint:disable-next-line:no-shadowed-variable
       const map = this.map;
-      this.state.style.getLayers('main').forEach(layer => {
+      this.state.style.getLayers('main').forEach((layer) => {
         if (map.getLayer(layer.id)) {
           map.removeLayer(layer.id);
         }
@@ -800,7 +886,7 @@ export class Map {
     }
     // @ts-ignore
     this.map.setStyle(this.state.style);
-    this.state = {...this.state, style: this.state.style};
+    this.state = { ...this.state, style: this.state.style };
   }
 
   private onRasterToggle(value: boolean) {
@@ -817,8 +903,8 @@ export class Map {
       const data = {
         type: 'FeatureCollection',
         features: this.geojsonSource.data.features
-          .filter(f => f.isPoint && f.hasLevel(this.state.floor.level))
-          .map(f => f.json)
+          .filter((f) => f.isPoint && f.hasLevel(this.state.floor.level))
+          .map((f) => f.json),
       } as FeatureCollection;
       const source = map.getSource('clusters') as any;
       if (source) {
@@ -828,22 +914,22 @@ export class Map {
   }
 
   private async onPlaceSelect(place: PlaceModel, zoomIntoPlace: boolean | undefined) {
-    this.state = {...this.state, place};
+    this.state = { ...this.state, place };
     const floors = await getPlaceFloors(place.id);
     const state: any = { floors: floors.sort((a, b) => a.level - b.level) };
 
     if (floors.length > 0) {
-      const groundFloor = floors.find(floor => floor.level === 0);
+      const groundFloor = floors.find((floor) => floor.level === 0);
       if (groundFloor) {
         state.floor = groundFloor;
       } else {
         state.floor = floors[0];
       }
     }
-    this.state = {...this.state, ...state};
+    this.state = { ...this.state, ...state };
     const map = this.map;
     if (map && zoomIntoPlace) {
-      map.flyTo({ center: [ place.location.lng, place.location.lat ] });
+      map.flyTo({ center: [place.location.lng, place.location.lat] });
     }
     this.onPlaceSelectListener.next(place);
     this.onFloorSelect(state.floor);
@@ -851,12 +937,13 @@ export class Map {
 
   private onFloorSelect(floor: FloorModel) {
     const map = this.map;
-    const route = this.routingSource.route && this.routingSource.route[floor.level] ? this.routingSource.route[floor.level] : null;
+    const route =
+      this.routingSource.route && this.routingSource.route[floor.level] ? this.routingSource.route[floor.level] : null;
     if (map) {
       this.state.style.setLevel(floor.level);
       map.setStyle(this.state.style);
       setTimeout(() => {
-        [...this.state.style.getLayers('main'), ...this.state.style.getLayers('route')].forEach(layer => {
+        [...this.state.style.getLayers('main'), ...this.state.style.getLayers('route')].forEach((layer) => {
           if (map.getLayer(layer.id)) {
             map.setFilter(layer.id, layer.filter);
           }
@@ -869,15 +956,12 @@ export class Map {
         map.fitBounds(bbox, { padding: 250, bearing: this.map.getBearing(), pitch: this.map.getPitch() });
       }
       if (this.defaultOptions.isKiosk && map.getLayer('my-location-layer')) {
-        const filter = [
-          'all',
-          ['==', ['to-number', ['get','level']], floor.level]
-        ];
+        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
         map.setFilter('my-location-layer', filter);
         this.state.style.getLayer('my-location-layer').filter = filter;
       }
     }
-    this.state = {...this.state, floor, style: this.state.style};
+    this.state = { ...this.state, floor, style: this.state.style };
     this.updateCluster();
     this.onFloorSelectListener.next(floor);
   }
@@ -893,11 +977,11 @@ export class Map {
     } catch (e) {
       console.log('catched', e);
     }
-    this.state = {...this.state, style: this.state.style};
+    this.state = { ...this.state, style: this.state.style };
   }
 
   private onRouteCancel() {
-    this.state = {...this.state, textNavigation: null};
+    this.state = { ...this.state, textNavigation: null };
     if (this.defaultOptions.initPolygons) {
       this.handlePolygonSelection();
     }
@@ -907,7 +991,7 @@ export class Map {
 
   private centerOnPoi(poi: any) {
     if (this.state.floor.level !== parseInt(poi.properties.level, 0)) {
-      const floor = this.state.floors.find(f => f.level === poi.properties.level);
+      const floor = this.state.floors.find((f) => f.level === poi.properties.level);
       if (floor) this.onFloorSelect(floor);
     }
     if (this.map) {
@@ -918,7 +1002,7 @@ export class Map {
   private centerOnRoute(route: Feature) {
     if (route && route.properties) {
       if (this.state.floor.level !== parseInt(route.properties.level, 0)) {
-        const floor = this.state.floors.find(f => f.level === parseInt(route.properties.level, 0));
+        const floor = this.state.floors.find((f) => f.level === parseInt(route.properties.level, 0));
         if (floor) this.onFloorSelect(floor);
       }
       if (this.map) {
@@ -937,19 +1021,21 @@ export class Map {
 
   private updateImages() {
     this.state.amenities
-      .filter(a => a.icon)
-      .forEach(amenity => {
+      .filter((a) => a.icon)
+      .forEach((amenity) => {
         this.amenityIds.push(amenity.id);
         this.map.loadImage(amenity.icon, (error: any, image: any) => {
           if (error) throw error;
           this.map.addImage(amenity.id, image);
-        })
+        });
       });
   }
 
   private getUpcomingFloorNumber(way: string) {
     if (this.routingSource.lines && this.routingSource.route) {
-      const currentRouteIndex = this.routingSource.lines.findIndex(route => +route.properties.level === this.state.floor.level);
+      const currentRouteIndex = this.routingSource.lines.findIndex(
+        (route) => +route.properties.level === this.state.floor.level,
+      );
       const currentRoute = this.routingSource.lines[currentRouteIndex];
       const nextRouteIndex = way === 'up' ? currentRouteIndex + 1 : currentRouteIndex - 1;
       const nextRoute = this.routingSource.lines[nextRouteIndex];
@@ -1031,7 +1117,9 @@ export class Map {
    *  });
    */
   public setFloorById(floorId: string) {
-    const floor = this.state.floors.filter(f => f.id === floorId) ? this.state.floors.filter(f => f.id === floorId)[0] : this.state.floor;
+    const floor = this.state.floors.filter((f) => f.id === floorId)
+      ? this.state.floors.filter((f) => f.id === floorId)[0]
+      : this.state.floor;
     if (floor) {
       this.onFloorSelect(new FloorModel(floor));
     }
@@ -1052,7 +1140,9 @@ export class Map {
    *  });
    */
   public setFloorByLevel(level: number) {
-    const floor = this.state.floors.filter(f => f.level === level) ? this.state.floors.filter(f => f.level === level)[0] : this.state.floor;
+    const floor = this.state.floors.filter((f) => f.level === level)
+      ? this.state.floors.filter((f) => f.level === level)[0]
+      : this.state.floor;
     if (floor) {
       this.onFloorSelect(new FloorModel(floor));
     }
@@ -1078,7 +1168,9 @@ export class Map {
     if (this.routingSource.route) {
       nextLevel = this.getUpcomingFloorNumber(way);
     }
-    floor = this.state.floors.filter(f => f.level === nextLevel) ? this.state.floors.filter(f => f.level === nextLevel)[0] : this.state.floor;
+    floor = this.state.floors.filter((f) => f.level === nextLevel)
+      ? this.state.floors.filter((f) => f.level === nextLevel)[0]
+      : this.state.floor;
     if (floor) {
       this.onFloorSelect(new FloorModel(floor));
     }
@@ -1114,8 +1206,10 @@ export class Map {
    *  });
    */
   public findRouteByIds(idTo: string, idFrom?: string, accessibleRoute?: boolean) {
-    const fromFeature = this.defaultOptions.isKiosk ? this.startPoint : this.state.allFeatures.features.find(f => f.id === idFrom || f.properties.id === idFrom) as Feature;
-    const toFeature = this.state.allFeatures.features.find(f => f.id === idTo || f.properties.id === idTo) as Feature;
+    const fromFeature = this.defaultOptions.isKiosk
+      ? this.startPoint
+      : (this.state.allFeatures.features.find((f) => f.id === idFrom || f.properties.id === idFrom) as Feature);
+    const toFeature = this.state.allFeatures.features.find((f) => f.id === idTo || f.properties.id === idTo) as Feature;
     this.routingSource.toggleAccessible(accessibleRoute);
     this.onRouteUpdate(fromFeature, toFeature);
   }
@@ -1135,8 +1229,10 @@ export class Map {
    *  });
    */
   public findRouteByTitle(titleTo: string, titleFrom?: string, accessibleRoute?: boolean) {
-    const fromFeature = this.defaultOptions.isKiosk ? this.startPoint : this.state.allFeatures.features.find(f => f.properties.title === titleFrom) as Feature;
-    const toFeature = this.state.allFeatures.features.find(f => f.properties.title === titleTo) as Feature;
+    const fromFeature = this.defaultOptions.isKiosk
+      ? this.startPoint
+      : (this.state.allFeatures.features.find((f) => f.properties.title === titleFrom) as Feature);
+    const toFeature = this.state.allFeatures.features.find((f) => f.properties.title === titleTo) as Feature;
     this.routingSource.toggleAccessible(accessibleRoute);
     this.onRouteUpdate(this.defaultOptions.isKiosk ? this.startPoint : fromFeature, toFeature);
   }
@@ -1159,15 +1255,19 @@ export class Map {
    *    map.findRouteByCoords(48.606703739771774, 17.833092384506614, 0, 48.60684545080579, 17.833450676669543, 0);
    *  });
    */
-  public findRouteByCoords(latTo: number, lngTo: number, levelTo: number, latFrom?: number, lngFrom?: number, levelFrom?: number, accessibleRoute?: boolean) {
-    const fromFeature = this.defaultOptions.isKiosk ? this.startPoint : turf.feature(
-      { type: 'Point', coordinates: [lngFrom, latFrom] },
-      { level: levelFrom }
-    ) as Feature;
-    const toFeature = turf.feature(
-      { type: 'Point', coordinates: [lngTo, latTo] },
-      { level: levelTo }
-    ) as Feature;
+  public findRouteByCoords(
+    latTo: number,
+    lngTo: number,
+    levelTo: number,
+    latFrom?: number,
+    lngFrom?: number,
+    levelFrom?: number,
+    accessibleRoute?: boolean,
+  ) {
+    const fromFeature = this.defaultOptions.isKiosk
+      ? this.startPoint
+      : (turf.feature({ type: 'Point', coordinates: [lngFrom, latFrom] }, { level: levelFrom }) as Feature);
+    const toFeature = turf.feature({ type: 'Point', coordinates: [lngTo, latTo] }, { level: levelTo }) as Feature;
     this.routingSource.toggleAccessible(accessibleRoute);
     this.onRouteUpdate(this.defaultOptions.isKiosk ? this.startPoint : fromFeature, toFeature);
   }
@@ -1259,7 +1359,11 @@ export class Map {
    *  });
    */
   public centerToRoute() {
-    if (this.routingSource && this.routingSource.route &&this.routingSource.route[this.routingSource.start?.properties.level]) {
+    if (
+      this.routingSource &&
+      this.routingSource.route &&
+      this.routingSource.route[this.routingSource.start?.properties.level]
+    ) {
       const routeStart = this.routingSource.route[this.routingSource.start?.properties.level] as Feature;
       this.centerOnRoute(routeStart);
       return routeStart;
@@ -1282,7 +1386,9 @@ export class Map {
    *  });
    */
   public centerToFeature(featureId: string) {
-    const feature = this.state.allFeatures.features.find(f => f.id === featureId || f.properties.id === featureId) as Feature;
+    const feature = this.state.allFeatures.features.find(
+      (f) => f.id === featureId || f.properties.id === featureId,
+    ) as Feature;
     if (feature) {
       this.centerOnPoi(feature);
       return feature;
@@ -1329,7 +1435,16 @@ export class Map {
    *    const myFeature = map.addCustomFeature('myPOI', 0, 48.606703739771774, 17.833092384506614);
    *  });
    */
-  public async addCustomFeature(title: string, level: number, lat: number, lng: number, icon?: string, id?: string, placeId?: string, floorId?: string) {
+  public async addCustomFeature(
+    title: string,
+    level: number,
+    lat: number,
+    lng: number,
+    icon?: string,
+    id?: string,
+    placeId?: string,
+    floorId?: string,
+  ) {
     return await this.onAddNewFeature(title, +level, +lat, +lng, icon, id, placeId, floorId);
   }
 
@@ -1353,7 +1468,16 @@ export class Map {
    *    const myFeature = map.updateFeature('poiId', 'myPOI', 0, 48.606703739771774, 17.833092384506614);
    *  });
    */
-  public async updateFeature(id: string, title?: string, level?: number, lat?: number, lng?: number, icon?: string, placeId?: string, floorId?: string) {
+  public async updateFeature(
+    id: string,
+    title?: string,
+    level?: number,
+    lat?: number,
+    lng?: number,
+    icon?: string,
+    placeId?: string,
+    floorId?: string,
+  ) {
     return await this.onUpdateFeature(id, title, level, lat, lng, icon, placeId, floorId);
   }
 
@@ -1476,7 +1600,9 @@ export class Map {
     if (!category || (category && this.amenityCategories[category])) {
       this.onSetAmenityFilter(amenityId, category);
     } else {
-      throw new Error(`It seems there is no '${category}' amenities category created, please set category with 'setAmenitiesCategory()' method`);
+      throw new Error(
+        `It seems there is no '${category}' amenities category created, please set category with 'setAmenitiesCategory()' method`,
+      );
     }
   }
 
@@ -1497,7 +1623,9 @@ export class Map {
     if (!category || (category && this.amenityCategories[category])) {
       this.onRemoveAmenityFilter(amenityId, category);
     } else {
-      throw new Error(`It seems there is no '${category}' amenities category created, please set category with 'setAmenitiesCategory()' method`);
+      throw new Error(
+        `It seems there is no '${category}' amenities category created, please set category with 'setAmenitiesCategory()' method`,
+      );
     }
   }
 
@@ -1531,7 +1659,7 @@ export class Map {
    */
   public setAmenitiesCategory(id: string, amenities: string[]) {
     this.amenityCategories[id] = {
-      amenities
+      amenities,
     };
   }
 
@@ -1551,7 +1679,9 @@ export class Map {
     if (this.amenityCategories[id]) {
       delete this.amenityCategories[id];
     } else {
-      throw new Error(`It seems there is no '${id}' amenities category created, please set category with 'setAmenitiesCategory()' method`);
+      throw new Error(
+        `It seems there is no '${id}' amenities category created, please set category with 'setAmenitiesCategory()' method`,
+      );
     }
   }
 
@@ -1586,5 +1716,5 @@ export class Map {
 }
 
 /* TODO
-* - check clusters
-* */
+ * - check clusters
+ * */

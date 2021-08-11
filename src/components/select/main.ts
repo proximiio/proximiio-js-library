@@ -1,8 +1,8 @@
-import Places from "../../controllers/places";
-import Floors from "../../controllers/floors";
-import Geo from "../../controllers/geo";
+import Places from '../../controllers/places';
+import Floors from '../../controllers/floors';
+import Geo from '../../controllers/geo';
 // @ts-ignore
-import * as Autocomplete from "@tarekraafat/autocomplete.js";
+import * as Autocomplete from '@tarekraafat/autocomplete.js';
 import { Subject } from 'rxjs';
 import { PlaceModel } from '../../models/place';
 import { FloorModel } from '../../models/floor';
@@ -59,7 +59,7 @@ export class Select {
    *  const select = new Proximiio.Select('Places');
    */
   constructor(dataset?: Datasets, options?: AutocompleteOptions, useApiSearch?: boolean) {
-    const selector = options?.selector ? `${options.selector}` : '#proximiioSelect'
+    const selector = options?.selector ? `${options.selector}` : '#proximiioSelect';
     this.useApiSearch = useApiSearch !== undefined ? useApiSearch : false;
     this.ac = new Autocomplete({
       data: this.getData(dataset),
@@ -67,7 +67,7 @@ export class Select {
       ...options,
     });
 
-    (document.querySelector(selector) as HTMLInputElement).addEventListener("selection",  (event: any) => {
+    (document.querySelector(selector) as HTMLInputElement).addEventListener('selection', (event: any) => {
       const feedback = event.detail;
       (document.querySelector(selector) as HTMLInputElement).blur();
       const selection = feedback.selection.value[feedback.selection.key];
@@ -92,14 +92,16 @@ export class Select {
     return {
       src: async (query: string) => {
         try {
-          const places = this.useApiSearch ? await Places.getPlaces(10, 0, undefined, undefined, 'name', query ) : await Places.getPlaces(100);
+          const places = this.useApiSearch
+            ? await Places.getPlaces(10, 0, undefined, undefined, 'name', query)
+            : await Places.getPlaces(100);
           return places.data;
         } catch (error) {
           return error;
         }
       },
       keys: ['name'],
-      cache: false
+      cache: false,
     };
   }
 
@@ -107,14 +109,16 @@ export class Select {
     return {
       src: async (query: string) => {
         try {
-          const floors = this.useApiSearch ? await Floors.getFloors(10, 0, undefined, undefined, 'name', query ) : await Floors.getFloors(100);
+          const floors = this.useApiSearch
+            ? await Floors.getFloors(10, 0, undefined, undefined, 'name', query)
+            : await Floors.getFloors(100);
           return floors.data;
         } catch (error) {
           return error;
         }
       },
       keys: ['name'],
-      cache: false
+      cache: false,
     };
   }
 
@@ -128,7 +132,7 @@ export class Select {
         }
       },
       keys: ['getTitleWithLevel'],
-      cache: false
+      cache: false,
     };
   }
 

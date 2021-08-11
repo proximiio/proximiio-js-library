@@ -1,6 +1,6 @@
 export default {
   'proximiio:languages': {
-    'en': {
+    en: {
       title: 'English',
       level: {
         zero: 'levels',
@@ -8,7 +8,7 @@ export default {
         two: 'levels',
         few: 'levels',
         many: 'levels',
-        other: 'levels'
+        other: 'levels',
       },
       meter: {
         zero: 'meters',
@@ -16,7 +16,7 @@ export default {
         two: 'meters',
         few: 'meters',
         many: 'meters',
-        other: 'meters'
+        other: 'meters',
       },
       turn_before: 'In %d %s %s.',
       turn_prepare: 'Prepare to %s in %d %s.',
@@ -41,9 +41,9 @@ export default {
       level_change_up: 'go %d %s up to %s %d.',
       passing_poi: 'Passing %s on your %s',
       left: 'left',
-      right: 'right'
+      right: 'right',
     },
-    'fi': {
+    fi: {
       title: 'English',
       level: {
         zero: 'levels',
@@ -51,7 +51,7 @@ export default {
         two: 'levels',
         few: 'levels',
         many: 'levels',
-        other: 'levels'
+        other: 'levels',
       },
       meter: {
         zero: 'meters',
@@ -59,7 +59,7 @@ export default {
         two: 'meters',
         few: 'meters',
         many: 'meters',
-        other: 'meters'
+        other: 'meters',
       },
       turn_before: 'In %d %s %s.',
       turn_prepare: 'Prepare to %s in %d %s.',
@@ -84,10 +84,10 @@ export default {
       level_change_up: 'go %d %s up to %s %d.',
       passing_poi: 'Passing %s on your %s',
       left: 'left',
-      right: 'right'
-    }
+      right: 'right',
+    },
   },
-  'en': {
+  en: {
     title: 'English',
     level: {
       zero: 'levels',
@@ -95,7 +95,7 @@ export default {
       two: 'levels',
       few: 'levels',
       many: 'levels',
-      other: 'levels'
+      other: 'levels',
     },
     meter: {
       zero: 'meters',
@@ -103,7 +103,7 @@ export default {
       two: 'meters',
       few: 'meters',
       many: 'meters',
-      other: 'meters'
+      other: 'meters',
     },
     turn_before: 'In %d %s %s.',
     turn_prepare: 'Prepare to %s in %d %s.',
@@ -128,6 +128,6 @@ export default {
     level_change_up: 'go %d %s up to %s %d.',
     passing_poi: 'Passing %s on your %s',
     left: 'left',
-    right: 'right'
-  }
-}
+    right: 'right',
+  },
+};

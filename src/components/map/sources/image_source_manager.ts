@@ -6,7 +6,7 @@ import { getFloors } from '../../../controllers/floors';
 export default class ImageSourceManager extends Eventable {
   sources: string[] = [];
   layers: string[] = [];
-  floors: {data: FloorModel[], total: number} = { data: [], total: 0};
+  floors: { data: FloorModel[]; total: number } = { data: [], total: 0 };
   belowLayer = 'proximiio-floors';
   enabled = true;
 
@@ -19,7 +19,7 @@ export default class ImageSourceManager extends Eventable {
   }
 
   setLevel(map: mapboxgl.Map, level: number) {
-    this.layers.forEach(id => {
+    this.layers.forEach((id) => {
       try {
         if (map.getLayer(id)) {
           map.removeLayer(id);
@@ -28,7 +28,7 @@ export default class ImageSourceManager extends Eventable {
         console.log('unable to remove layer', id);
       }
     });
-    this.sources.forEach(id => {
+    this.sources.forEach((id) => {
       try {
         if (map.getSource(id)) {
           map.removeSource(id);
@@ -39,13 +39,13 @@ export default class ImageSourceManager extends Eventable {
     });
 
     if (this.enabled) {
-      const floors = this.floors.data.filter(floor => floor.hasFloorplan && floor.level === level);
-      floors.forEach(floor => {
+      const floors = this.floors.data.filter((floor) => floor.hasFloorplan && floor.level === level);
+      floors.forEach((floor) => {
         const source = {
           type: 'image',
           url: floor.floorplanImageUrl,
           // tslint:disable-next-line:no-non-null-assertion
-          coordinates: floor.anchors!
+          coordinates: floor.anchors!,
         } as ImageSourceRaw;
 
         const sourceId = `image-source-${floor.id}`;
@@ -57,8 +57,8 @@ export default class ImageSourceManager extends Eventable {
           type: 'raster' as 'raster',
           source: sourceId,
           layout: {
-            visibility: 'visible'
-          } as RasterLayout
+            visibility: 'visible',
+          } as RasterLayout,
         };
 
         map.addLayer(layer, this.belowLayer);

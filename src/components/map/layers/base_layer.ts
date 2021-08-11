@@ -37,11 +37,21 @@ export default class BaseLayer {
   get json() {
     const { id, type, source, sourceLayer, minzoom, maxzoom, filter, metadata } = this;
     const data: any = { id, type };
-    if (source) { data.source = source; }
-    if (sourceLayer) { data['source-layer'] = sourceLayer; }
-    if (minzoom) { data.minzoom = minzoom; }
-    if (maxzoom) { data.maxzoom = maxzoom; }
-    if (filter) { data.filter = filter; }
+    if (source) {
+      data.source = source;
+    }
+    if (sourceLayer) {
+      data['source-layer'] = sourceLayer;
+    }
+    if (minzoom) {
+      data.minzoom = minzoom;
+    }
+    if (maxzoom) {
+      data.maxzoom = maxzoom;
+    }
+    if (filter) {
+      data.filter = filter;
+    }
 
     if (this.metadata) {
       data.metadata = metadata;

@@ -17,14 +17,18 @@ export const getFeatures = async (initPolygons?: boolean) => {
           polygon.properties.poi_id = feature.properties.id;
           polygon.properties.amenity = feature.properties.amenity;
           polygon.id = JSON.stringify(key);
-          if (polygon.properties['label-line'] && polygon.properties['label-line'][0] instanceof Array && polygon.properties['label-line'][1] instanceof Array) {
+          if (
+            polygon.properties['label-line'] &&
+            polygon.properties['label-line'][0] instanceof Array &&
+            polygon.properties['label-line'][1] instanceof Array
+          ) {
             const labelLineFeature = JSON.parse(JSON.stringify(feature));
             labelLineFeature.geometry = {
               coordinates: polygon.properties['label-line'],
-              type: 'LineString'
-            }
-            labelLineFeature.properties.id = JSON.stringify(key+9999);
-            labelLineFeature.id = JSON.stringify(key+9999);
+              type: 'LineString',
+            };
+            labelLineFeature.properties.id = JSON.stringify(key + 9999);
+            labelLineFeature.id = JSON.stringify(key + 9999);
             labelLineFeature.properties.type = 'shop-label';
             polygon.properties.label_id = labelLineFeature.properties.id;
             featuresToAdd.push(labelLineFeature);
@@ -49,15 +53,15 @@ export const getPois = async () => {
   const res = await axios.get(url);
   const customPois = globalState.dynamicFeatures;
   const pois = [...(res.data as FeatureCollection).features, ...customPois.features]
-    .filter((feature: Feature) => (feature.properties.usecase === 'poi' || feature.properties.type === 'poi'))
-    .sort((a: Feature, b: Feature) => a.properties.title > b.properties.title ? -1 : 1)
-    .sort((a: Feature, b: Feature) => a.properties.level > b.properties.level ? 1 : -1)
+    .filter((feature: Feature) => feature.properties.usecase === 'poi' || feature.properties.type === 'poi')
+    .sort((a: Feature, b: Feature) => (a.properties.title > b.properties.title ? -1 : 1))
+    .sort((a: Feature, b: Feature) => (a.properties.level > b.properties.level ? 1 : -1))
     .map((item: any) => new Feature(item));
   return pois;
-}
+};
 
 export default {
   getFeatures,
   getAmenities,
-  getPois
-}
+  getPois,
+};

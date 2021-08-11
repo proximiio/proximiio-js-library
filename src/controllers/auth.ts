@@ -26,7 +26,7 @@ export const login = async (email: string, password: string) => {
     }
 
     const authData: LoginDataModel = { email, password };
-    const loginRes =  await axios.post(`core_auth/login`, authData);
+    const loginRes = await axios.post(`core_auth/login`, authData);
     if (loginRes.data) {
       console.info(`Logged in successfully as ${loginRes.data.user.email}`);
       axios.defaults.headers.common.Authorization = loginRes.data.token;
@@ -35,7 +35,7 @@ export const login = async (email: string, password: string) => {
   } catch (e) {
     throw new Error(`Login failed, ${e.message}`);
   }
-}
+};
 
 /**
  *  @memberof Auth
@@ -58,7 +58,7 @@ export const loginWithToken = async (token: string) => {
     }
     axios.defaults.headers.common.Authorization = token;
 
-    const currentUser =  await axios.get(`core/current_user`);
+    const currentUser = await axios.get(`core/current_user`);
     if (currentUser.data) {
       console.info(`Logged in successfully as ${currentUser.data.email}`);
     }
@@ -66,10 +66,9 @@ export const loginWithToken = async (token: string) => {
   } catch (e) {
     throw new Error(`Login failed, ${e.message}`);
   }
-}
-
+};
 
 export default {
   login,
-  loginWithToken
-}
+  loginWithToken,
+};

@@ -18,18 +18,18 @@ export default class GeoJSONSource extends DataSource {
   }
 
   update(feature: Feature) {
-    const foundIndex = this.data.features.findIndex(x => x.id === feature.id || x.properties.id === feature.id);
+    const foundIndex = this.data.features.findIndex((x) => x.id === feature.id || x.properties.id === feature.id);
     this.data.features[foundIndex] = feature;
   }
 
   delete(id: string) {
-    const foundIndex = this.data.features.findIndex(x => x.id === id || x.properties.id === id);
+    const foundIndex = this.data.features.findIndex((x) => x.id === id || x.properties.id === id);
     this.data.features.splice(foundIndex, 1);
   }
 
   mapLanguage() {
-    const features = this.data.features.filter(f => typeof f.properties.title_i18n === 'object');
-    features.forEach(feature => this.mapFeatureLanguage(feature, this.language));
+    const features = this.data.features.filter((f) => typeof f.properties.title_i18n === 'object');
+    features.forEach((feature) => this.mapFeatureLanguage(feature, this.language));
   }
 
   mapFeatureLanguage(feature: Feature, language: string) {
@@ -43,22 +43,23 @@ export default class GeoJSONSource extends DataSource {
   }
 
   query(query: string, level = 0) {
-    return this.data.features
-      .filter(f => f.properties.title && f.properties.title.toLowerCase().match(query.toLowerCase()));
+    return this.data.features.filter(
+      (f) => f.properties.title && f.properties.title.toLowerCase().match(query.toLowerCase()),
+    );
   }
 
   get(id: string) {
-    return this.data.features.find(f => f.id === id) as Feature;
+    return this.data.features.find((f) => f.id === id) as Feature;
   }
 
   getInternal(id: string) {
-    return this.data.features.find(f => f.properties.id === id) as Feature;
+    return this.data.features.find((f) => f.properties.id === id) as Feature;
   }
 
   get collection() {
     return {
       type: 'FeatureCollection',
-      features: this.data.features.map(f => f.json)
+      features: this.data.features.map((f) => f.json),
     } as FeatureCollection;
   }
 }

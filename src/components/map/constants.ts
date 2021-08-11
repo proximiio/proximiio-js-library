@@ -21,7 +21,7 @@ export const FONTS = [
 export const DEFAULT_FONT = 'Klokantech Noto Sans Regular';
 export const METADATA_POLYGON_EDITING = 'proximiio:polygon-editing';
 
-export const NEW_FEATURE_DIALOG = (e:any, currentFloor: number) => {
+export const NEW_FEATURE_DIALOG = (e: any, currentFloor: number) => {
   return `
     <h1>Add New Feature</h1>
     <form name="form" id="modal-form" class="modal-form" autocomplete="off" role="main">
@@ -41,7 +41,9 @@ export const NEW_FEATURE_DIALOG = (e:any, currentFloor: number) => {
       
       <div>
         <label class="label-level">
-          <input type="number" class="text" name="level" placeholder="Level" value='${currentFloor ? currentFloor : 0}' required />
+          <input type="number" class="text" name="level" placeholder="Level" value='${
+            currentFloor ? currentFloor : 0
+          }' required />
           <span class="required">Level</span>
         </label>
       </div>
@@ -67,10 +69,10 @@ export const NEW_FEATURE_DIALOG = (e:any, currentFloor: number) => {
         </label>
       </div>
     </form>
-  `
-}
+  `;
+};
 
-export const EDIT_FEATURE_DIALOG = (e:any, feature: MapboxGeoJSONFeature) => {
+export const EDIT_FEATURE_DIALOG = (e: any, feature: MapboxGeoJSONFeature) => {
   return `
     <h1>Edit Feature</h1>
     <form name="form" id="modal-form" class="modal-form" autocomplete="off" role="main">
@@ -116,5 +118,5 @@ export const EDIT_FEATURE_DIALOG = (e:any, feature: MapboxGeoJSONFeature) => {
         </label>
       </div>
     </form>
-  `
-}
+  `;
+};

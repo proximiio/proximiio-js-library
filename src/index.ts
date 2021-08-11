@@ -5,9 +5,9 @@ import { Map } from './components/map/main';
 import { Select } from './components/select/main';
 
 export default {
-    Auth,
-    Places,
-    Floors,
-    Map,
-    Select
-}
+  Auth,
+  Places,
+  Floors,
+  Map,
+  Select,
+};

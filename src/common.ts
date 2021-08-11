@@ -2,11 +2,11 @@ import Axios from 'axios';
 
 export const axios = Axios.create({
   baseURL: 'https://api.proximi.fi',
-  timeout: 60000
+  timeout: 60000,
 });
 
 export const camelToKebab = (input: string) => input.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-export const kebabToCamel = (input: string) => input.replace(/-([a-z])/g, g => g[1].toUpperCase());
+export const kebabToCamel = (input: string) => input.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 
 export const kebabize = (data: any) => {
   const result: any = {};
@@ -32,15 +32,15 @@ export const getBase64FromImage = (file: File) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result as string);
-    reader.onerror = error => reject(error);
+    reader.onerror = (error) => reject(error);
   });
-}
+};
 
 export const uuidv4 = () => {
   // @ts-ignore
-  return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+  return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) =>
     // @ts-ignore
     // tslint:disable-next-line:no-bitwise
-    (c !== crypto.getRandomValues(new Uint8Array(1))[0] & 15 > c / 4).toString(16)
+    ((c !== crypto.getRandomValues(new Uint8Array(1))[0]) & (15 > c / 4)).toString(16),
   );
-}
+};

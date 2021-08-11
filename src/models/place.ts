@@ -4,9 +4,9 @@ export class PlaceModel extends BaseModel {
   name: string;
   address: string;
   location: {
-    lat: number,
-    lng: number,
-    zoom?: number
+    lat: number;
+    lng: number;
+    zoom?: number;
   };
   tags?: string[];
   remoteId?: string;
@@ -15,7 +15,7 @@ export class PlaceModel extends BaseModel {
     super(data);
     this.name = data.name;
     this.address = data.address;
-    this.location = data.location ? data.location : { lat: 60.1669635, lng: 24.9217484 }
+    this.location = data.location ? data.location : { lat: 60.1669635, lng: 24.9217484 };
     this.tags = data.tags;
     this.remoteId = data.remote_id;
   }

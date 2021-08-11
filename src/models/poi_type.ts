@@ -9,7 +9,7 @@ export const POI_TYPE = {
   ELEVATOR: 'elevator',
   ESCALATOR: 'escalator',
   STAIRCASE: 'staircase',
-  TEXT: 'text'
+  TEXT: 'text',
 };
 
 export default class PoiType {

@@ -8,12 +8,14 @@ export interface FloorEditorModel {
   scale?: number;
   url?: string;
   width?: number;
-  coordinates?: {
-    c1: Geopoint,
-    c2: Geopoint,
-    c3: Geopoint,
-    c4: Geopoint
-  } | number[][];
+  coordinates?:
+    | {
+        c1: Geopoint;
+        c2: Geopoint;
+        c3: Geopoint;
+        c4: Geopoint;
+      }
+    | number[][];
 }
 
 export type Coordinates = [number, number];
@@ -41,7 +43,7 @@ export class FloorModel extends BaseModel {
         [data.anchors[0].lng, data.anchors[0].lat],
         [data.anchors[1].lng, data.anchors[1].lat],
         [data.anchors[3].lng, data.anchors[3].lat],
-        [data.anchors[2].lng, data.anchors[2].lat]
+        [data.anchors[2].lng, data.anchors[2].lat],
       ];
     }
     this.editor = data.editor;

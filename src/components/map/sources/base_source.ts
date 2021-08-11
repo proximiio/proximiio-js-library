@@ -14,7 +14,7 @@ export default class BaseSource extends Eventable {
 
   get source() {
     return {
-      type: this.type
+      type: this.type,
     };
   }
 }

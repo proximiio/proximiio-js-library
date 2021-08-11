@@ -22,7 +22,7 @@ export class FeatureCollection {
   get json() {
     return {
       type: 'FeatureCollection',
-      features: this.features.map(feature => feature.json)
+      features: this.features.map((feature) => feature.json),
     };
   }
 }
@@ -58,13 +58,12 @@ export default class Feature extends BaseModel {
     }
 
     if (this.isLevelChanger && Array.isArray(this.properties.levels)) {
-      this.properties.levels.forEach((level: number) => this.properties[`__level_${level}`] = true);
+      this.properties.levels.forEach((level: number) => (this.properties[`__level_${level}`] = true));
     }
 
     if (this.properties.type === 'text' && Array.isArray(this.properties.textFont)) {
       this.properties.textFont = this.properties.textFont[0];
     }
-
   }
 
   get isEditable() {
@@ -132,7 +131,11 @@ export default class Feature extends BaseModel {
     if (this.geometry.type === 'LineString' || this.geometry.type === 'MultiLineString') {
       keys.push('class');
     }
-    return Object.keys(this.properties).map(key => !keys.includes(key)).filter(i => i).length === 0;
+    return (
+      Object.keys(this.properties)
+        .map((key) => !keys.includes(key))
+        .filter((i) => i).length === 0
+    );
   }
 
   get isRoom() {
@@ -166,7 +169,7 @@ export default class Feature extends BaseModel {
         console.log('feature parsing failed:', clone.properties.metadata);
       }
     }
-    Object.keys(clone.properties).forEach(key => {
+    Object.keys(clone.properties).forEach((key) => {
       if (key.match('__level')) {
         delete clone.properties.key;
       }
@@ -179,9 +182,9 @@ export default class Feature extends BaseModel {
       id,
       geometry: {
         type: 'Point',
-        coordinates: [longitude, latitude]
+        coordinates: [longitude, latitude],
       },
-      properties
+      properties,
     });
   }
 

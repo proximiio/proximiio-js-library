@@ -7,7 +7,6 @@ interface ChangeContainer {
   feature: Feature;
 }
 
-
 export default class RoutingSource extends DataSource {
   isEditable = false;
   start?: Feature;
@@ -32,7 +31,9 @@ export default class RoutingSource extends DataSource {
     this.start = start;
     this.finish = finish;
 
-    this.data = new FeatureCollection({features: [this.start, this.finish ].concat(this.lines || []).filter(i => i)});
+    this.data = new FeatureCollection({
+      features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),
+    });
     this.notify('feature-updated');
 
     if (start && finish) {
@@ -47,7 +48,7 @@ export default class RoutingSource extends DataSource {
       if (levelPaths) {
         const lines = [] as Feature[];
         const levels = Object.keys(levelPaths);
-        levels.forEach(level => {
+        levels.forEach((level) => {
           const path = levelPaths[level] as Feature;
           path.id = `routing-path-${level}`;
           path.properties.amenity = 'chevron_right';
@@ -66,7 +67,9 @@ export default class RoutingSource extends DataSource {
       //   line.properties.amenity = 'chevron_right'
       //   return line
       // })
-      this.data = new FeatureCollection({features: [ this.start, this.finish ].concat(this.lines || []).filter(i => i)});
+      this.data = new FeatureCollection({
+        features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),
+      });
       this.notify('loading-finished');
       this.notify('feature-updated');
     }
@@ -77,7 +80,9 @@ export default class RoutingSource extends DataSource {
     this.finish = undefined;
     this.lines = undefined;
     this.route = undefined;
-    this.data = new FeatureCollection({features: [ this.start, this.finish ].concat(this.lines || []).filter(i => i)});
+    this.data = new FeatureCollection({
+      features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),
+    });
     this.notify('feature-updated');
   }
 }

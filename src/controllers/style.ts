@@ -17,5 +17,5 @@ export const getStyles = async () => {
 };
 
 export const getStyleUrl = () => {
-  return `https://api.proximi.fi/v5/geo/style?token=${axios.defaults.headers.common.Authorization}`
-}
+  return `https://api.proximi.fi/v5/geo/style?token=${axios.defaults.headers.common.Authorization}`;
+};

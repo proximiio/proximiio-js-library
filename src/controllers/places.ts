@@ -8,8 +8,8 @@ export const getPlaces = async (
   dir?: string,
   filterByIndex?: string,
   q?: string,
-  filter?: string
-): Promise<{ data: PlaceModel[], total: number }> => {
+  filter?: string,
+): Promise<{ data: PlaceModel[]; total: number }> => {
   let queryParams = ``;
   if (limit) {
     queryParams += `?limit=${limit}`;
@@ -33,28 +33,26 @@ export const getPlaces = async (
     queryParams += `&filter=${q}`;
   }
   try {
-    const res =  await axios.get(`core/places${queryParams}`);
+    const res = await axios.get(`core/places${queryParams}`);
     return {
       data: res.data.map((item: any) => new PlaceModel(item)) as PlaceModel[],
-      total: +res.headers.searchcount
+      total: +res.headers.searchcount,
     };
   } catch (e) {
     throw new Error(`Retrieving places failed, ${e.message}`);
   }
-}
+};
 
-export const getPlaceById = async (
-  placeId: string
-): Promise<PlaceModel> => {
+export const getPlaceById = async (placeId: string): Promise<PlaceModel> => {
   try {
-    const res =  await axios.get(`core/places/${placeId}`);
+    const res = await axios.get(`core/places/${placeId}`);
     return new PlaceModel(res.data) as PlaceModel;
   } catch (e) {
     throw new Error(`Retrieving place by id '${placeId}' failed, ${e.message}`);
   }
-}
+};
 
 export default {
   getPlaces,
-  getPlaceById
-}
+  getPlaceById,
+};

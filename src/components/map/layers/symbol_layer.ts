@@ -34,11 +34,19 @@ export class PaintProperties extends Serializable {
     this.textHaloBlur = data['text-halo-blur'] || 0;
     this.textTranslate = data['text-translate'] || [0, 0];
     this.textTranslateAnchor = data['text-translate-anchor'] || 'map';
-
   }
 }
 
-export type Placement = 'center' | 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+export type Placement =
+  | 'center'
+  | 'left'
+  | 'right'
+  | 'top'
+  | 'bottom'
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right';
 export type WritingMode = 'horizontal' | 'vertical';
 
 export class LayoutProperties extends Serializable {
@@ -94,7 +102,6 @@ export class LayoutProperties extends Serializable {
     this.symbolSortKey = data['symbol-sort-key'];
     this.symbolZOrder = data['symbol-z-order'] || 'auto';
 
-
     this.iconAllowOverlap = data['icon-allow-overlap'] || false;
     this.iconIgnorePlacement = data['icon-ignore-placement'] || false;
     this.iconOptional = data['icon-optional'] || false;
@@ -112,26 +119,42 @@ export class LayoutProperties extends Serializable {
 
     this.textPitchAlignment = data['text-pitch-alignment'] || 'auto';
     this.textRotationAlignment = data['text-rotation-alignment'] || 'auto';
-    if ((typeof data['text-font'] === 'string' && data['text-font'] === '{textFont}') ||
-        (typeof data['text-font'] === 'object' && data['text-font'].property === 'textFont')) {
+    if (
+      (typeof data['text-font'] === 'string' && data['text-font'] === '{textFont}') ||
+      (typeof data['text-font'] === 'object' && data['text-font'].property === 'textFont')
+    ) {
       this.textFont = [
         'match',
         ['string', ['get', 'textFont']],
-        'Klokantech Noto Sans Bold', ['literal', ['Klokantech Noto Sans Bold']],
-        'Klokantech Noto Sans CJK Bold', ['literal', ['Klokantech Noto Sans CJK Bold']],
-        'Klokantech Noto Sans CJK Regular', ['literal', ['Klokantech Noto Sans CJK Regular']],
-        'Klokantech Noto Sans Italic', ['literal', ['Klokantech Noto Sans Italic']],
-        'Klokantech Noto Sans Regular', ['literal', ['Klokantech Noto Sans Regular']],
-        'Noto Sans Bold', ['literal', ['Noto Sans Bold']],
-        'Noto Sans Bold Italic', ['literal', ['Noto Sans Bold Italic']],
-        'Noto Sans Italic', ['literal', ['Noto Sans Italic']],
-        'Noto Sans Regular', ['literal', ['Noto Sans Regular']],
-        'Open Sans Bold', ['literal', ['Open Sans Bold']],
-        'Open Sans Italic', ['literal', ['Open Sans Italic']],
-        'Open Sans Regular', ['literal', ['Open Sans Regular']],
-        'Open Sans Semibold', ['literal', ['Open Sans Semibold']],
-        'Open Sans Semibold Italic', ['literal', ['Open Sans Semibold Italic']],
-        ['literal', ['Klokantech Noto Sans Bold']]
+        'Klokantech Noto Sans Bold',
+        ['literal', ['Klokantech Noto Sans Bold']],
+        'Klokantech Noto Sans CJK Bold',
+        ['literal', ['Klokantech Noto Sans CJK Bold']],
+        'Klokantech Noto Sans CJK Regular',
+        ['literal', ['Klokantech Noto Sans CJK Regular']],
+        'Klokantech Noto Sans Italic',
+        ['literal', ['Klokantech Noto Sans Italic']],
+        'Klokantech Noto Sans Regular',
+        ['literal', ['Klokantech Noto Sans Regular']],
+        'Noto Sans Bold',
+        ['literal', ['Noto Sans Bold']],
+        'Noto Sans Bold Italic',
+        ['literal', ['Noto Sans Bold Italic']],
+        'Noto Sans Italic',
+        ['literal', ['Noto Sans Italic']],
+        'Noto Sans Regular',
+        ['literal', ['Noto Sans Regular']],
+        'Open Sans Bold',
+        ['literal', ['Open Sans Bold']],
+        'Open Sans Italic',
+        ['literal', ['Open Sans Italic']],
+        'Open Sans Regular',
+        ['literal', ['Open Sans Regular']],
+        'Open Sans Semibold',
+        ['literal', ['Open Sans Semibold']],
+        'Open Sans Semibold Italic',
+        ['literal', ['Open Sans Semibold Italic']],
+        ['literal', ['Klokantech Noto Sans Bold']],
       ] as any;
     } else {
       this.textFont = data['text-font'];
