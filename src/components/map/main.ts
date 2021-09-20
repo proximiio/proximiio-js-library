@@ -792,7 +792,7 @@ export class Map {
       });
     }
     const personsCollection = this.state.persons.map((person) => {
-      return turf.point([person.lat, person.lng], {
+      return turf.point([person.lng, person.lat], {
         level: person.level,
       }) as Feature;
     });
