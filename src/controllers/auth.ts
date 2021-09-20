@@ -93,5 +93,5 @@ export const getUserConfig = async () => {
 export default {
   login,
   loginWithToken,
-  getUserConfig
+  getUserConfig,
 };

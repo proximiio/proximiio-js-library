@@ -9,7 +9,7 @@ export default class PersonModel {
   constructor(data: any) {
     this.id = data.id ? data.id : uuidv4();
     this.lat = data.lat;
-    this.lng =  data.lng;
+    this.lng = data.lng;
     this.level = data.level;
   }
 

@@ -81,7 +81,7 @@ export const globalState: State = {
   loadingRoute: false,
   noPlaces: false,
   textNavigation: null,
-  persons: []
+  persons: [],
 };
 
 export class Map {
@@ -169,8 +169,8 @@ export class Map {
     const center = this.defaultOptions.mapboxOptions?.center
       ? (this.defaultOptions.mapboxOptions.center as any)
       : this.defaultOptions.isKiosk
-        ? this.defaultOptions.kioskSettings?.coordinates
-        : [place.location.lng, place.location.lat];
+      ? this.defaultOptions.kioskSettings?.coordinates
+      : [place.location.lng, place.location.lat];
     style.center = center;
     this.geojsonSource.fetch(features);
     this.routingSource.routing.setData(new FeatureCollection(features));
@@ -752,19 +752,19 @@ export class Map {
   }
 
   private onSetPerson(lat: number, lng: number, level: number, id?: string | number) {
-    const person = new PersonModel({lat, lng, level, id});
+    const person = new PersonModel({ lat, lng, level, id });
     this.state = { ...this.state, persons: [person] };
     this.initPersonsMap();
   }
 
   private onAddPerson(lat: number, lng: number, level: number, id?: string | number) {
-    const person = new PersonModel({lat, lng, level, id});
-    this.state.persons = [ ...this.state.persons, person ];
+    const person = new PersonModel({ lat, lng, level, id });
+    this.state.persons = [...this.state.persons, person];
     this.initPersonsMap();
   }
 
   private onUpdatePerson(person: PersonModel, lat: number, lng: number, level: number) {
-    person.updatePosition({lat, lng, level});
+    person.updatePosition({ lat, lng, level });
     this.initPersonsMap();
   }
 
@@ -777,9 +777,9 @@ export class Map {
         source: 'persons-source',
         layout: {
           'icon-image': 'person',
-          'icon-size': ['interpolate', ['exponential', 0.3], ['zoom'], 17, 0.1, 22, 0.3]
+          'icon-size': ['interpolate', ['exponential', 0.3], ['zoom'], 17, 0.1, 22, 0.3],
         },
-        filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]]
+        filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
       });
     }
     if (!map.getSource('persons-source')) {
@@ -791,14 +791,14 @@ export class Map {
         },
       });
     }
-    const personsCollection = this.state.persons.map(person => {
+    const personsCollection = this.state.persons.map((person) => {
       return turf.point([person.lat, person.lng], {
         level: person.level,
       }) as Feature;
     });
     this.state.style.sources['persons-source'].data = {
       type: 'FeatureCollection',
-      features: personsCollection
+      features: personsCollection,
     };
     this.map.setStyle(this.state.style);
     this.onPersonUpdateListener.next(this.state.persons);
@@ -820,7 +820,9 @@ export class Map {
 
     if (event === 'loading-finished') {
       if (this.routingSource.route) {
-        const routeStart = this.routingSource.lines.find(l => +l.properties.level === this.routingSource.start?.properties.level);
+        const routeStart = this.routingSource.lines.find(
+          (l) => +l.properties.level === this.routingSource.start?.properties.level,
+        );
         const textNavigation = this.routeFactory.generateRoute(
           JSON.stringify(this.routingSource.points),
           JSON.stringify(this.endPoint),
@@ -979,7 +981,9 @@ export class Map {
     const state: any = { floors: floors.sort((a, b) => a.level - b.level) };
 
     if (floors.length > 0) {
-      const defaultFloor = floorLevel ? floors.find((floor) => floor.level === floorLevel) : floors.find((floor) => floor.level === 0);
+      const defaultFloor = floorLevel
+        ? floors.find((floor) => floor.level === floorLevel)
+        : floors.find((floor) => floor.level === 0);
       if (defaultFloor) {
         state.floor = defaultFloor;
       } else {
@@ -1152,7 +1156,7 @@ export class Map {
    */
   public async setPlace(placeId: string, zoomIntoPlace?: boolean, floorLevel?: number) {
     const place = await getPlaceById(placeId);
-    const shouldZoom = typeof zoomIntoPlace !== 'undefined' ? zoomIntoPlace: true;
+    const shouldZoom = typeof zoomIntoPlace !== 'undefined' ? zoomIntoPlace : true;
     await this.onPlaceSelect(place, shouldZoom, floorLevel);
     return place;
   }
@@ -1817,7 +1821,7 @@ export class Map {
    *  });
    */
   public upsertPerson(lat: number, lng: number, level: number, id?: string | number) {
-    const person = id ? this.state.persons.find(p => p.id === id) : null;
+    const person = id ? this.state.persons.find((p) => p.id === id) : null;
     if (person) {
       this.onUpdatePerson(person, lat, lng, level);
     } else {
