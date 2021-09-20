@@ -5,6 +5,7 @@ import StyleModel from '../../models/style';
 import Feature, { FeatureCollection } from '../../models/feature';
 import { AmenityModel } from '../../models/amenity';
 import { MapboxOptions } from '../../models/mapbox-options';
+import PersonModel from '../../models/person';
 interface State {
     readonly initializing: boolean;
     readonly floor: FloorModel;
@@ -23,6 +24,7 @@ interface State {
     readonly loadingRoute: boolean;
     readonly noPlaces: boolean;
     readonly textNavigation: any;
+    readonly persons: PersonModel[];
 }
 interface Options {
     selector?: string;
@@ -58,6 +60,7 @@ export declare class Map {
     private onFeatureUpdateListener;
     private onFeatureDeleteListener;
     private onPolygonClickListener;
+    private onPersonUpdateListener;
     private defaultOptions;
     private routeFactory;
     private startPoint?;
@@ -91,6 +94,10 @@ export declare class Map {
     private onRemoveAmenityFilter;
     private onResetAmenityFilters;
     private filterOutFeatures;
+    private onSetPerson;
+    private onAddPerson;
+    private onUpdatePerson;
+    private initPersonsMap;
     private prepareStyle;
     private onRouteChange;
     private onSourceChange;
@@ -134,6 +141,8 @@ export declare class Map {
      *  @memberof Map
      *  @name setPlace
      *  @param placeId {string} Id of the place to be set as active on map
+     *  @param zoomIntoPlace {boolean} should zoom into active place, optional
+     *  @param floorLevel {number} Level of the floor to be set as active on map, optional
      *  @returns active place
      *  @example
      *  const map = new Proximiio.Map();
@@ -142,7 +151,7 @@ export declare class Map {
      *    map.setPlace(myPlaceId);
      *  });
      */
-    setPlace(placeId: string): Promise<PlaceModel>;
+    setPlace(placeId: string, zoomIntoPlace?: boolean, floorLevel?: number): Promise<PlaceModel>;
     /**
      *  @memberof Map
      *  @name getPlaceSelectListener
@@ -569,5 +578,48 @@ export declare class Map {
      *  });
      */
     getPolygonClickListener(): import("rxjs").Observable<Feature>;
+    /**
+     * Method for setting a person icon on a Map, this method is resetting the previous state of all persons added before
+     *  @memberof Map
+     *  @name setPerson
+     *  @param lat {number} latitude coordinate of person.
+     *  @param lng {number} longitude coordinate of person.
+     *  @param level {number} floor level of person.
+     *  @param id {string | number} id of person, optional.
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.setPerson(48.606703739771774, 17.833092384506614, 0);
+     *  });
+     */
+    setPerson(lat: number, lng: number, level: number, id?: string | number): void;
+    /**
+     * Method for add/update person icon on a Map
+     *  @memberof Map
+     *  @name upsertPerson
+     *  @param lat {number} latitude coordinate of person.
+     *  @param lng {number} longitude coordinate of person.
+     *  @param level {number} floor level of person.
+     *  @param id {string | number} id of person, optional.
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.upsertPerson(48.606703739771774, 17.833092384506614, 0, 'person-1');
+     *  });
+     */
+    upsertPerson(lat: number, lng: number, level: number, id?: string | number): void;
+    /**
+     *  @memberof Map
+     *  @name getPersonUpdateListener
+     *  @returns returns person update listener
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getPersonUpdateListener().subscribe((personsList) => {
+     *    console.log('current persons', personsList);
+     *  });
+     */
+    getPersonUpdateListener(): import("rxjs").Observable<PersonModel[]>;
 }
 export {};

@@ -55,7 +55,7 @@ export default class RoutingSource extends DataSource {
           path.properties.level = level;
           lines.push(path);
         });
-        this.lines = lines;
+        this.lines = lines.sort((a, b) => (+a.properties.level > +b.properties.level) ? 1 : -1);
       } else {
         this.lines = [];
         this.notify('route-undefined');

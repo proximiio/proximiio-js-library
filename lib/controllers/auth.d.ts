@@ -27,8 +27,22 @@ export declare const login: (email: string, password: string) => Promise<import(
  *    })
  */
 export declare const loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any>>;
+/**
+ *  @memberof Auth
+ *  @name getUserConfig
+ *  @returns logged in user config data
+ *  @example
+ *  Proximiio.Auth.getUserConfig()
+ *    .then(res => {
+ *      const config = res;
+ *    }).catch(err => {
+ *      console.log('fetching config failed', err);
+ *    })
+ */
+export declare const getUserConfig: () => Promise<any>;
 declare const _default: {
     login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any>>;
     loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any>>;
+    getUserConfig: () => Promise<any>;
 };
 export default _default;

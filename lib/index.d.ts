@@ -4,6 +4,7 @@ declare const _default: {
     Auth: {
         login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any>>;
         loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any>>;
+        getUserConfig: () => Promise<any>;
     };
     Places: {
         getPlaces: (limit?: number, skip?: number, order?: string, dir?: string, filterByIndex?: string, q?: string, filter?: string) => Promise<{

@@ -12,7 +12,7 @@ import ClusterSource from './sources/cluster_source';
 import ImageSourceManager from './sources/image_source_manager';
 import { AmenityModel } from '../../models/amenity';
 import { getBase64FromImage, getImageFromBase64, uuidv4 } from '../../common';
-import { chevron, pulsingDot } from './icons';
+import { chevron, pulsingDot, person as personIcon } from './icons';
 import { MapboxEvent } from 'mapbox-gl';
 import { getPlaceFloors } from '../../controllers/floors';
 import { getPlaceById } from '../../controllers/places';
@@ -25,6 +25,7 @@ import * as TBTNav from '../../../assets/tbtnav';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
 import { MapboxOptions } from '../../models/mapbox-options';
 import { PolygonIconsLayer, PolygonsLayer, PolygonTitlesLayer } from './custom-layers';
+import PersonModel from '../../models/person';
 
 interface State {
   readonly initializing: boolean;
@@ -44,6 +45,7 @@ interface State {
   readonly loadingRoute: boolean;
   readonly noPlaces: boolean;
   readonly textNavigation: any;
+  readonly persons: PersonModel[];
 }
 
 interface Options {
@@ -79,6 +81,7 @@ export const globalState: State = {
   loadingRoute: false,
   noPlaces: false,
   textNavigation: null,
+  persons: []
 };
 
 export class Map {
@@ -99,6 +102,7 @@ export class Map {
   private onFeatureUpdateListener = new Subject<Feature>();
   private onFeatureDeleteListener = new Subject();
   private onPolygonClickListener = new Subject<Feature>();
+  private onPersonUpdateListener = new Subject<PersonModel[]>();
   private defaultOptions: Options = {
     selector: 'proximiioMap',
     allowNewFeatureModal: false,
@@ -165,8 +169,8 @@ export class Map {
     const center = this.defaultOptions.mapboxOptions?.center
       ? (this.defaultOptions.mapboxOptions.center as any)
       : this.defaultOptions.isKiosk
-      ? this.defaultOptions.kioskSettings?.coordinates
-      : [place.location.lng, place.location.lat];
+        ? this.defaultOptions.kioskSettings?.coordinates
+        : [place.location.lng, place.location.lat];
     style.center = center;
     this.geojsonSource.fetch(features);
     this.routingSource.routing.setData(new FeatureCollection(features));
@@ -232,8 +236,10 @@ export class Map {
       }
       map.setMaxZoom(30);
       const decodedChevron = await getImageFromBase64(chevron);
+      const decodedPersonIcon = await getImageFromBase64(personIcon);
       map.addImage('chevron_right', decodedChevron as any);
       map.addImage('pulsing-dot', pulsingDot, { pixelRatio: 2 });
+      map.addImage('person', decodedPersonIcon as any);
       this.onSourceChange();
       this.updateMapSource(this.geojsonSource);
       this.updateMapSource(this.routingSource);
@@ -242,13 +248,14 @@ export class Map {
       this.filteredAmenities = this.amenityIds;
       this.imageSourceManager.setLevel(map, this.state.floor?.level);
       await this.onPlaceSelect(this.state.place, this.defaultOptions.zoomIntoPlace);
-      this.onMapReadyListener.next(true);
-      if (this.defaultOptions.isKiosk) {
-        this.initKiosk();
-      }
       if (this.defaultOptions.initPolygons) {
         this.initPolygons();
       }
+      if (this.defaultOptions.isKiosk) {
+        this.initKiosk();
+      }
+      this.initPersonsMap();
+      this.onMapReadyListener.next(true);
     }
   }
 
@@ -744,6 +751,59 @@ export class Map {
     this.state.style.notify('filter-change');
   }
 
+  private onSetPerson(lat: number, lng: number, level: number, id?: string | number) {
+    const person = new PersonModel({lat, lng, level, id});
+    this.state = { ...this.state, persons: [person] };
+    this.initPersonsMap();
+  }
+
+  private onAddPerson(lat: number, lng: number, level: number, id?: string | number) {
+    const person = new PersonModel({lat, lng, level, id});
+    this.state.persons = [ ...this.state.persons, person ];
+    this.initPersonsMap();
+  }
+
+  private onUpdatePerson(person: PersonModel, lat: number, lng: number, level: number) {
+    person.updatePosition({lat, lng, level});
+    this.initPersonsMap();
+  }
+
+  private initPersonsMap() {
+    const map = this.map;
+    if (!map.getLayer('persons-layer')) {
+      this.state.style.addLayer({
+        id: 'persons-layer',
+        type: 'symbol',
+        source: 'persons-source',
+        layout: {
+          'icon-image': 'person',
+          'icon-size': ['interpolate', ['exponential', 0.3], ['zoom'], 17, 0.1, 22, 0.3]
+        },
+        filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]]
+      });
+    }
+    if (!map.getSource('persons-source')) {
+      this.state.style.addSource('persons-source', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [],
+        },
+      });
+    }
+    const personsCollection = this.state.persons.map(person => {
+      return turf.point([person.lat, person.lng], {
+        level: person.level,
+      }) as Feature;
+    });
+    this.state.style.sources['persons-source'].data = {
+      type: 'FeatureCollection',
+      features: personsCollection
+    };
+    this.map.setStyle(this.state.style);
+    this.onPersonUpdateListener.next(this.state.persons);
+  }
+
   private prepareStyle(style: StyleModel) {
     style.setSource('main', this.geojsonSource);
     style.setSource('synthetic', this.syntheticSource);
@@ -760,7 +820,7 @@ export class Map {
 
     if (event === 'loading-finished') {
       if (this.routingSource.route) {
-        const routeStart = this.routingSource.route[this.routingSource.start?.properties.level];
+        const routeStart = this.routingSource.lines.find(l => +l.properties.level === this.routingSource.start?.properties.level);
         const textNavigation = this.routeFactory.generateRoute(
           JSON.stringify(this.routingSource.points),
           JSON.stringify(this.endPoint),
@@ -913,15 +973,15 @@ export class Map {
     }
   }
 
-  private async onPlaceSelect(place: PlaceModel, zoomIntoPlace: boolean | undefined) {
+  private async onPlaceSelect(place: PlaceModel, zoomIntoPlace: boolean | undefined, floorLevel?: number) {
     this.state = { ...this.state, place };
     const floors = await getPlaceFloors(place.id);
     const state: any = { floors: floors.sort((a, b) => a.level - b.level) };
 
     if (floors.length > 0) {
-      const groundFloor = floors.find((floor) => floor.level === 0);
-      if (groundFloor) {
-        state.floor = groundFloor;
+      const defaultFloor = floorLevel ? floors.find((floor) => floor.level === floorLevel) : floors.find((floor) => floor.level === 0);
+      if (defaultFloor) {
+        state.floor = defaultFloor;
       } else {
         state.floor = floors[0];
       }
@@ -959,6 +1019,11 @@ export class Map {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
         map.setFilter('my-location-layer', filter);
         this.state.style.getLayer('my-location-layer').filter = filter;
+      }
+      if (map.getLayer('persons-layer')) {
+        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
+        map.setFilter('persons-layer', filter);
+        this.state.style.getLayer('persons-layer').filter = filter;
       }
     }
     this.state = { ...this.state, floor, style: this.state.style };
@@ -1001,8 +1066,8 @@ export class Map {
 
   private centerOnRoute(route: Feature) {
     if (route && route.properties) {
-      if (this.state.floor.level !== parseInt(route.properties.level, 0)) {
-        const floor = this.state.floors.find((f) => f.level === parseInt(route.properties.level, 0));
+      if (this.state.floor.level !== +route.properties.level) {
+        const floor = this.state.floors.find((f) => f.level === +route.properties.level);
         if (floor) this.onFloorSelect(floor);
       }
       if (this.map) {
@@ -1075,6 +1140,8 @@ export class Map {
    *  @memberof Map
    *  @name setPlace
    *  @param placeId {string} Id of the place to be set as active on map
+   *  @param zoomIntoPlace {boolean} should zoom into active place, optional
+   *  @param floorLevel {number} Level of the floor to be set as active on map, optional
    *  @returns active place
    *  @example
    *  const map = new Proximiio.Map();
@@ -1083,9 +1150,10 @@ export class Map {
    *    map.setPlace(myPlaceId);
    *  });
    */
-  public async setPlace(placeId: string) {
+  public async setPlace(placeId: string, zoomIntoPlace?: boolean, floorLevel?: number) {
     const place = await getPlaceById(placeId);
-    await this.onPlaceSelect(place, true);
+    const shouldZoom = typeof zoomIntoPlace !== 'undefined' ? zoomIntoPlace: true;
+    await this.onPlaceSelect(place, shouldZoom, floorLevel);
     return place;
   }
 
@@ -1712,6 +1780,63 @@ export class Map {
    */
   public getPolygonClickListener() {
     return this.onPolygonClickListener.asObservable();
+  }
+
+  /**
+   * Method for setting a person icon on a Map, this method is resetting the previous state of all persons added before
+   *  @memberof Map
+   *  @name setPerson
+   *  @param lat {number} latitude coordinate of person.
+   *  @param lng {number} longitude coordinate of person.
+   *  @param level {number} floor level of person.
+   *  @param id {string | number} id of person, optional.
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.setPerson(48.606703739771774, 17.833092384506614, 0);
+   *  });
+   */
+  public setPerson(lat: number, lng: number, level: number, id?: string | number) {
+    this.onSetPerson(lat, lng, level, id);
+  }
+
+  /**
+   * Method for add/update person icon on a Map
+   *  @memberof Map
+   *  @name upsertPerson
+   *  @param lat {number} latitude coordinate of person.
+   *  @param lng {number} longitude coordinate of person.
+   *  @param level {number} floor level of person.
+   *  @param id {string | number} id of person, optional.
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.upsertPerson(48.606703739771774, 17.833092384506614, 0, 'person-1');
+   *  });
+   */
+  public upsertPerson(lat: number, lng: number, level: number, id?: string | number) {
+    const person = id ? this.state.persons.find(p => p.id === id) : null;
+    if (person) {
+      this.onUpdatePerson(person, lat, lng, level);
+    } else {
+      this.onAddPerson(lat, lng, level, id);
+    }
+  }
+
+  /**
+   *  @memberof Map
+   *  @name getPersonUpdateListener
+   *  @returns returns person update listener
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getPersonUpdateListener().subscribe((personsList) => {
+   *    console.log('current persons', personsList);
+   *  });
+   */
+  public getPersonUpdateListener() {
+    return this.onPersonUpdateListener.asObservable();
   }
 }
 

@@ -50,6 +50,16 @@ Proximiio.Auth.loginWithToken('token')
 Proximiio.default.Auth.loginWithToken('token')
 ```
 
+###### Get User Config Data
+
+```
+// node.js & react/angular
+Proximiio.Auth.getUserConfig()
+
+// browser
+Proximiio.default.Auth.getUserConfig()
+```
+
 #### Get list of places
 ```
 // node.js & react/angular
@@ -166,6 +176,10 @@ map.getMapboxInstance(); // this will return mapbox instance
 ##### Set active place
 This method will set an active place, load floors etc. Have to be called after map is ready, see getMapReadyListener.
 ```
+// @param placeId {string} Id of the place to be set as active on map
+// @param zoomIntoPlace {boolean} should zoom into active place, optional
+// @param floorLevel {number} Level of the floor to be set as active on map, optional
+
 map.getMapReadyListener().subscribe(ready => {
    console.log('map ready', ready);
    map.setPlace(myPlaceId);
@@ -366,6 +380,36 @@ map.getMapReadyListener().subscribe(ready => {
 });
 ```
 
+##### Showing Person Icon
+
+###### setPerson()
+Method for setting a person icon on a Map, this method is resetting the previous state of all persons added before.
+```
+// @param lat {number} latitude coordinate of person.
+// @param lng {number} longitude coordinate of person.
+// @param level {number} floor level of person.
+// @param id {string | number} id of person, optional.
+
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   map.setPerson(48.606703739771774, 17.833092384506614, 0);
+});
+```
+
+###### upsertPerson()
+Method for add/update person icon on a Map.
+```
+// @param lat {number} latitude coordinate of person.
+// @param lng {number} longitude coordinate of person.
+// @param level {number} floor level of person.
+// @param id {string | number} id of person, optional.
+
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   map.upsertPerson(48.606703739771774, 17.833092384506614, 0, 'person-1');
+});
+```
+
 ##### Map Features Filtering
 
 ###### Setting new filter
@@ -515,6 +559,13 @@ map.getFeatureDeleteListener().subscribe(() => {
 ```
 map.getPolygonClickListener().subscribe((poi) => {
    console.log('polygon clicked', poi);
+});
+```
+
+##### Listen to persons update event
+```
+map.getPersonUpdateListener().subscribe((personsList) => {
+   console.log('current persons', personsList);
 });
 ```
 

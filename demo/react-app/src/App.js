@@ -5,6 +5,8 @@ import Proximiio from 'proximiio-js-library'
 import * as turf from '@turf/turf';
 import mapboxgl from 'mapbox-gl';
 
+let socket = new WebSocket('wss://live.proximi.fi/live');
+
 class App extends React.Component {
   constructor(props) {
     super(props)
@@ -12,6 +14,18 @@ class App extends React.Component {
   }
 
   componentDidMount() {
+    socket.onopen = (e) => {
+      console.log("[open] Connection established");
+      console.log("Sending to server");
+      socket.send(JSON.stringify({
+        action: 'authorize',
+        data: {
+          token: 'iAoJ9vN6kcd+oIjuVSs/ni4APlmDKriiTYH5oi5LEQc=',
+          version: '1.0'
+        }
+      }));
+    };
+
     const customPoiList = [{
       id: 'custom-poi-1',
       title: 'Custom Poi',
@@ -34,25 +48,25 @@ class App extends React.Component {
       level: 0
     }];
 
-    Proximiio.Auth.loginWithToken('token')
+    Proximiio.Auth.loginWithToken('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImlzcyI6IjQ0MDEwZjZmLTk5NjMtNDQzMy1hZDg2LTQwYjg5YjgyOWM0MSIsInR5cGUiOiJ1c2VyIiwidXNlciI6IkRlbW8gV2F5ZmluZGluZyIsInVzZXJfaWQiOiI1ZTBkNDVlMy0wMjVmLTRiMzItYmUwNy0wYzk0MjUxYmQ1NzMiLCJ0ZW5hbnRfaWQiOiI0NDAxMGY2Zi05OTYzLTQ0MzMtYWQ4Ni00MGI4OWI4MjljNDEifQ.reaAdK4uUqvGcDghQTmXtbsHR4mX9Hcinwwg4_uqwfQ')
       .then(res => {
         console.log('Logged in', res);
 
         Proximiio.Places.getPlaces(5)
-        .then(res => {
-          console.log('places fetched', res);
-        })
-        .catch(err => {
-          console.log(err);
-        })
+          .then(res => {
+            console.log('places fetched', res);
+          })
+          .catch(err => {
+            console.log(err);
+          })
 
         Proximiio.Floors.getFloors(5)
-        .then(res => {
-          console.log('floors fetched', res);
-        })
-        .catch(err => {
-          console.log(err);
-        })
+          .then(res => {
+            console.log('floors fetched', res);
+          })
+          .catch(err => {
+            console.log(err);
+          })
 
         this.map = new Proximiio.Map({
           allowNewFeatureModal: false,
@@ -105,11 +119,23 @@ class App extends React.Component {
           }, 5000);*/
         });
 
+        socket.onmessage = (message) => {
+          const data = JSON.parse(message.data);
+          if (data.action === 'position:update') {
+            const position = data.data.position;
+            this.map.upsertPerson(position.lat, position.lng, position.level, data.tag);
+          }
+        }
+
+        this.map.getPersonUpdateListener().subscribe(res => {
+          console.log('persons update', res);
+        });
+
         this.map.getFeatureAddListener().subscribe(feature => {
           console.log('feature added ', feature);
         })
 
-         this.map.getFeatureDeleteListener().subscribe(() => {
+        this.map.getFeatureDeleteListener().subscribe(() => {
           console.log('feature deleted ');
         })
 

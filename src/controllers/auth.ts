@@ -68,7 +68,30 @@ export const loginWithToken = async (token: string) => {
   }
 };
 
+/**
+ *  @memberof Auth
+ *  @name getUserConfig
+ *  @returns logged in user config data
+ *  @example
+ *  Proximiio.Auth.getUserConfig()
+ *    .then(res => {
+ *      const config = res;
+ *    }).catch(err => {
+ *      console.log('fetching config failed', err);
+ *    })
+ */
+
+export const getUserConfig = async () => {
+  try {
+    const config = await axios.get(`config`);
+    return config.data;
+  } catch (e) {
+    throw new Error(`Fetching config failed, ${e.message}`);
+  }
+};
+
 export default {
   login,
   loginWithToken,
+  getUserConfig
 };
