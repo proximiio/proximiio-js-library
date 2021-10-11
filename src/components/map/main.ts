@@ -111,7 +111,7 @@ export class Map {
     enableTBTNavigation: true,
     zoomIntoPlace: true,
     isKiosk: false,
-    initPolygons: false
+    initPolygons: false,
   };
   private routeFactory: any;
   private startPoint?: Feature;
