@@ -996,7 +996,9 @@ export class Map {
       map.flyTo({ center: [place.location.lng, place.location.lat] });
     }
     this.onPlaceSelectListener.next(place);
-    this.onFloorSelect(state.floor);
+    if (state.floor) {
+      this.onFloorSelect(state.floor);
+    }
   }
 
   private onFloorSelect(floor: FloorModel) {
