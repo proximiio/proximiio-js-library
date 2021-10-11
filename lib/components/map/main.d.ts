@@ -40,6 +40,7 @@ interface Options {
         level: number;
     };
     initPolygons?: boolean;
+    zoomLevel?: number;
 }
 export declare const globalState: State;
 export declare class Map {

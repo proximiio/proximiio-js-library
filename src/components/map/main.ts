@@ -62,6 +62,7 @@ interface Options {
     level: number;
   };
   initPolygons?: boolean;
+  zoomLevel?: number;
 }
 
 export const globalState: State = {
@@ -110,7 +111,7 @@ export class Map {
     enableTBTNavigation: true,
     zoomIntoPlace: true,
     isKiosk: false,
-    initPolygons: false,
+    initPolygons: false
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -172,6 +173,9 @@ export class Map {
       ? this.defaultOptions.kioskSettings?.coordinates
       : [place.location.lng, place.location.lat];
     style.center = center;
+    if (this.defaultOptions.zoomLevel) {
+      style.zoom = this.defaultOptions.zoomLevel;
+    }
     this.geojsonSource.fetch(features);
     this.routingSource.routing.setData(new FeatureCollection(features));
     this.prepareStyle(style);
@@ -189,7 +193,7 @@ export class Map {
       allFeatures: new FeatureCollection(features),
       latitude: center[1],
       longitude: center[0],
-      zoom: this.defaultOptions.mapboxOptions?.zoom,
+      zoom: this.defaultOptions.zoomLevel ? this.defaultOptions.zoomLevel : this.defaultOptions.mapboxOptions?.zoom,
       noPlaces: places.length === 0,
     };
     style.on(this.onStyleChange);
