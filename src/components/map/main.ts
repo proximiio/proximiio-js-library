@@ -113,7 +113,7 @@ export class Map {
     zoomIntoPlace: true,
     isKiosk: false,
     initPolygons: false,
-    considerVisibilityParam: true
+    considerVisibilityParam: true,
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -172,8 +172,8 @@ export class Map {
     const center = this.defaultOptions.mapboxOptions?.center
       ? (this.defaultOptions.mapboxOptions.center as any)
       : this.defaultOptions.isKiosk
-        ? this.defaultOptions.kioskSettings?.coordinates
-        : [place.location.lng, place.location.lat];
+      ? this.defaultOptions.kioskSettings?.coordinates
+      : [place.location.lng, place.location.lat];
     style.center = center;
     if (this.defaultOptions.zoomLevel) {
       style.zoom = this.defaultOptions.zoomLevel;
@@ -785,19 +785,11 @@ export class Map {
               ];
             } else {
               // hide pois with hidden visibility
-              filters[visibilityFilter] = [
-                '!=',
-                ['get', 'visibility'],
-                'hidden',
-              ];
+              filters[visibilityFilter] = ['!=', ['get', 'visibility'], 'hidden'];
             }
           } else {
             // add visibility filter
-            filters.push([
-              '!=',
-              ['get', 'visibility'],
-              'hidden'
-            ]);
+            filters.push(['!=', ['get', 'visibility'], 'hidden']);
           }
           this.state.style.getLayer(layer).filter = filters;
           this.map.setFilter(layer, filters);
