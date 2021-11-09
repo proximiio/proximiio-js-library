@@ -116,7 +116,8 @@ const map = new Proximiio.Map({
         coordinates: [number, number], // coordinates for a kiosk start point
         level: number // floor level of a kiosk starting point
     },
-    initPolygons: false // optional, default: false, if enabled and yours geojson includes required data the map will show defined features as polygons with hover/click effect.
+    initPolygons: false, // optional, default: false, if enabled and yours geojson includes required data the map will show defined features as polygons with hover/click effect
+    considerVisibilityParam: false // optional, default: true, if enabled all pois with visibility property defined as 'hidden' will not be visible as default, will be possible to toggle them with toggleHiddenPois() method
 });
 ```
 #### Required Data for 3D Polygons
@@ -319,6 +320,15 @@ This method will center the map to provided coordinates.
 map.getMapReadyListener().subscribe(ready => {
    console.log('map ready', ready);
    map.centerToCoordinates(48.60678469647394, 17.833135351538658, 20);
+});
+```
+
+##### Toggle hidden poi visibility
+This method will toggle hidden poi visibility based on the visibility param in poi properties.
+```   
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   map.toggleHiddenPois();
 });
 ```
 

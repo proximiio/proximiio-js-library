@@ -41,6 +41,7 @@ interface Options {
     };
     initPolygons?: boolean;
     zoomLevel?: number;
+    considerVisibilityParam?: boolean;
 }
 export declare const globalState: State;
 export declare class Map {
@@ -95,6 +96,8 @@ export declare class Map {
     private onRemoveAmenityFilter;
     private onResetAmenityFilters;
     private filterOutFeatures;
+    private handlePoiVisibility;
+    private onToggleHiddenPois;
     private onSetPerson;
     private onAddPerson;
     private onUpdatePerson;
@@ -622,5 +625,17 @@ export declare class Map {
      *  });
      */
     getPersonUpdateListener(): import("rxjs").Observable<PersonModel[]>;
+    /**
+     * Method for toggling hidden pois visibility
+     *  @memberof Map
+     *  @name toggleHiddenPois
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.toggleHiddenPois();
+     *  });
+     */
+    toggleHiddenPois(): void;
 }
 export {};

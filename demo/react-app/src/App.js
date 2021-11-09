@@ -34,7 +34,7 @@ class App extends React.Component {
       level: 0
     }];
 
-    Proximiio.Auth.loginWithToken('token')
+    Proximiio.Auth.loginWithToken('')
       .then(res => {
         console.log('Logged in', res);
 
@@ -182,6 +182,10 @@ class App extends React.Component {
     this.map.resetAmenityFilters();
   }
 
+  onToggleHiddenPois = () => {
+    this.map.toggleHiddenPois();
+  }
+
   render() {
     return (
       <div className="App">
@@ -213,6 +217,7 @@ class App extends React.Component {
           <button onClick={this.onRemoveFilter.bind(this, '44010f6f-9963-4433-ad86-40b89b829c41:d111c5e4-1a63-48b3-94de-5fa7b309daaf', 'shop')}>Remove Clothing Filter</button>
           <button onClick={this.onRemoveFilter.bind(this, '44010f6f-9963-4433-ad86-40b89b829c41:e762ea14-70e2-49b7-9938-f6870f9ab18f', 'amenities')}>Remove Toilets Filter</button>
           <button onClick={this.onResetFilters}>Reset Filters</button>
+          <button onClick={this.onToggleHiddenPois}>Toggle Hidden Pois</button>
         </header>
         <div id="proximiioMap"></div>
       </div>

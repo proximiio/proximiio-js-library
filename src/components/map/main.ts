@@ -63,6 +63,7 @@ interface Options {
   };
   initPolygons?: boolean;
   zoomLevel?: number;
+  considerVisibilityParam?: boolean;
 }
 
 export const globalState: State = {
@@ -112,6 +113,7 @@ export class Map {
     zoomIntoPlace: true,
     isKiosk: false,
     initPolygons: false,
+    considerVisibilityParam: true
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -170,8 +172,8 @@ export class Map {
     const center = this.defaultOptions.mapboxOptions?.center
       ? (this.defaultOptions.mapboxOptions.center as any)
       : this.defaultOptions.isKiosk
-      ? this.defaultOptions.kioskSettings?.coordinates
-      : [place.location.lng, place.location.lat];
+        ? this.defaultOptions.kioskSettings?.coordinates
+        : [place.location.lng, place.location.lat];
     style.center = center;
     if (this.defaultOptions.zoomLevel) {
       style.zoom = this.defaultOptions.zoomLevel;
@@ -257,6 +259,9 @@ export class Map {
       }
       if (this.defaultOptions.isKiosk) {
         this.initKiosk();
+      }
+      if (this.defaultOptions.considerVisibilityParam) {
+        this.handlePoiVisibility();
       }
       this.initPersonsMap();
       this.onMapReadyListener.next(true);
@@ -719,8 +724,8 @@ export class Map {
   }
 
   private filterOutFeatures() {
-    // proximiio-pois-icons, proximiio-pois-labels
-    const layers = ['proximiio-pois-icons', 'proximiio-pois-labels'];
+    // proximiio-pois-icons, proximiio-pois-labels, 'pois-icons', 'pois-labels'
+    const layers = ['proximiio-pois-icons', 'proximiio-pois-labels', 'pois-icons', 'pois-labels'];
     if (this.defaultOptions.initPolygons) {
       layers.push('poi-custom-icons', 'shop-labels');
     }
@@ -753,6 +758,57 @@ export class Map {
       }
     });
     this.state.style.notify('filter-change');
+  }
+
+  private handlePoiVisibility() {
+    // proximiio-pois-icons, proximiio-pois-labels, 'pois-icons', 'pois-labels'
+    const layers = ['proximiio-pois-icons', 'proximiio-pois-labels', 'pois-icons', 'pois-labels'];
+    if (this.defaultOptions.initPolygons) {
+      layers.push('poi-custom-icons', 'shop-labels');
+    }
+    layers.forEach((layer) => {
+      if (this.map.getLayer(layer)) {
+        setTimeout(() => {
+          const l = this.map.getLayer(layer) as any;
+          const filters = [...l.filter];
+          const visibilityFilter = filters.findIndex((f) => f[1][1] === 'visibility');
+          if (visibilityFilter !== -1) {
+            // toggle pois visibility based on visibility param
+            if (filters[visibilityFilter][0] === '!=') {
+              // show all pois, the visibility params is not considered
+              filters[visibilityFilter] = [
+                'match',
+                ['get', 'visibility'],
+                ['visible', 'hidden', 'undefined'],
+                true,
+                false,
+              ];
+            } else {
+              // hide pois with hidden visibility
+              filters[visibilityFilter] = [
+                '!=',
+                ['get', 'visibility'],
+                'hidden',
+              ];
+            }
+          } else {
+            // add visibility filter
+            filters.push([
+              '!=',
+              ['get', 'visibility'],
+              'hidden'
+            ]);
+          }
+          this.state.style.getLayer(layer).filter = filters;
+          this.map.setFilter(layer, filters);
+        });
+      }
+    });
+    this.state.style.notify('filter-change');
+  }
+
+  private onToggleHiddenPois() {
+    this.handlePoiVisibility();
   }
 
   private onSetPerson(lat: number, lng: number, level: number, id?: string | number) {
@@ -1847,6 +1903,21 @@ export class Map {
    */
   public getPersonUpdateListener() {
     return this.onPersonUpdateListener.asObservable();
+  }
+
+  /**
+   * Method for toggling hidden pois visibility
+   *  @memberof Map
+   *  @name toggleHiddenPois
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.toggleHiddenPois();
+   *  });
+   */
+  public toggleHiddenPois() {
+    this.onToggleHiddenPois();
   }
 }
 
