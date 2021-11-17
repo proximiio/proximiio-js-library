@@ -117,7 +117,8 @@ const map = new Proximiio.Map({
         level: number // floor level of a kiosk starting point
     },
     initPolygons: false, // optional, default: false, if enabled and yours geojson includes required data the map will show defined features as polygons with hover/click effect
-    considerVisibilityParam: false // optional, default: true, if enabled all pois with visibility property defined as 'hidden' will not be visible as default, will be possible to toggle them with toggleHiddenPois() method
+    considerVisibilityParam: false, // optional, default: true, if enabled all pois with visibility property defined as 'hidden' will not be visible as default, will be possible to toggle them with toggleHiddenPois() method
+    fitBoundsPadding: 200 // optional, default 250, number | PaddingOptions, the amount of padding in pixels to add to the given bounds for found route, https://docs.mapbox.com/mapbox-gl-js/api/properties/#paddingoptions
 });
 ```
 #### Required Data for 3D Polygons

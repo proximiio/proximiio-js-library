@@ -42,6 +42,13 @@ interface Options {
     initPolygons?: boolean;
     zoomLevel?: number;
     considerVisibilityParam?: boolean;
+    fitBoundsPadding?: number | PaddingOptions;
+}
+interface PaddingOptions {
+    bottom: number;
+    left: number;
+    right: number;
+    top: number;
 }
 export declare const globalState: State;
 export declare class Map {

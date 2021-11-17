@@ -34,8 +34,11 @@ class App extends React.Component {
 
         this.map.getMapReadyListener().subscribe(async (res) => {
           console.log('map ready', res);
-
           this.map.getMapboxInstance().addControl(new mapboxgl.NavigationControl());
+        });
+
+        this.map.getPolygonClickListener().subscribe(poi => {
+          this.map.findRouteByIds(poi.id, null);
         });
 
         this.map.getRouteFoundListener().subscribe(res => {

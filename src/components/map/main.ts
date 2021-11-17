@@ -64,6 +64,14 @@ interface Options {
   initPolygons?: boolean;
   zoomLevel?: number;
   considerVisibilityParam?: boolean;
+  fitBoundsPadding?: number | PaddingOptions;
+}
+
+interface PaddingOptions {
+  bottom: number;
+  left: number;
+  right: number;
+  top: number;
 }
 
 export const globalState: State = {
@@ -114,6 +122,7 @@ export class Map {
     isKiosk: false,
     initPolygons: false,
     considerVisibilityParam: true,
+    fitBoundsPadding: 250
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -1071,7 +1080,7 @@ export class Map {
       if (route) {
         const bbox = turf.bbox(route.geometry);
         // @ts-ignore;
-        map.fitBounds(bbox, { padding: 250, bearing: this.map.getBearing(), pitch: this.map.getPitch() });
+        map.fitBounds(bbox, { padding: this.defaultOptions.fitBoundsPadding, bearing: this.map.getBearing(), pitch: this.map.getPitch() });
       }
       if (this.defaultOptions.isKiosk && map.getLayer('my-location-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
@@ -1131,7 +1140,7 @@ export class Map {
       if (this.map) {
         const bbox = turf.bbox(route.geometry);
         // @ts-ignore
-        this.map.fitBounds(bbox, { padding: 250, bearing: this.map.getBearing(), pitch: this.map.getPitch() });
+        this.map.fitBounds(bbox, { padding: this.defaultOptions.fitBoundsPadding, bearing: this.map.getBearing(), pitch: this.map.getPitch() });
       }
     }
   }
