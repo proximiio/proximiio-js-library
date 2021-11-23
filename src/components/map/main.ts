@@ -12,7 +12,7 @@ import ClusterSource from './sources/cluster_source';
 import ImageSourceManager from './sources/image_source_manager';
 import { AmenityModel } from '../../models/amenity';
 import { getBase64FromImage, getImageFromBase64, uuidv4 } from '../../common';
-import { chevron, pulsingDot, person as personIcon } from './icons';
+import { chevron, pulsingDot, person as personIcon, floorchangeUpImage, floorchangeDownImage } from './icons';
 import { MapboxEvent } from 'mapbox-gl';
 import { getPlaceFloors } from '../../controllers/floors';
 import { getPlaceById } from '../../controllers/places';
@@ -65,6 +65,7 @@ interface Options {
   zoomLevel?: number;
   considerVisibilityParam?: boolean;
   fitBoundsPadding?: number | PaddingOptions;
+  showLevelDirectionIcon?: boolean;
 }
 
 interface PaddingOptions {
@@ -122,7 +123,8 @@ export class Map {
     isKiosk: false,
     initPolygons: false,
     considerVisibilityParam: true,
-    fitBoundsPadding: 250
+    fitBoundsPadding: 250,
+    showLevelDirectionIcon: false
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -181,8 +183,8 @@ export class Map {
     const center = this.defaultOptions.mapboxOptions?.center
       ? (this.defaultOptions.mapboxOptions.center as any)
       : this.defaultOptions.isKiosk
-      ? this.defaultOptions.kioskSettings?.coordinates
-      : [place.location.lng, place.location.lat];
+        ? this.defaultOptions.kioskSettings?.coordinates
+        : [place.location.lng, place.location.lat];
     style.center = center;
     if (this.defaultOptions.zoomLevel) {
       style.zoom = this.defaultOptions.zoomLevel;
@@ -249,12 +251,25 @@ export class Map {
           map.moveLayer('proximiio-paths', 'routing-line-completed');
         }
       }
+
+      // hide start and finish poi icons for generated route source
+      const routingSymbolsLayer = map.getLayer('proximiio-routing-symbols') as any;
+      if (routingSymbolsLayer) {
+        routingSymbolsLayer.filter.push(['!=', ['get', 'type'], 'poi-custom']);
+        this.state.style.getLayer('proximiio-routing-symbols').filter = routingSymbolsLayer.filter;
+        map.setFilter('proximiio-routing-symbols', routingSymbolsLayer.filter);
+      }
+
       map.setMaxZoom(30);
       const decodedChevron = await getImageFromBase64(chevron);
       const decodedPersonIcon = await getImageFromBase64(personIcon);
+      const decodedFloorchangeUpImage = await getImageFromBase64(floorchangeUpImage);
+      const decodedFloorchangeDownImage = await getImageFromBase64(floorchangeDownImage);
       map.addImage('chevron_right', decodedChevron as any);
       map.addImage('pulsing-dot', pulsingDot, { pixelRatio: 2 });
       map.addImage('person', decodedPersonIcon as any);
+      map.addImage('floorchange-up-image', decodedFloorchangeUpImage as any);
+      map.addImage('floorchange-down-image', decodedFloorchangeDownImage as any);
       this.onSourceChange();
       this.updateMapSource(this.geojsonSource);
       this.updateMapSource(this.routingSource);
@@ -271,6 +286,9 @@ export class Map {
       }
       if (this.defaultOptions.considerVisibilityParam) {
         this.handlePoiVisibility();
+      }
+      if (this.defaultOptions.showLevelDirectionIcon) {
+        this.initDirectionIcon();
       }
       this.initPersonsMap();
       this.onMapReadyListener.next(true);
@@ -323,6 +341,38 @@ export class Map {
       this.map.setFilter('my-location-layer', ['all', ['==', ['to-number', ['get', 'level']], level]]);
       this.map.setStyle(this.state.style);
       this.centerOnPoi(this.startPoint);
+    }
+  }
+
+  private initDirectionIcon() {
+    if (this.map) {
+      this.state.style.addSource('direction-icon-source', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: []
+        },
+      });
+      this.state.style.addLayer({
+        id: 'direction-icon-layer',
+        type: 'symbol',
+        source: 'direction-icon-source',
+        minzoom: 17,
+        maxzoom: 24,
+        layout: {
+          'icon-image': '{icon}',
+          'icon-size': ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.3],
+          'icon-offset': {
+            'type': 'identity',
+            'property': 'iconOffset'
+          },
+          'symbol-placement': 'point',
+          'icon-allow-overlap': true,
+          'text-allow-overlap': false
+        },
+        filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]]
+      });
+      this.map.setStyle(this.state.style);
     }
   }
 
@@ -889,6 +939,11 @@ export class Map {
           JSON.stringify(this.endPoint),
         );
         this.centerOnRoute(routeStart);
+
+        if (this.defaultOptions.showLevelDirectionIcon) {
+          this.addDirectionFeatures();
+        }
+
         this.state = { ...this.state, loadingRoute: false, textNavigation };
         this.onRouteFoundListener.next({
           route: this.routingSource.route,
@@ -1092,6 +1147,11 @@ export class Map {
         map.setFilter('persons-layer', filter);
         this.state.style.getLayer('persons-layer').filter = filter;
       }
+      if (this.defaultOptions.showLevelDirectionIcon && map.getLayer('direction-icon-layer')) {
+        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
+        map.setFilter('direction-icon-layer', filter);
+        this.state.style.getLayer('direction-icon-layer').filter = filter;
+      }
     }
     this.state = { ...this.state, floor, style: this.state.style };
     this.updateCluster();
@@ -1174,6 +1234,28 @@ export class Map {
       // return currentRouteIndex !== -1 && nextRoute ? +nextRoute.properties.level : way === 'up' ? this.state.floor.level + 1 : this.state.floor.level - 1;
       return nextRoute ? +nextRoute.properties.level : this.state.floor.level;
     }
+  }
+
+  private addDirectionFeatures() {
+    const levelChangers = this.routingSource.points
+      .filter(i => i.isLevelChanger)
+      .map(i => {
+        return new Feature({
+          type: 'Feature',
+          geometry: i.geometry,
+          properties: {
+            usecase: 'floor-change-symbol',
+            icon: this.routingSource.finish.properties.level > i.properties.level ? 'floorchange-up-image' : 'floorchange-down-image',
+            iconOffset: this.routingSource.finish.properties.level > i.properties.level ? [4, -90] : [4, 90],
+            level: i.properties.level
+          }
+        })
+      });
+    this.state.style.sources['direction-icon-source'].data = {
+      type: 'FeatureCollection',
+      features: levelChangers,
+    };
+    this.map.setStyle(this.state.style);
   }
 
   /**

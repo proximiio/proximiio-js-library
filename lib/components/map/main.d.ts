@@ -43,6 +43,7 @@ interface Options {
     zoomLevel?: number;
     considerVisibilityParam?: boolean;
     fitBoundsPadding?: number | PaddingOptions;
+    showLevelDirectionIcon?: boolean;
 }
 interface PaddingOptions {
     bottom: number;
@@ -88,6 +89,7 @@ export declare class Map {
     private onMapReady;
     private initKiosk;
     private onSetKiosk;
+    private initDirectionIcon;
     private initPolygons;
     private onShopClick;
     handlePolygonSelection(poi?: Feature): void;
@@ -127,6 +129,7 @@ export declare class Map {
     private centerOnCoords;
     private updateImages;
     private getUpcomingFloorNumber;
+    private addDirectionFeatures;
     /**
      *  @memberof Map
      *  @name getMapboxInstance

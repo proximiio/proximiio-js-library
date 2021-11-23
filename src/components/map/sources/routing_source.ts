@@ -44,7 +44,9 @@ export default class RoutingSource extends DataSource {
       // @ts-ignore
       this.route = route.levelPaths;
       // @ts-ignore
-      this.points = route.points;
+      this.points = route.points.map(i => {
+        return new Feature(i);
+      });
       if (levelPaths) {
         const lines = [] as Feature[];
         const levels = Object.keys(levelPaths);
