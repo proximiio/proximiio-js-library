@@ -2,7 +2,6 @@ import logo from './logo.svg';
 import './App.css';
 import React from 'react';
 import Proximiio from 'proximiio-js-library'
-import * as turf from '@turf/turf';
 import mapboxgl from 'mapbox-gl';
 
 class App extends React.Component {
@@ -34,7 +33,7 @@ class App extends React.Component {
       level: 0
     }];
 
-    Proximiio.Auth.loginWithToken('')
+    Proximiio.Auth.loginWithToken('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImlzcyI6IjQ0MDEwZjZmLTk5NjMtNDQzMy1hZDg2LTQwYjg5YjgyOWM0MSIsInR5cGUiOiJ1c2VyIiwidXNlciI6IkRlbW8gV2F5ZmluZGluZyIsInVzZXJfaWQiOiI1ZTBkNDVlMy0wMjVmLTRiMzItYmUwNy0wYzk0MjUxYmQ1NzMiLCJ0ZW5hbnRfaWQiOiI0NDAxMGY2Zi05OTYzLTQ0MzMtYWQ4Ni00MGI4OWI4MjljNDEifQ.reaAdK4uUqvGcDghQTmXtbsHR4mX9Hcinwwg4_uqwfQ')
       .then(res => {
         console.log('Logged in', res);
 
@@ -156,6 +155,10 @@ class App extends React.Component {
           console.log('route found successfully', res.route);
           console.log('turn by turn text navigation output', res.TBTNav);
         })
+
+        this.map.getPolygonClickListener().subscribe(poi => {
+          this.map.findRouteByIds(poi.id, null);
+        });
       })
       .catch(err => {
         console.log(err);
