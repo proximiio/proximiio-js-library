@@ -66,6 +66,7 @@ interface Options {
   considerVisibilityParam?: boolean;
   fitBoundsPadding?: number | PaddingOptions;
   showLevelDirectionIcon?: boolean;
+  showRasterFloorplans?: boolean;
 }
 
 interface PaddingOptions {
@@ -124,7 +125,8 @@ export class Map {
     initPolygons: false,
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
-    showLevelDirectionIcon: false
+    showLevelDirectionIcon: false,
+    showRasterFloorplans: false
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -192,6 +194,7 @@ export class Map {
     this.geojsonSource.fetch(features);
     this.routingSource.routing.setData(new FeatureCollection(features));
     this.prepareStyle(style);
+    this.imageSourceManager.enabled = this.defaultOptions.showRasterFloorplans;
     this.imageSourceManager.belowLayer = style.usesPrefixes() ? 'proximiio-floors' : 'floors';
     this.imageSourceManager.initialize();
     this.state = {
@@ -1067,8 +1070,8 @@ export class Map {
     this.state = { ...this.state, style: this.state.style };
   }
 
-  private onRasterToggle(value: boolean) {
-    this.imageSourceManager.enabled = value;
+  private onToggleRasterFloorplans() {
+    this.imageSourceManager.enabled = !this.imageSourceManager.enabled;
     const map = this.map;
     if (map) {
       this.imageSourceManager.setLevel(map, this.state.floor.level);
@@ -2001,6 +2004,21 @@ export class Map {
    */
   public toggleHiddenPois() {
     this.onToggleHiddenPois();
+  }
+
+  /**
+   * Method for toggling raster floorplans visibility
+   *  @memberof Map
+   *  @name toggleRasterFloorplans
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.toggleRasterFloorplans();
+   *  });
+   */
+  public toggleRasterFloorplans() {
+    this.onToggleRasterFloorplans();
   }
 }
 

@@ -44,6 +44,7 @@ interface Options {
     considerVisibilityParam?: boolean;
     fitBoundsPadding?: number | PaddingOptions;
     showLevelDirectionIcon?: boolean;
+    showRasterFloorplans?: boolean;
 }
 interface PaddingOptions {
     bottom: number;
@@ -118,7 +119,7 @@ export declare class Map {
     private updateMapSource;
     private onStyleSelect;
     private onStyleChange;
-    private onRasterToggle;
+    private onToggleRasterFloorplans;
     private updateCluster;
     private onPlaceSelect;
     private onFloorSelect;
@@ -647,5 +648,17 @@ export declare class Map {
      *  });
      */
     toggleHiddenPois(): void;
+    /**
+     * Method for toggling raster floorplans visibility
+     *  @memberof Map
+     *  @name toggleRasterFloorplans
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.toggleRasterFloorplans();
+     *  });
+     */
+    toggleRasterFloorplans(): void;
 }
 export {};
