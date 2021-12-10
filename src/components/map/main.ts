@@ -114,6 +114,7 @@ export class Map {
   private onFeatureUpdateListener = new Subject<Feature>();
   private onFeatureDeleteListener = new Subject();
   private onPolygonClickListener = new Subject<Feature>();
+  private onPoiClickListener = new Subject<Feature>();
   private onPersonUpdateListener = new Subject<PersonModel[]>();
   private defaultOptions: Options = {
     selector: 'proximiioMap',
@@ -294,6 +295,9 @@ export class Map {
         this.initDirectionIcon();
       }
       this.initPersonsMap();
+      this.map.on('click', 'proximiio-pois-icons', (ev) => {
+        this.onShopClick(ev);
+      });
       this.onMapReadyListener.next(true);
     }
   }
@@ -414,11 +418,19 @@ export class Map {
     e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined } & mapboxgl.EventData,
   ) {
     if (e.features && e.features[0] && e.features[0].properties) {
-      // @ts-ignore
+      if (this.defaultOptions.initPolygons) {
+        // @ts-ignore
       const poi = this.state.allFeatures.features.find(
         (i) => i.properties.id === e.features[0].properties.poi_id,
       ) as Feature;
-      this.onPolygonClickListener.next(poi);
+        this.onPolygonClickListener.next(poi);
+      } else {
+        // @ts-ignore
+      const poi = this.state.allFeatures.features.find(
+        (i) => i.properties.id === e.features[0].properties.id,
+      ) as Feature;
+        this.onPoiClickListener.next(poi);
+      }
     }
   }
 
@@ -1932,6 +1944,20 @@ export class Map {
    */
   public getPolygonClickListener() {
     return this.onPolygonClickListener.asObservable();
+  }
+
+  /**
+   *  @memberof Map
+   *  @name getPoiClickListener
+   *  @returns returns poi click listener
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getPoiClickListener().subscribe((poi) => {
+   *    console.log('poi clicked', poi);
+   *  });
+   */
+  public getPoiClickListener() {
+    return this.onPoiClickListener.asObservable();
   }
 
   /**

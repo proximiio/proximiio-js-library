@@ -71,6 +71,7 @@ export declare class Map {
     private onFeatureUpdateListener;
     private onFeatureDeleteListener;
     private onPolygonClickListener;
+    private onPoiClickListener;
     private onPersonUpdateListener;
     private defaultOptions;
     private routeFactory;
@@ -593,6 +594,17 @@ export declare class Map {
      *  });
      */
     getPolygonClickListener(): import("rxjs").Observable<Feature>;
+    /**
+     *  @memberof Map
+     *  @name getPoiClickListener
+     *  @returns returns poi click listener
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getPoiClickListener().subscribe((poi) => {
+     *    console.log('poi clicked', poi);
+     *  });
+     */
+    getPoiClickListener(): import("rxjs").Observable<Feature>;
     /**
      * Method for setting a person icon on a Map, this method is resetting the previous state of all persons added before
      *  @memberof Map

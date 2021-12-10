@@ -584,6 +584,13 @@ map.getPolygonClickListener().subscribe((poi) => {
 });
 ```
 
+##### Listen to poi click event
+```
+map.getPoiClickListener().subscribe((poi) => {
+   console.log('poi clicked', poi);
+});
+```
+
 ##### Listen to persons update event
 ```
 map.getPersonUpdateListener().subscribe((personsList) => {
