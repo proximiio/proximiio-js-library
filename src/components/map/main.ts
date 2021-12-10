@@ -157,10 +157,6 @@ export class Map {
     this.onRouteChange = this.onRouteChange.bind(this);
     this.onRouteCancel = this.onRouteCancel.bind(this);
 
-    this.map = new mapboxgl.Map({
-      ...this.defaultOptions.mapboxOptions,
-      container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map',
-    });
     this.initialize();
   }
 
@@ -189,6 +185,7 @@ export class Map {
         ? this.defaultOptions.kioskSettings?.coordinates
         : [place.location.lng, place.location.lat];
     style.center = center;
+    this.defaultOptions.mapboxOptions.center = style.center;
     if (this.defaultOptions.zoomLevel) {
       style.zoom = this.defaultOptions.zoomLevel;
     }
@@ -214,6 +211,10 @@ export class Map {
       noPlaces: places.length === 0,
     };
     style.on(this.onStyleChange);
+    this.map = new mapboxgl.Map({
+      ...this.defaultOptions.mapboxOptions,
+      container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map',
+    });
     this.map.setStyle(this.state.style);
     this.map.on('load', (e) => {
       this.onMapReady(e);
