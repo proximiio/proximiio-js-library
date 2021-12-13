@@ -13,6 +13,8 @@ export default class RoutingSource extends DataSource {
     changes: ChangeContainer[];
     route: any;
     points: any;
+    levelPaths: any;
+    levelPoints: any;
     routing: Routing;
     constructor();
     toggleAccessible(value: any): void;

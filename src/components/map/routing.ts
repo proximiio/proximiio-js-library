@@ -2,6 +2,7 @@
 import { Wayfinding } from '../../../assets/wayfinding';
 import Feature, { FeatureCollection } from '../../models/feature';
 import { lineString, point } from '@turf/helpers';
+import { kebabToCamel } from '../../common';
 
 export default class Routing {
   data: FeatureCollection;
@@ -47,9 +48,58 @@ export default class Routing {
   }
 
   route(start: Feature, finish: Feature) {
-    const points = this.wayfinding.runAStar(start, finish);
+    const points = this.wayfinding.runAStar(start, finish).map(i => {
+      return new Feature(i);
+    });
     if (!points) {
       return null;
+    }
+
+    const pathPoints = {} as any;
+    let pathPartIndex = 0;
+    points.forEach((p: Feature, index: number) => {
+      if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
+        pathPoints[`path-part-${pathPartIndex}`] = [];
+      }
+      pathPoints[`path-part-${pathPartIndex}`].push(p);
+      if (p.isLevelChanger && points[index+1].isLevelChanger) {
+        pathPartIndex++;
+      }
+    });
+
+    const paths = {} as any;
+    for (const [key, pointsList] of Object.entries(pathPoints)) {
+      // @ts-ignore
+      if (pointsList.length > 1) {
+        // @ts-ignore
+        paths[key] = new Feature(lineString(pointsList.map((i: any) => i.geometry.coordinates)));
+      } else {
+        // @ts-ignore
+        paths[key] = new Feature(point(pointsList.map((i: any) => i.geometry.coordinates)));
+      }
+      paths[key].id = key;
+      // @ts-ignore
+      paths[key].properties = {
+        // @ts-ignore
+        level: pointsList[pointsList.length-1].properties.level,
+        amenity: 'chevron_right'
+      };
+    }
+
+    const levelPaths = {} as any;
+    for (const [key, path] of Object.entries(paths)) {
+      // @ts-ignore
+      if (typeof levelPaths[path.properties.level] === 'undefined') {
+        // @ts-ignore
+        levelPaths[path.properties.level] = {
+          // @ts-ignore
+          level: path.properties.level,
+          paths: [path]
+        };
+      } else {
+        // @ts-ignore
+        levelPaths[path.properties.level].paths.push(path);
+      }
     }
 
     const levelPoints = {} as any;
@@ -61,17 +111,6 @@ export default class Routing {
       levelPoints[point.properties.level].push(point);
     });
 
-    const levels = Object.keys(levelPoints);
-    const levelPaths = {} as any;
-    levels.forEach((level) => {
-      if (levelPoints[level].length > 1) {
-        // tslint:disable-next-line:no-shadowed-variable
-        levelPaths[level] = new Feature(lineString(levelPoints[level].map((point: any) => point.geometry.coordinates)));
-      } else {
-        // tslint:disable-next-line:no-shadowed-variable
-        levelPaths[level] = new Feature(point(levelPoints[level].map((point: any) => point.geometry.coordinates)));
-      }
-    });
-    return { levelPaths, points };
+    return { paths, points, levelPaths, levelPoints };
   }
 }

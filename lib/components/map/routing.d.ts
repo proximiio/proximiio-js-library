@@ -6,7 +6,9 @@ export default class Routing {
     setData(collection: FeatureCollection): void;
     toggleOnlyAccessible(onlyAccessible: any): void;
     route(start: Feature, finish: Feature): {
-        levelPaths: any;
+        paths: any;
         points: any;
+        levelPaths: any;
+        levelPoints: any;
     };
 }

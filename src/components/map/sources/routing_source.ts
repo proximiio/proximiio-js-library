@@ -15,6 +15,8 @@ export default class RoutingSource extends DataSource {
   changes: ChangeContainer[];
   route: any;
   points: any;
+  levelPaths: any;
+  levelPoints: any;
   routing: Routing;
 
   constructor() {
@@ -40,24 +42,21 @@ export default class RoutingSource extends DataSource {
       this.notify('loading-start');
       const route = this.routing.route(start, finish);
       // @ts-ignore
-      const levelPaths = route.levelPaths;
+      const paths = route.paths;
       // @ts-ignore
-      this.route = route.levelPaths;
+      this.route = route.paths;
       // @ts-ignore
-      this.points = route.points.map(i => {
-        return new Feature(i);
-      });
-      if (levelPaths) {
+      this.points = route.points;
+      this.levelPaths = route.levelPaths;
+      this.levelPoints = route.levelPoints;
+
+      if (paths) {
         const lines = [] as Feature[];
-        const levels = Object.keys(levelPaths);
-        levels.forEach((level) => {
-          const path = levelPaths[level] as Feature;
-          path.id = `routing-path-${level}`;
-          path.properties.amenity = 'chevron_right';
-          path.properties.level = level;
-          lines.push(path);
-        });
-        this.lines = lines.sort((a, b) => (+a.properties.level > +b.properties.level ? 1 : -1));
+        for (const [k, v] of Object.entries(paths)) {
+          // @ts-ignore
+          lines.push(v);
+        }
+        this.lines = lines;
       } else {
         this.lines = [];
         this.notify('route-undefined');
