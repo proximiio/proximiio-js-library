@@ -33,7 +33,7 @@ class App extends React.Component {
       level: 0
     }];
 
-    Proximiio.Auth.loginWithToken('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImlzcyI6ImMxZWFhYjFhLTNmMDItNDQ5MS1hNTE1LWFmOGQ2MjhmNzRmYiIsInR5cGUiOiJhcHBsaWNhdGlvbiIsImFwcGxpY2F0aW9uX2lkIjoiYzQxNjMyZDgtZDIxNi00MTMwLTg1ZmYtNTJmYTdhMzE0OWI1In0.FEBlAxIamCJNi7XF4T2RO5oXJ0mLe-1Bee-qBwUMj_4')
+    Proximiio.Auth.loginWithToken('token')
       .then(res => {
         console.log('Logged in', res);
 
@@ -55,16 +55,18 @@ class App extends React.Component {
 
         this.map = new Proximiio.Map({
           allowNewFeatureModal: false,
-          zoomIntoPlace: true,
-          isKiosk: false,
+          zoomIntoPlace: false,
+          isKiosk: true,
+          kioskSettings: {
+            coordinates: [51.48091652702158, 25.336680584406395],
+            level: 0
+          },
           mapboxOptions: {
             zoom: 20,
             bearing: 10,
             pitch: 40
           },
-          defaultPlaceId: '6912b6f7-5617-4b64-ad4a-406d024d2d4f',
-          initPolygons: true,
-          showLevelDirectionIcon: true
+          initPolygons: true
         });
 
         this.map.getMapReadyListener().subscribe(async (res) => {
@@ -145,7 +147,7 @@ class App extends React.Component {
           this.map.centerToFeature(poi.id);
           console.log('to poi selected', poi);
           if (toPoi) {
-            this.map.findRouteByIds(toPoi.id, fromPoi.id);
+            this.map.findRouteByIds(toPoi.id);
           }
         })
 
