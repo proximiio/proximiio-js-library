@@ -48,7 +48,7 @@ export default class Routing {
   }
 
   route(start: Feature, finish: Feature) {
-    const points = this.wayfinding.runAStar(start, finish).map(i => {
+    const points = this.wayfinding.runAStar(start, finish).map((i) => {
       return new Feature(i);
     });
     if (!points) {
@@ -62,7 +62,7 @@ export default class Routing {
         pathPoints[`path-part-${pathPartIndex}`] = [];
       }
       pathPoints[`path-part-${pathPartIndex}`].push(p);
-      if (p.isLevelChanger && points[index+1].isLevelChanger) {
+      if (p.isLevelChanger && points[index + 1].isLevelChanger) {
         pathPartIndex++;
       }
     });
@@ -81,8 +81,8 @@ export default class Routing {
       // @ts-ignore
       paths[key].properties = {
         // @ts-ignore
-        level: pointsList[pointsList.length-1].properties.level,
-        amenity: 'chevron_right'
+        level: pointsList[pointsList.length - 1].properties.level,
+        amenity: 'chevron_right',
       };
     }
 
@@ -94,7 +94,7 @@ export default class Routing {
         levelPaths[path.properties.level] = {
           // @ts-ignore
           level: path.properties.level,
-          paths: [path]
+          paths: [path],
         };
       } else {
         // @ts-ignore

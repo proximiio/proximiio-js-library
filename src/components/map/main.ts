@@ -128,7 +128,7 @@ export class Map {
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
     showLevelDirectionIcon: false,
-    showRasterFloorplans: false
+    showRasterFloorplans: false,
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -183,8 +183,8 @@ export class Map {
     const center = this.defaultOptions.mapboxOptions?.center
       ? (this.defaultOptions.mapboxOptions.center as any)
       : this.defaultOptions.isKiosk
-        ? this.defaultOptions.kioskSettings?.coordinates
-        : [place.location.lng, place.location.lat];
+      ? this.defaultOptions.kioskSettings?.coordinates
+      : [place.location.lng, place.location.lat];
     style.center = center;
     this.defaultOptions.mapboxOptions.center = style.center;
     if (this.defaultOptions.zoomLevel) {
@@ -359,7 +359,7 @@ export class Map {
         type: 'geojson',
         data: {
           type: 'FeatureCollection',
-          features: []
+          features: [],
         },
       });
       this.state.style.addLayer({
@@ -372,14 +372,14 @@ export class Map {
           'icon-image': '{icon}',
           'icon-size': ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.3],
           'icon-offset': {
-            'type': 'identity',
-            'property': 'iconOffset'
+            type: 'identity',
+            property: 'iconOffset',
           },
           'symbol-placement': 'point',
           'icon-allow-overlap': true,
-          'text-allow-overlap': false
+          'text-allow-overlap': false,
         },
-        filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]]
+        filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
       });
       this.map.setStyle(this.state.style);
     }
@@ -422,15 +422,15 @@ export class Map {
     if (e.features && e.features[0] && e.features[0].properties) {
       if (this.defaultOptions.initPolygons) {
         // @ts-ignore
-      const poi = this.state.allFeatures.features.find(
-        (i) => i.properties.id === e.features[0].properties.poi_id,
-      ) as Feature;
+        const poi = this.state.allFeatures.features.find(
+          (i) => i.properties.id === e.features[0].properties.poi_id,
+        ) as Feature;
         this.onPolygonClickListener.next(poi);
       } else {
         // @ts-ignore
-      const poi = this.state.allFeatures.features.find(
-        (i) => i.properties.id === e.features[0].properties.id,
-      ) as Feature;
+        const poi = this.state.allFeatures.features.find(
+          (i) => i.properties.id === e.features[0].properties.id,
+        ) as Feature;
         this.onPoiClickListener.next(poi);
       }
     }
@@ -1135,7 +1135,9 @@ export class Map {
   private onFloorSelect(floor: FloorModel) {
     const map = this.map;
     const route =
-      this.routingSource.levelPoints && this.routingSource.levelPoints[floor.level] ? this.routingSource.levelPoints[floor.level] : null;
+      this.routingSource.levelPoints && this.routingSource.levelPoints[floor.level]
+        ? this.routingSource.levelPoints[floor.level]
+        : null;
     if (map) {
       this.state.style.setLevel(floor.level);
       map.setStyle(this.state.style);
@@ -1148,10 +1150,16 @@ export class Map {
         this.imageSourceManager.setLevel(map, floor.level);
       });
       if (route) {
-        const routePoints = lineString(this.routingSource.levelPoints[floor.level].map((i: any) => i.geometry.coordinates));
+        const routePoints = lineString(
+          this.routingSource.levelPoints[floor.level].map((i: any) => i.geometry.coordinates),
+        );
         const bbox = turf.bbox(routePoints);
         // @ts-ignore;
-        map.fitBounds(bbox, { padding: this.defaultOptions.fitBoundsPadding, bearing: this.map.getBearing(), pitch: this.map.getPitch() });
+        map.fitBounds(bbox, {
+          padding: this.defaultOptions.fitBoundsPadding,
+          bearing: this.map.getBearing(),
+          pitch: this.map.getPitch(),
+        });
       }
       if (this.defaultOptions.isKiosk && map.getLayer('my-location-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
@@ -1214,10 +1222,16 @@ export class Map {
         if (floor) this.onFloorSelect(floor);
       }
       if (this.map) {
-        const routePoints = lineString(this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates));
+        const routePoints = lineString(
+          this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
+        );
         const bbox = turf.bbox(routePoints);
         // @ts-ignore
-        this.map.fitBounds(bbox, { padding: this.defaultOptions.fitBoundsPadding, bearing: this.map.getBearing(), pitch: this.map.getPitch() });
+        this.map.fitBounds(bbox, {
+          padding: this.defaultOptions.fitBoundsPadding,
+          bearing: this.map.getBearing(),
+          pitch: this.map.getPitch(),
+        });
       }
     }
   }
@@ -1249,8 +1263,9 @@ export class Map {
       const nextRouteIndex = way === 'up' ? currentRouteIndex + 1 : currentRouteIndex - 1;
       const nextRoute = this.routingSource.lines[nextRouteIndex];
       // return currentRouteIndex !== -1 && nextRoute ? +nextRoute.properties.level : way === 'up' ? this.state.floor.level + 1 : this.state.floor.level - 1;
-      return nextRoute
-      && ((way === 'up' && +nextRoute.properties.level > this.state.floor.level) || (way === 'down' && +nextRoute.properties.level < this.state.floor.level))
+      return nextRoute &&
+        ((way === 'up' && +nextRoute.properties.level > this.state.floor.level) ||
+          (way === 'down' && +nextRoute.properties.level < this.state.floor.level))
         ? +nextRoute.properties.level
         : this.state.floor.level;
     }
@@ -1258,20 +1273,23 @@ export class Map {
 
   private addDirectionFeatures() {
     const levelChangers = this.routingSource.points
-      .filter(i => i.isLevelChanger)
+      .filter((i) => i.isLevelChanger)
       .map((i, index, array) => {
-        const feature = this.state.allFeatures.features.find((f) => f.id === i.id) as Feature
-        const nextLevelChanger = array[index+1] ? array[index+1] : array[index-1];
+        const feature = this.state.allFeatures.features.find((f) => f.id === i.id) as Feature;
+        const nextLevelChanger = array[index + 1] ? array[index + 1] : array[index - 1];
         return new Feature({
           type: 'Feature',
           geometry: feature.geometry,
           properties: {
             usecase: 'floor-change-symbol',
-            icon: nextLevelChanger.properties.level > i.properties.level ? 'floorchange-up-image' : 'floorchange-down-image',
+            icon:
+              nextLevelChanger.properties.level > i.properties.level
+                ? 'floorchange-up-image'
+                : 'floorchange-down-image',
             iconOffset: nextLevelChanger.properties.level > i.properties.level ? [4, -90] : [4, 90],
-            level: i.properties.level
-          }
-        })
+            level: i.properties.level,
+          },
+        });
       });
     this.state.style.sources['direction-icon-source'].data = {
       type: 'FeatureCollection',
