@@ -505,6 +505,21 @@ export declare class Map {
      */
     setKiosk(lat: number, lng: number, level: number): void;
     /**
+     * This method will set padding for zooming into bounding box of found route
+     *  @memberof Map
+     *  @name setBoundsPadding
+     *  @param padding {number | PaddingOptions} the amount of padding in pixels to add to the given bounds for found route, https://docs.mapbox.com/mapbox-gl-js/api/properties/#paddingoptions
+     *  @example
+     *  const map = new Proximiio.Map({
+     *    fitBoundsPadding: 200
+     *  });
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.setBoundsPadding(50);
+     *  });
+     */
+    setBoundsPadding(padding: number | PaddingOptions): void;
+    /**
      * You'll be able to show features only for defined amenity id on map with this method, also with defining the category (NOTE: you have to create them before with setAmenitiesCategory() method), filtering will be set only for defined array of amenities in the category. With category set, only one amenity filter can be active at the time, while without the category they stack so multiple amenities can be active.
      *  @memberof Map
      *  @name setAmenityFilter

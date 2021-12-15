@@ -233,6 +233,18 @@ map.getMapReadyListener().subscribe(ready => {
 });
 ```
 
+#### Set different bounding box padding 
+This method will set padding for zooming into bounding box of found route
+```
+const map = new Proximiio.Map({
+    fitBoundsPadding: 200
+});
+map.getMapReadyListener().subscribe(ready => {
+    console.log('map ready', ready);
+    map.setBoundsPadding(50);
+});
+```
+
 ##### Find Route
 
 ###### by features id
