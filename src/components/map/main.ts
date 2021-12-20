@@ -27,7 +27,6 @@ import { MapboxOptions } from '../../models/mapbox-options';
 import { PolygonIconsLayer, PolygonsLayer, PolygonTitlesLayer } from './custom-layers';
 import PersonModel from '../../models/person';
 import { lineString } from '@turf/helpers';
-import { LineString } from '@turf/turf';
 
 interface State {
   readonly initializing: boolean;
@@ -70,6 +69,15 @@ interface Options {
   showLevelDirectionIcon?: boolean;
   showRasterFloorplans?: boolean;
   animatedRoute?: boolean;
+  useRasterTiles?: boolean;
+  rasterTilesOptions?: {
+    tilesUrl: string[];
+    tileSize?: number;
+    minZoom?: number;
+    maxZoom?: number;
+    beforeLayer?: string;
+    attribution?: string;
+  }
 }
 
 interface PaddingOptions {
@@ -132,6 +140,7 @@ export class Map {
     showLevelDirectionIcon: false,
     showRasterFloorplans: false,
     animatedRoute: false,
+    useRasterTiles: false
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -302,6 +311,9 @@ export class Map {
       if (this.defaultOptions.animatedRoute) {
         this.initAnimatedRoute();
       }
+      if (this.defaultOptions.useRasterTiles) {
+        this.initRasterTiles();
+      }
       this.initPersonsMap();
       this.map.on('click', 'proximiio-pois-icons', (ev) => {
         this.onShopClick(ev);
@@ -412,6 +424,25 @@ export class Map {
         },
         filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
       });
+      this.map.setStyle(this.state.style);
+    }
+  }
+
+  private initRasterTiles() {
+    if (this.map) {
+      this.state.style.addSource('raster-tiles', {
+        type: 'raster',
+        tiles: this.defaultOptions.rasterTilesOptions.tilesUrl,
+        tileSize: this.defaultOptions.rasterTilesOptions.tileSize ? this.defaultOptions.rasterTilesOptions.tileSize : 256,
+        attribution: this.defaultOptions.rasterTilesOptions.attribution ? this.defaultOptions.rasterTilesOptions.attribution : ''
+      });
+      this.state.style.addLayer({
+        id: 'raster-tiles',
+        type: 'raster',
+        source: 'raster-tiles',
+        minzoom: this.defaultOptions.rasterTilesOptions.minZoom ? this.defaultOptions.rasterTilesOptions.minZoom : 15,
+        maxzoom: this.defaultOptions.rasterTilesOptions.maxZoom ? this.defaultOptions.rasterTilesOptions.maxZoom : 22,
+      }, this.defaultOptions.rasterTilesOptions.maxZoom ? this.defaultOptions.rasterTilesOptions.beforeLayer : 'proximiio-shop');
       this.map.setStyle(this.state.style);
     }
   }

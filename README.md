@@ -121,7 +121,16 @@ const map = new Proximiio.Map({
     fitBoundsPadding: 200, // optional, default 250, number | PaddingOptions, the amount of padding in pixels to add to the given bounds for found route, https://docs.mapbox.com/mapbox-gl-js/api/properties/#paddingoptions
     showLevelDirectionIcon: false // optional, default: false, if enabled arrow icon will be shown at the levelchanger indicating direction of level change along the found route,
     showRasterFloorplans: false // optional, default: false, if enabled raster floorplans will be visible,
-    animatedRoute: false // optional, default: false, EXPERIMENTAL, if enabled animated dot will be displayed along the route
+    animatedRoute: false // optional, default: false, EXPERIMENTAL, if enabled animated dot will be displayed along the route,
+    useRasterTiles: false, // optional, default: false, this will add raster tile source and layer with defined options from rasterTilesOptions
+    rasterTilesOptions: {
+        tilesUrl: string[], mandatory
+        tileSize: number, optional, default: 256,
+        minZoom: number, optional, default: 15,
+        maxZoom: number, optional, default: 22,
+        beforeLayer: string, optional, default: 'proximiio-shop',
+        attribution: string, optional
+    },
 });
 ```
 #### Required Data for 3D Polygons

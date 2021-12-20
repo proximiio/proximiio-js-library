@@ -46,6 +46,15 @@ interface Options {
     showLevelDirectionIcon?: boolean;
     showRasterFloorplans?: boolean;
     animatedRoute?: boolean;
+    useRasterTiles?: boolean;
+    rasterTilesOptions?: {
+        tilesUrl: string[];
+        tileSize?: number;
+        minZoom?: number;
+        maxZoom?: number;
+        beforeLayer?: string;
+        attribution?: string;
+    };
 }
 interface PaddingOptions {
     bottom: number;
@@ -94,6 +103,7 @@ export declare class Map {
     private onSetKiosk;
     private initDirectionIcon;
     private initAnimatedRoute;
+    private initRasterTiles;
     private initPolygons;
     private onShopClick;
     handlePolygonSelection(poi?: Feature): void;
