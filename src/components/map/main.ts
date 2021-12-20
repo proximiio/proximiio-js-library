@@ -77,7 +77,7 @@ interface Options {
     maxZoom?: number;
     beforeLayer?: string;
     attribution?: string;
-  }
+  };
 }
 
 interface PaddingOptions {
@@ -140,7 +140,7 @@ export class Map {
     showLevelDirectionIcon: false,
     showRasterFloorplans: false,
     animatedRoute: false,
-    useRasterTiles: false
+    useRasterTiles: false,
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -195,8 +195,8 @@ export class Map {
     const center = this.defaultOptions.mapboxOptions?.center
       ? (this.defaultOptions.mapboxOptions.center as any)
       : this.defaultOptions.isKiosk
-        ? this.defaultOptions.kioskSettings?.coordinates
-        : [place.location.lng, place.location.lat];
+      ? this.defaultOptions.kioskSettings?.coordinates
+      : [place.location.lng, place.location.lat];
     style.center = center;
     this.defaultOptions.mapboxOptions.center = style.center;
     if (this.defaultOptions.zoomLevel) {
@@ -420,7 +420,7 @@ export class Map {
         maxzoom: 24,
         paint: {
           'circle-color': '#1d8a9f',
-          'circle-radius': 10
+          'circle-radius': 10,
         },
         filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
       });
@@ -433,16 +433,25 @@ export class Map {
       this.state.style.addSource('raster-tiles', {
         type: 'raster',
         tiles: this.defaultOptions.rasterTilesOptions.tilesUrl,
-        tileSize: this.defaultOptions.rasterTilesOptions.tileSize ? this.defaultOptions.rasterTilesOptions.tileSize : 256,
-        attribution: this.defaultOptions.rasterTilesOptions.attribution ? this.defaultOptions.rasterTilesOptions.attribution : ''
+        tileSize: this.defaultOptions.rasterTilesOptions.tileSize
+          ? this.defaultOptions.rasterTilesOptions.tileSize
+          : 256,
+        attribution: this.defaultOptions.rasterTilesOptions.attribution
+          ? this.defaultOptions.rasterTilesOptions.attribution
+          : '',
       });
-      this.state.style.addLayer({
-        id: 'raster-tiles',
-        type: 'raster',
-        source: 'raster-tiles',
-        minzoom: this.defaultOptions.rasterTilesOptions.minZoom ? this.defaultOptions.rasterTilesOptions.minZoom : 15,
-        maxzoom: this.defaultOptions.rasterTilesOptions.maxZoom ? this.defaultOptions.rasterTilesOptions.maxZoom : 22,
-      }, this.defaultOptions.rasterTilesOptions.maxZoom ? this.defaultOptions.rasterTilesOptions.beforeLayer : 'proximiio-shop');
+      this.state.style.addLayer(
+        {
+          id: 'raster-tiles',
+          type: 'raster',
+          source: 'raster-tiles',
+          minzoom: this.defaultOptions.rasterTilesOptions.minZoom ? this.defaultOptions.rasterTilesOptions.minZoom : 15,
+          maxzoom: this.defaultOptions.rasterTilesOptions.maxZoom ? this.defaultOptions.rasterTilesOptions.maxZoom : 22,
+        },
+        this.defaultOptions.rasterTilesOptions.maxZoom
+          ? this.defaultOptions.rasterTilesOptions.beforeLayer
+          : 'proximiio-shop',
+      );
       this.map.setStyle(this.state.style);
     }
   }
@@ -1222,7 +1231,7 @@ export class Map {
         const routePoints = lineString(
           this.routingSource.levelPoints[floor.level].map((i: any) => i.geometry.coordinates),
         );
-        const lengthInMeters = turf.length(routePoints, {units: 'kilometers'}) * 1000;
+        const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
         const bbox = turf.bbox(routePoints);
         if (lengthInMeters > 15) {
           // @ts-ignore;
@@ -1312,7 +1321,7 @@ export class Map {
         const routePoints = lineString(
           this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
         );
-        const lengthInMeters = turf.length(routePoints, {units: 'kilometers'}) * 1000;
+        const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
         const bbox = turf.bbox(routePoints);
         if (lengthInMeters > 15) {
           // @ts-ignore;
@@ -1357,8 +1366,8 @@ export class Map {
       const nextRoute = this.routingSource.lines[nextRouteIndex];
       // return currentRouteIndex !== -1 && nextRoute ? +nextRoute.properties.level : way === 'up' ? this.state.floor.level + 1 : this.state.floor.level - 1;
       return nextRoute &&
-      ((way === 'up' && +nextRoute.properties.level > this.state.floor.level) ||
-        (way === 'down' && +nextRoute.properties.level < this.state.floor.level))
+        ((way === 'up' && +nextRoute.properties.level > this.state.floor.level) ||
+          (way === 'down' && +nextRoute.properties.level < this.state.floor.level))
         ? +nextRoute.properties.level
         : this.state.floor.level;
     }
@@ -1409,7 +1418,7 @@ export class Map {
       // Calculate the distance in kilometers between route start/end point.
       const lineDistance = turf.length(routePart);
 
-      this.arc[routePart.id] = []
+      this.arc[routePart.id] = [];
 
       // Draw an arc between the `origin` & `destination` of the two points
       for (let i = 0; i < lineDistance; i += lineDistance / this.steps) {
@@ -1417,7 +1426,10 @@ export class Map {
         this.arc[routePart.id].push(segment.geometry.coordinates);
       }
 
-      const point = turf.point(routePart.geometry.coordinates[0], {...routePart.properties, routePartId: routePart.id});
+      const point = turf.point(routePart.geometry.coordinates[0], {
+        ...routePart.properties,
+        routePartId: routePart.id,
+      });
       pointsArray.push(point);
     }
     this.state.style.sources['route-point'].data = turf.featureCollection(pointsArray);
@@ -1430,7 +1442,10 @@ export class Map {
       const pointsArray = [];
       for (const [routeKey, routePositions] of Object.entries(this.arc)) {
         if (routePositions[this.counter]) {
-          const point = turf.point(routePositions[this.counter], {...this.routingSource.route[routeKey].properties, routePartId: routeKey});
+          const point = turf.point(routePositions[this.counter], {
+            ...this.routingSource.route[routeKey].properties,
+            routePartId: routeKey,
+          });
           pointsArray.push(point);
         }
       }
@@ -1451,7 +1466,7 @@ export class Map {
           // this.cancelAnimation();
           // Restart the animation
           this.animate();
-        }, 2000)
+        }, 2000);
       }
 
       this.counter++;
@@ -1465,11 +1480,21 @@ export class Map {
   }
 
   private getClosestFeature(amenityId: string, fromFeature: Feature) {
-    const sameLevelfeatures = this.state.allFeatures.features.filter(i => i.properties.amenity === amenityId && i.geometry.type === 'Point' && i.properties.level === fromFeature.properties.level);
-    const features = this.state.allFeatures.features.filter(i => i.properties.amenity === amenityId && i.geometry.type === 'Point');
+    const sameLevelfeatures = this.state.allFeatures.features.filter(
+      (i) =>
+        i.properties.amenity === amenityId &&
+        i.geometry.type === 'Point' &&
+        i.properties.level === fromFeature.properties.level,
+    );
+    const features = this.state.allFeatures.features.filter(
+      (i) => i.properties.amenity === amenityId && i.geometry.type === 'Point',
+    );
     const targetPoint = turf.point(fromFeature.geometry.coordinates);
     if (sameLevelfeatures.length > 0 || features.length > 0) {
-      return turf.nearestPoint(targetPoint, turf.featureCollection(sameLevelfeatures.length > 0 ? sameLevelfeatures : features)) as Feature;
+      return turf.nearestPoint(
+        targetPoint,
+        turf.featureCollection(sameLevelfeatures.length > 0 ? sameLevelfeatures : features),
+      ) as Feature;
     } else {
       return false;
     }
@@ -1720,11 +1745,7 @@ export class Map {
    *    map.findRouteToNearestFeature('amenityId');
    *  });
    */
-  public findRouteToNearestFeature(
-    amenityId: string,
-    idFrom?: string,
-    accessibleRoute?: boolean
-  ) {
+  public findRouteToNearestFeature(amenityId: string, idFrom?: string, accessibleRoute?: boolean) {
     const fromFeature = this.defaultOptions.isKiosk
       ? this.startPoint
       : (this.state.allFeatures.features.find((f) => f.id === idFrom || f.properties.id === idFrom) as Feature);
