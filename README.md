@@ -120,7 +120,8 @@ const map = new Proximiio.Map({
     considerVisibilityParam: false, // optional, default: true, if enabled all pois with visibility property defined as 'hidden' will not be visible as default, will be possible to toggle them with toggleHiddenPois() method
     fitBoundsPadding: 200, // optional, default 250, number | PaddingOptions, the amount of padding in pixels to add to the given bounds for found route, https://docs.mapbox.com/mapbox-gl-js/api/properties/#paddingoptions
     showLevelDirectionIcon: false // optional, default: false, if enabled arrow icon will be shown at the levelchanger indicating direction of level change along the found route,
-    showRasterFloorplans: false // optional, default: false, if enabled raster floorplans will be visible
+    showRasterFloorplans: false // optional, default: false, if enabled raster floorplans will be visible,
+    animatedRoute: false // optional, default: false, EXPERIMENTAL, if enabled animated dot will be displayed along the route
 });
 ```
 #### Required Data for 3D Polygons
@@ -286,6 +287,36 @@ This method will generate route based on attached coords.
 map.getMapReadyListener().subscribe(ready => {
    console.log('map ready', ready);
    map.findRouteByCoords(48.606703739771774, 17.833092384506614, 0, 48.60684545080579, 17.833450676669543, 0);
+});
+```
+
+###### by coords
+This method will generate route based on attached coords.
+```
+// @param latTo {number} finish latitude coordinate
+// @param lngTo {number} finish longitude coordinate
+// @param levelTo {number} finish level
+// @param latFrom {number} start latitude coordinate, optional for kiosk
+// @param lngFrom {number} start longitude coordinate, optional for kiosk
+// @param levelFrom {number} start level, optional for kiosk
+// @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
+
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   map.findRouteByCoords(48.606703739771774, 17.833092384506614, 0, 48.60684545080579, 17.833450676669543, 0);
+});
+```
+
+###### by nearest amenity feature
+This method will generate route based on nearest amenity feature.
+```
+// @param amenityId {string} amenity id of a nearest feature to look for
+// @param idFrom {string} start feature id, optional for kiosk
+// @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
+
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   map.findRouteToNearestFeature('amenityId');
 });
 ```
 

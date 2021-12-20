@@ -36,6 +36,7 @@
     "@tarekraafat/autocomplete.js": "^10.2.5",
     "@turf/along": "^6.5.0",
     "@turf/helpers": "^6.5.0",
+    "@turf/nearest-point": "^6.5.0",
     "@turf/nearest-point-to-line": "^6.5.0",
     "@turf/point-to-line-distance": "^6.5.0",
     "@turf/turf": "^6.5.0",

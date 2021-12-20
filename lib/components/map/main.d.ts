@@ -45,6 +45,7 @@ interface Options {
     fitBoundsPadding?: number | PaddingOptions;
     showLevelDirectionIcon?: boolean;
     showRasterFloorplans?: boolean;
+    animatedRoute?: boolean;
 }
 interface PaddingOptions {
     bottom: number;
@@ -92,6 +93,7 @@ export declare class Map {
     private initKiosk;
     private onSetKiosk;
     private initDirectionIcon;
+    private initAnimatedRoute;
     private initPolygons;
     private onShopClick;
     handlePolygonSelection(poi?: Feature): void;
@@ -132,6 +134,14 @@ export declare class Map {
     private updateImages;
     private getUpcomingFloorNumber;
     private addDirectionFeatures;
+    private counter;
+    private arc;
+    private steps;
+    private animationInstances;
+    private addAnimatedRouteFeatures;
+    private animate;
+    private cancelAnimation;
+    private getClosestFeature;
     /**
      *  @memberof Map
      *  @name getMapboxInstance
@@ -281,6 +291,21 @@ export declare class Map {
      *  });
      */
     findRouteByCoords(latTo: number, lngTo: number, levelTo: number, latFrom?: number, lngFrom?: number, levelFrom?: number, accessibleRoute?: boolean): void;
+    /**
+     * This method will generate route to nearest amenity feature
+     *  @memberof Map
+     *  @name findRouteToNearestFeature
+     *  @param amenityId {string} amenity id of a nearest feature to look for
+     *  @param idFrom {string} start feature id, optional for kiosk
+     *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.findRouteToNearestFeature('amenityId');
+     *  });
+     */
+    findRouteToNearestFeature(amenityId: string, idFrom?: string, accessibleRoute?: boolean): void;
     /**
      * This method will cancel generated route
      *  @memberof Map

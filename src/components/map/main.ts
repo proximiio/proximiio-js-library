@@ -27,6 +27,7 @@ import { MapboxOptions } from '../../models/mapbox-options';
 import { PolygonIconsLayer, PolygonsLayer, PolygonTitlesLayer } from './custom-layers';
 import PersonModel from '../../models/person';
 import { lineString } from '@turf/helpers';
+import { LineString } from '@turf/turf';
 
 interface State {
   readonly initializing: boolean;
@@ -68,6 +69,7 @@ interface Options {
   fitBoundsPadding?: number | PaddingOptions;
   showLevelDirectionIcon?: boolean;
   showRasterFloorplans?: boolean;
+  animatedRoute?: boolean;
 }
 
 interface PaddingOptions {
@@ -129,6 +131,7 @@ export class Map {
     fitBoundsPadding: 250,
     showLevelDirectionIcon: false,
     showRasterFloorplans: false,
+    animatedRoute: false,
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -183,8 +186,8 @@ export class Map {
     const center = this.defaultOptions.mapboxOptions?.center
       ? (this.defaultOptions.mapboxOptions.center as any)
       : this.defaultOptions.isKiosk
-      ? this.defaultOptions.kioskSettings?.coordinates
-      : [place.location.lng, place.location.lat];
+        ? this.defaultOptions.kioskSettings?.coordinates
+        : [place.location.lng, place.location.lat];
     style.center = center;
     this.defaultOptions.mapboxOptions.center = style.center;
     if (this.defaultOptions.zoomLevel) {
@@ -296,6 +299,9 @@ export class Map {
       if (this.defaultOptions.showLevelDirectionIcon) {
         this.initDirectionIcon();
       }
+      if (this.defaultOptions.animatedRoute) {
+        this.initAnimatedRoute();
+      }
       this.initPersonsMap();
       this.map.on('click', 'proximiio-pois-icons', (ev) => {
         this.onShopClick(ev);
@@ -385,6 +391,31 @@ export class Map {
     }
   }
 
+  private initAnimatedRoute() {
+    if (this.map) {
+      this.state.style.addSource('route-point', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [],
+        },
+      });
+      this.state.style.addLayer({
+        id: 'route-point',
+        type: 'circle',
+        source: 'route-point',
+        minzoom: 17,
+        maxzoom: 24,
+        paint: {
+          'circle-color': '#1d8a9f',
+          'circle-radius': 10
+        },
+        filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
+      });
+      this.map.setStyle(this.state.style);
+    }
+  }
+
   private initPolygons() {
     if (this.map) {
       PolygonsLayer.setFilterLevel(this.state.floor.level);
@@ -462,25 +493,27 @@ export class Map {
     }
     if (connectedPolygonId) {
       this.selectedPolygon = this.state.allFeatures.features.find((i) => i.properties.id === connectedPolygonId);
-      this.map.setFeatureState(
-        {
-          source: 'main',
-          id: this.selectedPolygon.id,
-        },
-        {
-          selected: true,
-        },
-      );
-      if (this.selectedPolygon.properties.label_id) {
+      if (this.selectedPolygon) {
         this.map.setFeatureState(
           {
             source: 'main',
-            id: this.selectedPolygon.properties.label_id,
+            id: this.selectedPolygon.id,
           },
           {
             selected: true,
           },
         );
+        if (this.selectedPolygon.properties.label_id) {
+          this.map.setFeatureState(
+            {
+              source: 'main',
+              id: this.selectedPolygon.properties.label_id,
+            },
+            {
+              selected: true,
+            },
+          );
+        }
       }
     }
   }
@@ -953,13 +986,18 @@ export class Map {
           JSON.stringify(this.routingSource.points),
           JSON.stringify(this.endPoint),
         );
-        this.centerOnRoute(routeStart);
+        this.state = { ...this.state, loadingRoute: false, textNavigation };
 
         if (this.defaultOptions.showLevelDirectionIcon) {
           this.addDirectionFeatures();
         }
 
-        this.state = { ...this.state, loadingRoute: false, textNavigation };
+        if (this.defaultOptions.animatedRoute) {
+          this.addAnimatedRouteFeatures();
+        }
+
+        this.centerOnRoute(routeStart);
+
         this.onRouteFoundListener.next({
           route: this.routingSource.route,
           TBTNav: this.defaultOptions.enableTBTNavigation ? textNavigation : null,
@@ -1153,13 +1191,19 @@ export class Map {
         const routePoints = lineString(
           this.routingSource.levelPoints[floor.level].map((i: any) => i.geometry.coordinates),
         );
+        const lengthInMeters = turf.length(routePoints, {units: 'kilometers'}) * 1000;
         const bbox = turf.bbox(routePoints);
-        // @ts-ignore;
-        map.fitBounds(bbox, {
-          padding: this.defaultOptions.fitBoundsPadding,
-          bearing: this.map.getBearing(),
-          pitch: this.map.getPitch(),
-        });
+        if (lengthInMeters > 15) {
+          // @ts-ignore;
+          map.fitBounds(bbox, {
+            padding: lengthInMeters < 80 ? 400 : this.defaultOptions.fitBoundsPadding,
+            bearing: this.map.getBearing(),
+            pitch: this.map.getPitch(),
+          });
+        } else {
+          // @ts-ignore
+          this.map.flyTo({ center: turf.center(routePoints).geometry.coordinates });
+        }
       }
       if (this.defaultOptions.isKiosk && map.getLayer('my-location-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
@@ -1176,6 +1220,11 @@ export class Map {
         map.setFilter('direction-icon-layer', filter);
         this.state.style.getLayer('direction-icon-layer').filter = filter;
       }
+      if (this.defaultOptions.animatedRoute && map.getLayer('route-point')) {
+        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
+        map.setFilter('route-point', filter);
+        this.state.style.getLayer('route-point').filter = filter;
+      }
     }
     this.state = { ...this.state, floor, style: this.state.style };
     this.updateCluster();
@@ -1189,6 +1238,9 @@ export class Map {
       if (finish && this.defaultOptions.initPolygons) {
         this.handlePolygonSelection(finish);
       }
+      if (finish && this.defaultOptions.animatedRoute) {
+        this.cancelAnimation();
+      }
       this.routingSource.update(start, finish);
     } catch (e) {
       console.log('catched', e);
@@ -1201,6 +1253,10 @@ export class Map {
     if (this.defaultOptions.initPolygons) {
       this.handlePolygonSelection();
     }
+    if (this.defaultOptions.animatedRoute) {
+      this.cancelAnimation();
+    }
+    // TODO: remove direction icons
     this.routingSource.cancel();
     this.onRouteCancelListener.next('route cancelled');
   }
@@ -1225,13 +1281,19 @@ export class Map {
         const routePoints = lineString(
           this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
         );
+        const lengthInMeters = turf.length(routePoints, {units: 'kilometers'}) * 1000;
         const bbox = turf.bbox(routePoints);
-        // @ts-ignore
-        this.map.fitBounds(bbox, {
-          padding: this.defaultOptions.fitBoundsPadding,
-          bearing: this.map.getBearing(),
-          pitch: this.map.getPitch(),
-        });
+        if (lengthInMeters > 15) {
+          // @ts-ignore;
+          this.map.fitBounds(bbox, {
+            padding: lengthInMeters < 80 ? 400 : this.defaultOptions.fitBoundsPadding,
+            bearing: this.map.getBearing(),
+            pitch: this.map.getPitch(),
+          });
+        } else {
+          // @ts-ignore
+          this.map.flyTo({ center: turf.center(routePoints).geometry.coordinates });
+        }
       }
     }
   }
@@ -1264,8 +1326,8 @@ export class Map {
       const nextRoute = this.routingSource.lines[nextRouteIndex];
       // return currentRouteIndex !== -1 && nextRoute ? +nextRoute.properties.level : way === 'up' ? this.state.floor.level + 1 : this.state.floor.level - 1;
       return nextRoute &&
-        ((way === 'up' && +nextRoute.properties.level > this.state.floor.level) ||
-          (way === 'down' && +nextRoute.properties.level < this.state.floor.level))
+      ((way === 'up' && +nextRoute.properties.level > this.state.floor.level) ||
+        (way === 'down' && +nextRoute.properties.level < this.state.floor.level))
         ? +nextRoute.properties.level
         : this.state.floor.level;
     }
@@ -1296,6 +1358,90 @@ export class Map {
       features: levelChangers,
     };
     this.map.setStyle(this.state.style);
+  }
+
+  // Used to increment the value of the point measurement against the route.
+  private counter = 0;
+  // store route part animation points
+  private arc = {};
+  // Number of steps to use in the arc and animation, more steps means
+  // a smoother arc and animation, but too many steps will result in a
+  // low frame rate
+  private steps = 300;
+  private animationInstances = [];
+  private addAnimatedRouteFeatures() {
+    this.counter = 0;
+    this.arc = {};
+    const pointsArray = [];
+
+    for (const routePart of this.routingSource.lines) {
+      // Calculate the distance in kilometers between route start/end point.
+      const lineDistance = turf.length(routePart);
+
+      this.arc[routePart.id] = []
+
+      // Draw an arc between the `origin` & `destination` of the two points
+      for (let i = 0; i < lineDistance; i += lineDistance / this.steps) {
+        const segment = turf.along(turf.lineString(routePart.geometry.coordinates), i);
+        this.arc[routePart.id].push(segment.geometry.coordinates);
+      }
+
+      const point = turf.point(routePart.geometry.coordinates[0], {...routePart.properties, routePartId: routePart.id});
+      pointsArray.push(point);
+    }
+    this.state.style.sources['route-point'].data = turf.featureCollection(pointsArray);
+    this.map.setStyle(this.state.style);
+    this.animate();
+  }
+
+  private animate() {
+    if (Object.keys(this.arc).length > 0) {
+      const pointsArray = [];
+      for (const [routeKey, routePositions] of Object.entries(this.arc)) {
+        if (routePositions[this.counter]) {
+          const point = turf.point(routePositions[this.counter], {...this.routingSource.route[routeKey].properties, routePartId: routeKey});
+          pointsArray.push(point);
+        }
+      }
+      // Update the source with this new data
+      this.state.style.sources['route-point'].data = turf.featureCollection(pointsArray);
+      this.map.setStyle(this.state.style);
+
+      // Request the next frame of animation as long as the end has not been reached
+      if (this.counter < this.steps) {
+        const animationInstance = window.requestAnimationFrame(this.animate.bind(this));
+        this.animationInstances.push(animationInstance);
+      }
+      if (this.counter === this.steps) {
+        setTimeout(() => {
+          // Reset the counter
+          this.counter = 0;
+          // cancel animation
+          // this.cancelAnimation();
+          // Restart the animation
+          this.animate();
+        }, 2000)
+      }
+
+      this.counter++;
+    }
+  }
+
+  private cancelAnimation() {
+    for (const instance of this.animationInstances) {
+      window.cancelAnimationFrame(instance);
+    }
+  }
+
+  private getClosestFeature(amenityId: string, fromFeature: Feature) {
+    const sameLevelfeatures = this.state.allFeatures.features.filter(i => i.properties.amenity === amenityId && i.geometry.type === 'Point' && i.properties.level === fromFeature.properties.level);
+    const features = this.state.allFeatures.features.filter(i => i.properties.amenity === amenityId && i.geometry.type === 'Point');
+    const targetPoint = turf.point(fromFeature.geometry.coordinates);
+    if (sameLevelfeatures.length > 0 || features.length > 0) {
+      return turf.nearestPoint(targetPoint, turf.featureCollection(sameLevelfeatures.length > 0 ? sameLevelfeatures : features)) as Feature;
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -1527,6 +1673,37 @@ export class Map {
     const toFeature = turf.feature({ type: 'Point', coordinates: [lngTo, latTo] }, { level: levelTo }) as Feature;
     this.routingSource.toggleAccessible(accessibleRoute);
     this.onRouteUpdate(this.defaultOptions.isKiosk ? this.startPoint : fromFeature, toFeature);
+  }
+
+  /**
+   * This method will generate route to nearest amenity feature
+   *  @memberof Map
+   *  @name findRouteToNearestFeature
+   *  @param amenityId {string} amenity id of a nearest feature to look for
+   *  @param idFrom {string} start feature id, optional for kiosk
+   *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.findRouteToNearestFeature('amenityId');
+   *  });
+   */
+  public findRouteToNearestFeature(
+    amenityId: string,
+    idFrom?: string,
+    accessibleRoute?: boolean
+  ) {
+    const fromFeature = this.defaultOptions.isKiosk
+      ? this.startPoint
+      : (this.state.allFeatures.features.find((f) => f.id === idFrom || f.properties.id === idFrom) as Feature);
+    const toFeature: Feature | boolean = this.getClosestFeature(amenityId, fromFeature);
+    if (toFeature) {
+      this.routingSource.toggleAccessible(accessibleRoute);
+      this.onRouteUpdate(this.defaultOptions.isKiosk ? this.startPoint : fromFeature, toFeature);
+    } else {
+      throw new Error(`Feature not found`);
+    }
   }
 
   /**
