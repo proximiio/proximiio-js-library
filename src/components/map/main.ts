@@ -195,8 +195,8 @@ export class Map {
     const center = this.defaultOptions.mapboxOptions?.center
       ? (this.defaultOptions.mapboxOptions.center as any)
       : this.defaultOptions.isKiosk
-      ? this.defaultOptions.kioskSettings?.coordinates
-      : [place.location.lng, place.location.lat];
+        ? this.defaultOptions.kioskSettings?.coordinates
+        : [place.location.lng, place.location.lat];
     style.center = center;
     this.defaultOptions.mapboxOptions.center = style.center;
     if (this.defaultOptions.zoomLevel) {
@@ -843,6 +843,7 @@ export class Map {
     }
     this.filteredAmenities = this.amenityFilters;
     this.filterOutFeatures();
+    this.setActivePolygons(amenityId);
   }
 
   private onRemoveAmenityFilter(amenityId: string, category?: string) {
@@ -859,6 +860,7 @@ export class Map {
     }
     this.filteredAmenities = this.amenityFilters.length > 0 ? this.amenityFilters : this.amenityIds;
     this.filterOutFeatures();
+    this.setActivePolygons(null);
   }
 
   private onResetAmenityFilters() {
@@ -870,6 +872,7 @@ export class Map {
     }
     this.filteredAmenities = this.amenityIds;
     this.filterOutFeatures();
+    this.setActivePolygons(null);
   }
 
   private filterOutFeatures() {
@@ -907,6 +910,47 @@ export class Map {
       }
     });
     this.state.style.notify('filter-change');
+  }
+
+  private activePolygonsAmenity;
+  private setActivePolygons(amenityId: string | null) {
+    if (this.defaultOptions.initPolygons) {
+      const activeFeatures = this.activePolygonsAmenity ? this.state.allFeatures.features.filter(f => f.properties.amenity === this.activePolygonsAmenity && f.properties.metadata?.polygon_id && f.geometry.type === 'Point') : [];
+      const amenityFeatures = amenityId ? this.state.allFeatures.features.filter(f => f.properties.amenity === amenityId && f.properties.metadata?.polygon_id && f.geometry.type === 'Point') : [];
+      if (activeFeatures.length > 0) {
+        for (const f of activeFeatures) {
+          const polygon = this.state.allFeatures.features.find((i) => i.properties.id === f.properties.metadata.polygon_id);
+          if (polygon) {
+            this.map.setFeatureState(
+              {
+                source: 'main',
+                id: polygon.id,
+              },
+              {
+                active: false,
+              },
+            );
+          }
+        }
+      }
+      if (amenityFeatures.length > 0) {
+        for (const f of amenityFeatures) {
+          const polygon = this.state.allFeatures.features.find((i) => i.properties.id === f.properties.metadata.polygon_id);
+          if (polygon) {
+            this.map.setFeatureState(
+              {
+                source: 'main',
+                id: polygon.id,
+              },
+              {
+                active: true,
+              },
+            );
+          }
+        }
+      }
+    }
+    this.activePolygonsAmenity = amenityId;
   }
 
   private handlePoiVisibility() {
@@ -1376,8 +1420,8 @@ export class Map {
       const nextRoute = this.routingSource.lines[nextRouteIndex];
       // return currentRouteIndex !== -1 && nextRoute ? +nextRoute.properties.level : way === 'up' ? this.state.floor.level + 1 : this.state.floor.level - 1;
       return nextRoute &&
-        ((way === 'up' && +nextRoute.properties.level > this.state.floor.level) ||
-          (way === 'down' && +nextRoute.properties.level < this.state.floor.level))
+      ((way === 'up' && +nextRoute.properties.level > this.state.floor.level) ||
+        (way === 'down' && +nextRoute.properties.level < this.state.floor.level))
         ? +nextRoute.properties.level
         : this.state.floor.level;
     }

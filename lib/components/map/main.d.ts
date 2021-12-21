@@ -119,6 +119,8 @@ export declare class Map {
     private onRemoveAmenityFilter;
     private onResetAmenityFilters;
     private filterOutFeatures;
+    private activePolygonsAmenity;
+    private setActivePolygons;
     private handlePoiVisibility;
     private onToggleHiddenPois;
     private onSetPerson;

@@ -16,6 +16,8 @@ export const PolygonsLayer = new FillExtrusionLayer({
       '#6945ed',
       ['boolean', ['feature-state', 'hover'], false],
       '#a58dfa',
+      ['boolean', ['feature-state', 'active'], false],
+      '#ac94ff',
       ['boolean', ['feature-state', 'disabled'], false],
       '#8a8a8a',
       '#dbd7e8',
