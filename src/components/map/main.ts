@@ -195,8 +195,8 @@ export class Map {
     const center = this.defaultOptions.mapboxOptions?.center
       ? (this.defaultOptions.mapboxOptions.center as any)
       : this.defaultOptions.isKiosk
-        ? this.defaultOptions.kioskSettings?.coordinates
-        : [place.location.lng, place.location.lat];
+      ? this.defaultOptions.kioskSettings?.coordinates
+      : [place.location.lng, place.location.lat];
     style.center = center;
     this.defaultOptions.mapboxOptions.center = style.center;
     if (this.defaultOptions.zoomLevel) {
@@ -1376,8 +1376,8 @@ export class Map {
       const nextRoute = this.routingSource.lines[nextRouteIndex];
       // return currentRouteIndex !== -1 && nextRoute ? +nextRoute.properties.level : way === 'up' ? this.state.floor.level + 1 : this.state.floor.level - 1;
       return nextRoute &&
-      ((way === 'up' && +nextRoute.properties.level > this.state.floor.level) ||
-        (way === 'down' && +nextRoute.properties.level < this.state.floor.level))
+        ((way === 'up' && +nextRoute.properties.level > this.state.floor.level) ||
+          (way === 'down' && +nextRoute.properties.level < this.state.floor.level))
         ? +nextRoute.properties.level
         : this.state.floor.level;
     }
