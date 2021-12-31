@@ -43,6 +43,7 @@ interface Options {
     zoomLevel?: number;
     considerVisibilityParam?: boolean;
     fitBoundsPadding?: number | PaddingOptions;
+    minFitBoundsDistance?: number;
     showLevelDirectionIcon?: boolean;
     showRasterFloorplans?: boolean;
     animatedRoute?: boolean;

@@ -66,6 +66,7 @@ interface Options {
   zoomLevel?: number;
   considerVisibilityParam?: boolean;
   fitBoundsPadding?: number | PaddingOptions;
+  minFitBoundsDistance?: number;
   showLevelDirectionIcon?: boolean;
   showRasterFloorplans?: boolean;
   animatedRoute?: boolean;
@@ -137,6 +138,7 @@ export class Map {
     initPolygons: false,
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
+    minFitBoundsDistance: 15,
     showLevelDirectionIcon: false,
     showRasterFloorplans: false,
     animatedRoute: false,
@@ -1293,10 +1295,10 @@ export class Map {
         );
         const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
         const bbox = turf.bbox(routePoints);
-        if (lengthInMeters > 15) {
+        if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
           // @ts-ignore;
           map.fitBounds(bbox, {
-            padding: lengthInMeters < 80 ? 400 : this.defaultOptions.fitBoundsPadding,
+            padding: this.defaultOptions.fitBoundsPadding,
             bearing: this.map.getBearing(),
             pitch: this.map.getPitch(),
           });
@@ -1393,10 +1395,10 @@ export class Map {
         );
         const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
         const bbox = turf.bbox(routePoints);
-        if (lengthInMeters > 15) {
+        if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
           // @ts-ignore;
           this.map.fitBounds(bbox, {
-            padding: lengthInMeters < 80 ? 400 : this.defaultOptions.fitBoundsPadding,
+            padding: this.defaultOptions.fitBoundsPadding,
             bearing: this.map.getBearing(),
             pitch: this.map.getPitch(),
           });
