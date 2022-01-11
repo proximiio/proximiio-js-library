@@ -90,6 +90,8 @@ export declare class Map {
     private endPoint?;
     private showStartPoint;
     private amenityIds;
+    private filteredFeatures;
+    private featureFilters;
     private filteredAmenities;
     private amenityFilters;
     private amenityCategories;
@@ -116,6 +118,9 @@ export declare class Map {
     private onUpdateFeature;
     private onDeleteFeature;
     private onFeaturesChange;
+    private onSetFeatureFilter;
+    private onRemoveFeatureFilter;
+    private onResetFeatureFilters;
     private onSetAmenityFilter;
     private onRemoveAmenityFilter;
     private onResetAmenityFilters;
@@ -558,6 +563,44 @@ export declare class Map {
      */
     setBoundsPadding(padding: number | PaddingOptions): void;
     /**
+     * With this method you can show only defined features, you can send both id or title.
+     *  @memberof Map
+     *  @name setFeatureFilter
+     *  @param query {string} id or title of the feature
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.setFeatureFilter('myfeature');
+     *  });
+     */
+    setFeatureFilter(query: string): void;
+    /**
+     * Method for removing previously created feature filters.
+     *  @memberof Map
+     *  @name removeFeatureFilter
+     *  @param query {string} id or title of the feature
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.removeFeatureFilter('myfeature');
+     *  });
+     */
+    removeFeatureFilter(query: string): void;
+    /**
+     * Method for removing all active feature filters.
+     *  @memberof Map
+     *  @name resetFeatureFilters
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.resetFeatureFilters();
+     *  });
+     */
+    resetFeatureFilters(): void;
+    /**
      * You'll be able to show features only for defined amenity id on map with this method, also with defining the category (NOTE: you have to create them before with setAmenitiesCategory() method), filtering will be set only for defined array of amenities in the category. With category set, only one amenity filter can be active at the time, while without the category they stack so multiple amenities can be active.
      *  @memberof Map
      *  @name setAmenityFilter
@@ -586,7 +629,7 @@ export declare class Map {
      */
     removeAmenityFilter(amenityId: string, category?: string): void;
     /**
-     * Method for removing all active filters.
+     * Method for removing all active amenity filters.
      *  @memberof Map
      *  @name resetAmenityFilters
      *  @example

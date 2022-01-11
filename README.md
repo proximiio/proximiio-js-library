@@ -487,7 +487,41 @@ map.getMapReadyListener().subscribe(ready => {
 
 ##### Map Features Filtering
 
-###### Setting new filter
+###### Setting new feature filter
+With this method you set only defined poi feature to be visible, calling this method multiple times will set another feature to be visible without hiding the previous one.
+```
+// param query {string} id or title of the feature
+
+const map = new Proximiio.Map();
+map.getMapReadyListener().subscribe(ready => {
+    console.log('map ready', ready);
+    map.setFeatureFilter('myfeature');
+});
+```
+
+###### Removing created feature filter
+Method for removing previously created feature filters.
+```
+// param query {string} id or title of the feature
+
+const map = new Proximiio.Map();
+map.getMapReadyListener().subscribe(ready => {
+    console.log('map ready', ready);
+    map.removeFeatureFilter('myfeature');
+});
+```
+
+###### Resetting all feature filters
+Method for removing all active feature filters.
+```
+const map = new Proximiio.Map();
+map.getMapReadyListener().subscribe(ready => {
+    console.log('map ready', ready);
+    map.resetFeatureFilters();
+});
+```
+
+###### Setting new amenity filter
 You'll be able to show features only for defined amenity id on map with this method, also with defining the category _(NOTE: you have to create them before with [setAmenitiesCategory()](#setting-new-amenities-category) method)_, filtering will be set only for defined array of amenities in the category. With category set, only one amenity filter can be active at the time, while without the category they stack so multiple amenities can be active.
 
 ```
@@ -501,7 +535,7 @@ map.getMapReadyListener().subscribe(ready => {
 });
 ```
 
-###### Removing created filter
+###### Removing created amenity filter
 Method for removing previously created amenity filters. In case amenity filter has been set with the category parameter, you have to use same param for removing the filter.
 
 ```
@@ -515,8 +549,8 @@ map.getMapReadyListener().subscribe(ready => {
 });
 ```
 
-###### Resetting all filters
-Method for removing all active filters.
+###### Resetting all amenity filters
+Method for removing all active amenity filters.
 
 ```  
 const map = new Proximiio.Map();
