@@ -173,6 +173,14 @@ class App extends React.Component {
     this.map.setFloorByWay('down');
   }
 
+  onSetFeatureFilter = (feature) => {
+    this.map.setFeatureFilter(feature);
+  }
+
+  onRemoveFeatureFilter = (feature) => {
+    this.map.removeFeatureFilter(feature);
+  }
+
   onSetFilter = (amenityId, category) => {
     this.map.setAmenityFilter(amenityId, category);
   }
@@ -183,6 +191,10 @@ class App extends React.Component {
 
   onResetFilters = () => {
     this.map.resetAmenityFilters();
+  }
+
+  onResetFeatureFilters = () => {
+    this.map.resetFeatureFilters();
   }
 
   onToggleHiddenPois = () => {
@@ -213,6 +225,10 @@ class App extends React.Component {
           </div>
           <button onClick={this.onFloorUp}>Floor Up</button>
           <button onClick={this.onFloorDown}>Floor Down</button>
+          <button onClick={this.onSetFeatureFilter.bind(this, 'P.D.')}>Set P.D. Filter</button>
+          <button onClick={this.onRemoveFeatureFilter.bind(this, 'P.D.')}>Remove P.D. Filter</button>
+          <button onClick={this.onSetFeatureFilter.bind(this, 'Olive Grove')}>Set Olive Grove Filter</button>
+          <button onClick={this.onRemoveFeatureFilter.bind(this, 'Olive Grove')}>Remove Olive Grove Filter</button>
           <button onClick={this.onSetFilter.bind(this, '44010f6f-9963-4433-ad86-40b89b829c41:c693d414-4613-4c6c-95da-771e52759873', 'shop')}>Set Cafe Filter</button>
           <button onClick={this.onSetFilter.bind(this, '44010f6f-9963-4433-ad86-40b89b829c41:d111c5e4-1a63-48b3-94de-5fa7b309daaf', 'shop')}>Set Clothing Filter</button>
           <button onClick={this.onSetFilter.bind(this, '44010f6f-9963-4433-ad86-40b89b829c41:e762ea14-70e2-49b7-9938-f6870f9ab18f', 'amenities')}>Set Toilets Filter</button>
@@ -220,6 +236,7 @@ class App extends React.Component {
           <button onClick={this.onRemoveFilter.bind(this, '44010f6f-9963-4433-ad86-40b89b829c41:d111c5e4-1a63-48b3-94de-5fa7b309daaf', 'shop')}>Remove Clothing Filter</button>
           <button onClick={this.onRemoveFilter.bind(this, '44010f6f-9963-4433-ad86-40b89b829c41:e762ea14-70e2-49b7-9938-f6870f9ab18f', 'amenities')}>Remove Toilets Filter</button>
           <button onClick={this.onResetFilters}>Reset Filters</button>
+          <button onClick={this.onResetFeatureFilters}>Reset Feature Filters</button>
           <button onClick={this.onToggleHiddenPois}>Toggle Hidden Pois</button>
         </header>
         <div id="proximiioMap"></div>

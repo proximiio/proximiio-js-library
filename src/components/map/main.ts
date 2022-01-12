@@ -149,6 +149,8 @@ export class Map {
   private endPoint?: Feature;
   private showStartPoint = false;
   private amenityIds: string[] = [];
+  private filteredFeatures: string[] = [];
+  private featureFilters: string[] = [];
   private filteredAmenities: string[] = [];
   private amenityFilters: string[] = [];
   private amenityCategories: any = {};
@@ -197,8 +199,8 @@ export class Map {
     const center = this.defaultOptions.mapboxOptions?.center
       ? (this.defaultOptions.mapboxOptions.center as any)
       : this.defaultOptions.isKiosk
-      ? this.defaultOptions.kioskSettings?.coordinates
-      : [place.location.lng, place.location.lat];
+        ? this.defaultOptions.kioskSettings?.coordinates
+        : [place.location.lng, place.location.lat];
     style.center = center;
     this.defaultOptions.mapboxOptions.center = style.center;
     if (this.defaultOptions.zoomLevel) {
@@ -824,6 +826,34 @@ export class Map {
     }
   }
 
+  private onSetFeatureFilter(query: string) {
+    const features = this.state.allFeatures.features.filter(f => f.properties.id === query || f.id === query || f.properties.title === query);
+    for (const feature of features) {
+      if (this.featureFilters.findIndex(i => i === feature.properties.id) === -1) {
+        this.featureFilters.push(feature.properties.id);
+      }
+    }
+    this.filteredFeatures = this.featureFilters;
+    this.filterOutFeatures();
+  }
+
+  private onRemoveFeatureFilter(query: string) {
+    const features = this.state.allFeatures.features.filter(f => f.properties.id === query || f.id === query || f.properties.title === query);
+    for (const feature of features) {
+      if (this.featureFilters.findIndex(i => i === feature.properties.id) !== -1) {
+        this.featureFilters.splice(this.featureFilters.findIndex(i => i === feature.properties.id), 1);
+      }
+    }
+    this.filteredFeatures = this.featureFilters.length > 0 ? this.featureFilters : [];
+    this.filterOutFeatures();
+  }
+
+  private onResetFeatureFilters() {
+    this.featureFilters = [];
+    this.filteredFeatures = this.featureFilters;
+    this.filterOutFeatures();
+  }
+
   private onSetAmenityFilter(amenityId: string, category?: string) {
     if (category) {
       this.amenityCategories[category].active = true;
@@ -885,10 +915,11 @@ export class Map {
     }
     layers.forEach((layer) => {
       if (this.map.getLayer(layer)) {
-        setTimeout(() => {
-          const l = this.map.getLayer(layer) as any;
-          const filters = [...l.filter];
-          const amenityFilter = filters.findIndex((f) => f[1][1] === 'amenity');
+        const l = this.map.getLayer(layer) as any;
+        const filters = [...l.filter];
+        const amenityFilter = filters.findIndex((f) => f[1][1] === 'amenity');
+        const featureFilter = filters.findIndex((f) => f[1][1] === 'id');
+        if (this.filteredAmenities.length > 0) {
           if (amenityFilter !== -1) {
             filters[amenityFilter] = [
               'match',
@@ -906,9 +937,32 @@ export class Map {
               false,
             ]);
           }
-          this.state.style.getLayer(layer).filter = filters;
-          this.map.setFilter(layer, filters);
-        });
+        }
+        if (this.filteredFeatures.length > 0) {
+          if (featureFilter !== -1) {
+            filters[featureFilter] = [
+              'match',
+              ['get', 'id'],
+              this.filteredFeatures,
+              true,
+              false,
+            ];
+          } else {
+            filters.push([
+              'match',
+              ['get', 'id'],
+              this.filteredFeatures,
+              true,
+              false,
+            ]);
+          }
+        } else {
+          if (featureFilter !== -1) {
+            filters.splice(featureFilter, 1);
+          }
+        }
+        this.state.style.getLayer(layer).filter = filters;
+        this.map.setFilter(layer, filters);
       }
     });
     this.state.style.notify('filter-change');
@@ -919,17 +973,17 @@ export class Map {
     if (this.defaultOptions.initPolygons) {
       const activeFeatures = this.activePolygonsAmenity
         ? this.state.allFeatures.features.filter(
-            (f) =>
-              f.properties.amenity === this.activePolygonsAmenity &&
-              f.properties.metadata?.polygon_id &&
-              f.geometry.type === 'Point',
-          )
+          (f) =>
+            f.properties.amenity === this.activePolygonsAmenity &&
+            f.properties.metadata?.polygon_id &&
+            f.geometry.type === 'Point',
+        )
         : [];
       const amenityFeatures = amenityId
         ? this.state.allFeatures.features.filter(
-            (f) =>
-              f.properties.amenity === amenityId && f.properties.metadata?.polygon_id && f.geometry.type === 'Point',
-          )
+          (f) =>
+            f.properties.amenity === amenityId && f.properties.metadata?.polygon_id && f.geometry.type === 'Point',
+        )
         : [];
       if (activeFeatures.length > 0) {
         for (const f of activeFeatures) {
@@ -1438,8 +1492,8 @@ export class Map {
       const nextRoute = this.routingSource.lines[nextRouteIndex];
       // return currentRouteIndex !== -1 && nextRoute ? +nextRoute.properties.level : way === 'up' ? this.state.floor.level + 1 : this.state.floor.level - 1;
       return nextRoute &&
-        ((way === 'up' && +nextRoute.properties.level > this.state.floor.level) ||
-          (way === 'down' && +nextRoute.properties.level < this.state.floor.level))
+      ((way === 'up' && +nextRoute.properties.level > this.state.floor.level) ||
+        (way === 'down' && +nextRoute.properties.level < this.state.floor.level))
         ? +nextRoute.properties.level
         : this.state.floor.level;
     }
@@ -2160,6 +2214,53 @@ export class Map {
   }
 
   /**
+   * With this method you can show only defined features, you can send both id or title.
+   *  @memberof Map
+   *  @name setFeatureFilter
+   *  @param query {string} id or title of the feature
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.setFeatureFilter('myfeature');
+   *  });
+   */
+  public setFeatureFilter(query: string) {
+    this.onSetFeatureFilter(query);
+  }
+
+  /**
+   * Method for removing previously created feature filters.
+   *  @memberof Map
+   *  @name removeFeatureFilter
+   *  @param query {string} id or title of the feature
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.removeFeatureFilter('myfeature');
+   *  });
+   */
+  public removeFeatureFilter(query: string) {
+    this.onRemoveFeatureFilter(query);
+  }
+
+  /**
+   * Method for removing all active feature filters.
+   *  @memberof Map
+   *  @name resetFeatureFilters
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.resetFeatureFilters();
+   *  });
+   */
+  public resetFeatureFilters() {
+    this.onResetFeatureFilters();
+  }
+
+  /**
    * You'll be able to show features only for defined amenity id on map with this method, also with defining the category (NOTE: you have to create them before with setAmenitiesCategory() method), filtering will be set only for defined array of amenities in the category. With category set, only one amenity filter can be active at the time, while without the category they stack so multiple amenities can be active.
    *  @memberof Map
    *  @name setAmenityFilter
@@ -2206,7 +2307,7 @@ export class Map {
   }
 
   /**
-   * Method for removing all active filters.
+   * Method for removing all active amenity filters.
    *  @memberof Map
    *  @name resetAmenityFilters
    *  @example
