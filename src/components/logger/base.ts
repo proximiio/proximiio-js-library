@@ -12,6 +12,6 @@ export default class BaseLogger {
     this.organization_id = data.organization_id;
     this.organization_name = data.organization_name;
     this.visitor_id = data.visitor_id ? data.visitor_id : uuidv4();
-    this.createdAt = data.createdAt ? data.createdAt : new Date()
+    this.createdAt = data.createdAt ? data.createdAt : new Date();
   }
 }

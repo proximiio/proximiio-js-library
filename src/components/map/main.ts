@@ -109,7 +109,7 @@ export const globalState: State = {
   noPlaces: false,
   textNavigation: null,
   persons: [],
-  user: null
+  user: null,
 };
 
 export class Map {
@@ -231,7 +231,7 @@ export class Map {
       longitude: center[0],
       zoom: this.defaultOptions.zoomLevel ? this.defaultOptions.zoomLevel : this.defaultOptions.mapboxOptions?.zoom,
       noPlaces: places.length === 0,
-      user
+      user,
     };
     style.on(this.onStyleChange);
     this.map = new mapboxgl.Map({
@@ -1181,8 +1181,12 @@ export class Map {
           optionAvoidRamps: this.routingSource.routing.wayfinding.configuration.avoidRamps,
           optionAvoidStaircases: this.routingSource.routing.wayfinding.configuration.avoidStaircases,
           optionAvoidTicketGates: this.routingSource.routing.wayfinding.configuration.avoidTicketGates,
-          route: this.routingSource.points.map(p => [p.geometry.coordinates[0], p.geometry.coordinates[1], p.properties.level]),
-          rerouted: false
+          route: this.routingSource.points.map((p) => [
+            p.geometry.coordinates[0],
+            p.geometry.coordinates[1],
+            p.properties.level,
+          ]),
+          rerouted: false,
         });
         await logger.save();
       }
