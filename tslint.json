@@ -3,6 +3,6 @@
   "rules": {
     "no-console": false,
     "max-classes-per-file": false,
-    "variable-name": [true, "allow-snake-case"]
+    "variable-name": [true, "allow-pascal-case", "allow-snake-case", "allow-leading-underscore"]
   }
 }
