@@ -1,8 +1,8 @@
 {
-   "extends": ["tslint:recommended", "tslint-config-prettier"],
-   "rules": {
-      "no-console": false,
-      "allow-snake-case": true,
-      "max-classes-per-file": false
-   }
+  "extends": ["tslint:recommended", "tslint-config-prettier"],
+  "rules": {
+    "no-console": false,
+    "max-classes-per-file": false,
+    "variable-name": [true, "allow-snake-case"]
+  }
 }
