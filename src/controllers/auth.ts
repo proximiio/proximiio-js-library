@@ -90,8 +90,18 @@ export const getUserConfig = async () => {
   }
 };
 
+export const getCurrentUser = async () => {
+  try {
+    const currentUser = await axios.get(`core/current_user`);
+    return currentUser.data;
+  } catch (e) {
+    throw new Error(`Fetching current user failed, ${e.message}`);
+  }
+}
+
 export default {
   login,
   loginWithToken,
   getUserConfig,
+  getCurrentUser
 };

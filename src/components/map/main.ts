@@ -1,5 +1,6 @@
 import * as mapboxgl from 'mapbox-gl';
 import Repository from '../../controllers/repository';
+import Auth from '../../controllers/auth';
 import { PlaceModel } from '../../models/place';
 import { FloorModel } from '../../models/floor';
 import StyleModel from '../../models/style';
@@ -27,6 +28,7 @@ import { MapboxOptions } from '../../models/mapbox-options';
 import { PolygonIconsLayer, PolygonsLayer, PolygonTitlesLayer } from './custom-layers';
 import PersonModel from '../../models/person';
 import { lineString } from '@turf/helpers';
+import WayfindingLogger from '../logger/wayfinding';
 
 interface State {
   readonly initializing: boolean;
@@ -47,6 +49,7 @@ interface State {
   readonly noPlaces: boolean;
   readonly textNavigation: any;
   readonly persons: PersonModel[];
+  readonly user;
 }
 
 interface Options {
@@ -106,6 +109,7 @@ export const globalState: State = {
   noPlaces: false,
   textNavigation: null,
   persons: [],
+  user: null
 };
 
 export class Map {
@@ -194,6 +198,7 @@ export class Map {
     const { places, style, styles, features, amenities } = await Repository.getPackage(
       this.defaultOptions.initPolygons,
     );
+    const user = await Auth.getCurrentUser();
     const defaultPlace = places.find((p) => p.id === this.defaultOptions.defaultPlaceId);
     const place = places.length > 0 ? (defaultPlace ? defaultPlace : places[0]) : new PlaceModel({});
     const center = this.defaultOptions.mapboxOptions?.center
@@ -226,6 +231,7 @@ export class Map {
       longitude: center[0],
       zoom: this.defaultOptions.zoomLevel ? this.defaultOptions.zoomLevel : this.defaultOptions.mapboxOptions?.zoom,
       noPlaces: places.length === 0,
+      user
     };
     style.on(this.onStyleChange);
     this.map = new mapboxgl.Map({
@@ -1124,7 +1130,7 @@ export class Map {
     style.setLevel(0);
   }
 
-  private onRouteChange(event?: string) {
+  private async onRouteChange(event?: string) {
     if (event === 'loading-start') {
       this.state = { ...this.state, loadingRoute: true };
       return;
@@ -1155,6 +1161,30 @@ export class Map {
           start: this.startPoint,
           end: this.endPoint,
         });
+
+        const logger = new WayfindingLogger({
+          organization_id: this.state.user.organization.id,
+          organization_name: this.state.user.organization.name,
+          startLngLat: this.routingSource.start.geometry.coordinates,
+          startLevel: this.routingSource.start.properties.level,
+          startSegmentId: this.routingSource.start.id,
+          startSegmentName: this.defaultOptions.isKiosk ? 'kioskPoint' : this.routingSource.start.properties.title,
+          destinationFeatureId: this.routingSource.finish.id,
+          destinationName: this.routingSource.finish.properties.title,
+          destinationLngLat: this.routingSource.finish.geometry.coordinates,
+          destinationLevel: this.routingSource.finish.properties.level,
+          foundPath: this.routingSource.lines.length > 0,
+          optionAvoidBarrier: this.routingSource.routing.wayfinding.configuration.avoidBarriers,
+          optionAvoidElevators: this.routingSource.routing.wayfinding.configuration.avoidElevators,
+          optionAvoidEscalators: this.routingSource.routing.wayfinding.configuration.avoidEscalators,
+          optionAvoidNarrowPaths: this.routingSource.routing.wayfinding.configuration.avoidNarrowPaths,
+          optionAvoidRamps: this.routingSource.routing.wayfinding.configuration.avoidRamps,
+          optionAvoidStaircases: this.routingSource.routing.wayfinding.configuration.avoidStaircases,
+          optionAvoidTicketGates: this.routingSource.routing.wayfinding.configuration.avoidTicketGates,
+          route: this.routingSource.points.map(p => [p.geometry.coordinates[0], p.geometry.coordinates[1], p.properties.level]),
+          rerouted: false
+        });
+        await logger.save();
       }
       return;
     }

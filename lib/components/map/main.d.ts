@@ -25,6 +25,7 @@ interface State {
     readonly noPlaces: boolean;
     readonly textNavigation: any;
     readonly persons: PersonModel[];
+    readonly user: any;
 }
 interface Options {
     selector?: string;

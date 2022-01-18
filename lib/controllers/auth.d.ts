@@ -40,9 +40,11 @@ export declare const loginWithToken: (token: string) => Promise<import("axios").
  *    })
  */
 export declare const getUserConfig: () => Promise<any>;
+export declare const getCurrentUser: () => Promise<any>;
 declare const _default: {
     login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any>>;
     loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any>>;
     getUserConfig: () => Promise<any>;
+    getCurrentUser: () => Promise<any>;
 };
 export default _default;
