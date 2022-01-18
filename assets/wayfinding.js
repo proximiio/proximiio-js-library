@@ -466,38 +466,42 @@ export class Wayfinding {
             }
 
             levelChanger.properties.fixedPointMap = new Map();
-            levelChanger.properties.levels.forEach(level => {
-                let point = this._copyPoint(levelChanger);
-                point.properties.level = level;
-                let fixedPoint = this._getFixPointInArea(point);
-                fixedPoint.id = levelChanger.id;
-                fixedPoint.properties.amenity = levelChanger.properties.amenity;
-                fixedPoint.properties.direction = levelChanger.properties.direction;
-                fixedPoint.properties.id = levelChanger.properties.id;
-                fixedPoint.properties.level = level;
-                fixedPoint.properties.type = levelChanger.properties.type;
-                if (fixedPoint.properties.neighbours === undefined) fixedPoint.properties.neighbours = [];
-
-                // Do not fix level changers that are further than 5 meters from any path or area
-                if (this._distance(point, fixedPoint) > 5) {
-                    return;
-                }
-
-                // Store fixed point into the level changer
-                levelChanger.properties.fixedPointMap.set(level, fixedPoint);
-
-                // Add neighbourhood for corridor
-                if (fixedPoint.properties.onCorridor) {
-                    // fixedPoint.properties.neighbours = [...this.corridorLinePointPairs[fixedPoint.properties.corridorIndex], ...segmentIntersectionPointMap.get(fixedPoint.properties.corridorIndex)];
-                    if (fixedPoint.properties.neighboursLeadingTo !== undefined) {
-                        fixedPoint.properties.neighboursLeadingTo.forEach(neighbour => {
-                            if (neighbour.properties.neighbours === undefined) neighbour.properties.neighbours = [];
-                            neighbour.properties.neighbours.push(fixedPoint);
-                        });
-                        this.corridorLineFeatures[fixedPoint.properties.corridorIndex].properties.intersectionPointList.push(fixedPoint);
+            if (levelChanger.properties.levels) {
+                levelChanger.properties.levels.forEach(level => {
+                    let point = this._copyPoint(levelChanger);
+                    point.properties.level = level;
+                    let fixedPoint = this._getFixPointInArea(point);
+                    if (fixedPoint) {
+                        fixedPoint.id = levelChanger.id;
+                        fixedPoint.properties.amenity = levelChanger.properties.amenity;
+                        fixedPoint.properties.direction = levelChanger.properties.direction;
+                        fixedPoint.properties.id = levelChanger.properties.id;
+                        fixedPoint.properties.level = level;
+                        fixedPoint.properties.type = levelChanger.properties.type;
+                        if (fixedPoint.properties.neighbours === undefined) fixedPoint.properties.neighbours = [];
+    
+                        // Do not fix level changers that are further than 5 meters from any path or area
+                        if (this._distance(point, fixedPoint) > 5) {
+                            return;
+                        }
+    
+                        // Store fixed point into the level changer
+                        levelChanger.properties.fixedPointMap.set(level, fixedPoint);
+    
+                        // Add neighbourhood for corridor
+                        if (fixedPoint.properties.onCorridor) {
+                            // fixedPoint.properties.neighbours = [...this.corridorLinePointPairs[fixedPoint.properties.corridorIndex], ...segmentIntersectionPointMap.get(fixedPoint.properties.corridorIndex)];
+                            if (fixedPoint.properties.neighboursLeadingTo !== undefined) {
+                                fixedPoint.properties.neighboursLeadingTo.forEach(neighbour => {
+                                    if (neighbour.properties.neighbours === undefined) neighbour.properties.neighbours = [];
+                                    neighbour.properties.neighbours.push(fixedPoint);
+                                });
+                                this.corridorLineFeatures[fixedPoint.properties.corridorIndex].properties.intersectionPointList.push(fixedPoint);
+                            }
+                        }
                     }
-                }
-            });
+                });
+            }
         });
 
         levelChangerGroupMap.forEach( (lcList, groupId) => {
@@ -1447,100 +1451,101 @@ export class Wayfinding {
 
     _getFixPointInArea(point) {
         let floorData = this.floorData.get(point.properties.level);
+        if (floorData) {
+            // If point is located without accessible area, do nothing
+            let areaList  = floorData.areas;
+            for (let index in areaList) {
+                let polygon = areaList[index];
+                if (turf.booleanContains(polygon, point)) {
+                    return point;
+                }
+            }
 
-        // If point is located without accessible area, do nothing
-        let areaList  = floorData.areas;
-        for (let index in areaList) {
-            let polygon = areaList[index];
-            if (turf.booleanContains(polygon, point)) {
+            // Find nearest wall to stick to
+            let bestWall = null;
+            let bestWallDistance = Infinity;
+            floorData.wallFeatures.forEach(wall => {
+                let distance = turf.pointToLineDistance(point.geometry.coordinates, wall, {units: 'meters'});
+                if (distance < bestWallDistance) {
+                    bestWall = wall;
+                    bestWallDistance = distance;
+                }
+            });
+
+            let levelCorridorFeatures = this.corridorLineFeatures.filter(corridorLine => corridorLine.properties.level === point.properties.level);
+            let bestCorridorIndex = null;
+            let bestCorridorDistance = Infinity;
+            levelCorridorFeatures.forEach(corridor => {
+                let corridorIndex = this.corridorLineFeatures.indexOf(corridor);
+                let corridorDistance = turf.pointToLineDistance(point.geometry.coordinates, corridor, {units: 'meters'});
+                if (corridorDistance < bestCorridorDistance) {
+                    bestCorridorIndex = corridorIndex;
+                    bestCorridorDistance = corridorDistance;
+                }
+            });
+
+            // Test if area or corridor is closer, create appropriate fixed point
+            if (bestWall === null && bestCorridorIndex === null) {
+                // could not find neither close area or corridor
                 return point;
-            }
-        }
+            } else {
+                let fixedPoint;
 
-        // Find nearest wall to stick to
-        let bestWall = null;
-        let bestWallDistance = Infinity;
-        floorData.wallFeatures.forEach(wall => {
-            let distance = turf.pointToLineDistance(point.geometry.coordinates, wall, {units: 'meters'});
-            if (distance < bestWallDistance) {
-                bestWall = wall;
-                bestWallDistance = distance;
-            }
-        });
+                // Corridor is closer
+                if (bestCorridorIndex !== undefined && bestCorridorDistance < bestWallDistance) {
 
-        let levelCorridorFeatures = this.corridorLineFeatures.filter(corridorLine => corridorLine.properties.level === point.properties.level);
-        let bestCorridorIndex = null;
-        let bestCorridorDistance = Infinity;
-        levelCorridorFeatures.forEach(corridor => {
-            let corridorIndex = this.corridorLineFeatures.indexOf(corridor);
-            let corridorDistance = turf.pointToLineDistance(point.geometry.coordinates, corridor, {units: 'meters'});
-            if (corridorDistance < bestCorridorDistance) {
-                bestCorridorIndex = corridorIndex;
-                bestCorridorDistance = corridorDistance;
-            }
-        });
+                    // Create fixed point on line itself
+                    let line = this.corridorLineFeatures[bestCorridorIndex];
+                    fixedPoint = turf.nearestPointOnLine(line, point);
 
-        // Test if area or corridor is closer, create appropriate fixed point
-        if (bestWall === null && bestCorridorIndex === null) {
-            // could not find neither close area or corridor
-            return point;
-        } else {
-            let fixedPoint;
+                    // Mark this fixed point is on corridor, preset neighbours
+                    fixedPoint.properties.onCorridor = true;
+                    fixedPoint.properties.corridorIndex = bestCorridorIndex;
+                    if (!fixedPoint.properties.neighbours) {
+                        fixedPoint.properties.neighbours = [];
+                    }
+                    if (this.corridorLineFeatures[bestCorridorIndex].properties.bidirectional != false) {
+                        fixedPoint.properties.neighbours.push(this.corridorLinePointPairs[bestCorridorIndex][0], this.corridorLinePointPairs[bestCorridorIndex][1]);
+                        fixedPoint.properties.neighbours.push(...line.properties.intersectionPointList);
+                        fixedPoint.properties.neighboursLeadingTo = [
+                            this.corridorLinePointPairs[bestCorridorIndex][0],
+                            this.corridorLinePointPairs[bestCorridorIndex][1],
+                            ...line.properties.intersectionPointList
+                        ];
+                    } else if (this.corridorLineFeatures[bestCorridorIndex].properties.swapDirection != true) {
+                        fixedPoint.properties.neighbours.push(this.corridorLinePointPairs[bestCorridorIndex][0]);
+                        // include only intersection points after this point
+                        let distance = this._distance(fixedPoint, this.corridorLinePointPairs[bestCorridorIndex][0]);
+                        let pointsBefore = line.properties.intersectionPointList.filter(point => this._distance(point, this.corridorLinePointPairs[bestCorridorIndex][0]) < distance);
+                        let pointsAfter = line.properties.intersectionPointList.filter(point => this._distance(point, this.corridorLinePointPairs[bestCorridorIndex][0]) >= distance);
+                        fixedPoint.properties.neighbours.push(...pointsAfter);
+                        fixedPoint.properties.neighboursLeadingTo = pointsBefore;
+                    } else {
+                        fixedPoint.properties.neighbours.push(this.corridorLinePointPairs[bestCorridorIndex][1]);
+                        // include only intersection points before this point
+                        let distance = this._distance(fixedPoint, this.corridorLinePointPairs[bestCorridorIndex][0]);
+                        let pointsBefore = line.properties.intersectionPointList.filter(point => this._distance(point, this.corridorLinePointPairs[bestCorridorIndex][0]) <= distance);
+                        let pointsAfter = line.properties.intersectionPointList.filter(point => this._distance(point, this.corridorLinePointPairs[bestCorridorIndex][0]) > distance);
+                        fixedPoint.properties.neighbours.push(...pointsBefore);
+                        fixedPoint.properties.neighboursLeadingTo = pointsAfter;
+                    }
 
-            // Corridor is closer
-            if (bestCorridorIndex !== undefined && bestCorridorDistance < bestWallDistance) {
+                    // Wall is closer
+                } else if (bestWall !== null) {
 
-                // Create fixed point on line itself
-                let line = this.corridorLineFeatures[bestCorridorIndex];
-                fixedPoint = turf.nearestPointOnLine(line, point);
-
-                // Mark this fixed point is on corridor, preset neighbours
-                fixedPoint.properties.onCorridor = true;
-                fixedPoint.properties.corridorIndex = bestCorridorIndex;
-                if (!fixedPoint.properties.neighbours) {
-                    fixedPoint.properties.neighbours = [];
-                }
-                if (this.corridorLineFeatures[bestCorridorIndex].properties.bidirectional != false) {
-                    fixedPoint.properties.neighbours.push(this.corridorLinePointPairs[bestCorridorIndex][0], this.corridorLinePointPairs[bestCorridorIndex][1]);
-                    fixedPoint.properties.neighbours.push(...line.properties.intersectionPointList);
-                    fixedPoint.properties.neighboursLeadingTo = [
-                        this.corridorLinePointPairs[bestCorridorIndex][0],
-                        this.corridorLinePointPairs[bestCorridorIndex][1],
-                        ...line.properties.intersectionPointList
-                    ];
-                } else if (this.corridorLineFeatures[bestCorridorIndex].properties.swapDirection != true) {
-                    fixedPoint.properties.neighbours.push(this.corridorLinePointPairs[bestCorridorIndex][0]);
-                    // include only intersection points after this point
-                    let distance = this._distance(fixedPoint, this.corridorLinePointPairs[bestCorridorIndex][0]);
-                    let pointsBefore = line.properties.intersectionPointList.filter(point => this._distance(point, this.corridorLinePointPairs[bestCorridorIndex][0]) < distance);
-                    let pointsAfter = line.properties.intersectionPointList.filter(point => this._distance(point, this.corridorLinePointPairs[bestCorridorIndex][0]) >= distance);
-                    fixedPoint.properties.neighbours.push(...pointsAfter);
-                    fixedPoint.properties.neighboursLeadingTo = pointsBefore;
-                } else {
-                    fixedPoint.properties.neighbours.push(this.corridorLinePointPairs[bestCorridorIndex][1]);
-                    // include only intersection points before this point
-                    let distance = this._distance(fixedPoint, this.corridorLinePointPairs[bestCorridorIndex][0]);
-                    let pointsBefore = line.properties.intersectionPointList.filter(point => this._distance(point, this.corridorLinePointPairs[bestCorridorIndex][0]) <= distance);
-                    let pointsAfter = line.properties.intersectionPointList.filter(point => this._distance(point, this.corridorLinePointPairs[bestCorridorIndex][0]) > distance);
-                    fixedPoint.properties.neighbours.push(...pointsBefore);
-                    fixedPoint.properties.neighboursLeadingTo = pointsAfter;
+                    // Create fixed point inside area
+                    let nearestPoint = turf.nearestPointOnLine(bestWall, point);
+                    let bearing = turf.bearing(point, nearestPoint);
+                    fixedPoint =  turf.destination(point.geometry.coordinates, bestWallDistance + 0.05, bearing, {units: 'meters'});
                 }
 
-                // Wall is closer
-            } else if (bestWall !== null) {
+                // Mark level of fixed point
+                fixedPoint.properties.level = point.properties.level;
 
-                // Create fixed point inside area
-                let nearestPoint = turf.nearestPointOnLine(bestWall, point);
-                let bearing = turf.bearing(point, nearestPoint);
-                fixedPoint =  turf.destination(point.geometry.coordinates, bestWallDistance + 0.05, bearing, {units: 'meters'});
+                // Return created point
+                return fixedPoint;
+
             }
-
-            // Mark level of fixed point
-            fixedPoint.properties.level = point.properties.level;
-
-            // Return created point
-            return fixedPoint;
-
         }
     }
 
