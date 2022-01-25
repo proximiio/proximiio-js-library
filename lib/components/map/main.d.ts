@@ -57,6 +57,12 @@ interface Options {
         beforeLayer?: string;
         attribution?: string;
     };
+    handleUrlParams?: boolean;
+    urlParams?: {
+        startFeauture?: string;
+        destinationFeature?: string;
+        defaultPlace?: string;
+    };
 }
 interface PaddingOptions {
     bottom: number;

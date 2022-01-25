@@ -125,15 +125,26 @@ const map = new Proximiio.Map({
     animatedRoute: false // optional, default: false, EXPERIMENTAL, if enabled animated dot will be displayed along the route,
     useRasterTiles: false, // optional, default: false, this will add raster tile source and layer with defined options from rasterTilesOptions
     rasterTilesOptions: {
-        tilesUrl: string[], mandatory
-        tileSize: number, optional, default: 256,
-        minZoom: number, optional, default: 15,
-        maxZoom: number, optional, default: 22,
-        beforeLayer: string, optional, default: 'proximiio-shop',
-        attribution: string, optional
+        tilesUrl: string[], // mandatory
+        tileSize: number, // optional, default: 256,
+        minZoom: number, // optional, default: 15,
+        maxZoom: number, // optional, default: 22,
+        beforeLayer: string, // optional, default: 'proximiio-shop',
+        attribution: string, // optional
     },
+    handleUrlParams: false, // optional, default: false, if enabled you can define place, start and destination features for routing in url params and library will handle those, you can change param names via urlParams option listed below
+    urlParams: {
+      startFeature: string, // optional, default: 'startFeature', library will search for the start feature by it's id or title defined within provided param
+      destinationFeature: string, // optional, default: 'destinationFeature', library will search for the destination feature by it's id or title defined within provided param
+      defaultPlace: string, // optional, default: 'defaultPlace', library will search for the place by it's id or title defined within provided param
+    }
 });
 ```
+#### Initiating with url params
+Library can handle some params from url in case you will enable `handleUrlParams` in map constructor. There's nothing else special required, just provide them in browser url like this as default:
+
+`http://your-server/?startFeature=featureIdOrTitle&destinationFeature=featureIdOrTitle&defaultPlace=placeIdOrTitle`
+
 #### Required Data for 3D Polygons
 As first there must be a MultiPolygon feature created which will be a polygon itself, it's also nice to have a label-line property in properties set. Label-line is just imaginary line alongside which poi title will be drawn. At last, you have to connect poi to polygon via adding its id to poi metadata like polygon_id property.
 

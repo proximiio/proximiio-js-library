@@ -82,6 +82,12 @@ interface Options {
     beforeLayer?: string;
     attribution?: string;
   };
+  handleUrlParams?: boolean;
+  urlParams?: {
+    startFeauture?: string;
+    destinationFeature?: string;
+    defaultPlace?: string;
+  }
 }
 
 interface PaddingOptions {
@@ -147,6 +153,12 @@ export class Map {
     showRasterFloorplans: false,
     animatedRoute: false,
     useRasterTiles: false,
+    handleUrlParams: false,
+    urlParams: {
+      startFeauture: 'startFeature',
+      destinationFeature: 'destinationFeature',
+      defaultPlace: 'defaultPlace',
+    },
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -167,7 +179,9 @@ export class Map {
       options.mapboxOptions.center = options.kioskSettings.coordinates;
     }
 
+    const urlParams = { ...this.defaultOptions.urlParams, ...options.urlParams };
     this.defaultOptions = { ...this.defaultOptions, ...options };
+    this.defaultOptions.urlParams = urlParams;
     this.state = globalState;
 
     this.onSourceChange = this.onSourceChange.bind(this);
@@ -195,17 +209,29 @@ export class Map {
   }
 
   private async fetch() {
+    let placeParam = null;
+    if (this.defaultOptions.handleUrlParams) {
+      const urlParams = new URLSearchParams(window.location.search);
+      placeParam = urlParams.get(this.defaultOptions.urlParams.defaultPlace);
+    }
     const { places, style, styles, features, amenities } = await Repository.getPackage(
       this.defaultOptions.initPolygons,
     );
     const user = await Auth.getCurrentUser();
-    const defaultPlace = places.find((p) => p.id === this.defaultOptions.defaultPlaceId);
+    const defaultPlace = placeParam ? 
+      places.find((p) => p.id === placeParam || p.name === placeParam) : 
+      places.find((p) => p.id === this.defaultOptions.defaultPlaceId);
     const place = places.length > 0 ? (defaultPlace ? defaultPlace : places[0]) : new PlaceModel({});
-    const center = this.defaultOptions.mapboxOptions?.center
-      ? (this.defaultOptions.mapboxOptions.center as any)
-      : this.defaultOptions.isKiosk
-      ? this.defaultOptions.kioskSettings?.coordinates
-      : [place.location.lng, place.location.lat];
+    let center: [number, number] = [place.location.lng, place.location.lat];
+    if (this.defaultOptions.mapboxOptions?.center) {
+      center = this.defaultOptions.mapboxOptions.center as [number, number];
+    } 
+    if (this.defaultOptions.isKiosk) {
+      center = this.defaultOptions.kioskSettings?.coordinates;
+    } 
+    if (placeParam) {
+      center = [place.location.lng, place.location.lat];
+    }
     style.center = center;
     this.defaultOptions.mapboxOptions.center = style.center;
     if (this.defaultOptions.zoomLevel) {
@@ -323,6 +349,19 @@ export class Map {
       }
       if (this.defaultOptions.useRasterTiles) {
         this.initRasterTiles();
+      }
+      if (this.defaultOptions.handleUrlParams) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const startParam = urlParams.get(this.defaultOptions.urlParams.startFeauture);
+        const destinationParam = urlParams.get(this.defaultOptions.urlParams.destinationFeature);
+        const startFeature = startParam ? 
+          (this.state.allFeatures.features.find((f) => f.properties.title && (f.id === startParam || f.properties.id === startParam || f.properties.title === startParam)) as Feature) :
+          this.startPoint;
+        const destinationFeature = this.state.allFeatures.features.find((f) => f.properties.title && (f.id === destinationParam || f.properties.id === destinationParam || f.properties.title === destinationParam)) as Feature;
+
+        if (startFeature && destinationFeature) {
+          this.onRouteUpdate(startFeature, destinationFeature);
+        }
       }
       this.initPersonsMap();
       this.map.on('click', 'proximiio-pois-icons', (ev) => {
