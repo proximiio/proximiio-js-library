@@ -57,6 +57,7 @@ interface Options {
         beforeLayer?: string;
         attribution?: string;
     };
+    useGpsLocation?: boolean;
 }
 interface PaddingOptions {
     bottom: number;
@@ -105,6 +106,7 @@ export declare class Map {
     private onMapReady;
     private initKiosk;
     private onSetKiosk;
+    private initGeoLocation;
     private initDirectionIcon;
     private initAnimatedRoute;
     private initRasterTiles;

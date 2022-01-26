@@ -132,6 +132,7 @@ const map = new Proximiio.Map({
         beforeLayer: string, optional, default: 'proximiio-shop',
         attribution: string, optional
     },
+    useGpsLocation: false, // optional, default: false, if enabled your location will be detected with geolocation API and used as a starting point for routing
 });
 ```
 #### Required Data for 3D Polygons
