@@ -138,6 +138,7 @@ const map = new Proximiio.Map({
       destinationFeature: string, // optional, default: 'destinationFeature', library will search for the destination feature by it's id or title defined within provided param
       defaultPlace: string, // optional, default: 'defaultPlace', library will search for the place by it's id or title defined within provided param
     }
+    useGpsLocation: false, // optional, default: false, if enabled your location will be detected with geolocation API and used as a starting point for routing
 });
 ```
 #### Initiating with url params
