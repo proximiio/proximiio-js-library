@@ -87,7 +87,7 @@ interface Options {
     startFeauture?: string;
     destinationFeature?: string;
     defaultPlace?: string;
-  }
+  };
   useGpsLocation?: boolean;
 }
 
@@ -224,17 +224,17 @@ export class Map {
       this.defaultOptions.initPolygons,
     );
     const user = await Auth.getCurrentUser();
-    const defaultPlace = placeParam ? 
-      places.find((p) => p.id === placeParam || p.name === placeParam) : 
-      places.find((p) => p.id === this.defaultOptions.defaultPlaceId);
+    const defaultPlace = placeParam
+      ? places.find((p) => p.id === placeParam || p.name === placeParam)
+      : places.find((p) => p.id === this.defaultOptions.defaultPlaceId);
     const place = places.length > 0 ? (defaultPlace ? defaultPlace : places[0]) : new PlaceModel({});
     let center: [number, number] = [place.location.lng, place.location.lat];
     if (this.defaultOptions.mapboxOptions?.center) {
       center = this.defaultOptions.mapboxOptions.center as [number, number];
-    } 
+    }
     if (this.defaultOptions.isKiosk) {
       center = this.defaultOptions.kioskSettings?.coordinates;
-    } 
+    }
     if (placeParam) {
       center = [place.location.lng, place.location.lat];
     }
@@ -363,10 +363,20 @@ export class Map {
         const urlParams = new URLSearchParams(window.location.search);
         const startParam = urlParams.get(this.defaultOptions.urlParams.startFeauture);
         const destinationParam = urlParams.get(this.defaultOptions.urlParams.destinationFeature);
-        const startFeature = startParam ? 
-          (this.state.allFeatures.features.find((f) => f.properties.title && (f.id === startParam || f.properties.id === startParam || f.properties.title === startParam)) as Feature) :
-          this.startPoint;
-        const destinationFeature = this.state.allFeatures.features.find((f) => f.properties.title && (f.id === destinationParam || f.properties.id === destinationParam || f.properties.title === destinationParam)) as Feature;
+        const startFeature = startParam
+          ? (this.state.allFeatures.features.find(
+              (f) =>
+                f.properties.title &&
+                (f.id === startParam || f.properties.id === startParam || f.properties.title === startParam),
+            ) as Feature)
+          : this.startPoint;
+        const destinationFeature = this.state.allFeatures.features.find(
+          (f) =>
+            f.properties.title &&
+            (f.id === destinationParam ||
+              f.properties.id === destinationParam ||
+              f.properties.title === destinationParam),
+        ) as Feature;
 
         if (startFeature && destinationFeature) {
           this.onRouteUpdate(startFeature, destinationFeature);
