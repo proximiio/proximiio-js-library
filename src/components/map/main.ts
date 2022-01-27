@@ -338,6 +338,7 @@ export class Map {
       this.filteredAmenities = this.amenityIds;
       this.imageSourceManager.setLevel(map, this.state.floor?.level);
       await this.onPlaceSelect(this.state.place, this.defaultOptions.zoomIntoPlace);
+      
       if (this.defaultOptions.initPolygons) {
         this.initPolygons();
       }
@@ -359,34 +360,18 @@ export class Map {
       if (this.defaultOptions.useRasterTiles) {
         this.initRasterTiles();
       }
-      if (this.defaultOptions.handleUrlParams) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const startParam = urlParams.get(this.defaultOptions.urlParams.startFeauture);
-        const destinationParam = urlParams.get(this.defaultOptions.urlParams.destinationFeature);
-        const startFeature = startParam
-          ? (this.state.allFeatures.features.find(
-              (f) =>
-                f.properties.title &&
-                (f.id === startParam || f.properties.id === startParam || f.properties.title === startParam),
-            ) as Feature)
-          : this.startPoint;
-        const destinationFeature = this.state.allFeatures.features.find(
-          (f) =>
-            f.properties.title &&
-            (f.id === destinationParam ||
-              f.properties.id === destinationParam ||
-              f.properties.title === destinationParam),
-        ) as Feature;
 
-        if (startFeature && destinationFeature) {
-          this.onRouteUpdate(startFeature, destinationFeature);
-        }
-      }
       this.initPersonsMap();
+
       this.map.on('click', 'proximiio-pois-icons', (ev) => {
         this.onShopClick(ev);
       });
+
       this.onMapReadyListener.next(true);
+
+      if (this.defaultOptions.handleUrlParams) {
+        this.initUrlParams();
+      }
     }
   }
 
@@ -731,6 +716,28 @@ export class Map {
       }
     }
     this.hoveredPolygon = null;
+  }
+
+  private initUrlParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const startParam = urlParams.get(this.defaultOptions.urlParams.startFeauture);
+    const destinationParam = urlParams.get(this.defaultOptions.urlParams.destinationFeature);
+    const startFeature = startParam
+      ? (this.state.allFeatures.features.find(
+          (f) =>
+            f.properties.title &&
+            (f.id === startParam || f.properties.id === startParam || f.properties.title === startParam),
+        ) as Feature)
+      : this.startPoint;
+    const destinationFeature = this.state.allFeatures.features.find(
+      (f) =>
+        f.properties.title &&
+        (f.id === destinationParam || f.properties.id === destinationParam || f.properties.title === destinationParam),
+    ) as Feature;
+
+    if (startFeature && destinationFeature) {
+      this.onRouteUpdate(startFeature, destinationFeature);
+    }
   }
 
   private featureDialog(e: any) {
@@ -2104,12 +2111,8 @@ export class Map {
    *  });
    */
   public centerToRoute() {
-    if (
-      this.routingSource &&
-      this.routingSource.route &&
-      this.routingSource.route[this.routingSource.start?.properties.level]
-    ) {
-      const routeStart = this.routingSource.route[this.routingSource.start?.properties.level] as Feature;
+    if (this.routingSource && this.routingSource.route && this.routingSource.route['path-part-0']) {
+      const routeStart = this.routingSource.route['path-part-0'] as Feature;
       this.centerOnRoute(routeStart);
       return routeStart;
     } else {

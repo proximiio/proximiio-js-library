@@ -122,6 +122,7 @@ export declare class Map {
     private onShopMouseEnter;
     private onShopMouseMove;
     private onShopMouseLeave;
+    private initUrlParams;
     private featureDialog;
     private onAddNewFeature;
     private onUpdateFeature;
