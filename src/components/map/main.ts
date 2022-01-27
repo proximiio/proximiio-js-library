@@ -338,7 +338,7 @@ export class Map {
       this.filteredAmenities = this.amenityIds;
       this.imageSourceManager.setLevel(map, this.state.floor?.level);
       await this.onPlaceSelect(this.state.place, this.defaultOptions.zoomIntoPlace);
-      
+
       if (this.defaultOptions.initPolygons) {
         this.initPolygons();
       }
