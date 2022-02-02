@@ -239,7 +239,9 @@ export class Map {
       center = [place.location.lng, place.location.lat];
     }
     style.center = center;
-    this.defaultOptions.mapboxOptions.center = style.center;
+    if (this.defaultOptions.mapboxOptions) {
+      this.defaultOptions.mapboxOptions.center = style.center;
+    }
     if (this.defaultOptions.zoomLevel) {
       style.zoom = this.defaultOptions.zoomLevel;
     }
