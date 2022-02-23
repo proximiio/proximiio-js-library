@@ -1615,9 +1615,10 @@ export class Map {
       );
       const currentRoute = this.routingSource.lines[currentRouteIndex];
       const nextRouteIndex = this.routingSource.lines.findIndex(
-        (route) => +route.properties.level === (way === 'up' ? currentRouteIndex + 1 : currentRouteIndex - 1),
+        (route) => +route.properties.level === (way === 'up' ? currentRoute.properties.level + 1 : currentRoute.properties.level - 1),
       );
       const nextRoute = this.routingSource.lines[nextRouteIndex];
+      console.log(currentRouteIndex, nextRouteIndex, this.routingSource);
       // return currentRouteIndex !== -1 && nextRoute ? +nextRoute.properties.level : way === 'up' ? this.state.floor.level + 1 : this.state.floor.level - 1;
       return nextRoute &&
         ((way === 'up' && +nextRoute.properties.level > this.state.floor.level) ||
