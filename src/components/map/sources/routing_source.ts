@@ -42,13 +42,13 @@ export default class RoutingSource extends DataSource {
       this.notify('loading-start');
       const route = this.routing.route(start, finish);
       // @ts-ignore
-      const paths = route.paths;
+      const paths = route?.paths;
       // @ts-ignore
-      this.route = route.paths;
+      this.route = route?.paths;
       // @ts-ignore
-      this.points = route.points;
-      this.levelPaths = route.levelPaths;
-      this.levelPoints = route.levelPoints;
+      this.points = route?.points;
+      this.levelPaths = route?.levelPaths;
+      this.levelPoints = route?.levelPoints;
 
       if (paths) {
         const lines = [] as Feature[];

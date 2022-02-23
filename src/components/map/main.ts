@@ -1614,7 +1614,9 @@ export class Map {
         (route) => +route.properties.level === this.state.floor.level,
       );
       const currentRoute = this.routingSource.lines[currentRouteIndex];
-      const nextRouteIndex = way === 'up' ? currentRouteIndex + 1 : currentRouteIndex - 1;
+      const nextRouteIndex = this.routingSource.lines.findIndex(
+        (route) => +route.properties.level === (way === 'up' ? currentRouteIndex + 1 : currentRouteIndex - 1),
+      );
       const nextRoute = this.routingSource.lines[nextRouteIndex];
       // return currentRouteIndex !== -1 && nextRoute ? +nextRoute.properties.level : way === 'up' ? this.state.floor.level + 1 : this.state.floor.level - 1;
       return nextRoute &&

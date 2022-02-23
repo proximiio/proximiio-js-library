@@ -48,12 +48,13 @@ export default class Routing {
   }
 
   route(start: Feature, finish: Feature) {
-    const points = this.wayfinding.runAStar(start, finish).map((i) => {
-      return new Feature(i);
-    });
+    let points = this.wayfinding.runAStar(start, finish);
     if (!points) {
       return null;
     }
+    points = points.map((i) => {
+      return new Feature(i);
+    });
 
     const pathPoints = {} as any;
     let pathPartIndex = 0;
