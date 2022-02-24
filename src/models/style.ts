@@ -307,7 +307,7 @@ export default class StyleModel {
 
   addLayer(layer: any, beforeLayer: string) {
     if (beforeLayer) {
-      this.layers.splice(this.getLayerIndex(beforeLayer)+1, 0, layer);
+      this.layers.splice(this.getLayerIndex(beforeLayer) + 1, 0, layer);
     } else {
       this.layers.push(layer);
     }

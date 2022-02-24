@@ -529,7 +529,9 @@ export class Map {
           minzoom: this.defaultOptions.rasterTilesOptions.minZoom ? this.defaultOptions.rasterTilesOptions.minZoom : 15,
           maxzoom: this.defaultOptions.rasterTilesOptions.maxZoom ? this.defaultOptions.rasterTilesOptions.maxZoom : 22,
         },
-        this.defaultOptions.rasterTilesOptions.beforeLayer ? this.defaultOptions.rasterTilesOptions.beforeLayer : 'proximiio-shop'
+        this.defaultOptions.rasterTilesOptions.beforeLayer
+          ? this.defaultOptions.rasterTilesOptions.beforeLayer
+          : 'proximiio-shop',
       );
     }
   }
