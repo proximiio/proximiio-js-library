@@ -305,8 +305,12 @@ export default class StyleModel {
     return typeof this.layers.find((layer) => layer.id === 'proximiio-paths') !== 'undefined';
   }
 
-  addLayer(layer: any) {
-    this.layers.push(layer);
+  addLayer(layer: any, beforeLayer: string) {
+    if (beforeLayer) {
+      this.layers.splice(this.getLayerIndex(beforeLayer)+1, 0, layer);
+    } else {
+      this.layers.push(layer);
+    }
   }
 
   getLayer(id: string) {

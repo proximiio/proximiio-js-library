@@ -341,11 +341,14 @@ export class Map {
       this.imageSourceManager.setLevel(map, this.state.floor?.level);
       await this.onPlaceSelect(this.state.place, this.defaultOptions.zoomIntoPlace);
 
-      if (this.defaultOptions.initPolygons) {
-        this.initPolygons();
+      if (this.defaultOptions.useRasterTiles) {
+        this.initRasterTiles();
       }
       if (this.defaultOptions.isKiosk) {
         this.initKiosk();
+      }
+      if (this.defaultOptions.initPolygons) {
+        this.initPolygons();
       }
       if (this.defaultOptions.useGpsLocation) {
         this.initGeoLocation();
@@ -358,9 +361,6 @@ export class Map {
       }
       if (this.defaultOptions.animatedRoute) {
         this.initAnimatedRoute();
-      }
-      if (this.defaultOptions.useRasterTiles) {
-        this.initRasterTiles();
       }
 
       this.initPersonsMap();
@@ -377,6 +377,8 @@ export class Map {
       if (this.defaultOptions.handleUrlParams) {
         this.initUrlParams();
       }
+
+      this.map.setStyle(this.state.style);
     }
   }
 
@@ -404,7 +406,6 @@ export class Map {
           },
           filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
         });
-        this.map.setStyle(this.state.style);
         this.centerOnPoi(this.startPoint);
       }
     }
@@ -481,7 +482,6 @@ export class Map {
         },
         filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
       });
-      this.map.setStyle(this.state.style);
     }
   }
 
@@ -506,7 +506,6 @@ export class Map {
         },
         filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
       });
-      this.map.setStyle(this.state.style);
     }
   }
 
@@ -530,11 +529,8 @@ export class Map {
           minzoom: this.defaultOptions.rasterTilesOptions.minZoom ? this.defaultOptions.rasterTilesOptions.minZoom : 15,
           maxzoom: this.defaultOptions.rasterTilesOptions.maxZoom ? this.defaultOptions.rasterTilesOptions.maxZoom : 22,
         },
-        this.defaultOptions.rasterTilesOptions.maxZoom
-          ? this.defaultOptions.rasterTilesOptions.beforeLayer
-          : 'proximiio-shop',
+        this.defaultOptions.rasterTilesOptions.beforeLayer ? this.defaultOptions.rasterTilesOptions.beforeLayer : 'proximiio-shop'
       );
-      this.map.setStyle(this.state.style);
     }
   }
 
@@ -548,8 +544,6 @@ export class Map {
 
       PolygonTitlesLayer.setFilterLevel(this.state.floor.level);
       this.state.style.addLayer(PolygonTitlesLayer.json);
-
-      this.map.setStyle(this.state.style);
 
       this.map.on('click', 'shop-custom', (e) => {
         this.onShopClick(e);
@@ -1126,7 +1120,7 @@ export class Map {
     if (this.defaultOptions.initPolygons) {
       layers.push('poi-custom-icons', 'shop-labels');
     }
-    layers.forEach((layer) => {
+    /*layers.forEach((layer) => {
       if (this.map.getLayer(layer)) {
         setTimeout(() => {
           const l = this.map.getLayer(layer) as any;
@@ -1155,7 +1149,7 @@ export class Map {
           this.map.setFilter(layer, filters);
         });
       }
-    });
+    });*/
     this.state.style.notify('filter-change');
   }
 
@@ -1212,7 +1206,6 @@ export class Map {
       type: 'FeatureCollection',
       features: personsCollection,
     };
-    this.map.setStyle(this.state.style);
     this.onPersonUpdateListener.next(this.state.persons);
   }
 
@@ -1620,7 +1613,6 @@ export class Map {
           (way === 'up' ? currentRoute.properties.level + 1 : currentRoute.properties.level - 1),
       );
       const nextRoute = this.routingSource.lines[nextRouteIndex];
-      console.log(currentRouteIndex, nextRouteIndex, this.routingSource);
       // return currentRouteIndex !== -1 && nextRoute ? +nextRoute.properties.level : way === 'up' ? this.state.floor.level + 1 : this.state.floor.level - 1;
       return nextRoute &&
         ((way === 'up' && +nextRoute.properties.level > this.state.floor.level) ||

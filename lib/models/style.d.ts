@@ -29,7 +29,7 @@ export default class StyleModel {
     getUniversalLayers(source: string): any[];
     getSyntheticLayers(): any[];
     usesPrefixes(): boolean;
-    addLayer(layer: any): void;
+    addLayer(layer: any, beforeLayer: string): void;
     getLayer(id: string): any;
     getLayerIndex(id: string): number;
     getLayers(sourceId: string): BaseLayer[];
