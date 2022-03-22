@@ -168,9 +168,9 @@ export class Map {
   private showStartPoint = false;
   private amenityIds: string[] = [];
   private filteredFeatures: string[] = [];
-  private featureFilters: string[] = [];
+  private hiddenFeatures: string[] = [];
   private filteredAmenities: string[] = [];
-  private amenityFilters: string[] = [];
+  private hiddenAmenities: string[] = [];
   private amenityCategories: any = {};
   private hoveredPolygon: any;
   private selectedPolygon: any;
@@ -922,42 +922,59 @@ export class Map {
     }
   }
 
-  private onSetFeatureFilter(query: string) {
+  private onSetFeatureFilter(query: string, inverted?: boolean) {
     const features = this.state.allFeatures.features.filter(
       (f) => f.properties.id === query || f.id === query || f.properties.title === query,
     );
     for (const feature of features) {
-      if (this.featureFilters.findIndex((i) => i === feature.properties.id) === -1) {
-        this.featureFilters.push(feature.properties.id);
+      if (inverted && this.hiddenFeatures.findIndex((i) => i === feature.properties.id) === -1) {
+        this.hiddenFeatures.push(feature.properties.id);
+      } else if (!inverted && this.filteredFeatures.findIndex((i) => i === feature.properties.id) === -1) {
+        this.filteredFeatures.push(feature.properties.id);
       }
     }
-    this.filteredFeatures = this.featureFilters;
     this.filterOutFeatures();
   }
 
-  private onRemoveFeatureFilter(query: string) {
+  private onRemoveFeatureFilter(query: string, inverted?: boolean) {
     const features = this.state.allFeatures.features.filter(
       (f) => f.properties.id === query || f.id === query || f.properties.title === query,
     );
     for (const feature of features) {
-      if (this.featureFilters.findIndex((i) => i === feature.properties.id) !== -1) {
-        this.featureFilters.splice(
-          this.featureFilters.findIndex((i) => i === feature.properties.id),
+      if (inverted && this.hiddenFeatures.findIndex((i) => i === feature.properties.id) !== -1) {
+        this.hiddenFeatures.splice(
+          this.hiddenFeatures.findIndex((i) => i === feature.properties.id),
+          1,
+        );
+      } else if (!inverted && this.filteredFeatures.findIndex((i) => i === feature.properties.id) !== -1) {
+        this.filteredFeatures.splice(
+          this.filteredFeatures.findIndex((i) => i === feature.properties.id),
           1,
         );
       }
     }
-    this.filteredFeatures = this.featureFilters.length > 0 ? this.featureFilters : [];
+    this.filteredFeatures = this.filteredFeatures.length > 0 ? this.filteredFeatures : [];
+    this.hiddenFeatures = this.hiddenFeatures.length > 0 ? this.hiddenFeatures : [];
+    this.filterOutFeatures();
+  }
+
+  private onHidePois() {
+    this.hiddenFeatures = this.state.allFeatures.features
+      .filter((i) => i.properties.type === 'poi' || i.properties.usecase === 'poi')
+      .map((i) => i.properties.id);
     this.filterOutFeatures();
   }
 
   private onResetFeatureFilters() {
-    this.featureFilters = [];
-    this.filteredFeatures = this.featureFilters;
+    this.filteredFeatures = [];
+    this.hiddenFeatures = [];
     this.filterOutFeatures();
   }
 
-  private onSetAmenityFilter(amenityId: string, category?: string) {
+  private onSetAmenityFilter(amenityId: string, category?: string, inverted?: boolean) {
+    if (category && inverted) {
+      throw new Error(`It's not possible to use both category and inverted options in setAmenityFilter function!`);
+    }
     if (category) {
       this.amenityCategories[category].active = true;
       this.amenityCategories[category].activeId = amenityId;
@@ -970,42 +987,53 @@ export class Map {
           }
         }
       }
-      this.amenityFilters = this.amenityIds.filter((el) => !amenities.includes(el));
+      this.filteredAmenities = this.amenityIds.filter((el) => !amenities.includes(el));
     } else {
-      if (this.amenityFilters.findIndex((i) => i === amenityId) === -1) {
-        this.amenityFilters.push(amenityId);
+      if (inverted && this.hiddenAmenities.findIndex((i) => i === amenityId) === -1) {
+        this.hiddenAmenities.push(amenityId);
+        this.filteredAmenities = this.filteredAmenities.filter((i) => i !== amenityId);
+      } else if (!inverted && this.filteredAmenities.findIndex((i) => i === amenityId) === -1) {
+        this.filteredAmenities.push(amenityId);
       }
     }
-    this.filteredAmenities = this.amenityFilters;
     this.filterOutFeatures();
-    this.setActivePolygons(amenityId);
+    if (!inverted) this.setActivePolygons(amenityId);
   }
 
-  private onRemoveAmenityFilter(amenityId: string, category?: string) {
+  private onRemoveAmenityFilter(amenityId: string, category?: string, inverted?: boolean) {
+    if (category && inverted) {
+      throw new Error(`It's not possible to use both category and inverted options in removeAmenityFilter function!`);
+    }
     if (
       category &&
       this.amenityCategories[category].active &&
       this.amenityCategories[category].activeId === amenityId
     ) {
       const amenities = this.amenityCategories[category].amenities.filter((i: string) => i !== amenityId);
-      this.amenityFilters = this.amenityFilters.concat(amenities);
+      this.filteredAmenities = this.filteredAmenities.concat(amenities);
       this.amenityCategories[category].active = false;
     } else if (!category) {
-      this.amenityFilters = this.amenityFilters.filter((i) => i !== amenityId);
+      if (inverted) {
+        this.hiddenAmenities = this.hiddenAmenities.filter((i) => i !== amenityId);
+        if (this.filteredAmenities.findIndex((i) => i === amenityId) === -1) this.filteredAmenities.push(amenityId);
+      } else {
+        this.filteredAmenities = this.filteredAmenities.filter((i) => i !== amenityId);
+      }
     }
-    this.filteredAmenities = this.amenityFilters.length > 0 ? this.amenityFilters : this.amenityIds;
+    this.filteredAmenities = this.filteredAmenities.length > 0 ? this.filteredAmenities : this.amenityIds;
+    this.hiddenAmenities = this.hiddenAmenities.length > 0 ? this.hiddenAmenities : [];
     this.filterOutFeatures();
     this.setActivePolygons(null);
   }
 
   private onResetAmenityFilters() {
-    this.amenityFilters = [];
+    this.filteredAmenities = this.amenityIds;
+    this.hiddenAmenities = [];
     for (const key in this.amenityCategories) {
       if (this.amenityCategories.hasOwnProperty(key)) {
         this.amenityCategories[key].active = false;
       }
     }
-    this.filteredAmenities = this.amenityIds;
     this.filterOutFeatures();
     this.setActivePolygons(null);
   }
@@ -1046,6 +1074,17 @@ export class Map {
             filters[featureFilter] = ['match', ['get', 'id'], this.filteredFeatures, true, false];
           } else {
             filters.push(['match', ['get', 'id'], this.filteredFeatures, true, false]);
+          }
+        } else {
+          if (featureFilter !== -1) {
+            filters.splice(featureFilter, 1);
+          }
+        }
+        if (this.hiddenFeatures.length > 0) {
+          if (featureFilter !== -1) {
+            filters[featureFilter] = ['match', ['get', 'id'], this.hiddenFeatures, false, true];
+          } else {
+            filters.push(['match', ['get', 'id'], this.hiddenFeatures, false, true]);
           }
         } else {
           if (featureFilter !== -1) {
@@ -1122,7 +1161,7 @@ export class Map {
     if (this.defaultOptions.initPolygons) {
       layers.push('poi-custom-icons', 'shop-labels');
     }
-    /*layers.forEach((layer) => {
+    layers.forEach((layer) => {
       if (this.map.getLayer(layer)) {
         setTimeout(() => {
           const l = this.map.getLayer(layer) as any;
@@ -1151,7 +1190,7 @@ export class Map {
           this.map.setFilter(layer, filters);
         });
       }
-    });*/
+    });
     this.state.style.notify('filter-change');
   }
 
@@ -2354,10 +2393,11 @@ export class Map {
   }
 
   /**
-   * With this method you can show only defined features, you can send both id or title.
+   * With this method you can show only defined features, you can send both id or title, with inverted set to true defined feature will hide instead.
    *  @memberof Map
    *  @name setFeatureFilter
    *  @param query {string} id or title of the feature
+   *  @param inverted {boolean} when set to true, defined feature will hide, optional
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -2365,8 +2405,8 @@ export class Map {
    *    map.setFeatureFilter('myfeature');
    *  });
    */
-  public setFeatureFilter(query: string) {
-    this.onSetFeatureFilter(query);
+  public setFeatureFilter(query: string, inverted?: boolean) {
+    this.onSetFeatureFilter(query, inverted);
   }
 
   /**
@@ -2374,6 +2414,7 @@ export class Map {
    *  @memberof Map
    *  @name removeFeatureFilter
    *  @param query {string} id or title of the feature
+   *  @param inverted {boolean} have to be set to same value like it was in setFeatureFilter method, optional
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -2381,8 +2422,23 @@ export class Map {
    *    map.removeFeatureFilter('myfeature');
    *  });
    */
-  public removeFeatureFilter(query: string) {
-    this.onRemoveFeatureFilter(query);
+  public removeFeatureFilter(query: string, inverted?: boolean) {
+    this.onRemoveFeatureFilter(query, inverted);
+  }
+
+  /**
+   * With this method you can hide all pois.
+   *  @memberof Map
+   *  @name hidePois
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.hidePois();
+   *  });
+   */
+  public hidePois() {
+    this.onHidePois();
   }
 
   /**
@@ -2401,21 +2457,24 @@ export class Map {
   }
 
   /**
-   * You'll be able to show features only for defined amenity id on map with this method, also with defining the category (NOTE: you have to create them before with setAmenitiesCategory() method), filtering will be set only for defined array of amenities in the category. With category set, only one amenity filter can be active at the time, while without the category they stack so multiple amenities can be active.
+   * You'll be able to show features only for defined amenity id on map with this method, also with defining the category (NOTE: you have to create them before with setAmenitiesCategory() method), filtering will be set only for defined array of amenities in the category. With category set, only one amenity filter can be active at the time, while without the category they stack so multiple amenities can be active. With inverted option set to true, defined amenity features will hide. Category and inverted options can't be defined at the same time.
    *  @memberof Map
    *  @name setAmenityFilter
    *  @param amenityId {string} only features of defined amenityId will be visible
    *  @param category {string} id of the amenities category added via setAmenitiesCategory, optional, if defined filtering will be set only for defined array of amenities in same method
+   *  @param inverted {boolean} when set to true, defined amenity features will hide, optional
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
    *    console.log('map ready', ready);
    *    map.setAmenityFilter('myamenity');
+   *    // inverted method
+   *    map.setAmenityFilter('myamenity', null, true);
    *  });
    */
-  public setAmenityFilter(amenityId: string, category?: string) {
+  public setAmenityFilter(amenityId: string, category?: string, inverted?: boolean) {
     if (!category || (category && this.amenityCategories[category])) {
-      this.onSetAmenityFilter(amenityId, category);
+      this.onSetAmenityFilter(amenityId, category, inverted);
     } else {
       throw new Error(
         `It seems there is no '${category}' amenities category created, please set category with 'setAmenitiesCategory()' method`,
@@ -2429,16 +2488,19 @@ export class Map {
    *  @name removeAmenityFilter
    *  @param amenityId {string} remove the filter for a defined amenityId
    *  @param category {string} id of the amenities category added via setAmenitiesCategory, optional, if defined filtering will be removed only for defined array of amenities in same method
+   *  @param inverted {boolean} have to be set to same value like it was in setAmenityFilter method, optional
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
    *    console.log('map ready', ready);
    *    map.removeAmenityFilter('myamenity');
+   *    // remove inverted method
+   *    map.removeAmenityFilter('myamenity', null, true);
    *  });
    */
-  public removeAmenityFilter(amenityId: string, category?: string) {
+  public removeAmenityFilter(amenityId: string, category?: string, inverted?: boolean) {
     if (!category || (category && this.amenityCategories[category])) {
-      this.onRemoveAmenityFilter(amenityId, category);
+      this.onRemoveAmenityFilter(amenityId, category, inverted);
     } else {
       throw new Error(
         `It seems there is no '${category}' amenities category created, please set category with 'setAmenitiesCategory()' method`,

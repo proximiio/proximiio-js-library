@@ -99,9 +99,9 @@ export declare class Map {
     private showStartPoint;
     private amenityIds;
     private filteredFeatures;
-    private featureFilters;
+    private hiddenFeatures;
     private filteredAmenities;
-    private amenityFilters;
+    private hiddenAmenities;
     private amenityCategories;
     private hoveredPolygon;
     private selectedPolygon;
@@ -130,6 +130,7 @@ export declare class Map {
     private onFeaturesChange;
     private onSetFeatureFilter;
     private onRemoveFeatureFilter;
+    private onHidePois;
     private onResetFeatureFilters;
     private onSetAmenityFilter;
     private onRemoveAmenityFilter;
@@ -584,7 +585,7 @@ export declare class Map {
      *    map.setFeatureFilter('myfeature');
      *  });
      */
-    setFeatureFilter(query: string): void;
+    setFeatureFilter(query: string, inverted?: boolean): void;
     /**
      * Method for removing previously created feature filters.
      *  @memberof Map
@@ -597,7 +598,19 @@ export declare class Map {
      *    map.removeFeatureFilter('myfeature');
      *  });
      */
-    removeFeatureFilter(query: string): void;
+    removeFeatureFilter(query: string, inverted?: boolean): void;
+    /**
+     * With this method you can hide all pois.
+     *  @memberof Map
+     *  @name hidePois
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.hidePois();
+     *  });
+     */
+    hidePois(): void;
     /**
      * Method for removing all active feature filters.
      *  @memberof Map
@@ -623,7 +636,7 @@ export declare class Map {
      *    map.setAmenityFilter('myamenity');
      *  });
      */
-    setAmenityFilter(amenityId: string, category?: string): void;
+    setAmenityFilter(amenityId: string, category?: string, inverted?: boolean): void;
     /**
      * Method for removing previously created amenity filters. In case amenity filter has been set with the category parameter, you have to use same param for removing the filter.
      *  @memberof Map
@@ -637,7 +650,7 @@ export declare class Map {
      *    map.removeAmenityFilter('myamenity');
      *  });
      */
-    removeAmenityFilter(amenityId: string, category?: string): void;
+    removeAmenityFilter(amenityId: string, category?: string, inverted?: boolean): void;
     /**
      * Method for removing all active amenity filters.
      *  @memberof Map
