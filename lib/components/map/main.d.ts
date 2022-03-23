@@ -41,6 +41,14 @@ interface Options {
         level: number;
     };
     initPolygons?: boolean;
+    polygonsOptions?: {
+        defaultPolygonColor?: string;
+        hoverPolygonColor?: string;
+        selectedPolygonColor?: string;
+        defaultLabelColor?: string;
+        hoverLabelColor?: string;
+        selectedLabelColor?: string;
+    };
     zoomLevel?: number;
     considerVisibilityParam?: boolean;
     fitBoundsPadding?: number | PaddingOptions;
@@ -574,10 +582,11 @@ export declare class Map {
      */
     setBoundsPadding(padding: number | PaddingOptions): void;
     /**
-     * With this method you can show only defined features, you can send both id or title.
+     * With this method you can show only defined features, you can send both id or title, with inverted set to true defined feature will hide instead.
      *  @memberof Map
      *  @name setFeatureFilter
      *  @param query {string} id or title of the feature
+     *  @param inverted {boolean} when set to true, defined feature will hide, optional
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -591,6 +600,7 @@ export declare class Map {
      *  @memberof Map
      *  @name removeFeatureFilter
      *  @param query {string} id or title of the feature
+     *  @param inverted {boolean} have to be set to same value like it was in setFeatureFilter method, optional
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -624,16 +634,19 @@ export declare class Map {
      */
     resetFeatureFilters(): void;
     /**
-     * You'll be able to show features only for defined amenity id on map with this method, also with defining the category (NOTE: you have to create them before with setAmenitiesCategory() method), filtering will be set only for defined array of amenities in the category. With category set, only one amenity filter can be active at the time, while without the category they stack so multiple amenities can be active.
+     * You'll be able to show features only for defined amenity id on map with this method, also with defining the category (NOTE: you have to create them before with setAmenitiesCategory() method), filtering will be set only for defined array of amenities in the category. With category set, only one amenity filter can be active at the time, while without the category they stack so multiple amenities can be active. With inverted option set to true, defined amenity features will hide. Category and inverted options can't be defined at the same time.
      *  @memberof Map
      *  @name setAmenityFilter
      *  @param amenityId {string} only features of defined amenityId will be visible
      *  @param category {string} id of the amenities category added via setAmenitiesCategory, optional, if defined filtering will be set only for defined array of amenities in same method
+     *  @param inverted {boolean} when set to true, defined amenity features will hide, optional
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
      *    console.log('map ready', ready);
      *    map.setAmenityFilter('myamenity');
+     *    // inverted method
+     *    map.setAmenityFilter('myamenity', null, true);
      *  });
      */
     setAmenityFilter(amenityId: string, category?: string, inverted?: boolean): void;
@@ -643,11 +656,14 @@ export declare class Map {
      *  @name removeAmenityFilter
      *  @param amenityId {string} remove the filter for a defined amenityId
      *  @param category {string} id of the amenities category added via setAmenitiesCategory, optional, if defined filtering will be removed only for defined array of amenities in same method
+     *  @param inverted {boolean} have to be set to same value like it was in setAmenityFilter method, optional
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
      *    console.log('map ready', ready);
      *    map.removeAmenityFilter('myamenity');
+     *    // remove inverted method
+     *    map.removeAmenityFilter('myamenity', null, true);
      *  });
      */
     removeAmenityFilter(amenityId: string, category?: string, inverted?: boolean): void;

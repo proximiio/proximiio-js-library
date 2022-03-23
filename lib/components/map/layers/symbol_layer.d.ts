@@ -1,19 +1,19 @@
 import BaseLayer, { Serializable } from './base_layer';
 export declare class PaintProperties extends Serializable {
-    iconColor: string;
-    iconOpacity: number;
-    iconHaloColor: string;
-    iconHaloWidth: number;
-    iconHaloBlur: number;
-    iconTranslate: [number, number];
-    iconTranslateAnchor: 'map' | 'viewport';
-    textOpacity: number;
-    textColor: string;
-    textHaloColor: string;
-    textHaloWidth: number;
-    textHaloBlur: number;
-    textTranslate: [number, number];
-    textTranslateAnchor: 'map' | 'viewport';
+    iconColor?: string;
+    iconOpacity?: number;
+    iconHaloColor?: string;
+    iconHaloWidth?: number;
+    iconHaloBlur?: number;
+    iconTranslate?: [number, number];
+    iconTranslateAnchor?: 'map' | 'viewport';
+    textOpacity?: number;
+    textColor?: string;
+    textHaloColor?: string;
+    textHaloWidth?: number;
+    textHaloBlur?: number;
+    textTranslate?: [number, number];
+    textTranslateAnchor?: 'map' | 'viewport';
     constructor(data: any);
 }
 export declare type Placement = 'center' | 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';

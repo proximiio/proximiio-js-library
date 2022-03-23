@@ -25,7 +25,7 @@ import * as tingle from 'tingle.js/dist/tingle';
 import * as TBTNav from '../../../assets/tbtnav';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
 import { MapboxOptions } from '../../models/mapbox-options';
-import { PolygonIconsLayer, PolygonsLayer, PolygonTitlesLayer } from './custom-layers';
+import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer } from './custom-layers';
 import PersonModel from '../../models/person';
 import { lineString } from '@turf/helpers';
 import WayfindingLogger from '../logger/wayfinding';
@@ -66,6 +66,14 @@ interface Options {
     level: number;
   };
   initPolygons?: boolean;
+  polygonsOptions?: {
+    defaultPolygonColor?: string;
+    hoverPolygonColor?: string;
+    selectedPolygonColor?: string;
+    defaultLabelColor?: string;
+    hoverLabelColor?: string;
+    selectedLabelColor?: string;
+  };
   zoomLevel?: number;
   considerVisibilityParam?: boolean;
   fitBoundsPadding?: number | PaddingOptions;
@@ -147,6 +155,14 @@ export class Map {
     zoomIntoPlace: true,
     isKiosk: false,
     initPolygons: false,
+    polygonsOptions: {
+      defaultPolygonColor: '#dbd7e8',
+      hoverPolygonColor: '#a58dfa',
+      selectedPolygonColor: '#6945ed',
+      defaultLabelColor: '#6945ed',
+      hoverLabelColor: '#fff',
+      selectedLabelColor: '#fff',
+    },
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
     minFitBoundsDistance: 15,
@@ -182,8 +198,10 @@ export class Map {
     }
 
     const urlParams = { ...this.defaultOptions.urlParams, ...options.urlParams };
+    const polygonsOptions = { ...this.defaultOptions.polygonsOptions, ...options.polygonsOptions };
     this.defaultOptions = { ...this.defaultOptions, ...options };
     this.defaultOptions.urlParams = urlParams;
+    this.defaultOptions.polygonsOptions = polygonsOptions;
     this.state = globalState;
 
     if (this.defaultOptions.isKiosk && this.defaultOptions.useGpsLocation) {
@@ -538,14 +556,17 @@ export class Map {
 
   private initPolygons() {
     if (this.map) {
-      PolygonsLayer.setFilterLevel(this.state.floor.level);
-      this.state.style.addLayer(PolygonsLayer.json);
+      const polygonsLayer = new PolygonsLayer(this.defaultOptions.polygonsOptions);
+      polygonsLayer.setFilterLevel(this.state.floor.level);
+      this.state.style.addLayer(polygonsLayer.json);
 
-      PolygonIconsLayer.setFilterLevel(this.state.floor.level);
-      this.state.style.addLayer(PolygonIconsLayer.json);
+      const polygonIconsLayer = new PolygonIconsLayer(this.defaultOptions.polygonsOptions);
+      polygonIconsLayer.setFilterLevel(this.state.floor.level);
+      this.state.style.addLayer(polygonIconsLayer.json);
 
-      PolygonTitlesLayer.setFilterLevel(this.state.floor.level);
-      this.state.style.addLayer(PolygonTitlesLayer.json);
+      const polygonTitlesLayer = new PolygonTitlesLayer(this.defaultOptions.polygonsOptions);
+      polygonTitlesLayer.setFilterLevel(this.state.floor.level);
+      this.state.style.addLayer(polygonTitlesLayer.json);
 
       this.map.on('click', 'shop-custom', (e) => {
         this.onShopClick(e);

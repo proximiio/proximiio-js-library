@@ -3,20 +3,20 @@ import { kebabize } from '../../../common';
 import { DEFAULT_FONT } from '../constants';
 
 export class PaintProperties extends Serializable {
-  iconColor: string;
-  iconOpacity: number;
-  iconHaloColor: string;
-  iconHaloWidth: number;
-  iconHaloBlur: number;
-  iconTranslate: [number, number];
-  iconTranslateAnchor: 'map' | 'viewport';
-  textOpacity: number;
-  textColor: string;
-  textHaloColor: string;
-  textHaloWidth: number;
-  textHaloBlur: number;
-  textTranslate: [number, number];
-  textTranslateAnchor: 'map' | 'viewport';
+  iconColor?: string;
+  iconOpacity?: number;
+  iconHaloColor?: string;
+  iconHaloWidth?: number;
+  iconHaloBlur?: number;
+  iconTranslate?: [number, number];
+  iconTranslateAnchor?: 'map' | 'viewport';
+  textOpacity?: number;
+  textColor?: string;
+  textHaloColor?: string;
+  textHaloWidth?: number;
+  textHaloBlur?: number;
+  textTranslate?: [number, number];
+  textTranslateAnchor?: 'map' | 'viewport';
 
   constructor(data: any) {
     super();

@@ -1,13 +1,13 @@
 import BaseLayer, { Serializable } from './base_layer';
 export declare class PaintProperties extends Serializable {
-    fillExtrusionColor: string;
-    fillExtrusionOpacity: number;
-    fillExtrusionTranslate: [number, number];
-    fillExtrusionTranslateAnchor: 'map' | 'viewport';
+    fillExtrusionColor: any;
+    fillExtrusionOpacity?: number;
+    fillExtrusionTranslate?: [number, number];
+    fillExtrusionTranslateAnchor?: 'map' | 'viewport';
     fillExtrusionPattern?: 'string';
     fillExtrusionHeight: number;
-    fillExtrusionBase: number;
-    fillExtrusionVerticalGradient: boolean;
+    fillExtrusionBase?: number;
+    fillExtrusionVerticalGradient?: boolean;
     constructor(data: any);
 }
 export declare class LayoutProperties extends Serializable {
