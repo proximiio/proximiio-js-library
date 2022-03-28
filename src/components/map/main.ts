@@ -592,10 +592,13 @@ export class Map {
     if (e.features && e.features[0] && e.features[0].properties) {
       if (this.defaultOptions.initPolygons) {
         // @ts-ignore
-        const poi = this.state.allFeatures.features.find(
+        const polygonPoi = this.state.allFeatures.features.find(
           (i) => i.properties.id === e.features[0].properties.poi_id,
         ) as Feature;
-        this.onPolygonClickListener.next(poi);
+        const poi = this.state.allFeatures.features.find(
+          (i) => i.properties.id === e.features[0].properties.id,
+        ) as Feature;
+        this.onPolygonClickListener.next(polygonPoi ? polygonPoi : poi);
       } else {
         // @ts-ignore
         const poi = this.state.allFeatures.features.find(
