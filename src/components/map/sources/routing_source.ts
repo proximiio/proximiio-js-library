@@ -81,6 +81,9 @@ export default class RoutingSource extends DataSource {
     this.finish = undefined;
     this.lines = undefined;
     this.route = undefined;
+    this.points = undefined;
+    this.levelPaths = undefined;
+    this.levelPoints = undefined;
     this.data = new FeatureCollection({
       features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),
     });
