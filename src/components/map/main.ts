@@ -1672,11 +1672,13 @@ export class Map {
         (route) => +route.properties.level === this.state.floor.level,
       );
       const currentRoute = this.routingSource.lines[currentRouteIndex];
-      const nextRouteIndex = this.routingSource.lines.findIndex(
-        (route) =>
-          +route.properties.level ===
-          (way === 'up' ? currentRoute.properties.level + 1 : currentRoute.properties.level - 1),
-      );
+      const nextRouteIndex = this.routingSource.lines.findIndex((route) => {
+        if (way === 'up') {
+          return +route.properties.level > currentRoute.properties.level
+        } else {
+          return +route.properties.level < currentRoute.properties.level
+        }
+      });
       const nextRoute = this.routingSource.lines[nextRouteIndex];
       // return currentRouteIndex !== -1 && nextRoute ? +nextRoute.properties.level : way === 'up' ? this.state.floor.level + 1 : this.state.floor.level - 1;
       return nextRoute &&
