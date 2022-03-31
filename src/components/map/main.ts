@@ -1674,9 +1674,9 @@ export class Map {
       const currentRoute = this.routingSource.lines[currentRouteIndex];
       const nextRouteIndex = this.routingSource.lines.findIndex((route) => {
         if (way === 'up') {
-          return +route.properties.level > currentRoute.properties.level
+          return +route.properties.level > currentRoute.properties.level;
         } else {
-          return +route.properties.level < currentRoute.properties.level
+          return +route.properties.level < currentRoute.properties.level;
         }
       });
       const nextRoute = this.routingSource.lines[nextRouteIndex];
