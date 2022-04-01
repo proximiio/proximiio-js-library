@@ -140,6 +140,11 @@ const map = new Proximiio.Map({
       defaultLabelColor: string; // optional, default: '#6945ed', default color of the polygon labels
       hoverLabelColor: string; // optional, default: '#fff', hover color of the polygon labels
       selectedLabelColor: string; // optional, default: '#fff', selected color of the polygon labels
+      defaultPolygonHeight: number; // optional, default: 3, default polygon height in meters
+      hoverPolygonHeight: number; // optional, default: 3, hover polygon height in meters
+      selectedPolygonHeight: number; // optional, default: 3, selected polygon height in meters
+      base: number; // optional, default: 0, default polygon base in meters
+      opacity: number; // optional, default: 1, default polygon opacity
    }
    considerVisibilityParam: false, // optional, default: true, if enabled all pois with visibility property defined as 'hidden' will not be visible as default, will be possible to toggle them with toggleHiddenPois() method
    fitBoundsPadding: 200, // optional, default 250, number | PaddingOptions, the amount of padding in pixels to add to the given bounds for found route, https://docs.mapbox.com/mapbox-gl-js/api/properties/#paddingoptions

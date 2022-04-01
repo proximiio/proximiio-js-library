@@ -196,6 +196,7 @@ export class Map {
   private filteredFeatures: string[] = [];
   private hiddenFeatures: string[] = [];
   private filteredAmenities: string[] = [];
+  private amenityFilters: string[] = [];
   private hiddenAmenities: string[] = [];
   private amenityCategories: any = {};
   private hoveredPolygon: any;
@@ -1026,15 +1027,16 @@ export class Map {
           }
         }
       }
-      this.filteredAmenities = this.amenityIds.filter((el) => !amenities.includes(el));
+      this.amenityFilters = this.amenityIds.filter((el) => !amenities.includes(el));
     } else {
       if (inverted && this.hiddenAmenities.findIndex((i) => i === amenityId) === -1) {
         this.hiddenAmenities.push(amenityId);
         this.filteredAmenities = this.filteredAmenities.filter((i) => i !== amenityId);
-      } else if (!inverted && this.filteredAmenities.findIndex((i) => i === amenityId) === -1) {
-        this.filteredAmenities.push(amenityId);
+      } else if (!inverted && this.amenityFilters.findIndex((i) => i === amenityId) === -1) {
+        this.amenityFilters.push(amenityId);
       }
     }
+    this.filteredAmenities = this.amenityFilters;
     this.filterOutFeatures();
     if (!inverted) this.setActivePolygons(amenityId);
   }
@@ -1049,30 +1051,31 @@ export class Map {
       this.amenityCategories[category].activeId === amenityId
     ) {
       const amenities = this.amenityCategories[category].amenities.filter((i: string) => i !== amenityId);
-      this.filteredAmenities = this.filteredAmenities.concat(amenities);
+      this.amenityFilters = this.amenityFilters.concat(amenities);
       this.amenityCategories[category].active = false;
     } else if (!category) {
       if (inverted) {
         this.hiddenAmenities = this.hiddenAmenities.filter((i) => i !== amenityId);
         if (this.filteredAmenities.findIndex((i) => i === amenityId) === -1) this.filteredAmenities.push(amenityId);
       } else {
-        this.filteredAmenities = this.filteredAmenities.filter((i) => i !== amenityId);
+        this.amenityFilters = this.amenityFilters.filter((i) => i !== amenityId);
       }
     }
-    this.filteredAmenities = this.filteredAmenities.length > 0 ? this.filteredAmenities : this.amenityIds;
+    this.filteredAmenities = this.amenityFilters.length > 0 ? this.amenityFilters : this.amenityIds;
     this.hiddenAmenities = this.hiddenAmenities.length > 0 ? this.hiddenAmenities : [];
     this.filterOutFeatures();
     this.setActivePolygons(null);
   }
 
   private onResetAmenityFilters() {
-    this.filteredAmenities = this.amenityIds;
+    this.amenityFilters = [];
     this.hiddenAmenities = [];
     for (const key in this.amenityCategories) {
       if (this.amenityCategories.hasOwnProperty(key)) {
         this.amenityCategories[key].active = false;
       }
     }
+    this.filteredAmenities = this.amenityIds;
     this.filterOutFeatures();
     this.setActivePolygons(null);
   }
@@ -1157,7 +1160,7 @@ export class Map {
       if (activeFeatures.length > 0) {
         for (const f of activeFeatures) {
           const polygon = this.state.allFeatures.features.find(
-            (i) => i.properties.id === f.properties.metadata.polygon_id,
+            (i) => i.properties.id === f.properties.metadata.polygon_id && i.properties.type === 'shop-custom',
           );
           if (polygon) {
             this.map.setFeatureState(
@@ -1175,7 +1178,7 @@ export class Map {
       if (amenityFeatures.length > 0) {
         for (const f of amenityFeatures) {
           const polygon = this.state.allFeatures.features.find(
-            (i) => i.properties.id === f.properties.metadata.polygon_id,
+            (i) => i.properties.id === f.properties.metadata.polygon_id && i.properties.type === 'shop-custom',
           );
           if (polygon) {
             this.map.setFeatureState(

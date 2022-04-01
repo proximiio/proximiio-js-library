@@ -114,6 +114,7 @@ export declare class Map {
     private filteredFeatures;
     private hiddenFeatures;
     private filteredAmenities;
+    private amenityFilters;
     private hiddenAmenities;
     private amenityCategories;
     private hoveredPolygon;
