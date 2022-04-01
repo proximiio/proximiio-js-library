@@ -171,7 +171,7 @@ export class Map {
       hoverPolygonHeight: 3,
       selectedPolygonHeight: 3,
       base: 0,
-      opacity: 1
+      opacity: 1,
     },
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
@@ -647,7 +647,9 @@ export class Map {
       }
     }
     if (connectedPolygonId) {
-      this.selectedPolygon = this.state.allFeatures.features.find((i) => i.properties.id === connectedPolygonId && i.properties.type === 'shop-custom');
+      this.selectedPolygon = this.state.allFeatures.features.find(
+        (i) => i.properties.id === connectedPolygonId && i.properties.type === 'shop-custom',
+      );
       if (this.selectedPolygon) {
         this.map.setFeatureState(
           {
