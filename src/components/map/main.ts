@@ -73,6 +73,11 @@ interface Options {
     defaultLabelColor?: string;
     hoverLabelColor?: string;
     selectedLabelColor?: string;
+    defaultPolygonHeight?: number;
+    hoverPolygonHeight?: number;
+    selectedPolygonHeight?: number;
+    base?: number;
+    opacity?: number;
   };
   zoomLevel?: number;
   considerVisibilityParam?: boolean;
@@ -162,6 +167,11 @@ export class Map {
       defaultLabelColor: '#6945ed',
       hoverLabelColor: '#fff',
       selectedLabelColor: '#fff',
+      defaultPolygonHeight: 3,
+      hoverPolygonHeight: 3,
+      selectedPolygonHeight: 3,
+      base: 0,
+      opacity: 1
     },
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
@@ -598,6 +608,9 @@ export class Map {
         const poi = this.state.allFeatures.features.find(
           (i) => i.properties.id === e.features[0].properties.id,
         ) as Feature;
+        if (polygonPoi) {
+          this.handlePolygonSelection(polygonPoi);
+        }
         this.onPolygonClickListener.next(polygonPoi ? polygonPoi : poi);
       } else {
         // @ts-ignore
@@ -634,7 +647,7 @@ export class Map {
       }
     }
     if (connectedPolygonId) {
-      this.selectedPolygon = this.state.allFeatures.features.find((i) => i.properties.id === connectedPolygonId);
+      this.selectedPolygon = this.state.allFeatures.features.find((i) => i.properties.id === connectedPolygonId && i.properties.type === 'shop-custom');
       if (this.selectedPolygon) {
         this.map.setFeatureState(
           {

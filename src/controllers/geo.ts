@@ -13,24 +13,26 @@ export const getFeatures = async (initPolygons?: boolean) => {
         feature.properties.type = 'poi-custom';
         const polygon = res.data.features.find((f: any) => f.properties.id === feature.properties.metadata.polygon_id);
         if (polygon) {
-          polygon.properties.type = 'shop-custom';
-          polygon.properties.poi_id = feature.properties.id;
-          polygon.properties.amenity = feature.properties.amenity;
-          polygon.id = JSON.stringify(key);
+          const polygonFeature = JSON.parse(JSON.stringify(polygon));
+          polygonFeature.properties.type = 'shop-custom';
+          polygonFeature.properties.poi_id = feature.properties.id;
+          polygonFeature.properties.amenity = feature.properties.amenity;
+          polygonFeature.id = JSON.stringify(key);
+          featuresToAdd.push(polygonFeature);
           if (
-            polygon.properties['label-line'] &&
-            polygon.properties['label-line'][0] instanceof Array &&
-            polygon.properties['label-line'][1] instanceof Array
+            polygonFeature.properties['label-line'] &&
+            polygonFeature.properties['label-line'][0] instanceof Array &&
+            polygonFeature.properties['label-line'][1] instanceof Array
           ) {
             const labelLineFeature = JSON.parse(JSON.stringify(feature));
             labelLineFeature.geometry = {
-              coordinates: polygon.properties['label-line'],
+              coordinates: polygonFeature.properties['label-line'],
               type: 'LineString',
             };
             labelLineFeature.properties.id = JSON.stringify(key + 9999);
             labelLineFeature.id = JSON.stringify(key + 9999);
             labelLineFeature.properties.type = 'shop-label';
-            polygon.properties.label_id = labelLineFeature.properties.id;
+            polygonFeature.properties.label_id = labelLineFeature.properties.id;
             featuresToAdd.push(labelLineFeature);
           }
         }

@@ -11,7 +11,18 @@ export class PolygonsLayer extends FillExtrusionLayer {
     this.source = 'main';
     this.filter = ['all', ['==', ['get', 'type'], 'shop-custom'], ['==', ['to-number', ['get', 'level']], 0]];
     this.paint = new PaintProperties({
-      'fill-extrusion-height': 3,
+      'fill-extrusion-height': [
+        'case',
+        ['boolean', ['feature-state', 'selected'], false],
+        data.selectedPolygonHeight,
+        ['boolean', ['feature-state', 'hover'], false],
+        data.hoverPolygonHeight,
+        ['boolean', ['feature-state', 'active'], false],
+        data.hoverPolygonHeight,
+        data.defaultPolygonHeight,
+      ],
+      'fill-extrusion-base': data.base,
+      'fill-extrusion-opacity': data.opacity,
       'fill-extrusion-color': [
         'case',
         ['boolean', ['feature-state', 'selected'], false],

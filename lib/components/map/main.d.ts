@@ -48,6 +48,11 @@ interface Options {
         defaultLabelColor?: string;
         hoverLabelColor?: string;
         selectedLabelColor?: string;
+        defaultPolygonHeight?: number;
+        hoverPolygonHeight?: number;
+        selectedPolygonHeight?: number;
+        base?: number;
+        opacity?: number;
     };
     zoomLevel?: number;
     considerVisibilityParam?: boolean;
