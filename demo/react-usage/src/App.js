@@ -33,7 +33,7 @@ class App extends React.Component {
       level: 0
     }];
 
-    Proximiio.Auth.loginWithToken('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImlzcyI6IjI5NWIwYzFkLTNmYWMtNGUyZC05MWZlLTgxY2Y5MTI0ZTRiYSIsInR5cGUiOiJhcHBsaWNhdGlvbiIsImFwcGxpY2F0aW9uX2lkIjoiMDM3YWJhZTAtNWExMy00YzkyLTgxODEtZTY0YTRmNmFkYjI5In0.-nMemM6dCQyUrTBJVYDV-r0zTuZvuVfeGcCEs8h3ooo')
+    Proximiio.Auth.loginWithToken('token')
       .then(res => {
         console.log('Logged in', res);
 
@@ -58,7 +58,7 @@ class App extends React.Component {
           zoomIntoPlace: false,
           isKiosk: true,
           kioskSettings: {
-            coordinates: [24.9218584, 60.1669235],
+            coordinates: [51.48091652702158, 25.336680584406395],
             level: 0
           },
           mapboxOptions: {
@@ -66,19 +66,7 @@ class App extends React.Component {
             bearing: 10,
             pitch: 40
           },
-          initPolygons: true,
-          polygonsOptions: {
-            defaultPolygonColor: '#000',
-            hoverPolygonColor: '#fff',
-            selectedPolygonColor: '#fff',
-            defaultLabelColor: '#212e85',
-            defaultPolygonHeight: 0,
-            hoverPolygonHeight: 0.3,
-            selectedPolygonHeight: 0.5,
-            opacity: 0.2
-          },
-          defaultPlaceId: "398b8567-618a-4d5b-b105-9631696aa7a6",
-          showLevelDirectionIcon: true
+          initPolygons: true
         });
 
         this.map.getMapReadyListener().subscribe(async (res) => {
