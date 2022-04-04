@@ -343,6 +343,10 @@ export default class StyleModel {
     this.sources[id] = data.source;
   }
 
+  getSource(sourceId: string): BaseSource {
+    return this.sources[sourceId];
+  }
+
   setLevel(level: number) {
     [...this.getLayers('main'), ...this.getLayers('route')].forEach((layer) => {
       if (!layer.filter) {

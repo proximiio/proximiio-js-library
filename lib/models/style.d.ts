@@ -36,6 +36,7 @@ export default class StyleModel {
     addSource(sourceId: string, source: any): void;
     getSources(): BaseSource[];
     setSource(id: string, data: BaseSource): void;
+    getSource(sourceId: string): BaseSource;
     setLevel(level: number): void;
     get polygonEditing(): any;
     toggleCluster(): void;

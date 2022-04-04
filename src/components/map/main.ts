@@ -252,6 +252,9 @@ export class Map {
     const { places, style, styles, features, amenities } = await Repository.getPackage(
       this.defaultOptions.initPolygons,
     );
+    const levelChangers = features.features.filter(
+      (f) => f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
+    );
     const user = await Auth.getCurrentUser();
     const defaultPlace = placeParam
       ? places.find((p) => p.id === placeParam || p.name === placeParam)
@@ -290,6 +293,7 @@ export class Map {
       amenities,
       features,
       allFeatures: new FeatureCollection(features),
+      levelChangers: new FeatureCollection({ features: levelChangers }),
       latitude: center[1],
       longitude: center[0],
       zoom: this.defaultOptions.zoomLevel ? this.defaultOptions.zoomLevel : this.defaultOptions.mapboxOptions?.zoom,
@@ -510,6 +514,17 @@ export class Map {
           'text-allow-overlap': false,
         },
         filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
+      });
+      this.map.on('click', 'proximiio-levelchangers', (ev) => {
+        if (this.routingSource.points) {
+          const directionIcon = this.state.style
+            .getSource('direction-icon-source')
+            .data.features.find((f) => f.properties.level === this.state.floor.level);
+          const way = directionIcon ? (directionIcon.properties.icon === 'floorchange-up-image' ? 'up' : 'down') : null;
+          if (way && ev.features[0].properties.id === directionIcon.properties.levelChangerId) {
+            this.setFloorByWay(way);
+          }
+        }
       });
     }
   }
@@ -1712,10 +1727,15 @@ export class Map {
       .filter((i) => i.isLevelChanger)
       .map((i, index, array) => {
         const feature = this.state.allFeatures.features.find((f) => f.id === i.id) as Feature;
+        const targetPoint = turf.point(feature.geometry.coordinates);
+        const placeLevelChangers = new FeatureCollection({
+          features: this.state.levelChangers.features.filter((f) => f.properties.place_id === this.state.place.id),
+        });
+        const nearestLevelChanger = turf.nearestPoint(targetPoint, placeLevelChangers as any);
         const nextLevelChanger = array[index + 1] ? array[index + 1] : array[index - 1];
         return new Feature({
           type: 'Feature',
-          geometry: feature.geometry,
+          geometry: nearestLevelChanger.geometry,
           properties: {
             usecase: 'floor-change-symbol',
             icon:
@@ -1724,6 +1744,7 @@ export class Map {
                 : 'floorchange-down-image',
             iconOffset: nextLevelChanger.properties.level > i.properties.level ? [4, -90] : [4, 90],
             level: i.properties.level,
+            levelChangerId: nearestLevelChanger.properties.id,
           },
         });
       });
