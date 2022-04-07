@@ -888,8 +888,10 @@ export class Wayfinding {
         let openSet = [fixedStartPoint];
         let closedSet = [];
 
-        fixedStartPoint.properties.gscore = 0;
-        fixedStartPoint.properties.fscore = this._heuristic(fixedStartPoint, fixedEndPoint);
+        if (fixedStartPoint) {
+            fixedStartPoint.properties.gscore = 0;
+            fixedStartPoint.properties.fscore = this._heuristic(fixedStartPoint, fixedEndPoint);
+        }
 
         while (openSet.length > 0) {
             let current = this._getMinFScore(openSet);
@@ -1376,7 +1378,7 @@ export class Wayfinding {
         let bestScore = Infinity;
         for (let index in pointSet) {
             let point = pointSet[index];
-            if (point.properties.fscore < bestScore) {
+            if (point && point.properties.fscore < bestScore) {
                 bestPoint = point;
                 bestScore = point.properties.fscore;
             }

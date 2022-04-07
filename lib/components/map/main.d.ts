@@ -77,6 +77,7 @@ interface Options {
         defaultPlace?: string;
     };
     useGpsLocation?: boolean;
+    language?: string;
 }
 interface PaddingOptions {
     bottom: number;
@@ -205,6 +206,19 @@ export declare class Map {
      *  });
      */
     getMapReadyListener(): import("rxjs").Observable<boolean>;
+    /**
+     * This method will set an active place, load floors etc. Have to be called after map is ready, see getMapReadyListener.
+     *  @memberof Map
+     *  @name setLanguage
+     *  @param language {string} language code
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.setLanguage('en');
+     *  });
+     */
+    setLanguage(language: string): void;
     /**
      * This method will set an active place, load floors etc. Have to be called after map is ready, see getMapReadyListener.
      *  @memberof Map

@@ -168,6 +168,7 @@ const map = new Proximiio.Map({
       defaultPlace: string, // optional, default: 'defaultPlace', library will search for the place by it's id or title defined within provided param
    },
    useGpsLocation: false, // optional, default: false, if enabled your location will be detected with geolocation API and used as a starting point for routing
+   language: 'en', // optional, set default map language for poi features
 });
 ```
 

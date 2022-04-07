@@ -102,6 +102,7 @@ interface Options {
     defaultPlace?: string;
   };
   useGpsLocation?: boolean;
+  language?: string;
 }
 
 interface PaddingOptions {
@@ -249,9 +250,7 @@ export class Map {
       const urlParams = new URLSearchParams(window.location.search);
       placeParam = urlParams.get(this.defaultOptions.urlParams.defaultPlace);
     }
-    const { places, style, styles, features, amenities } = await Repository.getPackage(
-      this.defaultOptions.initPolygons,
-    );
+    let { places, style, styles, features, amenities } = await Repository.getPackage(this.defaultOptions.initPolygons);
     const levelChangers = features.features.filter(
       (f) => f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
     );
@@ -276,6 +275,9 @@ export class Map {
     }
     if (this.defaultOptions.zoomLevel) {
       style.zoom = this.defaultOptions.zoomLevel;
+    }
+    if (this.defaultOptions.language) {
+      this.geojsonSource.language = this.defaultOptions.language;
     }
     this.geojsonSource.fetch(features);
     this.routingSource.routing.setData(new FeatureCollection(features));
@@ -318,7 +320,10 @@ export class Map {
       );
     }
     if (this.defaultOptions.enableTBTNavigation) {
-      this.routeFactory = new TBTNav.RouteFactory(JSON.stringify(this.state.allFeatures.features), 'en');
+      this.routeFactory = new TBTNav.RouteFactory(
+        JSON.stringify(this.state.allFeatures.features),
+        this.defaultOptions.language ? this.defaultOptions.language : 'en',
+      );
     }
   }
 
@@ -973,7 +978,10 @@ export class Map {
     this.routingSource.routing.setData(this.state.allFeatures);
     this.updateMapSource(this.routingSource);
     if (this.defaultOptions.enableTBTNavigation) {
-      this.routeFactory = new TBTNav.RouteFactory(JSON.stringify(this.state.allFeatures.features), 'en');
+      this.routeFactory = new TBTNav.RouteFactory(
+        JSON.stringify(this.state.allFeatures.features),
+        this.defaultOptions.language ? this.defaultOptions.language : 'en',
+      );
     }
   }
 
@@ -1879,6 +1887,24 @@ export class Map {
    */
   public getMapReadyListener() {
     return this.onMapReadyListener.asObservable();
+  }
+
+  /**
+   * This method will set an active place, load floors etc. Have to be called after map is ready, see getMapReadyListener.
+   *  @memberof Map
+   *  @name setLanguage
+   *  @param language {string} language code
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.setLanguage('en');
+   *  });
+   */
+  public setLanguage(language: string) {
+    this.geojsonSource.language = language;
+    this.geojsonSource.fetch(this.state.features);
+    this.onFeaturesChange();
   }
 
   /**
