@@ -358,31 +358,33 @@ export class Wayfinding {
             let segmentFeature = corridorLineFeatures[i];
 
             let segmentIntersections = [];
-            let walls = this.floorData.get(segment[0].properties.level).walls;
-            let wallFeatures = this.floorData.get(segment[0].properties.level).wallFeatures;
+            let walls = this.floorData.get(segment[0].properties.level) ? this.floorData.get(segment[0].properties.level).walls : null;
+            let wallFeatures = this.floorData.get(segment[0].properties.level) ? this.floorData.get(segment[0].properties.level).wallFeatures : null;
 
-            wallFeatures.forEach((wallFeature, wallIndex) => {
-                let intersections = turf.lineIntersect(segmentFeature, wallFeature).features;
-                if (intersections.length > 0) {
-                    let intersectPoint = intersections[0];
-                    intersectPoint.properties.level = segment[0].properties.level;
-                    intersectPoint.properties.neighbours = [];
-                    intersectPoint.properties.bordersArea = true;
-                    // Intersect point inherits filters from both intersecting lines
-                    if (segmentFeature.properties.narrowPath) {
-                        intersectPoint.properties.narrowPath = true;
+            if (wallFeatures) {
+                wallFeatures.forEach((wallFeature, wallIndex) => {
+                    let intersections = turf.lineIntersect(segmentFeature, wallFeature).features;
+                    if (intersections.length > 0) {
+                        let intersectPoint = intersections[0];
+                        intersectPoint.properties.level = segment[0].properties.level;
+                        intersectPoint.properties.neighbours = [];
+                        intersectPoint.properties.bordersArea = true;
+                        // Intersect point inherits filters from both intersecting lines
+                        if (segmentFeature.properties.narrowPath) {
+                            intersectPoint.properties.narrowPath = true;
+                        }
+                        if (segmentFeature.properties.ramp) {
+                            intersectPoint.properties.ramp = true;
+                        }
+                        let distance = this._distance(segment[0], intersectPoint);
+                        segmentIntersections.push({
+                            point: intersectPoint,
+                            distance: distance,
+                            wallIndex: wallIndex
+                        });
                     }
-                    if (segmentFeature.properties.ramp) {
-                        intersectPoint.properties.ramp = true;
-                    }
-                    let distance = this._distance(segment[0], intersectPoint);
-                    segmentIntersections.push({
-                        point: intersectPoint,
-                        distance: distance,
-                        wallIndex: wallIndex
-                    });
-                }
-            });
+                });
+            }
 
             if (segmentIntersections.length > 0) {
 
@@ -651,12 +653,13 @@ export class Wayfinding {
             }
 
             // Store relationship for corridor point
-            if (levelNeighboursMap[pointIndex] === undefined) {
-                levelNeighboursMap[pointIndex] = neighbours.map(neighbour => points.indexOf(neighbour));
-            } else {
-                neighbours.forEach(neighbour => levelNeighboursMap[pointIndex].push(points.indexOf(neighbour)));
+            if (levelNeighboursMap && levelNeighboursMap[pointIndex]) {
+                if (levelNeighboursMap[pointIndex] === undefined) {
+                    levelNeighboursMap[pointIndex] = neighbours.map(neighbour => points.indexOf(neighbour));
+                } else {
+                    neighbours.forEach(neighbour => levelNeighboursMap[pointIndex].push(points.indexOf(neighbour)));
+                }
             }
-
         });
 
         // Export and store data
@@ -677,7 +680,7 @@ export class Wayfinding {
             }
 
             // a) Find walls where the point P is used and the other points in walls: A, B
-            let walls = this.floorData.get(point.properties.level).walls.filter(wall => (wall.includes(point)));
+            let walls = this.floorData.get(point.properties.level) ? this.floorData.get(point.properties.level).walls.filter(wall => (wall.includes(point))) : [];
 
             if (walls.length === 0) {
                 return;

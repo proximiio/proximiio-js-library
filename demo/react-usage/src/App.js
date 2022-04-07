@@ -33,7 +33,7 @@ class App extends React.Component {
       level: 0
     }];
 
-    Proximiio.Auth.loginWithToken('token')
+    Proximiio.Auth.loginWithToken('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImlzcyI6ImM5ZjYxZjQwLWM4ZmQtNDhmYS1iMzk1LWY5M2JhMjI3NTEzZSIsInR5cGUiOiJ1c2VyIiwidXNlciI6Ik1vYmlsZSBhcHBzIERld2EiLCJ1c2VyX2lkIjoiMGRhNDdhYTctZjJlMi00YTBiLWEyNmItMWIwZTQ0OTk4Njc5IiwidGVuYW50X2lkIjoiYzlmNjFmNDAtYzhmZC00OGZhLWIzOTUtZjkzYmEyMjc1MTNlIn0.RYINQxyb1AjqPVzoK0z1UfGksnY6m4WrtlY8ysUg98g')
       .then(res => {
         console.log('Logged in', res);
 
@@ -56,9 +56,10 @@ class App extends React.Component {
         this.map = new Proximiio.Map({
           allowNewFeatureModal: false,
           zoomIntoPlace: false,
+          defaultPlaceId: '84b55598-6b86-44d8-8399-c109a26bb8ec',
           isKiosk: true,
           kioskSettings: {
-            coordinates: [51.48091652702158, 25.336680584406395],
+            coordinates: [55.323970, 25.226912],
             level: 0
           },
           mapboxOptions: {
@@ -66,7 +67,7 @@ class App extends React.Component {
             bearing: 10,
             pitch: 40
           },
-          initPolygons: true
+          initPolygons: false
         });
 
         this.map.getMapReadyListener().subscribe(async (res) => {
