@@ -169,6 +169,7 @@ const map = new Proximiio.Map({
    },
    useGpsLocation: false, // optional, default: false, if enabled your location will be detected with geolocation API and used as a starting point for routing
    language: 'en', // optional, set default map language for poi features
+   routeColor: '#000000', // optional, define route line color
 });
 ```
 

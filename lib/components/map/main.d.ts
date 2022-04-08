@@ -78,6 +78,7 @@ interface Options {
     };
     useGpsLocation?: boolean;
     language?: string;
+    routeColor?: string;
 }
 interface PaddingOptions {
     bottom: number;

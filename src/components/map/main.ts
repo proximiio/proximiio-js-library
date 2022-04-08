@@ -103,6 +103,7 @@ interface Options {
   };
   useGpsLocation?: boolean;
   language?: string;
+  routeColor?: string;
 }
 
 interface PaddingOptions {
@@ -278,6 +279,12 @@ export class Map {
     }
     if (this.defaultOptions.language) {
       this.geojsonSource.language = this.defaultOptions.language;
+    }
+    if (this.defaultOptions.routeColor) {
+      const routeLayer = style.layers.find(l => l.id === 'proximiio-routing-line-remaining');
+      if (routeLayer) {
+        routeLayer.paint['line-color'] = this.defaultOptions.routeColor;
+      }
     }
     this.geojsonSource.fetch(features);
     this.routingSource.routing.setData(new FeatureCollection(features));
