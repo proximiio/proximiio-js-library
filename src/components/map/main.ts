@@ -495,7 +495,6 @@ export class Map {
         this.startPoint = turf.point([data.coords.longitude, data.coords.latitude], {
           level: this.state.floor.level,
         }) as Feature;
-        this.centerOnPoi(this.startPoint);
       });
     }
   }
