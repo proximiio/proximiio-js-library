@@ -1056,7 +1056,6 @@ export class Map {
             amenities = Array.isArray(amenityId)
               ? amenities.concat(cat.amenities.filter((i: string) => !cat.activeId.includes(i)))
               : amenities.concat(cat.amenities.filter((i: string) => i !== cat.activeId));
-            console.log(amenities);
           }
         }
       }
