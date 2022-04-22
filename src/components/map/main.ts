@@ -567,14 +567,21 @@ export class Map {
 
   private initRasterTiles() {
     if (this.map) {
+      const metadata = this.state.style.metadata;
       this.state.style.addSource('raster-tiles', {
         type: 'raster',
-        tiles: this.defaultOptions.rasterTilesOptions.tilesUrl,
-        tileSize: this.defaultOptions.rasterTilesOptions.tileSize
+        tiles: this.defaultOptions.rasterTilesOptions?.tilesUrl
+          ? [`https://api.proximi.fi/imageproxy/source=${this.defaultOptions.rasterTilesOptions.tilesUrl}`]
+          : [`https://api.proximi.fi/imageproxy/source=${metadata['proximiio:raster:tileurl']}`],
+        tileSize: this.defaultOptions.rasterTilesOptions?.tileSize
           ? this.defaultOptions.rasterTilesOptions.tileSize
+          : metadata['proximiio:raster:tilesize']
+          ? metadata['proximiio:raster:tilesize']
           : 256,
-        attribution: this.defaultOptions.rasterTilesOptions.attribution
+        attribution: this.defaultOptions.rasterTilesOptions?.attribution
           ? this.defaultOptions.rasterTilesOptions.attribution
+          : metadata['proximiio:raster:attribution']
+          ? metadata['proximiio:raster:attribution']
           : '',
       });
       this.state.style.addLayer(
@@ -582,11 +589,21 @@ export class Map {
           id: 'raster-tiles',
           type: 'raster',
           source: 'raster-tiles',
-          minzoom: this.defaultOptions.rasterTilesOptions.minZoom ? this.defaultOptions.rasterTilesOptions.minZoom : 15,
-          maxzoom: this.defaultOptions.rasterTilesOptions.maxZoom ? this.defaultOptions.rasterTilesOptions.maxZoom : 22,
+          minzoom: this.defaultOptions.rasterTilesOptions?.minZoom
+            ? this.defaultOptions.rasterTilesOptions.minZoom
+            : metadata['proximiio:raster:minzoom']
+            ? metadata['proximiio:raster:minzoom']
+            : 15,
+          maxzoom: this.defaultOptions.rasterTilesOptions?.maxZoom
+            ? this.defaultOptions.rasterTilesOptions.maxZoom
+            : metadata['proximiio:raster:maxzoom']
+            ? metadata['proximiio:raster:maxzoom']
+            : 22,
         },
-        this.defaultOptions.rasterTilesOptions.beforeLayer
+        this.defaultOptions.rasterTilesOptions?.beforeLayer
           ? this.defaultOptions.rasterTilesOptions.beforeLayer
+          : metadata['proximiio:raster:beforelayer']
+          ? metadata['proximiio:raster:beforelayer']
           : 'proximiio-shop',
       );
     }
