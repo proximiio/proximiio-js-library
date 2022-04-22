@@ -2089,9 +2089,9 @@ export class Map {
    */
   public findRouteByIds(idTo: string, idFrom?: string, accessibleRoute?: boolean) {
     const fromFeature =
-      this.startPoint && (this.defaultOptions.isKiosk || this.defaultOptions.useGpsLocation)
-        ? this.startPoint
-        : (this.state.allFeatures.features.find((f) => f.id === idFrom || f.properties.id === idFrom) as Feature);
+      idFrom
+        ? (this.state.allFeatures.features.find((f) => f.id === idFrom || f.properties.id === idFrom) as Feature)
+        : this.startPoint;
     const toFeature = this.state.allFeatures.features.find((f) => f.id === idTo || f.properties.id === idTo) as Feature;
     this.routingSource.toggleAccessible(accessibleRoute);
     this.onRouteUpdate(fromFeature, toFeature);
@@ -2113,17 +2113,12 @@ export class Map {
    */
   public findRouteByTitle(titleTo: string, titleFrom?: string, accessibleRoute?: boolean) {
     const fromFeature =
-      this.startPoint && (this.defaultOptions.isKiosk || this.defaultOptions.useGpsLocation)
-        ? this.startPoint
-        : (this.state.allFeatures.features.find((f) => f.properties.title === titleFrom) as Feature);
+      titleFrom
+        ? (this.state.allFeatures.features.find((f) => f.properties.title === titleFrom) as Feature)
+        : this.startPoint;
     const toFeature = this.state.allFeatures.features.find((f) => f.properties.title === titleTo) as Feature;
     this.routingSource.toggleAccessible(accessibleRoute);
-    this.onRouteUpdate(
-      this.startPoint && (this.defaultOptions.isKiosk || this.defaultOptions.useGpsLocation)
-        ? this.startPoint
-        : fromFeature,
-      toFeature,
-    );
+    this.onRouteUpdate(fromFeature, toFeature,);
   }
 
   /**
@@ -2154,17 +2149,12 @@ export class Map {
     accessibleRoute?: boolean,
   ) {
     const fromFeature =
-      this.startPoint && (this.defaultOptions.isKiosk || this.defaultOptions.useGpsLocation)
-        ? this.startPoint
-        : (turf.feature({ type: 'Point', coordinates: [lngFrom, latFrom] }, { level: levelFrom }) as Feature);
+      latFrom && lngFrom && levelFrom
+        ? (turf.feature({ type: 'Point', coordinates: [lngFrom, latFrom] }, { level: levelFrom }) as Feature)
+        : this.startPoint;
     const toFeature = turf.feature({ type: 'Point', coordinates: [lngTo, latTo] }, { level: levelTo }) as Feature;
     this.routingSource.toggleAccessible(accessibleRoute);
-    this.onRouteUpdate(
-      this.startPoint && (this.defaultOptions.isKiosk || this.defaultOptions.useGpsLocation)
-        ? this.startPoint
-        : fromFeature,
-      toFeature,
-    );
+    this.onRouteUpdate(fromFeature, toFeature);
   }
 
   /**
@@ -2183,18 +2173,13 @@ export class Map {
    */
   public findRouteToNearestFeature(amenityId: string, idFrom?: string, accessibleRoute?: boolean) {
     const fromFeature =
-      this.startPoint && (this.defaultOptions.isKiosk || this.defaultOptions.useGpsLocation)
-        ? this.startPoint
-        : (this.state.allFeatures.features.find((f) => f.id === idFrom || f.properties.id === idFrom) as Feature);
+      idFrom
+        ? (this.state.allFeatures.features.find((f) => f.id === idFrom || f.properties.id === idFrom) as Feature)
+        : this.startPoint;
     const toFeature: Feature | boolean = this.getClosestFeature(amenityId, fromFeature);
     if (toFeature) {
       this.routingSource.toggleAccessible(accessibleRoute);
-      this.onRouteUpdate(
-        this.startPoint && (this.defaultOptions.isKiosk || this.defaultOptions.useGpsLocation)
-          ? this.startPoint
-          : fromFeature,
-        toFeature,
-      );
+      this.onRouteUpdate(fromFeature, toFeature);
     } else {
       throw new Error(`Feature not found`);
     }
