@@ -281,7 +281,7 @@ export class Map {
       this.geojsonSource.language = this.defaultOptions.language;
     }
     if (this.defaultOptions.routeColor) {
-      const routeLayer = style.layers.find(l => l.id === 'proximiio-routing-line-remaining');
+      const routeLayer = style.layers.find((l) => l.id === 'proximiio-routing-line-remaining');
       if (routeLayer) {
         routeLayer.paint['line-color'] = this.defaultOptions.routeColor;
       }
@@ -1041,7 +1041,7 @@ export class Map {
     this.filterOutFeatures();
   }
 
-  private onSetAmenityFilter(amenityId: string, category?: string, inverted?: boolean) {
+  private onSetAmenityFilter(amenityId: string | string[], category?: string, inverted?: boolean) {
     if (category && inverted) {
       throw new Error(`It's not possible to use both category and inverted options in setAmenityFilter function!`);
     }
@@ -1053,40 +1053,59 @@ export class Map {
         if (this.amenityCategories.hasOwnProperty(key)) {
           const cat = this.amenityCategories[key];
           if (cat.active) {
-            amenities = amenities.concat(cat.amenities.filter((i: string) => i !== cat.activeId));
+            amenities = Array.isArray(amenityId)
+              ? amenities.concat(cat.amenities.filter((i: string) => !cat.activeId.includes(i)))
+              : amenities.concat(cat.amenities.filter((i: string) => i !== cat.activeId));
+            console.log(amenities);
           }
         }
       }
       this.amenityFilters = this.amenityIds.filter((el) => !amenities.includes(el));
     } else {
       if (inverted && this.hiddenAmenities.findIndex((i) => i === amenityId) === -1) {
-        this.hiddenAmenities.push(amenityId);
+        if (Array.isArray(amenityId)) {
+          this.hiddenAmenities.concat(amenityId);
+        } else {
+          this.hiddenAmenities.push(amenityId);
+        }
         this.filteredAmenities = this.filteredAmenities.filter((i) => i !== amenityId);
       } else if (!inverted && this.amenityFilters.findIndex((i) => i === amenityId) === -1) {
-        this.amenityFilters.push(amenityId);
+        if (Array.isArray(amenityId)) {
+          this.amenityFilters.concat(amenityId);
+        } else {
+          this.amenityFilters.push(amenityId);
+        }
       }
     }
     this.filteredAmenities = this.amenityFilters;
     this.filterOutFeatures();
-    if (!inverted) this.setActivePolygons(amenityId);
+    if (!inverted && !Array.isArray(amenityId)) this.setActivePolygons(amenityId);
   }
 
-  private onRemoveAmenityFilter(amenityId: string, category?: string, inverted?: boolean) {
+  private onRemoveAmenityFilter(amenityId: string | string[], category?: string, inverted?: boolean) {
     if (category && inverted) {
       throw new Error(`It's not possible to use both category and inverted options in removeAmenityFilter function!`);
     }
     if (
       category &&
       this.amenityCategories[category].active &&
-      this.amenityCategories[category].activeId === amenityId
+      JSON.stringify(this.amenityCategories[category].activeId) === JSON.stringify(amenityId)
     ) {
-      const amenities = this.amenityCategories[category].amenities.filter((i: string) => i !== amenityId);
+      const amenities = Array.isArray(amenityId)
+        ? this.amenityCategories[category].amenities.filter((i: string) => !amenityId.includes(i))
+        : this.amenityCategories[category].amenities.filter((i: string) => i !== amenityId);
       this.amenityFilters = this.amenityFilters.concat(amenities);
       this.amenityCategories[category].active = false;
     } else if (!category) {
       if (inverted) {
         this.hiddenAmenities = this.hiddenAmenities.filter((i) => i !== amenityId);
-        if (this.filteredAmenities.findIndex((i) => i === amenityId) === -1) this.filteredAmenities.push(amenityId);
+        if (this.filteredAmenities.findIndex((i) => i === amenityId) === -1) {
+          if (Array.isArray(amenityId)) {
+            this.filteredAmenities.concat(amenityId);
+          } else {
+            this.filteredAmenities.push(amenityId);
+          }
+        }
       } else {
         this.amenityFilters = this.amenityFilters.filter((i) => i !== amenityId);
       }
@@ -2558,7 +2577,7 @@ export class Map {
    * You'll be able to show features only for defined amenity id on map with this method, also with defining the category (NOTE: you have to create them before with setAmenitiesCategory() method), filtering will be set only for defined array of amenities in the category. With category set, only one amenity filter can be active at the time, while without the category they stack so multiple amenities can be active. With inverted option set to true, defined amenity features will hide. Category and inverted options can't be defined at the same time.
    *  @memberof Map
    *  @name setAmenityFilter
-   *  @param amenityId {string} only features of defined amenityId will be visible
+   *  @param amenityId {string} | {string[]} only features of defined amenityId | amenityIds will be visible
    *  @param category {string} id of the amenities category added via setAmenitiesCategory, optional, if defined filtering will be set only for defined array of amenities in same method
    *  @param inverted {boolean} when set to true, defined amenity features will hide, optional
    *  @example
@@ -2570,7 +2589,7 @@ export class Map {
    *    map.setAmenityFilter('myamenity', null, true);
    *  });
    */
-  public setAmenityFilter(amenityId: string, category?: string, inverted?: boolean) {
+  public setAmenityFilter(amenityId: string | string[], category?: string, inverted?: boolean) {
     if (!category || (category && this.amenityCategories[category])) {
       this.onSetAmenityFilter(amenityId, category, inverted);
     } else {
@@ -2584,7 +2603,7 @@ export class Map {
    * Method for removing previously created amenity filters. In case amenity filter has been set with the category parameter, you have to use same param for removing the filter.
    *  @memberof Map
    *  @name removeAmenityFilter
-   *  @param amenityId {string} remove the filter for a defined amenityId
+   *  @param amenityId {string | string[]} remove the filter for a defined amenityId | amenityIds
    *  @param category {string} id of the amenities category added via setAmenitiesCategory, optional, if defined filtering will be removed only for defined array of amenities in same method
    *  @param inverted {boolean} have to be set to same value like it was in setAmenityFilter method, optional
    *  @example
@@ -2596,7 +2615,7 @@ export class Map {
    *    map.removeAmenityFilter('myamenity', null, true);
    *  });
    */
-  public removeAmenityFilter(amenityId: string, category?: string, inverted?: boolean) {
+  public removeAmenityFilter(amenityId: string | string[], category?: string, inverted?: boolean) {
     if (!category || (category && this.amenityCategories[category])) {
       this.onRemoveAmenityFilter(amenityId, category, inverted);
     } else {

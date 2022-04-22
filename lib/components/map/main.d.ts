@@ -658,7 +658,7 @@ export declare class Map {
      * You'll be able to show features only for defined amenity id on map with this method, also with defining the category (NOTE: you have to create them before with setAmenitiesCategory() method), filtering will be set only for defined array of amenities in the category. With category set, only one amenity filter can be active at the time, while without the category they stack so multiple amenities can be active. With inverted option set to true, defined amenity features will hide. Category and inverted options can't be defined at the same time.
      *  @memberof Map
      *  @name setAmenityFilter
-     *  @param amenityId {string} only features of defined amenityId will be visible
+     *  @param amenityId {string} | {string[]} only features of defined amenityId | amenityIds will be visible
      *  @param category {string} id of the amenities category added via setAmenitiesCategory, optional, if defined filtering will be set only for defined array of amenities in same method
      *  @param inverted {boolean} when set to true, defined amenity features will hide, optional
      *  @example
@@ -670,12 +670,12 @@ export declare class Map {
      *    map.setAmenityFilter('myamenity', null, true);
      *  });
      */
-    setAmenityFilter(amenityId: string, category?: string, inverted?: boolean): void;
+    setAmenityFilter(amenityId: string | string[], category?: string, inverted?: boolean): void;
     /**
      * Method for removing previously created amenity filters. In case amenity filter has been set with the category parameter, you have to use same param for removing the filter.
      *  @memberof Map
      *  @name removeAmenityFilter
-     *  @param amenityId {string} remove the filter for a defined amenityId
+     *  @param amenityId {string | string[]} remove the filter for a defined amenityId | amenityIds
      *  @param category {string} id of the amenities category added via setAmenitiesCategory, optional, if defined filtering will be removed only for defined array of amenities in same method
      *  @param inverted {boolean} have to be set to same value like it was in setAmenityFilter method, optional
      *  @example
@@ -687,7 +687,7 @@ export declare class Map {
      *    map.removeAmenityFilter('myamenity', null, true);
      *  });
      */
-    removeAmenityFilter(amenityId: string, category?: string, inverted?: boolean): void;
+    removeAmenityFilter(amenityId: string | string[], category?: string, inverted?: boolean): void;
     /**
      * Method for removing all active amenity filters.
      *  @memberof Map
