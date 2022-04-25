@@ -17,7 +17,7 @@ import { chevron, pulsingDot, person as personIcon, floorchangeUpImage, floorcha
 import { MapboxEvent } from 'mapbox-gl';
 import { getPlaceFloors } from '../../controllers/floors';
 import { getPlaceById } from '../../controllers/places';
-import { Subject } from 'rxjs';
+import { Subject, throwIfEmpty } from 'rxjs';
 import * as turf from '@turf/turf';
 // @ts-ignore
 import * as tingle from 'tingle.js/dist/tingle';
@@ -104,7 +104,8 @@ interface Options {
   useGpsLocation?: boolean;
   geolocationControlOptions?: {
     autoTrigger?: boolean;
-    position?: "top-right" | "top-left" | "bottom-left" | "bottom-right";
+    autoLocate?: boolean;
+    position?: 'top-right' | 'top-left' | 'bottom-left' | 'bottom-right';
   };
   language?: string;
   routeColor?: string;
@@ -195,8 +196,9 @@ export class Map {
     useGpsLocation: false,
     geolocationControlOptions: {
       autoTrigger: true,
-      position: 'top-right'
-    }
+      autoLocate: true,
+      position: 'top-right',
+    },
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -498,6 +500,19 @@ export class Map {
       if (this.defaultOptions.geolocationControlOptions.autoTrigger) {
         setTimeout(() => {
           geolocate.trigger();
+        });
+      }
+
+      if (this.defaultOptions.geolocationControlOptions.autoLocate === false) {
+        setTimeout(() => {
+          // @ts-ignore
+          geolocate._watchState = 'BACKGROUND';
+          // @ts-ignore
+          geolocate._geolocateButton.classList.add('mapboxgl-ctrl-geolocate-background');
+          // @ts-ignore
+          geolocate._geolocateButton.classList.remove('mapboxgl-ctrl-geolocate-active');
+          // @ts-ignore
+          geolocate.fire(new Event('trackuserlocationend'));
         });
       }
 
@@ -2098,10 +2113,9 @@ export class Map {
    *  });
    */
   public findRouteByIds(idTo: string, idFrom?: string, accessibleRoute?: boolean) {
-    const fromFeature =
-      idFrom
-        ? (this.state.allFeatures.features.find((f) => f.id === idFrom || f.properties.id === idFrom) as Feature)
-        : this.startPoint;
+    const fromFeature = idFrom
+      ? (this.state.allFeatures.features.find((f) => f.id === idFrom || f.properties.id === idFrom) as Feature)
+      : this.startPoint;
     const toFeature = this.state.allFeatures.features.find((f) => f.id === idTo || f.properties.id === idTo) as Feature;
     this.routingSource.toggleAccessible(accessibleRoute);
     this.onRouteUpdate(fromFeature, toFeature);
@@ -2122,13 +2136,12 @@ export class Map {
    *  });
    */
   public findRouteByTitle(titleTo: string, titleFrom?: string, accessibleRoute?: boolean) {
-    const fromFeature =
-      titleFrom
-        ? (this.state.allFeatures.features.find((f) => f.properties.title === titleFrom) as Feature)
-        : this.startPoint;
+    const fromFeature = titleFrom
+      ? (this.state.allFeatures.features.find((f) => f.properties.title === titleFrom) as Feature)
+      : this.startPoint;
     const toFeature = this.state.allFeatures.features.find((f) => f.properties.title === titleTo) as Feature;
     this.routingSource.toggleAccessible(accessibleRoute);
-    this.onRouteUpdate(fromFeature, toFeature,);
+    this.onRouteUpdate(fromFeature, toFeature);
   }
 
   /**
@@ -2182,10 +2195,9 @@ export class Map {
    *  });
    */
   public findRouteToNearestFeature(amenityId: string, idFrom?: string, accessibleRoute?: boolean) {
-    const fromFeature =
-      idFrom
-        ? (this.state.allFeatures.features.find((f) => f.id === idFrom || f.properties.id === idFrom) as Feature)
-        : this.startPoint;
+    const fromFeature = idFrom
+      ? (this.state.allFeatures.features.find((f) => f.id === idFrom || f.properties.id === idFrom) as Feature)
+      : this.startPoint;
     const toFeature: Feature | boolean = this.getClosestFeature(amenityId, fromFeature);
     if (toFeature) {
       this.routingSource.toggleAccessible(accessibleRoute);

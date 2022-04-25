@@ -79,7 +79,8 @@ interface Options {
     useGpsLocation?: boolean;
     geolocationControlOptions?: {
         autoTrigger?: boolean;
-        position?: "top-right" | "top-left" | "bottom-left" | "bottom-right";
+        autoLocate?: boolean;
+        position?: 'top-right' | 'top-left' | 'bottom-left' | 'bottom-right';
     };
     language?: string;
     routeColor?: string;
