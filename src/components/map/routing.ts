@@ -43,6 +43,7 @@ export default class Routing {
         avoidRevolvingDoors: false,
         avoidTicketGates: false,
         avoidBarriers: false,
+        avoidHills: false,
       });
     }
   }
