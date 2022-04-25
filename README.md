@@ -168,6 +168,10 @@ const map = new Proximiio.Map({
       defaultPlace: string, // optional, default: 'defaultPlace', library will search for the place by it's id or title defined within provided param
    },
    useGpsLocation: false, // optional, default: false, if enabled your location will be detected with geolocation API and used as a starting point for routing
+   geolocationControlOptions: {
+      autoTrigger: boolean, // optional, default: true, if enabled map will automatically focus on user location
+      position: string, // optional, default: 'top-right', position on the map to which the control will be added. Valid values are 'top-left' , 'top-right' , 'bottom-left' , and 'bottom-right'
+   },
    language: 'en', // optional, set default map language for poi features
    routeColor: '#000000', // optional, define route line color
 });

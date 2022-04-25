@@ -102,6 +102,10 @@ interface Options {
     defaultPlace?: string;
   };
   useGpsLocation?: boolean;
+  geolocationControlOptions?: {
+    autoTrigger?: boolean;
+    position?: "top-right" | "top-left" | "bottom-left" | "bottom-right";
+  };
   language?: string;
   routeColor?: string;
 }
@@ -189,6 +193,10 @@ export class Map {
       defaultPlace: 'defaultPlace',
     },
     useGpsLocation: false,
+    geolocationControlOptions: {
+      autoTrigger: true,
+      position: 'top-right'
+    }
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -485,11 +493,13 @@ export class Map {
         trackUserLocation: true,
       });
 
-      this.map.addControl(geolocate);
+      this.map.addControl(geolocate, this.defaultOptions.geolocationControlOptions.position);
 
-      setTimeout(() => {
-        geolocate.trigger();
-      });
+      if (this.defaultOptions.geolocationControlOptions.autoTrigger) {
+        setTimeout(() => {
+          geolocate.trigger();
+        });
+      }
 
       geolocate.on('geolocate', (data) => {
         this.startPoint = turf.point([data.coords.longitude, data.coords.latitude], {

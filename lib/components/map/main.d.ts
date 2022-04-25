@@ -77,6 +77,10 @@ interface Options {
         defaultPlace?: string;
     };
     useGpsLocation?: boolean;
+    geolocationControlOptions?: {
+        autoTrigger?: boolean;
+        position?: "top-right" | "top-left" | "bottom-left" | "bottom-right";
+    };
     language?: string;
     routeColor?: string;
 }
