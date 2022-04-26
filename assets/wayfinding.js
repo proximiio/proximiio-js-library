@@ -135,7 +135,7 @@ export class Wayfinding {
                 });
             }
         });
-        return { minLevel, maxLevel};
+        return { minLevel, maxLevel };
     }
 
     rebuildData() {
@@ -147,7 +147,7 @@ export class Wayfinding {
 
             // Floor features == "walkable areas"
             floor.features.forEach((walkableArea, walkableAreaIndex) => {
-                let wallLineStringList = turf.flatten(turf.polygonToLine(walkableArea)).features.map(feature => {return feature.geometry; });
+                let wallLineStringList = turf.flatten(turf.polygonToLine(walkableArea)).features.map(feature => feature.geometry );
                 // Floor wall lines, we wish to split to individual walls
                 wallLineStringList.forEach(wallLineString => {
                     let firstPoint;
@@ -936,10 +936,12 @@ export class Wayfinding {
 
             if (current === fixedEndPoint) {
                 let finalPath = this.reconstructPath(current);
-                if (fixedEndPoint !== endPoint && endPoint.properties.levels !== undefined && (!fixedEndPoint.properties.onCorridor || this._distance(fixedEndPoint, endPoint) > this.pathFixDistance)) {
+                // if (fixedEndPoint !== endPoint && endPoint.properties.levels !== undefined && (!fixedEndPoint.properties.onCorridor || this._distance(fixedEndPoint, endPoint) > this.pathFixDistance)) {
+                if (fixedEndPoint !== endPoint && (!fixedEndPoint.properties.onCorridor || this._distance(fixedEndPoint, endPoint) > this.pathFixDistance)) {
                     endPoint.properties.fixed = true
                     finalPath.push(endPoint);
                 }
+
                 if (fixedStartPoint !== startPoint && (!fixedStartPoint.properties.onCorridor || this._distance(fixedStartPoint, startPoint) > this.pathFixDistance)) {
                     startPoint.properties.fixed = true
                     finalPath.unshift(startPoint);
@@ -1434,9 +1436,7 @@ export class Wayfinding {
      * @private
      */
     _getFixEndPoint(endPoint, startPointLevel) {
-        // LC
         let lc = this.levelChangerList.find(it => it.id === endPoint.id);
-        // if (lc !== undefined) return lc;
         if (lc !== undefined && lc.properties.fixedPointMap !== undefined) {
             let nearestLevel = undefined;
             lc.properties.fixedPointMap.forEach((fixedPoint, level) => {
@@ -1454,20 +1454,19 @@ export class Wayfinding {
         let floorData = this.floorData.get(point.properties.level);
 
         // If point is located without accessible area, do nothing
-        let areaList  = floorData.areas;
-        for (let index in areaList) {
-            let polygon = areaList[index];
+        floorData.areas.forEach(polygon => {
             if (turf.booleanContains(polygon, point)) {
                 return point;
             }
-        }
+        });
 
         // Find nearest wall to stick to
         let bestWall = null;
         let bestWallDistance = Infinity;
+
         floorData.wallFeatures.forEach(wall => {
-            let distance = turf.pointToLineDistance(point.geometry.coordinates, wall, {units: this.UNIT_TYPE});
-            if (distance < bestWallDistance) {
+            let distance = turf.pointToLineDistance(point.geometry.coordinates, wall, { units: this.UNIT_TYPE });
+            if (distance <= bestWallDistance) {
                 bestWall = wall;
                 bestWallDistance = distance;
             }
@@ -1545,7 +1544,6 @@ export class Wayfinding {
 
             // Return created point
             return fixedPoint;
-
         }
     }
 
