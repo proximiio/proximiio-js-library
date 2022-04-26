@@ -374,7 +374,7 @@ export class Map {
       // hide start and finish poi icons for generated route source
       const routingSymbolsLayer = map.getLayer('proximiio-routing-symbols') as any;
       if (routingSymbolsLayer) {
-        routingSymbolsLayer.filter.push(['!=', ['get', 'type'], 'poi-custom']);
+        routingSymbolsLayer.filter.push(['match', ['get', 'type'], ['poi', 'poi-custom'], false, true]);
         this.state.style.getLayer('proximiio-routing-symbols').filter = routingSymbolsLayer.filter;
         map.setFilter('proximiio-routing-symbols', routingSymbolsLayer.filter);
       }
