@@ -261,7 +261,7 @@ export class Map {
       const urlParams = new URLSearchParams(window.location.search);
       placeParam = urlParams.get(this.defaultOptions.urlParams.defaultPlace);
     }
-    let { places, style, styles, features, amenities } = await Repository.getPackage(this.defaultOptions.initPolygons);
+    const { places, style, styles, features, amenities } = await Repository.getPackage(this.defaultOptions.initPolygons);
     const levelChangers = features.features.filter(
       (f) => f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
     );
