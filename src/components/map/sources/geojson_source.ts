@@ -38,7 +38,9 @@ export default class GeoJSONSource extends DataSource {
     }
 
     if (typeof feature.properties.title_i18n === 'object') {
-      feature.properties.title = feature.properties.title_i18n[language] ? feature.properties.title_i18n[language] : feature.properties.title;
+      feature.properties.title = feature.properties.title_i18n[language]
+        ? feature.properties.title_i18n[language]
+        : feature.properties.title;
     }
   }
 
