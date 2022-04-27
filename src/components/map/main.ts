@@ -568,12 +568,14 @@ export class Map {
     }
   }
 
-  private onSetFeaturesHighlight(features: string[], color?: string, radius?: number) {
+  private onSetFeaturesHighlight(features: string[], color?: string, radius?: number, blur?: number) {
     const map = this.map;
     const featuresToHiglight = this.state.allFeatures.features.filter((f) => {
       return features.includes(f.id || f.properties.id);
     });
     const poisIconsLayer = this.map.getLayer('proximiio-pois-icons') as mapboxgl.Layer;
+    const poisIconsImageSize = this.map.getLayoutProperty('proximiio-pois-icons', 'icon-size');
+    console.log(poisIconsImageSize);
     if (map) {
       if (!map.getLayer('highlight-icon-layer')) {
         this.state.style.addLayer(
@@ -584,13 +586,20 @@ export class Map {
             minzoom: poisIconsLayer.minzoom,
             maxzoom: poisIconsLayer.maxzoom,
             paint: {
-              'circle-radius': [
-                "interpolate", ["exponential", 0.8], ["zoom"],
-                16, 0.05 * (radius ? radius : 50),
-                22, radius ? radius : 50
-              ],
+              'circle-radius':
+                poisIconsImageSize[0] === 'interpolate'
+                  ? [
+                      poisIconsImageSize[0],
+                      poisIconsImageSize[1],
+                      poisIconsImageSize[2],
+                      poisIconsImageSize[3],
+                      poisIconsImageSize[4] * (radius ? radius : 50),
+                      poisIconsImageSize[5],
+                      poisIconsImageSize[6] * (radius ? radius : 50),
+                    ]
+                  : radius,
               'circle-color': color ? color : '#000',
-              'circle-blur': 0.8,
+              'circle-blur': blur !== null && blur !== undefined ? blur : 0.8,
             },
             filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
           },
@@ -2889,8 +2898,9 @@ export class Map {
    *  @memberof Map
    *  @name setFeaturesHighlight
    *  @param features {string[]} feature id to set highlight on, you can send empty array to remove highlights.
-   *  @param color {string} highlight color.
-   *  @param radius {number} highlight circle radius.
+   *  @param color {string} highlight color, optional.
+   *  @param radius {number} highlight circle radius, optional.
+   *  @param blur {number} blur of the highlight circle, optional.
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -2898,8 +2908,8 @@ export class Map {
    *    map.setFeaturesHighlight(['featureid']);
    *  });
    */
-  public setFeaturesHighlight(features: string[], color?: string, radius?: number) {
-    this.onSetFeaturesHighlight(features, color, radius);
+  public setFeaturesHighlight(features: string[], color?: string, radius?: number, blur?: number) {
+    this.onSetFeaturesHighlight(features, color, radius, blur);
   }
 }
 

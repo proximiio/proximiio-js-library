@@ -500,8 +500,9 @@ Method for adding circle layer as a highlight for defined features.
 
 ```
 // @param features {string[]} array of feature ids to set highlight on, you can send empty array to remove highlights.
-// @param color {string} highlight color.
-// @param radius {number} highlight circle radius.
+// @param color {string} highlight color, optional, default: '#000'.
+// @param radius {number} highlight circle radius, optional, default: 50.
+// @param blur {number} blur of the highlight circle, optional, default: 0.8.
 
 map.getMapReadyListener().subscribe(ready => {
    console.log('map ready', ready);

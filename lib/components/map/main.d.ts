@@ -839,8 +839,9 @@ export declare class Map {
      *  @memberof Map
      *  @name setFeaturesHighlight
      *  @param features {string[]} feature id to set highlight on, you can send empty array to remove highlights.
-     *  @param color {string} highlight color.
-     *  @param radius {number} highlight circle radius.
+     *  @param color {string} highlight color, optional.
+     *  @param radius {number} highlight circle radius, optional.
+     *  @param blur {number} blur of the highlight circle, optional.
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -848,6 +849,6 @@ export declare class Map {
      *    map.setFeaturesHighlight(['featureid']);
      *  });
      */
-    setFeaturesHighlight(features: string[], color?: string, radius?: number): void;
+    setFeaturesHighlight(features: string[], color?: string, radius?: number, blur?: number): void;
 }
 export {};
