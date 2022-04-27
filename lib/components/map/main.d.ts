@@ -135,6 +135,7 @@ export declare class Map {
     private onSetKiosk;
     private initGeoLocation;
     private initDirectionIcon;
+    private onSetFeaturesHighlight;
     private initAnimatedRoute;
     private initRasterTiles;
     private initPolygons;
@@ -833,5 +834,20 @@ export declare class Map {
      *  });
      */
     toggleRasterFloorplans(): void;
+    /**
+     * Method for adding circle layer as a highlight for defined features
+     *  @memberof Map
+     *  @name setFeaturesHighlight
+     *  @param features {string[]} feature id to set highlight on, you can send empty array to remove highlights.
+     *  @param color {string} highlight color.
+     *  @param radius {number} highlight circle radius.
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.setFeaturesHighlight(['featureid']);
+     *  });
+     */
+    setFeaturesHighlight(features: string[], color?: string, radius?: number): void;
 }
 export {};

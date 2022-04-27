@@ -568,6 +568,49 @@ export class Map {
     }
   }
 
+  private onSetFeaturesHighlight(features: string[], color?: string, radius?: number) {
+    const map = this.map;
+    const featuresToHiglight = this.state.allFeatures.features.filter((f) => {
+      return features.includes(f.id || f.properties.id);
+    });
+    const poisIconsLayer = this.map.getLayer('proximiio-pois-icons') as mapboxgl.Layer;
+    if (map) {
+      if (!map.getLayer('highlight-icon-layer')) {
+        this.state.style.addLayer(
+          {
+            id: 'highlight-icon-layer',
+            type: 'circle',
+            source: 'highlight-icon-source',
+            minzoom: poisIconsLayer.minzoom,
+            maxzoom: poisIconsLayer.maxzoom,
+            paint: {
+              'circle-radius': [
+                "interpolate", ["exponential", 0.8], ["zoom"],
+                16, 0.05 * (radius ? radius : 50),
+                22, radius ? radius : 50
+              ],
+              'circle-color': color ? color : '#000',
+              'circle-blur': 0.8,
+            },
+            filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
+          },
+          this.defaultOptions.initPolygons ? 'shop-custom' : 'proximiio-shop',
+        );
+      }
+      if (!map.getSource('highlight-icon-source')) {
+        this.state.style.addSource('highlight-icon-source', {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: [],
+          },
+        });
+      }
+      this.state.style.sources['highlight-icon-source'].data.features = featuresToHiglight ? featuresToHiglight : [];
+      this.map.setStyle(this.state.style);
+    }
+  }
+
   private initAnimatedRoute() {
     if (this.map) {
       this.state.style.addSource('route-point', {
@@ -1674,6 +1717,11 @@ export class Map {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
         map.setFilter('route-point', filter);
         this.state.style.getLayer('route-point').filter = filter;
+      }
+      if (map.getLayer('highlight-icon-layer')) {
+        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
+        map.setFilter('highlight-icon-layer', filter);
+        this.state.style.getLayer('highlight-icon-layer').filter = filter;
       }
     }
     this.state = { ...this.state, floor, style: this.state.style };
@@ -2834,6 +2882,24 @@ export class Map {
    */
   public toggleRasterFloorplans() {
     this.onToggleRasterFloorplans();
+  }
+
+  /**
+   * Method for adding circle layer as a highlight for defined features
+   *  @memberof Map
+   *  @name setFeaturesHighlight
+   *  @param features {string[]} feature id to set highlight on, you can send empty array to remove highlights.
+   *  @param color {string} highlight color.
+   *  @param radius {number} highlight circle radius.
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.setFeaturesHighlight(['featureid']);
+   *  });
+   */
+  public setFeaturesHighlight(features: string[], color?: string, radius?: number) {
+    this.onSetFeaturesHighlight(features, color, radius);
   }
 }
 

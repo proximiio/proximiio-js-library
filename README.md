@@ -494,6 +494,21 @@ map.getMapReadyListener().subscribe(ready => {
 });
 ```
 
+##### Set Features Highlight
+
+Method for adding circle layer as a highlight for defined features.
+
+```
+// @param features {string[]} array of feature ids to set highlight on, you can send empty array to remove highlights.
+// @param color {string} highlight color.
+// @param radius {number} highlight circle radius.
+
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   map.setFeaturesHighlight(['featureid']);
+});
+```
+
 ##### Add New Feature
 
 Add new feature to map.
