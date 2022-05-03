@@ -575,7 +575,6 @@ export class Map {
     });
     const poisIconsLayer = this.map.getLayer('proximiio-pois-icons') as mapboxgl.Layer;
     const poisIconsImageSize = this.map.getLayoutProperty('proximiio-pois-icons', 'icon-size');
-    console.log(poisIconsImageSize);
     if (map) {
       if (!map.getLayer('highlight-icon-layer')) {
         this.state.style.addLayer(
@@ -683,7 +682,7 @@ export class Map {
           ? this.defaultOptions.rasterTilesOptions.beforeLayer
           : metadata['proximiio:raster:beforelayer']
           ? metadata['proximiio:raster:beforelayer']
-          : 'proximiio-shop',
+          : 'osm-country_label-en',
       );
     }
   }
