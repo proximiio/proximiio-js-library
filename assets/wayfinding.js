@@ -60,8 +60,8 @@ export class Wayfinding {
         const routableAreaFeatureList = featureList.filter(feature => feature.properties.routable && this.ROUTABLE_TYPE.includes(feature.geometry.type));
         let floorGeojsonMap = new Map();
         for (let level = minLevel; level <= maxLevel; level++) {
-            let floorAreaFeature = routableAreaFeatureList.find(feature => feature.properties.level === level);
-            floorGeojsonMap.set(level, turf.featureCollection(floorAreaFeature !== undefined ? [floorAreaFeature] : []));
+            let floorAreaFeature = routableAreaFeatureList.filter(feature => feature.properties.level === level);
+            floorGeojsonMap.set(level, turf.featureCollection(floorAreaFeature !== undefined ? floorAreaFeature : []));
         }
         this.floorList = floorGeojsonMap;
 
@@ -117,7 +117,7 @@ export class Wayfinding {
         let maxLevel = undefined;
 
         featureList.forEach(feature => {
-            let level = feature.properties.level;
+            const level = feature.properties.level;
             if (minLevel === undefined || level < minLevel) {
                 minLevel = level;
             }
@@ -125,12 +125,12 @@ export class Wayfinding {
                 maxLevel = level;
             }
             if (feature.properties.levels !== undefined) {
-                feature.properties.levels.forEach(level => {
-                    if (minLevel === undefined || level < minLevel) {
-                        minLevel = level;
+                feature.properties.levels.forEach(item => {
+                    if (minLevel === undefined || item < minLevel) {
+                        minLevel = item;
                     }
-                    if (maxLevel === undefined || maxLevel < level) {
-                        maxLevel = level;
+                    if (maxLevel === undefined || maxLevel < item) {
+                        maxLevel = item;
                     }
                 });
             }
@@ -146,8 +146,8 @@ export class Wayfinding {
             let floorAreas = [];
 
             // Floor features == "walkable areas"
-            floor.features.forEach((walkableArea, walkableAreaIndex) => {
-                let wallLineStringList = turf.flatten(turf.polygonToLine(walkableArea)).features.map(feature => feature.geometry );
+            floor.features.forEach(walkableArea => {
+                let wallLineStringList = turf.flatten(turf.polygonToLine(walkableArea)).features.map(feature => feature.geometry);
                 // Floor wall lines, we wish to split to individual walls
                 wallLineStringList.forEach(wallLineString => {
                     let firstPoint;
@@ -160,6 +160,7 @@ export class Wayfinding {
                             firstPoint = turf.point(wallLineString.coordinates[index]);
                             firstPoint.properties.level = level;
                             firstPoint.properties.neighbours = [];
+                            firstPoint.properties.walkableAreaId = walkableArea.id;
                             point = firstPoint;
                         } else {
                             point = nextPoint;
@@ -170,6 +171,7 @@ export class Wayfinding {
                             nextPoint = turf.point(wallLineString.coordinates[index + 1]);
                             nextPoint.properties.level = level;
                             nextPoint.properties.neighbours = [];
+                            nextPoint.properties.walkableAreaId = walkableArea.id;
                         }
                         point.properties.neighbours.push(nextPoint);
                         nextPoint.properties.neighbours.push(point);
@@ -197,8 +199,8 @@ export class Wayfinding {
             let inAreaPoiList = this.accessibilityPoi
                 .filter(poi => floorLevel === poi.properties.level)
                 .filter(poi =>
-                    floorData.areas.filter(area => turf.booleanContains(area, poi)) .length > 0)
-            ;
+                    floorData.areas.filter(area => turf.booleanContains(area, poi)).length > 0);
+
             inAreaPoiList.forEach(poi => {
                 // Generate points around POI to allow going around, but only if they are "within area
                 let detourPointList = [
@@ -376,6 +378,8 @@ export class Wayfinding {
                     intersectPoint.properties.level = segment[0].properties.level;
                     intersectPoint.properties.neighbours = [];
                     intersectPoint.properties.bordersArea = true;
+                    intersectPoint.properties.walkableAreaId = walls[0][0].properties.walkableAreaId;
+                    
                     // Intersect point inherits filters from both intersecting lines
                     if (segmentFeature.properties.narrowPath) {
                         intersectPoint.properties.narrowPath = true;
@@ -756,11 +760,13 @@ export class Wayfinding {
                 if (previous === current || previous.geometry.coordinates[0] !== point.geometry.coordinates[0] || previous.geometry.coordinates[1] !== point.geometry.coordinates[1]) {
                     let newPoint = this._copyPoint(point);
                     newPoint.properties.level = current.properties.level;
+                    newPoint.properties.walkableAreaId = current.properties.walkableAreaId;
+                    newPoint.properties.bordersArea = current.properties.bordersArea;
                     path.push(newPoint);
                     previous = point;
                 }
             });
-            current =  current.properties.cameFrom;
+            current = current.properties.cameFrom;
         } while (current != null);
 
         path.reverse();
@@ -778,7 +784,7 @@ export class Wayfinding {
             }
 
             let distanceAtoB = this._distance(pointA, pointB);
-            // 70cm
+            // 50cm
             if (distanceAtoB < 0.5) {
                 pointsToFilter.push(pointA);
             }
@@ -910,7 +916,25 @@ export class Wayfinding {
      * @return {[Feature<Point>]}
      * @private
      */
-    runAStar(startPoint, endPoint) {
+     runAStar(startPoint, endPoint) {
+        const natural = this.calculatePath(startPoint, endPoint);
+        const reverse = this.calculatePath(endPoint, startPoint);
+
+        if (natural.length >= reverse.length) {
+            return natural
+        }
+
+        return reverse;
+    }
+
+    /**
+     *
+     * @param startPoint {Feature<Point>}
+     * @param endPoint {Feature<Point>}
+     * @return {[Feature<Point>]}
+     * @private
+     */
+     calculatePath(startPoint, endPoint) {
         this.clearData();
 
         this.nbLines = [];
@@ -936,7 +960,6 @@ export class Wayfinding {
 
             if (current === fixedEndPoint) {
                 let finalPath = this.reconstructPath(current);
-                // if (fixedEndPoint !== endPoint && endPoint.properties.levels !== undefined && (!fixedEndPoint.properties.onCorridor || this._distance(fixedEndPoint, endPoint) > this.pathFixDistance)) {
                 if (fixedEndPoint !== endPoint && (!fixedEndPoint.properties.onCorridor || this._distance(fixedEndPoint, endPoint) > this.pathFixDistance)) {
                     endPoint.properties.fixed = true
                     finalPath.push(endPoint);
@@ -955,26 +978,36 @@ export class Wayfinding {
 
             neighbours.forEach(n => this.nbLines.push(turf.lineString([current.geometry.coordinates, n.geometry.coordinates])));
 
-            for (let nIndex in neighbours) {
-                let neighbour = neighbours[nIndex];
-                if (closedSet.indexOf(neighbour) > -1) {
-                    continue;
-                }
+            neighbours.forEach( neighbour => {
+                if (closedSet.indexOf(neighbour) <= -1) {
+                    let tentativeGScore = current.properties.gscore + this._distance(current, neighbour);
+                    let gScoreNeighbour = neighbour.properties.gscore != null ? neighbour.properties.gscore : Infinity;
 
-                let tentativeGScore = current.properties.gscore + this._distance(current, neighbour);
-                let gScoreNeighbour = neighbour.properties.gscore != null ? neighbour.properties.gscore : Infinity;
-                if (tentativeGScore < gScoreNeighbour) {
-                    neighbour.properties.cameFrom = current;
-                    neighbour.properties.gscore = tentativeGScore + 0.2;
-                    neighbour.properties.fscore = tentativeGScore + this._heuristic(neighbour, fixedEndPoint);
-                    if (openSet.indexOf(neighbour) < 0) {
-                        openSet.push(neighbour);
+                    if (tentativeGScore < gScoreNeighbour) {
+                        neighbour.properties.cameFrom = current;
+                        neighbour.properties.gscore = tentativeGScore + 0.2;
+                        neighbour.properties.fscore = tentativeGScore + this._heuristic(neighbour, fixedEndPoint);
+                        if (openSet.indexOf(neighbour) < 0) {
+                            openSet.push(neighbour);
+                        }
                     }
                 }
-
-            }
+            });
         }
         return undefined;
+    }
+
+    _checkIfAreaPolygonAreConnected(current, neighbour) {
+        const first = neighbour.properties.bordersArea || false;
+        const second = current.properties.bordersArea || false;
+        const third = ((current.properties.cameFrom || {}).properties || {}).bordersArea || false;
+        
+        if (neighbour.properties.walkableAreaId !== current.properties.walkableAreaId && neighbour.properties.walkableAreaId !== undefined && current.properties.walkableAreaId !== undefined) {
+            return true;
+        }
+
+        const result = first && second && third;
+        return result;
     }
 
     /**
@@ -994,6 +1027,7 @@ export class Wayfinding {
                 let level = point.properties.level;
                 let revolvingDoorBlock = this.configuration.avoidRevolvingDoors && this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.REVOLVING_DOOR);
                 let ticketGateBlock = this.configuration.avoidTicketGates && this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.TICKET_GATE);
+                
                 return !revolvingDoorBlock && !ticketGateBlock;
             });
         } else {
@@ -1005,12 +1039,13 @@ export class Wayfinding {
                     let levelNeighbourMap = this.neighbourMap[level];
                     if (levelNeighbourMap.hasOwnProperty(pointIndex)) {
                         levelNeighbourMap[pointIndex].forEach(neighbourIndex => {
-                            let neighbourPoint = points[neighbourIndex];
+                            const neighbourPoint = points[neighbourIndex];
 
-                            let revolvingDoorBlock = this.configuration.avoidRevolvingDoors && this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.REVOLVING_DOOR);
-                            let ticketGateBlock = this.configuration.avoidTicketGates && this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.TICKET_GATE);
+                            const revolvingDoorBlock = this.configuration.avoidRevolvingDoors && this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.REVOLVING_DOOR);
+                            const ticketGateBlock = this.configuration.avoidTicketGates && this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.TICKET_GATE);
+                            const isCrossingTwoPolygon = this._checkIfAreaPolygonAreConnected(point, neighbourPoint);
                             
-                            if (!neighbours.includes(neighbourPoint) && (!revolvingDoorBlock && !ticketGateBlock)) {
+                            if (!neighbours.includes(neighbourPoint) && (!revolvingDoorBlock && !ticketGateBlock) && !isCrossingTwoPolygon) {
                                 neighbours.push(neighbourPoint);
                             }
                         });
@@ -1024,8 +1059,8 @@ export class Wayfinding {
                 || (point.properties.fixedPointMap != undefined && point.properties.fixedPointMap.has(endPoint.properties.level))
             ) {
 
-                let revolvingDoorBlock = this.configuration.avoidRevolvingDoors && this._testAccessibilityPoiNeighbourhood(point, endPoint, endPoint.properties.level, this.POI_TYPE.REVOLVING_DOOR);
-                let ticketGateBlock = this.configuration.avoidTicketGates && this._testAccessibilityPoiNeighbourhood(point, endPoint, endPoint.properties.level, this.POI_TYPE.TICKET_GATE);
+                const revolvingDoorBlock = this.configuration.avoidRevolvingDoors && this._testAccessibilityPoiNeighbourhood(point, endPoint, endPoint.properties.level, this.POI_TYPE.REVOLVING_DOOR);
+                const ticketGateBlock = this.configuration.avoidTicketGates && this._testAccessibilityPoiNeighbourhood(point, endPoint, endPoint.properties.level, this.POI_TYPE.TICKET_GATE);
 
                 if (!revolvingDoorBlock && !ticketGateBlock) {
 
@@ -1068,6 +1103,7 @@ export class Wayfinding {
             } else if (this.configuration.avoidHills && neighbour.properties.hill) {
                 return false;
             }
+
             return true;
         });
     }
@@ -1354,14 +1390,7 @@ export class Wayfinding {
     }
 
     _testIdenticalPointInList(point, pointList) {
-        let pointCoordinates = point.geometry.coordinates;
-        for (let index in pointList) {
-            let proposedPointCoordinates = pointList[index].geometry.coordinates;
-            if (proposedPointCoordinates[0] === pointCoordinates[0] && proposedPointCoordinates[1] === pointCoordinates[1]) {
-                return true;
-            }
-        }
-        return false;
+        return pointList.find((list) => list.geometry.coordinates[0] === point.geometry.coordinates[0] && list.geometry.coordinates[1] === point.geometry.coordinates[1]) !== undefined
     }
 
     /**
@@ -1372,13 +1401,12 @@ export class Wayfinding {
     _getMinFScore(pointSet) {
         let bestPoint = null;
         let bestScore = Infinity;
-        for (let index in pointSet) {
-            let point = pointSet[index];
-            if (point.properties.fscore < bestScore) {
+        pointSet.forEach(point => {
+            if (point.properties.fscore <= bestScore) {
                 bestPoint = point;
                 bestScore = point.properties.fscore;
             }
-        }
+        });
         return bestPoint;
     }
 
@@ -1439,7 +1467,7 @@ export class Wayfinding {
         let lc = this.levelChangerList.find(it => it.id === endPoint.id);
         if (lc !== undefined && lc.properties.fixedPointMap !== undefined) {
             let nearestLevel = undefined;
-            lc.properties.fixedPointMap.forEach((fixedPoint, level) => {
+            lc.properties.fixedPointMap.forEach((_, level) => {
                 if (nearestLevel === undefined || Math.abs(nearestLevel - startPointLevel) > Math.abs(level - startPointLevel)) {
                     nearestLevel = level;
                 }
