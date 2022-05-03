@@ -27,7 +27,7 @@ import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
 import { MapboxOptions } from '../../models/mapbox-options';
 import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer } from './custom-layers';
 import PersonModel from '../../models/person';
-import { lineString } from '@turf/helpers';
+import { isNumber, lineString } from '@turf/helpers';
 import WayfindingLogger from '../logger/wayfinding';
 
 interface State {
@@ -109,6 +109,7 @@ interface Options {
   };
   language?: string;
   routeColor?: string;
+  forceFloorLevel?: number;
 }
 
 interface PaddingOptions {
@@ -1464,6 +1465,15 @@ export class Map {
 
         if (this.defaultOptions.animatedRoute) {
           this.addAnimatedRouteFeatures();
+        }
+
+        if (this.defaultOptions.forceFloorLevel !== null || this.defaultOptions.forceFloorLevel !== undefined) {
+          this.routingSource.data.features = this.routingSource.data.features.map(feature => {
+            if (feature.properties.level !== this.defaultOptions.forceFloorLevel) {
+              feature.properties.level = this.defaultOptions.forceFloorLevel;
+            }
+            return feature;
+          });
         }
 
         this.centerOnRoute(routeStart);

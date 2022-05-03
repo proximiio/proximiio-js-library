@@ -84,6 +84,7 @@ interface Options {
     };
     language?: string;
     routeColor?: string;
+    forceFloorLevel?: number;
 }
 interface PaddingOptions {
     bottom: number;

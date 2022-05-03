@@ -175,6 +175,7 @@ const map = new Proximiio.Map({
    },
    language: 'en', // optional, set default map language for poi features
    routeColor: '#000000', // optional, define route line color
+   forceFloorLevel: 0, // optional, define floor number if you want to force routes visible for single level
 });
 ```
 
