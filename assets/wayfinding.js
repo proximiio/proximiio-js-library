@@ -920,7 +920,7 @@ export class Wayfinding {
         const natural = this.calculatePath(startPoint, endPoint);
         const reverse = this.calculatePath(endPoint, startPoint);
 
-        if (natural.length >= reverse.length) {
+        if (reverse === undefined || natural.length >= reverse.length) {
             return natural
         }
 
@@ -951,7 +951,7 @@ export class Wayfinding {
         fixedStartPoint.properties.fscore = this._heuristic(fixedStartPoint, fixedEndPoint);
 
         while (openSet.length > 0) {
-            let current = this._getMinFScore(openSet);
+            let current = this._getMinFScore(openSet, closedSet);
 
             // Unable to find best point to continue?
             if (current === null) {
@@ -997,17 +997,26 @@ export class Wayfinding {
         return undefined;
     }
 
-    _checkIfAreaPolygonAreConnected(current, neighbour) {
-        const first = neighbour.properties.bordersArea || false;
-        const second = current.properties.bordersArea || false;
-        const third = ((current.properties.cameFrom || {}).properties || {}).bordersArea || false;
-        
-        if (neighbour.properties.walkableAreaId !== current.properties.walkableAreaId && neighbour.properties.walkableAreaId !== undefined && current.properties.walkableAreaId !== undefined) {
+    _checkIfCrossingTwoPolygon(current, neighbour) {
+        const last = current.properties || {};
+        const candidate = neighbour.properties || {};
+
+        if(candidate.walkableAreaId !== undefined && last.walkableAreaId !== undefined) {
+            if (candidate.walkableAreaId !== last.walkableAreaId) {
+                return true;
+            }
+
+            if (candidate.bordersArea === undefined) {
+                return true;
+            }
+        }
+
+        if(last.walkableAreaId !== undefined && candidate.walkableAreaId === undefined) {
+            if (candidate.isCorridorPoint === true) { return false; }
             return true;
         }
 
-        const result = first && second && third;
-        return result;
+        return false;
     }
 
     /**
@@ -1027,8 +1036,9 @@ export class Wayfinding {
                 let level = point.properties.level;
                 let revolvingDoorBlock = this.configuration.avoidRevolvingDoors && this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.REVOLVING_DOOR);
                 let ticketGateBlock = this.configuration.avoidTicketGates && this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.TICKET_GATE);
-                
-                return !revolvingDoorBlock && !ticketGateBlock;
+                const isCrossingTwoPolygon = this._checkIfCrossingTwoPolygon(point, neighbourPoint);
+
+                return !revolvingDoorBlock && !ticketGateBlock && !isCrossingTwoPolygon;
             });
         } else {
             // Gather neighbours over all levels
@@ -1043,7 +1053,7 @@ export class Wayfinding {
 
                             const revolvingDoorBlock = this.configuration.avoidRevolvingDoors && this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.REVOLVING_DOOR);
                             const ticketGateBlock = this.configuration.avoidTicketGates && this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.TICKET_GATE);
-                            const isCrossingTwoPolygon = this._checkIfAreaPolygonAreConnected(point, neighbourPoint);
+                            const isCrossingTwoPolygon = this._checkIfCrossingTwoPolygon(point, neighbourPoint);
                             
                             if (!neighbours.includes(neighbourPoint) && (!revolvingDoorBlock && !ticketGateBlock) && !isCrossingTwoPolygon) {
                                 neighbours.push(neighbourPoint);
@@ -1061,8 +1071,9 @@ export class Wayfinding {
 
                 const revolvingDoorBlock = this.configuration.avoidRevolvingDoors && this._testAccessibilityPoiNeighbourhood(point, endPoint, endPoint.properties.level, this.POI_TYPE.REVOLVING_DOOR);
                 const ticketGateBlock = this.configuration.avoidTicketGates && this._testAccessibilityPoiNeighbourhood(point, endPoint, endPoint.properties.level, this.POI_TYPE.TICKET_GATE);
+                const isCrossingTwoPolygon = this._checkIfCrossingTwoPolygon(point, endPoint);
 
-                if (!revolvingDoorBlock && !ticketGateBlock) {
+                if (!revolvingDoorBlock && !ticketGateBlock && !isCrossingTwoPolygon) {
 
                     // Endpoint is fixed on corridor
                     if (endPoint.properties.onCorridor) {
@@ -1398,13 +1409,22 @@ export class Wayfinding {
      * @param pointSet {[Feature<Point>]}
      * @returns {Feature<Point>}
      */
-    _getMinFScore(pointSet) {
+    _getMinFScore(pointSet, previous) {
         let bestPoint = null;
         let bestScore = Infinity;
+
+        const lastWalkableAreaId = (previous.slice(-1).properties || {}).walkableAreaId;
+        const penultimateWalkableAreaId = (previous.slice(-2).properties || {}).walkableAreaId;
+
+        const closedWalkable = penultimateWalkableAreaId !== undefined && lastWalkableAreaId === penultimateWalkableAreaId;
+
         pointSet.forEach(point => {
-            if (point.properties.fscore <= bestScore) {
+            const properties = point.properties;
+
+            if (properties.fscore < bestScore) {//} && (closedWalkable || (!closedWalkable && properties.walkableAreaId === lastWalkableAreaId))) {
                 bestPoint = point;
-                bestScore = point.properties.fscore;
+                bestScore = properties.fscore;    
+
             }
         });
         return bestPoint;
@@ -1482,11 +1502,17 @@ export class Wayfinding {
         let floorData = this.floorData.get(point.properties.level);
 
         // If point is located without accessible area, do nothing
+        let pointFound = undefined;
         floorData.areas.forEach(polygon => {
             if (turf.booleanContains(polygon, point)) {
-                return point;
+                pointFound = point;
+                return;
             }
         });
+        if (pointFound !== undefined) {
+            return pointFound;
+        }
+
 
         // Find nearest wall to stick to
         let bestWall = null;
