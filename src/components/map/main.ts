@@ -1467,7 +1467,7 @@ export class Map {
           this.addAnimatedRouteFeatures();
         }
 
-        if (this.defaultOptions.forceFloorLevel !== null || this.defaultOptions.forceFloorLevel !== undefined) {
+        if (this.defaultOptions.forceFloorLevel !== null && this.defaultOptions.forceFloorLevel !== undefined) {
           this.routingSource.data.features = this.routingSource.data.features.map(feature => {
             if (feature.properties.level !== this.defaultOptions.forceFloorLevel) {
               feature.properties.level = this.defaultOptions.forceFloorLevel;
