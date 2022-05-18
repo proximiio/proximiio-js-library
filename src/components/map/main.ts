@@ -110,6 +110,7 @@ interface Options {
   language?: string;
   routeColor?: string;
   forceFloorLevel?: number;
+  amenityIdProperty?: string;
 }
 
 interface PaddingOptions {
@@ -264,7 +265,9 @@ export class Map {
     }
     const { places, style, styles, features, amenities } = await Repository.getPackage(
       this.defaultOptions.initPolygons,
+      this.defaultOptions.amenityIdProperty
     );
+    console.log(amenities);
     const levelChangers = features.features.filter(
       (f) => f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
     );

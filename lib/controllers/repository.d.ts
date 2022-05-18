@@ -3,7 +3,7 @@ import { FloorModel } from '../models/floor';
 import StyleModel from '../models/style';
 import { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
-export declare const getPackage: (initPolygons?: boolean) => Promise<{
+export declare const getPackage: (initPolygons?: boolean, amenityIdProperty?: string) => Promise<{
     places: PlaceModel[];
     floors: FloorModel[];
     style: StyleModel;
@@ -12,7 +12,7 @@ export declare const getPackage: (initPolygons?: boolean) => Promise<{
     amenities: AmenityModel[];
 }>;
 declare const _default: {
-    getPackage: (initPolygons?: boolean) => Promise<{
+    getPackage: (initPolygons?: boolean, amenityIdProperty?: string) => Promise<{
         places: PlaceModel[];
         floors: FloorModel[];
         style: StyleModel;

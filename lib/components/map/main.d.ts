@@ -85,6 +85,7 @@ interface Options {
     language?: string;
     routeColor?: string;
     forceFloorLevel?: number;
+    amenityIdProperty?: string;
 }
 interface PaddingOptions {
     bottom: number;

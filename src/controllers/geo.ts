@@ -44,10 +44,15 @@ export const getFeatures = async (initPolygons?: boolean) => {
   return new FeatureCollection(res.data);
 };
 
-export const getAmenities = async () => {
+export const getAmenities = async (amenityIdProperty?: string) => {
   const url = '/v5/geo/amenities';
   const res = await axios.get(url);
-  return res.data.map((item: any) => new AmenityModel(item));
+  return res.data.map((item: any) => {
+    if (amenityIdProperty && item[amenityIdProperty] && item.category !== 'default') {
+      item.id = item[amenityIdProperty].toLowerCase();
+    }
+    return new AmenityModel(item)
+  });
 };
 
 export const getPois = async () => {
