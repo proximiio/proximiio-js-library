@@ -299,6 +299,9 @@ export class Map {
         routeLayer.paint['line-color'] = this.defaultOptions.routeColor;
       }
     }
+    if (this.defaultOptions.forceFloorLevel !== null && this.defaultOptions.forceFloorLevel !== undefined) {
+      this.routingSource.routing.forceFloorLevel = this.defaultOptions.forceFloorLevel;
+    }
     this.geojsonSource.fetch(features);
     this.routingSource.routing.setData(new FeatureCollection(features));
     this.prepareStyle(style);
