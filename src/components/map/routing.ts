@@ -85,19 +85,11 @@ export default class Routing {
     for (const [key, pointsList] of Object.entries(pathPoints)) {
       // @ts-ignore
       if (pointsList.length > 1) {
-        paths[key] =
-          this.forceFloorLevel !== null && this.forceFloorLevel !== undefined
-            // @ts-ignore
-            ? new Feature((0, lineString)(pointsList.map((i: any) => i.geometry.coordinates)))
-            // @ts-ignore
-            : new Feature(lineString(pointsList.map((i: any) => i.geometry.coordinates)))
+        // @ts-ignore
+        paths[key] = this.forceFloorLevel !== null && this.forceFloorLevel !== undefined ? new Feature((0, lineString)(pointsList.map((i: any) => i.geometry.coordinates))) : new Feature(lineString(pointsList.map((i: any) => i.geometry.coordinates)))
       } else {
-        paths[key] =
-          this.forceFloorLevel !== null && this.forceFloorLevel !== undefined
-            // @ts-ignore
-            ? new Feature((0, point)(pointsList.map((i: any) => i.geometry.coordinates)))
-            // @ts-ignore
-            : new Feature(point(pointsList.map((i: any) => i.geometry.coordinates)))
+        // @ts-ignore
+        paths[key] = this.forceFloorLevel !== null && this.forceFloorLevel !== undefined ? new Feature((0, point)(pointsList.map((i: any) => i.geometry.coordinates))) : new Feature(point(pointsList.map((i: any) => i.geometry.coordinates)))
       }
       paths[key].id = key;
       // @ts-ignore
