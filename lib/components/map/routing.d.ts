@@ -2,6 +2,7 @@ import Feature, { FeatureCollection } from '../../models/feature';
 export default class Routing {
     data: FeatureCollection;
     wayfinding: any;
+    forceFloorLevel: number;
     constructor();
     setData(collection: FeatureCollection): void;
     toggleOnlyAccessible(onlyAccessible: any): void;

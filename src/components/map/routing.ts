@@ -7,6 +7,7 @@ import { kebabToCamel } from '../../common';
 export default class Routing {
   data: FeatureCollection;
   wayfinding: any;
+  forceFloorLevel: number;
 
   constructor() {
     this.data = new FeatureCollection({});
@@ -58,14 +59,25 @@ export default class Routing {
     });
 
     const pathPoints = {} as any;
-    let pathPartIndex = 0;
-    points.forEach((p: Feature, index: number) => {
-      if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
-        pathPoints[`path-part-${pathPartIndex}`] = [];
-      }
-      pathPoints[`path-part-${pathPartIndex}`].push(p);
-      if (p.isLevelChanger && points[index + 1].isLevelChanger) {
-        pathPartIndex++;
+    let pathPartIndex: any = 0;
+
+    points.forEach((p: Feature | any, index: number) => {
+      if (this.forceFloorLevel !== null && this.forceFloorLevel !== undefined) {
+        if (typeof pathPoints['path-part-'.concat(pathPartIndex)] === 'undefined') {
+          pathPoints['path-part-'.concat(pathPartIndex)] = [];
+        }
+        pathPoints['path-part-'.concat(pathPartIndex)].push(p);
+        if (p.isLevelChanger && points[index + 1].isLevelChanger && p.level !== points[index + 1].level) {
+          pathPartIndex++;
+        }
+      } else {
+        if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
+          pathPoints[`path-part-${pathPartIndex}`] = [];
+        }
+        pathPoints[`path-part-${pathPartIndex}`].push(p);
+        if (p.isLevelChanger && points[index + 1].isLevelChanger) {
+          pathPartIndex++;
+        }
       }
     });
 
@@ -73,11 +85,19 @@ export default class Routing {
     for (const [key, pointsList] of Object.entries(pathPoints)) {
       // @ts-ignore
       if (pointsList.length > 1) {
-        // @ts-ignore
-        paths[key] = new Feature(lineString(pointsList.map((i: any) => i.geometry.coordinates)));
+        paths[key] =
+          this.forceFloorLevel !== null && this.forceFloorLevel !== undefined
+            // @ts-ignore
+            ? new Feature((0, lineString)(pointsList.map((i: any) => i.geometry.coordinates)))
+            // @ts-ignore
+            : new Feature(lineString(pointsList.map((i: any) => i.geometry.coordinates)))
       } else {
-        // @ts-ignore
-        paths[key] = new Feature(point(pointsList.map((i: any) => i.geometry.coordinates)));
+        paths[key] =
+          this.forceFloorLevel !== null && this.forceFloorLevel !== undefined
+            // @ts-ignore
+            ? new Feature((0, point)(pointsList.map((i: any) => i.geometry.coordinates)))
+            // @ts-ignore
+            : new Feature(point(pointsList.map((i: any) => i.geometry.coordinates)))
       }
       paths[key].id = key;
       // @ts-ignore

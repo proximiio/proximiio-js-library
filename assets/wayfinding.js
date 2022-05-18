@@ -752,6 +752,7 @@ export class Wayfinding {
      * @return {[Feature<Point>]}
      */
     reconstructPath(current) {
+
         let path = [];
         let previous = current;
         do {
@@ -767,6 +768,11 @@ export class Wayfinding {
                 }
             });
             current = current.properties.cameFrom;
+
+            if (path.length > 10000) {
+                throw new Error('Too big route');
+            }
+
         } while (current != null);
 
         path.reverse();
@@ -917,14 +923,23 @@ export class Wayfinding {
      * @private
      */
      runAStar(startPoint, endPoint) {
+
         const natural = this.calculatePath(startPoint, endPoint);
         const reverse = this.calculatePath(endPoint, startPoint);
 
-        if (reverse === undefined || natural.length >= reverse.length) {
-            return natural
+        if (natural === undefined && reverse === undefined) {
+            return undefined;
         }
 
-        return reverse;
+        if (natural === undefined && reverse !== undefined) {
+            return reverse;
+        }
+
+        if (natural !== undefined && reverse === undefined) {
+            return natural;
+        }
+
+        return natural.length <= reverse.length ? natural : reverse;
     }
 
     /**
@@ -959,7 +974,12 @@ export class Wayfinding {
             }
 
             if (current === fixedEndPoint) {
-                let finalPath = this.reconstructPath(current);
+                let finalPath = undefined;
+                try {
+                    finalPath = this.reconstructPath(current);
+                } catch (error) {
+                    return undefined;
+                }
                 if (fixedEndPoint !== endPoint && (!fixedEndPoint.properties.onCorridor || this._distance(fixedEndPoint, endPoint) > this.pathFixDistance)) {
                     endPoint.properties.fixed = true
                     finalPath.push(endPoint);
@@ -970,7 +990,7 @@ export class Wayfinding {
                     finalPath.unshift(startPoint);
                 }
                 finalPath[finalPath.length - 1].properties.gscore = current.properties.gscore;
-                return finalPath
+                return finalPath;
             }
             closedSet.push(openSet.splice(openSet.indexOf(current),1));
 
