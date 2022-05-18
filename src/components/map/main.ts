@@ -267,7 +267,6 @@ export class Map {
       this.defaultOptions.initPolygons,
       this.defaultOptions.amenityIdProperty
     );
-    console.log(amenities);
     const levelChangers = features.features.filter(
       (f) => f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
     );
