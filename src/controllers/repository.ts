@@ -10,7 +10,7 @@ import { AmenityModel } from '../models/amenity';
 
 export const getPackage = async (
   initPolygons?: boolean,
-  amenityIdProperty?: string
+  amenityIdProperty?: string,
 ): Promise<{
   places: PlaceModel[];
   floors: FloorModel[];

@@ -51,7 +51,7 @@ export const getAmenities = async (amenityIdProperty?: string) => {
     if (amenityIdProperty && item[amenityIdProperty] && item.category !== 'default') {
       item.id = item[amenityIdProperty].toLowerCase();
     }
-    return new AmenityModel(item)
+    return new AmenityModel(item);
   });
 };
 
