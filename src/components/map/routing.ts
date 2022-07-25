@@ -8,6 +8,7 @@ export default class Routing {
   data: FeatureCollection;
   wayfinding: any;
   forceFloorLevel: number;
+  routeWithDetails: boolean;
 
   constructor() {
     this.data = new FeatureCollection({});
@@ -50,7 +51,18 @@ export default class Routing {
   }
 
   route(start: Feature, finish: Feature) {
-    let points = this.wayfinding.runAStar(start, finish);
+    let points = null;
+    let details = null;
+    if (this.routeWithDetails) {
+      const res = this.wayfinding.runAStarWithDetails(start, finish);
+      points = res.path;
+      details = {
+        distance: res.distance,
+        duration: res.duration
+      };
+    } else {
+      points = this.wayfinding.runAStar(start, finish);
+    }
     if (!points) {
       return null;
     }
@@ -136,6 +148,6 @@ export default class Routing {
       levelPoints[point.properties.level].push(point);
     });
 
-    return { paths, points, levelPaths, levelPoints };
+    return { paths, points, levelPaths, levelPoints, details };
   }
 }

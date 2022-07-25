@@ -18,6 +18,16 @@ export default class RoutingSource extends DataSource {
   levelPaths: any;
   levelPoints: any;
   routing: Routing;
+  details: {
+    distance: number;
+    duration: {
+      elevator: number;
+      escalator: number;
+      staircase: number;
+      realistic: number;
+      shortest: number;
+    }
+  }
 
   constructor() {
     super('route');
@@ -49,6 +59,7 @@ export default class RoutingSource extends DataSource {
       this.points = route?.points;
       this.levelPaths = route?.levelPaths;
       this.levelPoints = route?.levelPoints;
+      this.details = route?.details;
 
       if (paths) {
         const lines = [] as Feature[];
@@ -84,6 +95,7 @@ export default class RoutingSource extends DataSource {
     this.points = undefined;
     this.levelPaths = undefined;
     this.levelPoints = undefined;
+    this.details = undefined;
     this.data = new FeatureCollection({
       features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),
     });

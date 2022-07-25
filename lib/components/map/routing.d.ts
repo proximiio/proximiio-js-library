@@ -3,6 +3,7 @@ export default class Routing {
     data: FeatureCollection;
     wayfinding: any;
     forceFloorLevel: number;
+    routeWithDetails: boolean;
     constructor();
     setData(collection: FeatureCollection): void;
     toggleOnlyAccessible(onlyAccessible: any): void;
@@ -11,5 +12,6 @@ export default class Routing {
         points: any;
         levelPaths: any;
         levelPoints: any;
+        details: any;
     };
 }

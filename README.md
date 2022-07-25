@@ -177,6 +177,7 @@ const map = new Proximiio.Map({
    routeColor: '#000000', // optional, define route line color
    forceFloorLevel: 0, // optional, define floor number if you want to force routes visible for single level
    amenityIdProperty: 'title', // optional, define amenity property to rewrite amenity id with, so poi icons can be initialized by different param
+   routeWithDetails: true, // optional, you'll receive details object (distance and duration of route) in found route listener response, default: true
 });
 ```
 
