@@ -54,12 +54,12 @@ export class Wayfinding {
 
         _defineProperty(this, "walkingSpeed", 1.4); // meters / second
 
-        _defineProperty(this, "floorHeight", 8.0); // meters
+        _defineProperty(this, "floorHeight", 4.5); // meters
         
-        _defineProperty(this, "elevatorSpeed", 2.8); // meters / second 
-        _defineProperty(this, "elevatorWaiting", 40.0); // second
+        _defineProperty(this, "elevatorSpeed", 0.9); // meters / second 
+        _defineProperty(this, "elevatorWaiting", 55.0); // second
 
-        _defineProperty(this, "escalatorSpeed", 0.6); // meters / second
+        _defineProperty(this, "escalatorSpeed", 0.17); // meters / second
 
         _defineProperty(this, "staircasesSpeed", 0.2); // meters / second
 
@@ -256,6 +256,8 @@ export class Wayfinding {
 
                 let lineFeature = turf.lineString([pointA.geometry.coordinates, pointB.geometry.coordinates]);
                 lineFeature.properties.level = corridor.properties.level;
+
+                // Investigate https://github.com/proximiio/proximiio-geo-api-v5/blob/master/routing-engine/pioneer.js#L31
 
                 // Mark lineFeature accordingly
                 lineFeature.properties.bidirectional = corridor.properties.bidirectional;
@@ -1064,12 +1066,14 @@ export class Wayfinding {
 
             if (this.isPathEscalator(path, key)) {
                 let levels = Math.abs(path[key].properties.level-path[key+1].properties.level);
-                escalator += (levels * this.floorHeight) / (this.walkingSpeed - this.escalatorSpeed);
+                let base = (this.floorHeight * this.floorHeight);
+                escalator += Math.sqrt(levels * (base + base)) / this.escalatorSpeed;
             }
 
             if (this.isPathStaircase(path, key)) {
                 let levels = Math.abs(path[key].properties.level-path[key+1].properties.level);
-                staircase += (levels * this.floorHeight) / (this.walkingSpeed - this.staircasesSpeed);
+                let base = (this.floorHeight * this.floorHeight);
+                staircase += Math.sqrt(levels * (base + base)) / this.staircasesSpeed;
             }
         });
 
