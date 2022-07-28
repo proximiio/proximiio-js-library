@@ -59,7 +59,7 @@ export class Wayfinding {
         _defineProperty(this, "elevatorSpeed", 0.9); // meters / second 
         _defineProperty(this, "elevatorWaiting", 55.0); // second
 
-        _defineProperty(this, "escalatorSpeed", 0.17); // meters / second
+        _defineProperty(this, "escalatorSpeed", 0.24); // meters / second
 
         _defineProperty(this, "staircasesSpeed", 0.3); // meters / second
 
