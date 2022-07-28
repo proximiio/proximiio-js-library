@@ -61,7 +61,7 @@ export class Wayfinding {
 
         _defineProperty(this, "escalatorSpeed", 0.17); // meters / second
 
-        _defineProperty(this, "staircasesSpeed", 0.2); // meters / second
+        _defineProperty(this, "staircasesSpeed", 0.3); // meters / second
 
         const featureList = featureCollection.features;
 
@@ -1073,7 +1073,7 @@ export class Wayfinding {
             if (this.isPathStaircase(path, key)) {
                 let levels = Math.abs(path[key].properties.level-path[key+1].properties.level);
                 let base = (this.floorHeight * this.floorHeight);
-                staircase += Math.sqrt(levels * Math.sqrt(base + base)) / this.staircasesSpeed;
+                staircase += (levels * Math.sqrt(base + base)) / this.staircasesSpeed;
             }
         });
 
