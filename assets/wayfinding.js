@@ -1067,13 +1067,13 @@ export class Wayfinding {
             if (this.isPathEscalator(path, key)) {
                 let levels = Math.abs(path[key].properties.level-path[key+1].properties.level);
                 let base = (this.floorHeight * this.floorHeight);
-                escalator += Math.sqrt(levels * (base + base)) / this.escalatorSpeed;
+                escalator += (levels * Math.sqrt(base + base)) / this.escalatorSpeed;
             }
 
             if (this.isPathStaircase(path, key)) {
                 let levels = Math.abs(path[key].properties.level-path[key+1].properties.level);
                 let base = (this.floorHeight * this.floorHeight);
-                staircase += Math.sqrt(levels * (base + base)) / this.staircasesSpeed;
+                staircase += Math.sqrt(levels * Math.sqrt(base + base)) / this.staircasesSpeed;
             }
         });
 
