@@ -16,6 +16,16 @@ export default class RoutingSource extends DataSource {
     levelPaths: any;
     levelPoints: any;
     routing: Routing;
+    details: {
+        distance: number;
+        duration: {
+            elevator: number;
+            escalator: number;
+            staircase: number;
+            realistic: number;
+            shortest: number;
+        };
+    };
     constructor();
     toggleAccessible(value: any): void;
     update(start?: Feature, finish?: Feature): Promise<void>;

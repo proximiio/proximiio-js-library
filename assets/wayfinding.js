@@ -52,6 +52,17 @@ export class Wayfinding {
     
         _defineProperty(this, "wallOffsetDistance", 0.5);
 
+        _defineProperty(this, "walkingSpeed", 1.4); // meters / second
+
+        _defineProperty(this, "floorHeight", 4.5); // meters
+        
+        _defineProperty(this, "elevatorSpeed", 0.9); // meters / second 
+        _defineProperty(this, "elevatorWaiting", 55.0); // second
+
+        _defineProperty(this, "escalatorSpeed", 0.24); // meters / second
+
+        _defineProperty(this, "staircasesSpeed", 0.3); // meters / second
+
         const featureList = featureCollection.features;
 
         const { minLevel, maxLevel } = this.extractMinMaxLevel(featureList);
@@ -103,7 +114,7 @@ export class Wayfinding {
      * @param configuration.avoidBarriers {Boolean}
      * @param pathFixDistance {Number}
      */
-    setConfiguration(configuration, pathFixDistance = 1.0) {
+     setConfiguration(configuration, pathFixDistance = 1.0) {
         Object.keys(configuration).forEach(property => {
             if (this.configuration.hasOwnProperty(property)) {
                 this.configuration[property] = configuration[property];
@@ -117,7 +128,7 @@ export class Wayfinding {
         let maxLevel = undefined;
 
         featureList.forEach(feature => {
-            const level = feature.properties.level;
+            let level = feature.properties.level;
             if (minLevel === undefined || level < minLevel) {
                 minLevel = level;
             }
@@ -125,12 +136,12 @@ export class Wayfinding {
                 maxLevel = level;
             }
             if (feature.properties.levels !== undefined) {
-                feature.properties.levels.forEach(item => {
-                    if (minLevel === undefined || item < minLevel) {
-                        minLevel = item;
+                feature.properties.levels.forEach(level => {
+                    if (minLevel === undefined || level < minLevel) {
+                        minLevel = level;
                     }
-                    if (maxLevel === undefined || maxLevel < item) {
-                        maxLevel = item;
+                    if (maxLevel === undefined || maxLevel < level) {
+                        maxLevel = level;
                     }
                 });
             }
@@ -245,6 +256,8 @@ export class Wayfinding {
 
                 let lineFeature = turf.lineString([pointA.geometry.coordinates, pointB.geometry.coordinates]);
                 lineFeature.properties.level = corridor.properties.level;
+
+                // Investigate https://github.com/proximiio/proximiio-geo-api-v5/blob/master/routing-engine/pioneer.js#L31
 
                 // Mark lineFeature accordingly
                 lineFeature.properties.bidirectional = corridor.properties.bidirectional;
@@ -939,7 +952,140 @@ export class Wayfinding {
             return natural;
         }
 
-        return natural.length <= reverse.length ? natural : reverse;
+        const path = natural.length <= reverse.length ? natural : reverse;
+        return path;
+    }
+
+    /**
+     *
+     * @param startPoint {Feature<Point>}
+     * @param endPoint {Feature<Point>}
+     * @return {[Feature<Point>]}
+     * @private
+     */
+    runAStarWithDetails(startPoint, endPoint) {
+        const path = this.runAStar(startPoint, endPoint);
+        const distance = this.calculateDistance(path);
+        const duration = this.calculateTime(path, distance);
+
+        return {
+            path,
+            distance,
+            duration
+        };
+    }
+
+    /**
+     * Check if path has an elevator
+     * @param path {Feature<Point>}
+     * @param key {Int}
+     * @return {Boolean}
+     * @private
+     */
+    isPathElevator(path, key) {
+        if (path[key].properties.type == this.POI_TYPE.ELEVATOR && path[key+1].properties.type == this.POI_TYPE.ELEVATOR) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if path has an escalator
+     * @param path {Feature<Point>}
+     * @param key {Int}
+     * @return {Boolean}
+     * @private
+     */
+    isPathEscalator(path, key) {
+        if (path[key].properties.type == this.POI_TYPE.ESCALATOR && path[key+1].properties.type == this.POI_TYPE.ESCALATOR) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if path has a staircase
+     * @param path {Feature<Point>}
+     * @param key {Int}
+     * @return {Boolean}
+     * @private
+     */
+    isPathStaircase(path, key) {
+        if (path[key].properties.type == this.POI_TYPE.STAIRCASE && path[key+1].properties.type == this.POI_TYPE.STAIRCASE) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if path is flat without stairs, elevator or escalator
+     * @param path {Feature<Point>}
+     * @param key {Int}
+     * @return {Boolean}
+     * @private
+     */
+    isPathFlat(path, key) {
+        return !this.isPathElevator(path, key) && !this.isPathEscalator(path, key) && !this.isPathStaircase(path, key);
+    }
+
+    /**
+     * Calculate length of the path in meters
+     * @param path {Feature<Point>}
+     * @return {Float}
+     * @private
+     */
+     calculateDistance(path) {
+        let distance = 0;
+        path.forEach((_, key) => {
+            if (path[key+1] !== undefined) {
+                distance += turf.distance(path[key], path[key+1], {units: this.UNIT_TYPE})
+            }
+        });
+        return distance;
+    }
+
+    /**
+     * Calculate length of the path in seconds
+     * @param path {Feature<Point>}
+     * @param distance {Float}
+     * @return {Float}
+     * @private
+     */
+     calculateTime(path, distance) {
+        let time = distance / this.walkingSpeed;
+        
+        let elevator = 0.0;
+        let escalator = 0.0;
+        let staircase = 0.0;
+
+        path.forEach((_, key) => {
+            if (this.isPathElevator(path, key)) {
+                let levels = Math.abs(path[key].properties.level-path[key+1].properties.level);
+                elevator += ((levels * this.floorHeight) / this.elevatorSpeed) + this.elevatorWaiting;
+            }
+
+            if (this.isPathEscalator(path, key)) {
+                let levels = Math.abs(path[key].properties.level-path[key+1].properties.level);
+                let base = (this.floorHeight * this.floorHeight);
+                escalator += (levels * Math.sqrt(base + base)) / this.escalatorSpeed;
+            }
+
+            if (this.isPathStaircase(path, key)) {
+                let levels = Math.abs(path[key].properties.level-path[key+1].properties.level);
+                let base = (this.floorHeight * this.floorHeight);
+                staircase += (levels * Math.sqrt(base + base)) / this.staircasesSpeed;
+            }
+        });
+
+        const realistic = time + elevator + escalator + staircase;
+
+        return { 
+            "shortest": time, 
+            elevator, 
+            escalator, 
+            staircase, 
+            realistic 
+        };
     }
 
     /**

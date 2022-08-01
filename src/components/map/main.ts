@@ -111,6 +111,7 @@ interface Options {
   routeColor?: string;
   forceFloorLevel?: number;
   amenityIdProperty?: string;
+  routeWithDetails?: boolean;
 }
 
 interface PaddingOptions {
@@ -201,6 +202,7 @@ export class Map {
       autoLocate: true,
       position: 'top-right',
     },
+    routeWithDetails: true
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -303,6 +305,9 @@ export class Map {
     }
     if (this.defaultOptions.forceFloorLevel !== null && this.defaultOptions.forceFloorLevel !== undefined) {
       this.routingSource.routing.forceFloorLevel = this.defaultOptions.forceFloorLevel;
+    }
+    if (this.defaultOptions.routeWithDetails !== null && this.defaultOptions.routeWithDetails !== undefined) {
+      this.routingSource.routing.routeWithDetails = this.defaultOptions.routeWithDetails;
     }
     this.geojsonSource.fetch(features);
     this.routingSource.routing.setData(new FeatureCollection(features));
@@ -1495,6 +1500,7 @@ export class Map {
         this.onRouteFoundListener.next({
           route: this.routingSource.route,
           TBTNav: this.defaultOptions.enableTBTNavigation ? textNavigation : null,
+          details: this.defaultOptions.routeWithDetails ? this.routingSource.details : null,
           start: this.startPoint,
           end: this.endPoint,
         });
