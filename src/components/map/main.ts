@@ -407,11 +407,11 @@ export class Map {
       if (this.defaultOptions.useRasterTiles) {
         this.initRasterTiles();
       }
-      if (this.defaultOptions.isKiosk) {
-        this.initKiosk();
-      }
       if (this.defaultOptions.initPolygons) {
         this.initPolygons();
+      }
+      if (this.defaultOptions.isKiosk) {
+        this.initKiosk();
       }
       if (this.defaultOptions.useGpsLocation) {
         this.initGeoLocation();
@@ -904,6 +904,15 @@ export class Map {
         (f.id === destinationParam || f.properties.id === destinationParam || f.properties.title === destinationParam),
     ) as Feature;
 
+    if (startFeature && !destinationFeature) {
+      this.centerToFeature(startFeature.id); 
+      if (this.map && this.defaultOptions.isKiosk) {
+        this.setKiosk(startFeature.geometry.coordinates[1], startFeature.geometry.coordinates[0], startFeature.properties.level)
+      }
+    } 
+    if (!startFeature && destinationFeature) {
+      this.centerToFeature(destinationFeature.id); 
+    } 
     if (startFeature && destinationFeature) {
       this.onRouteUpdate(startFeature, destinationFeature);
     }
