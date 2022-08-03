@@ -406,7 +406,7 @@ export class Map {
       this.updateCluster();
       this.updateImages();
       this.filteredAmenities = this.amenityIds;
-      this.imageSourceManager.setLevel(map, this.state.floor?.level);
+      this.imageSourceManager.setLevel(map, this.state.floor?.level, this.state);
       await this.onPlaceSelect(this.state.place, this.defaultOptions.zoomIntoPlace);
 
       if (this.defaultOptions.useRasterTiles) {
@@ -1652,7 +1652,7 @@ export class Map {
     this.imageSourceManager.enabled = !this.imageSourceManager.enabled;
     const map = this.map;
     if (map) {
-      this.imageSourceManager.setLevel(map, this.state.floor.level);
+      this.imageSourceManager.setLevel(map, this.state.floor.level, this.state);
     }
   }
 
@@ -1713,7 +1713,7 @@ export class Map {
             map.setFilter(layer.id, layer.filter);
           }
         });
-        this.imageSourceManager.setLevel(map, floor.level);
+        this.imageSourceManager.setLevel(map, floor.level, this.state);
       });
       if (route) {
         const routePoints = lineString(

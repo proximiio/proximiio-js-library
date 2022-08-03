@@ -12,5 +12,5 @@ export default class ImageSourceManager extends Eventable {
     enabled: boolean;
     constructor();
     initialize(): Promise<void>;
-    setLevel(map: mapboxgl.Map, level: number): void;
+    setLevel(map: mapboxgl.Map, level: number, state: any): void;
 }

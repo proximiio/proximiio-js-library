@@ -34,9 +34,11 @@ export default class StyleModel {
     getLayerIndex(id: string): number;
     getLayers(sourceId: string): BaseLayer[];
     addSource(sourceId: string, source: any): void;
+    removeLayer(id: string): void;
     getSources(): BaseSource[];
     setSource(id: string, data: BaseSource): void;
     getSource(sourceId: string): BaseSource;
+    removeSource(sourceId: string): void;
     setLevel(level: number): void;
     get polygonEditing(): any;
     toggleCluster(): void;

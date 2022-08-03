@@ -18,11 +18,11 @@ export default class ImageSourceManager extends Eventable {
     this.floors = await getFloors();
   }
 
-  setLevel(map: mapboxgl.Map, level: number) {
+  setLevel(map: mapboxgl.Map, level: number, state: any) {
     this.layers.forEach((id) => {
       try {
-        if (map.getLayer(id)) {
-          map.removeLayer(id);
+        if (state.style.getLayer(id)) {
+          state.style.removeLayer(id);
         }
       } catch (e) {
         console.log('unable to remove layer', id);
@@ -30,8 +30,8 @@ export default class ImageSourceManager extends Eventable {
     });
     this.sources.forEach((id) => {
       try {
-        if (map.getSource(id)) {
-          map.removeSource(id);
+        if (state.style.getSource(id)) {
+          state.style.removeSource(id);
         }
       } catch (e) {
         console.log('unable to remove source', id);
@@ -49,7 +49,7 @@ export default class ImageSourceManager extends Eventable {
         } as ImageSourceRaw;
 
         const sourceId = `image-source-${floor.id}`;
-        map.addSource(sourceId, source);
+        state.style.addSource(sourceId, source);
         this.sources.push(sourceId);
 
         const layer = {
@@ -61,9 +61,10 @@ export default class ImageSourceManager extends Eventable {
           } as RasterLayout,
         };
 
-        map.addLayer(layer, this.belowLayer);
+        state.style.addLayer(layer, this.belowLayer);
         this.layers.push(layer.id);
       });
+      map.setStyle(state.style);
     }
   }
 }

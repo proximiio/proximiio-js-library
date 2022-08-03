@@ -329,6 +329,12 @@ export default class StyleModel {
     this.sources[sourceId] = source;
   }
 
+  removeLayer(id: string) {
+    this.layers = this.layers.filter((layer) => {
+      return layer.id !== id;
+    });
+  }
+
   getSources(): BaseSource[] {
     const sources = [] as BaseSource[];
     Object.keys(this.sources).forEach((id) => {
@@ -345,6 +351,12 @@ export default class StyleModel {
 
   getSource(sourceId: string): BaseSource {
     return this.sources[sourceId];
+  }
+
+  removeSource(sourceId: string) {
+    if (this.sources[sourceId]) {
+      delete this.sources[sourceId];
+    }
   }
 
   setLevel(level: number) {
