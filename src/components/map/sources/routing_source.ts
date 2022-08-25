@@ -26,8 +26,8 @@ export default class RoutingSource extends DataSource {
       staircase: number;
       realistic: number;
       shortest: number;
-    }
-  }
+    };
+  };
 
   constructor() {
     super('route');

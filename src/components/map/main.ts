@@ -202,7 +202,7 @@ export class Map {
       autoLocate: true,
       position: 'top-right',
     },
-    routeWithDetails: true
+    routeWithDetails: true,
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -910,14 +910,18 @@ export class Map {
     ) as Feature;
 
     if (startFeature && startFeature.id && !destinationFeature) {
-      this.centerToFeature(startFeature.id); 
+      this.centerToFeature(startFeature.id);
       if (this.map && this.defaultOptions.isKiosk) {
-        this.setKiosk(startFeature.geometry.coordinates[1], startFeature.geometry.coordinates[0], startFeature.properties.level)
+        this.setKiosk(
+          startFeature.geometry.coordinates[1],
+          startFeature.geometry.coordinates[0],
+          startFeature.properties.level,
+        );
       }
-    } 
+    }
     if (!startFeature && destinationFeature) {
-      this.centerToFeature(destinationFeature.id); 
-    } 
+      this.centerToFeature(destinationFeature.id);
+    }
     if (startFeature && destinationFeature) {
       this.onRouteUpdate(startFeature, destinationFeature);
     }

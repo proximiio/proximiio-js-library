@@ -58,7 +58,7 @@ export default class Routing {
       points = res.path;
       details = {
         distance: res.distance,
-        duration: res.duration
+        duration: res.duration,
       };
     } else {
       points = this.wayfinding.runAStar(start, finish);
