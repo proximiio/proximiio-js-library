@@ -1,5 +1,5 @@
 // @ts-ignore
-import { Wayfinding } from '../../../assets/wayfinding';
+import { Wayfinding } from '../../../lib/assets/wayfinding';
 import Feature, { FeatureCollection } from '../../models/feature';
 import { lineString, point } from '@turf/helpers';
 import { kebabToCamel } from '../../common';

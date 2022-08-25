@@ -22,7 +22,7 @@ import * as turf from '@turf/turf';
 // @ts-ignore
 import * as tingle from 'tingle.js/dist/tingle';
 // @ts-ignore
-import * as TBTNav from '../../../assets/tbtnav';
+import * as TBTNav from '../../../lib/assets/tbtnav';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
 import { MapboxOptions } from '../../models/mapbox-options';
 import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer } from './custom-layers';
