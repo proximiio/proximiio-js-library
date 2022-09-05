@@ -9,11 +9,18 @@ export const getFeatures = async (initPolygons?: boolean) => {
   if (initPolygons) {
     const featuresToAdd: any[] = [];
     res.data.features = res.data.features.map((feature: any, key: number) => {
+      feature.id = feature.id.replace(/\{|\}/g, '');
+      feature.properties.id = feature.properties.id.replace(/\{|\}/g, '')
+
       if (feature.properties.type === 'poi' && feature.properties.metadata && feature.properties.metadata.polygon_id) {
         feature.properties.type = 'poi-custom';
-        const polygon = res.data.features.find((f: any) => f.properties.id === feature.properties.metadata.polygon_id);
+        const polygon = res.data.features.find(
+          (f: any) =>
+            f.properties.id.replace(/\{|\}/g, '') === feature.properties.metadata.polygon_id.replace(/\{|\}/g, ''),
+        );
         if (polygon) {
           const polygonFeature = JSON.parse(JSON.stringify(polygon));
+          polygonFeature.properties.id = polygonFeature.properties.id.replace(/\{|\}/g, '')
           polygonFeature.properties.type = 'shop-custom';
           polygonFeature.properties.poi_id = feature.properties.id;
           polygonFeature.properties.amenity = feature.properties.amenity;

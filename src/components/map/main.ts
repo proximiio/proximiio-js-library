@@ -712,6 +712,10 @@ export class Map {
       polygonTitlesLayer.setFilterLevel(this.state.floor.level);
       this.state.style.addLayer(polygonTitlesLayer.json);
 
+      if (this.state.style.getLayer('proximiio-shop')) {
+        this.state.style.removeLayer('proximiio-shop');
+      }
+
       this.map.on('click', 'shop-custom', (e) => {
         this.onShopClick(e);
       });
