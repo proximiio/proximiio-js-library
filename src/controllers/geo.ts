@@ -2,6 +2,7 @@ import { axios, uuidv4 } from '../common';
 import Feature, { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 import { globalState } from '../components/map/main';
+import { FeatureCollection as FCModel, Feature as FModel } from '@turf/helpers';
 
 export const getFeatures = async (initPolygons?: boolean) => {
   const url = '/v5/geo/features';
@@ -74,8 +75,41 @@ export const getPois = async () => {
   return pois;
 };
 
+export const addFeatures = async (featureCollection: FCModel) => {
+  const url = '/v5/geo/features';
+  try {
+    await axios.post(url, featureCollection);
+  } catch (error) {
+    console.log('Adding new features to db failed', error.message);
+    throw new Error(error.message);
+  }
+};
+
+export const updateFeature = async (featureData: FModel, featureId: string) => {
+  const url = '/v5/geo/features/' + featureId;
+  try {
+    await axios.put(url, featureData);
+  } catch (error) {
+    console.log('Updating feature in db failed', error.message);
+    throw new Error(error.message);
+  }
+};
+
+export const deleteFeatures = async (featureCollection: FCModel) => {
+  const url = '/v5/geo/features/delete';
+  try {
+    await axios.post(url, featureCollection);
+  } catch (error) {
+    console.log('Deleting features from db failed', error.message);
+    throw new Error(error.message);
+  }
+};
+
 export default {
   getFeatures,
+  addFeatures,
+  updateFeature,
+  deleteFeatures,
   getAmenities,
   getPois,
 };
