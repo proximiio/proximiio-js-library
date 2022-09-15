@@ -1030,6 +1030,7 @@ export class Map {
     }
 
     if (!isTemporary) {
+      this.state.allFeatures.features.push(feature);
       await addFeatures({
         type: 'FeatureCollection',
         features: [feature.json],
@@ -1080,13 +1081,16 @@ export class Map {
       floor_id: floorId ? floorId : feature.properties.floor_id,
       ...properties,
     };
-
     if (icon && icon.length > 0) {
       const decodedIcon = await getImageFromBase64(icon);
       this.map.addImage(id, decodedIcon as any);
     }
 
     if (!isTemporary) {
+      const featureIndex = this.state.allFeatures.features.findIndex(
+        (x) => x.id === feature.id || x.properties.id === feature.id,
+      );
+      this.state.allFeatures.features[featureIndex] = feature;
       await addFeatures({
         type: 'FeatureCollection',
         features: [feature.json],
@@ -1116,6 +1120,8 @@ export class Map {
     }
 
     if (!isTemporary) {
+      const featureIndex = this.state.allFeatures.features.findIndex((x) => x.id === id || x.properties.id === id);
+      this.state.allFeatures.features.splice(featureIndex, 1);
       await deleteFeatures({
         type: 'FeatureCollection',
         features: [foundFeature],
