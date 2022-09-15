@@ -1030,7 +1030,7 @@ export class Map {
     }
 
     if (!isTemporary) {
-      this.state.allFeatures.features.push(feature);
+      this.state.features.features.push(feature);
       await addFeatures({
         type: 'FeatureCollection',
         features: [feature.json],
@@ -1087,10 +1087,10 @@ export class Map {
     }
 
     if (!isTemporary) {
-      const featureIndex = this.state.allFeatures.features.findIndex(
+      const featureIndex = this.state.features.features.findIndex(
         (x) => x.id === feature.id || x.properties.id === feature.id,
       );
-      this.state.allFeatures.features[featureIndex] = feature;
+      this.state.features.features[featureIndex] = feature;
       await addFeatures({
         type: 'FeatureCollection',
         features: [feature.json],
@@ -1120,8 +1120,8 @@ export class Map {
     }
 
     if (!isTemporary) {
-      const featureIndex = this.state.allFeatures.features.findIndex((x) => x.id === id || x.properties.id === id);
-      this.state.allFeatures.features.splice(featureIndex, 1);
+      const featureIndex = this.state.features.features.findIndex((x) => x.id === id || x.properties.id === id);
+      this.state.features.features.splice(featureIndex, 1);
       await deleteFeatures({
         type: 'FeatureCollection',
         features: [foundFeature],
