@@ -674,6 +674,18 @@ map.getMapReadyListener().subscribe(ready => {
 });
 ```
 
+###### Refetching features
+
+Method for refetching all pois features on map.
+
+```
+const map = new Proximiio.Map();
+map.getMapReadyListener().subscribe(ready => {
+    console.log('map ready', ready);
+    map.refetch();
+});
+```
+
 ###### Setting new amenity filter
 
 You'll be able to show features only for defined amenity id on map with this method, also with defining the category _(NOTE: you have to create them before with [setAmenitiesCategory()](#setting-new-amenities-category) method)_, filtering will be set only for defined array of amenities in the category. With category set, only one amenity filter can be active at the time, while without the category they stack so multiple amenities can be active. With inverted option set to true, defined amenity features will hide. Category and inverted options can't be defined at the same time.

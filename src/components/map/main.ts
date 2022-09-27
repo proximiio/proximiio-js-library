@@ -451,6 +451,27 @@ export class Map {
     }
   }
 
+  private async onRefetch() {
+    if (this.map) {
+      console.log('data should be refetched');
+      const { features } = await Repository.getPackage(
+        this.defaultOptions.initPolygons,
+        this.defaultOptions.amenityIdProperty,
+      );
+      const levelChangers = features.features.filter(
+        (f) => f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
+      );
+      this.state = {
+        ...this.state,
+        features,
+        allFeatures: new FeatureCollection(features),
+        levelChangers: new FeatureCollection({ features: levelChangers })
+      };
+      this.geojsonSource.fetch(this.state.features);
+      this.onFeaturesChange();
+    }
+  }
+
   private initKiosk() {
     if (this.map) {
       this.showStartPoint = false;
@@ -2994,6 +3015,21 @@ export class Map {
    */
   public setFeaturesHighlight(features: string[], color?: string, radius?: number, blur?: number) {
     this.onSetFeaturesHighlight(features, color, radius, blur);
+  }
+
+  /**
+   * Method for refetching features data
+   *  @memberof Map
+   *  @name refetch
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.refetch();
+   *  });
+   */
+  public refetch() {
+    this.onRefetch();
   }
 }
 

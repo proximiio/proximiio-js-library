@@ -134,6 +134,7 @@ export declare class Map {
     private cancelObservers;
     private fetch;
     private onMapReady;
+    private onRefetch;
     private initKiosk;
     private onSetKiosk;
     private initGeoLocation;
@@ -858,5 +859,17 @@ export declare class Map {
      *  });
      */
     setFeaturesHighlight(features: string[], color?: string, radius?: number, blur?: number): void;
+    /**
+     * Method for refetching features data
+     *  @memberof Map
+     *  @name refetch
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.refetch();
+     *  });
+     */
+    refetch(): void;
 }
 export {};
