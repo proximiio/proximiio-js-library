@@ -459,13 +459,14 @@ export class Map {
         this.defaultOptions.amenityIdProperty,
       );
       const levelChangers = features.features.filter(
-        (f) => f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
+        (f) =>
+          f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
       );
       this.state = {
         ...this.state,
         features,
         allFeatures: new FeatureCollection(features),
-        levelChangers: new FeatureCollection({ features: levelChangers })
+        levelChangers: new FeatureCollection({ features: levelChangers }),
       };
       this.geojsonSource.fetch(this.state.features);
       this.onFeaturesChange();
