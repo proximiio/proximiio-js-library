@@ -320,17 +320,23 @@ export class Wayfinding {
         pointB.properties.level = corridor.properties.level;
         pointB.properties.neighbours = [];
 
-        const isBidirectional = corridor.properties.bidirectional === undefined || corridor.properties.bidirectional === true;
+        const isAvailableNow = this._checkTimeBased(corridor) && this._checkAvailablePath(corridor);
+
+        const isBidirectional =
+          corridor.properties.bidirectional === undefined ||
+          corridor.properties.bidirectional === true;
         const isSwappedDirection =
           corridor.properties.swapDirection !== undefined &&
           corridor.properties.swapDirection === true;
 
-        if (isBidirectional || !isSwappedDirection) {
-          pointA.properties.neighbours.push(pointB);
-        }
+        if (isAvailableNow) {
+          if (isBidirectional || !isSwappedDirection) {
+            pointA.properties.neighbours.push(pointB);
+          }
 
-        if (isBidirectional || isSwappedDirection) {
-          pointB.properties.neighbours.push(pointA);
+          if (isBidirectional || isSwappedDirection) {
+            pointB.properties.neighbours.push(pointA);
+          }
         }
 
         let lineFeature = turf.lineString([
@@ -340,6 +346,7 @@ export class Wayfinding {
         lineFeature.properties.level = corridor.properties.level;
 
         // Mark lineFeature accordingly
+        lineFeature.properties.isAvailableNow = isAvailableNow;
         lineFeature.properties.bidirectional = isBidirectional;
         lineFeature.properties.swapDirection = isSwappedDirection;
 
@@ -350,7 +357,7 @@ export class Wayfinding {
           pointB.properties.narrowPath = true;
           lineFeature.properties.narrowPath = true;
         }
-        
+
         // Mark points as Ramp if corridor is Ramp
         const isRamp = corridor.properties.ramp === true;
         if (isRamp) {
@@ -464,31 +471,38 @@ export class Wayfinding {
             intersection
           );
 
-          const isBidirectional = segmentFeature.properties.bidirectional === undefined || segmentFeature.properties.bidirectional === true;
+          const isAvailableNow = segmentFeature.properties.isAvailableNow;
+
+          const isBidirectional =
+            segmentFeature.properties.bidirectional === undefined ||
+            segmentFeature.properties.bidirectional === true;
 
           const isSwappedDirection =
             segmentFeature.properties.swapDirection !== undefined &&
             segmentFeature.properties.swapDirection === true;
 
-          if (isBidirectional) {
-            intersection.properties.neighbours =
-              intersection.properties.neighbours.concat(
-                segmentIntersectionList.filter((it) => it !== intersection)
-              );
-          } else {
-            if (!isSwappedDirection) {
-              let pointsAfter = segmentIntersectionList.slice(
-                segmentIntersectionList.indexOf(intersection)
-              );
-              intersection.properties.neighbours.push(...pointsAfter);
-            } else {
-              let pointsBefore = segmentIntersectionList.slice(
-                0,
-                segmentIntersectionList.indexOf(intersection)
-              );
-              intersection.properties.neighbours.push(...pointsBefore);
+            if (isAvailableNow) {
+              if (isBidirectional) {
+                intersection.properties.neighbours =
+                  intersection.properties.neighbours.concat(
+                    segmentIntersectionList.filter((it) => it !== intersection)
+                  );
+              } else {
+                if (!isSwappedDirection) {
+                  let pointsAfter = segmentIntersectionList.slice(
+                    segmentIntersectionList.indexOf(intersection)
+                  );
+                  intersection.properties.neighbours.push(...pointsAfter);
+                } else {
+                  let pointsBefore = segmentIntersectionList.slice(
+                    0,
+                    segmentIntersectionList.indexOf(intersection)
+                  );
+                  intersection.properties.neighbours.push(...pointsBefore);
+                }
+              }
             }
-          }
+          
         });
         corridorLineFeatures[i].properties.intersectionPointList =
           segmentIntersectionList;
@@ -1195,9 +1209,14 @@ export class Wayfinding {
    */
   runAStar(startPoint, endPoint) {
     const natural = this.calculatePath(startPoint, endPoint);
-    if(natural !== undefined && natural.length == 2) {
-      const isPathOnLineProperDirection = this._checkShortPath(natural[0], natural[1]);
-      if (!isPathOnLineProperDirection) { return undefined; }
+    if (natural !== undefined && natural.length == 2) {
+      const isPathOnLineProperDirection = this._checkShortPath(
+        natural[0],
+        natural[1]
+      );
+      if (!isPathOnLineProperDirection) {
+        return undefined;
+      }
     }
 
     return natural;
@@ -2228,9 +2247,12 @@ export class Wayfinding {
           fixedPoint.properties.neighbours = [];
         }
 
-        const isBidirectional = this.corridorLineFeatures[bestCorridorIndex].properties
-        .bidirectional === undefined || this.corridorLineFeatures[bestCorridorIndex].properties
-        .bidirectional === true;
+        const isAvailableNow = this.corridorLineFeatures[bestCorridorIndex].properties.isAvailableNow;
+        const isBidirectional =
+          this.corridorLineFeatures[bestCorridorIndex].properties
+            .bidirectional === undefined ||
+          this.corridorLineFeatures[bestCorridorIndex].properties
+            .bidirectional === true;
 
         const isSwappedDirection =
           this.corridorLineFeatures[bestCorridorIndex].properties
@@ -2238,74 +2260,51 @@ export class Wayfinding {
           this.corridorLineFeatures[bestCorridorIndex].properties
             .swapDirection === true;
 
-        if (isBidirectional) {
-          fixedPoint.properties.neighbours.push(
-            this.corridorLinePointPairs[bestCorridorIndex][0],
-            this.corridorLinePointPairs[bestCorridorIndex][1]
-          );
-          fixedPoint.properties.neighbours.push(
-            ...line.properties.intersectionPointList
-          );
-          fixedPoint.properties.neighboursLeadingTo = [
-            this.corridorLinePointPairs[bestCorridorIndex][0],
-            this.corridorLinePointPairs[bestCorridorIndex][1],
-            ...line.properties.intersectionPointList,
-          ];
-        } else {
-          if (!isSwappedDirection && !isStart) {
-            const after = this.corridorLinePointPairs[bestCorridorIndex][0];
-            fixedPoint.properties.neighbours.push(
-              after
-            );
-            // include only intersection points after this point
-            let distance = this._distance(
-              fixedPoint,
-              after
-            );
-            let pointsBefore = line.properties.intersectionPointList.filter(
-              (point) =>
-                this._distance(
-                  point,
-                  after
-                ) < distance
-            );
-            let pointsAfter = line.properties.intersectionPointList.filter(
-              (point) =>
-                this._distance(
-                  point,
-                  after
-                ) >= distance
-            );
-            fixedPoint.properties.neighbours.push(...pointsAfter);
-            fixedPoint.properties.neighboursLeadingTo = pointsBefore;
-          } else {
-            const before = this.corridorLinePointPairs[bestCorridorIndex][1];
-            fixedPoint.properties.neighbours.push(
-                before
-            );
-            // include only intersection points before this point
-            let distance = this._distance(
-              fixedPoint,
-              before
-            );
-            let pointsBefore = line.properties.intersectionPointList.filter(
-              (point) =>
-                this._distance(
-                  point,
-                  before
-                ) <= distance
-            );
-            let pointsAfter = line.properties.intersectionPointList.filter(
-              (point) =>
-                this._distance(
-                  point,
-                  before
-                ) > distance
-            );
-            fixedPoint.properties.neighbours.push(...pointsBefore);
-            fixedPoint.properties.neighboursLeadingTo = pointsAfter;
-          }
-        }
+if (isAvailableNow) {
+  if (isBidirectional) {
+    fixedPoint.properties.neighbours.push(
+      this.corridorLinePointPairs[bestCorridorIndex][0],
+      this.corridorLinePointPairs[bestCorridorIndex][1]
+    );
+    fixedPoint.properties.neighbours.push(
+      ...line.properties.intersectionPointList
+    );
+    fixedPoint.properties.neighboursLeadingTo = [
+      this.corridorLinePointPairs[bestCorridorIndex][0],
+      this.corridorLinePointPairs[bestCorridorIndex][1],
+      ...line.properties.intersectionPointList,
+    ];
+  } else {
+    if (!isSwappedDirection && !isStart) {
+      const after = this.corridorLinePointPairs[bestCorridorIndex][0];
+      fixedPoint.properties.neighbours.push(after);
+      // include only intersection points after this point
+      let distance = this._distance(fixedPoint, after);
+      let pointsBefore = line.properties.intersectionPointList.filter(
+        (point) => this._distance(point, after) < distance
+      );
+      let pointsAfter = line.properties.intersectionPointList.filter(
+        (point) => this._distance(point, after) >= distance
+      );
+      fixedPoint.properties.neighbours.push(...pointsAfter);
+      fixedPoint.properties.neighboursLeadingTo = pointsBefore;
+    } else {
+      const before = this.corridorLinePointPairs[bestCorridorIndex][1];
+      fixedPoint.properties.neighbours.push(before);
+      // include only intersection points before this point
+      let distance = this._distance(fixedPoint, before);
+      let pointsBefore = line.properties.intersectionPointList.filter(
+        (point) => this._distance(point, before) <= distance
+      );
+      let pointsAfter = line.properties.intersectionPointList.filter(
+        (point) => this._distance(point, before) > distance
+      );
+      fixedPoint.properties.neighbours.push(...pointsBefore);
+      fixedPoint.properties.neighboursLeadingTo = pointsAfter;
+    }
+  }
+}
+        
 
         // Wall is closer
       } else if (bestWall !== null) {
@@ -2356,11 +2355,15 @@ export class Wayfinding {
     if (intersectionPoint.properties.neighbours === undefined) {
       intersectionPoint.properties.neighbours = [];
     }
-    const isBidirectional = segmentFeature.properties.bidirectional === undefined || segmentFeature.properties.bidirectional === true;
+    const isAvailableNow = segmentFeature.properties.isAvailableNow;
+    const isBidirectional =
+      segmentFeature.properties.bidirectional === undefined ||
+      segmentFeature.properties.bidirectional === true;
     const isSwappedDirection =
       segmentFeature.properties.swapDirection !== undefined &&
       segmentFeature.properties.swapDirection === true;
 
+      if (isAvailableNow) {
     if (isBidirectional) {
       intersectionPoint.properties.neighbours.push(
         segmentPointA,
@@ -2378,6 +2381,7 @@ export class Wayfinding {
       }
     }
   }
+  }
 
   _comparePointsByDistanceFromReference(
     reference,
@@ -2394,22 +2398,85 @@ export class Wayfinding {
   _checkShortPath(start, end) {
     const startCorridor = this._getFixPointInArea(start, true);
     const endCorridor = this._getFixPointInArea(end, true);
-    if (startCorridor.properties.corridorIndex === endCorridor.properties.corridorIndex) {
+    if (
+      startCorridor.properties.corridorIndex ===
+      endCorridor.properties.corridorIndex
+    ) {
       const index = startCorridor.properties.corridorIndex;
       const corridor = this.corridorLineFeatures[index];
-      const isBidirectional = corridor.properties.bidirectional === undefined || corridor.properties.bidirectional === true;
+      const isAvailableNow = corridor.properties.isAvailableNow;
+      if (!isAvailableNow) {
+        return false;
+      }
+      const isBidirectional =
+        corridor.properties.bidirectional === undefined ||
+        corridor.properties.bidirectional === true;
       if (isBidirectional) {
         return true;
       }
       const coords = corridor.geometry.coordinates;
       const corridorBearing = turf.bearing(coords[0], coords[1]);
       const pathBearing = turf.bearing(start, end);
-      const delta = parseInt(corridorBearing-pathBearing);
+      const delta = parseInt(corridorBearing - pathBearing);
 
-      const isSwappedDirection = corridor.properties.swapDirection !== undefined && corridor.properties.swapDirection;
+      const isSwappedDirection =
+        corridor.properties.swapDirection !== undefined &&
+        corridor.properties.swapDirection;
 
       return isSwappedDirection ? delta !== 0 : delta === 0;
     }
-    return true
+    return true;
+  }
+
+  _checkTimeBased(feature, now = new Date()) {
+    // We need to assume that from/to are in UTC time
+
+    let isAvailableNow = true;
+    if (feature.properties.openingHours !== undefined) {
+    
+      const currentDay = now.getUTCDay();
+
+      const openings = feature.properties.openingHours[currentDay];
+
+      // Current hour in UTC
+      const currentHour = parseInt(now.getUTCHours());
+      const currentMinute = parseInt(now.getUTCMinutes());
+      const current = currentHour * 60 + currentMinute;
+
+      // if there's no data means it's always close
+      if (openings.length === 0) {
+        return false;
+      }
+
+      // Retrieve opening
+      const opening = openings[0].split(":");
+      const openingHour = parseInt(opening[0]);
+      const openingMinute = parseInt(opening[1]);
+      const open = openingHour * 60 + openingMinute;
+
+      // Retrieve closing
+      const closing = openings[1].split(":");
+      const closingHour = parseInt(closing[0]);
+      const closingMinute = parseInt(closing[1]);
+      const close = closingHour * 60 + closingMinute;
+
+      // It's always open
+      if (open === 0 && open === close) {
+        return true;
+      }
+      
+      isAvailableNow = (current >= open && current <= close);
+    }
+    return isAvailableNow;
+  }
+
+  _checkAvailablePath(feature) {
+    let useForPath = true;
+
+    if (feature.properties.available !== undefined) {
+      useForPath = feature.properties.available;
+    }
+
+    return useForPath;
   }
 }
