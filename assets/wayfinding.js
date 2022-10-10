@@ -351,8 +351,8 @@ export class Wayfinding {
         lineFeature.properties.swapDirection = isSwappedDirection;
 
         // Mark points as NarrowPath if corridor is NarrowPath
-        const isNarrowPath = corridor.properties.narrowPat === true;
-        if (isNarrowPath) {
+        const isNarrowPath = corridor.properties.narrowPath === true;
+        if (isNarrowPath === true) {
           pointA.properties.narrowPath = true;
           pointB.properties.narrowPath = true;
           lineFeature.properties.narrowPath = true;
@@ -360,13 +360,15 @@ export class Wayfinding {
 
         // Mark points as Ramp if corridor is Ramp
         const isRamp = corridor.properties.ramp === true;
-        if (isRamp) {
+        if (isRamp === true) {
           pointA.properties.ramp = true;
           pointB.properties.ramp = true;
           lineFeature.properties.ramp = true;
         }
+
+        const isHill = corridor.properties.ramp === true;
         // Mark points as Hill if corridor is Hill
-        if (corridor.properties.hill) {
+        if (isHill === true) {
           pointA.properties.hill = true;
           pointB.properties.hill = true;
           lineFeature.properties.hill = true;
