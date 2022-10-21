@@ -2434,11 +2434,11 @@ if (isAvailableNow) {
     // We need to assume that from/to are in UTC time
 
     let isAvailableNow = true;
-    if (feature.properties.openingHours !== undefined) {
+    if (feature.properties.workingHours !== undefined) {
     
       const currentDay = now.getUTCDay();
 
-      const openings = feature.properties.openingHours[currentDay];
+      const openings = feature.properties.workingHours[currentDay];
 
       // Current hour in UTC
       const currentHour = parseInt(now.getUTCHours());
