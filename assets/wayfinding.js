@@ -2436,13 +2436,13 @@ if (isAvailableNow) {
     let isAvailableNow = true;
     if (feature.properties.workingHours !== undefined) {
     
-      const currentDay = now.getUTCDay();
+      const currentDay = now.getDay();
 
       const openings = feature.properties.workingHours[currentDay];
 
       // Current hour in UTC
-      const currentHour = parseInt(now.getUTCHours());
-      const currentMinute = parseInt(now.getUTCMinutes());
+      const currentHour = parseInt(now.getHours());
+      const currentMinute = parseInt(now.getMinutes());
       const current = currentHour * 60 + currentMinute;
 
       // if there's no data means it's always close
