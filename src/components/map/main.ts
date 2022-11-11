@@ -738,6 +738,12 @@ export class Map {
       if (this.state.style.getLayer('proximiio-shop')) {
         this.state.style.removeLayer('proximiio-shop');
       }
+      if (this.state.style.getLayer('proximiio-pois-icons')) {
+        this.state.style.removeLayer('proximiio-pois-icons');
+      }
+      if (this.state.style.getLayer('proximiio-pois-labels')) {
+        this.state.style.removeLayer('proximiio-pois-labels');
+      }
 
       this.map.on('click', 'shop-custom', (e) => {
         this.onShopClick(e);
@@ -761,13 +767,16 @@ export class Map {
     e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined } & mapboxgl.EventData,
   ) {
     if (e.features && e.features[0] && e.features[0].properties) {
+      e.features[0].properties._dynamic = JSON.parse(
+        e.features[0].properties._dynamic ? e.features[0].properties._dynamic : {},
+      );
       if (this.defaultOptions.initPolygons) {
         // @ts-ignore
         const polygonPoi = this.state.allFeatures.features.find(
-          (i) => i.properties.id === e.features[0].properties.poi_id,
+          (i) => i.properties.id === e.features[0].properties._dynamic?.poi_id,
         ) as Feature;
         const poi = this.state.allFeatures.features.find(
-          (i) => i.properties.id === e.features[0].properties.id,
+          (i) => i.properties.id === e.features[0].properties._dynamic?.id,
         ) as Feature;
         if (polygonPoi) {
           this.handlePolygonSelection(polygonPoi);
@@ -784,7 +793,7 @@ export class Map {
   }
 
   handlePolygonSelection(poi?: Feature) {
-    const connectedPolygonId = poi && poi.properties.metadata ? poi.properties.metadata.polygon_id : null;
+    const connectedPolygonId = poi && poi.properties._dynamic ? poi.properties._dynamic.polygon_id : null;
     if (this.selectedPolygon) {
       this.map.setFeatureState(
         {
@@ -795,11 +804,11 @@ export class Map {
           selected: false,
         },
       );
-      if (this.selectedPolygon.properties.label_id) {
+      if (this.selectedPolygon.properties._dynamic.label_id) {
         this.map.setFeatureState(
           {
             source: 'main',
-            id: this.selectedPolygon.properties.label_id,
+            id: this.selectedPolygon.properties._dynamic.label_id,
           },
           {
             selected: false,
@@ -809,7 +818,7 @@ export class Map {
     }
     if (connectedPolygonId) {
       this.selectedPolygon = this.state.allFeatures.features.find(
-        (i) => i.properties.id === connectedPolygonId && i.properties.type === 'shop-custom',
+        (i) => i.properties._dynamic?.id === connectedPolygonId && i.properties._dynamic?.type === 'shop-custom',
       );
       if (this.selectedPolygon) {
         this.map.setFeatureState(
@@ -821,11 +830,11 @@ export class Map {
             selected: true,
           },
         );
-        if (this.selectedPolygon.properties.label_id) {
+        if (this.selectedPolygon.properties._dynamic.label_id) {
           this.map.setFeatureState(
             {
               source: 'main',
-              id: this.selectedPolygon.properties.label_id,
+              id: this.selectedPolygon.properties._dynamic.label_id,
             },
             {
               selected: true,
@@ -844,6 +853,9 @@ export class Map {
     e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined } & mapboxgl.EventData,
   ) {
     if (e.features && e.features.length > 0) {
+      e.features[0].properties._dynamic = JSON.parse(
+        e.features[0].properties._dynamic ? e.features[0].properties._dynamic : {},
+      );
       if (this.hoveredPolygon) {
         this.map.setFeatureState(
           {
@@ -854,11 +866,11 @@ export class Map {
             hover: false,
           },
         );
-        if (this.hoveredPolygon.properties.label_id) {
+        if (this.hoveredPolygon.properties._dynamic.label_id) {
           this.map.setFeatureState(
             {
               source: 'main',
-              id: this.hoveredPolygon.properties.label_id,
+              id: this.hoveredPolygon.properties._dynamic.label_id,
             },
             {
               hover: false,
@@ -876,11 +888,11 @@ export class Map {
           hover: true,
         },
       );
-      if (this.hoveredPolygon.properties.label_id) {
+      if (this.hoveredPolygon.properties._dynamic.label_id) {
         this.map.setFeatureState(
           {
             source: 'main',
-            id: this.hoveredPolygon.properties.label_id,
+            id: this.hoveredPolygon.properties._dynamic.label_id,
           },
           {
             hover: true,
@@ -904,11 +916,11 @@ export class Map {
           hover: false,
         },
       );
-      if (this.hoveredPolygon.properties.label_id) {
+      if (this.hoveredPolygon.properties._dynamic.label_id) {
         this.map.setFeatureState(
           {
             source: 'main',
-            id: this.hoveredPolygon.properties.label_id,
+            id: this.hoveredPolygon.properties._dynamic.label_id,
           },
           {
             hover: false,
@@ -1378,20 +1390,24 @@ export class Map {
         ? this.state.allFeatures.features.filter(
             (f) =>
               f.properties.amenity === this.activePolygonsAmenity &&
-              f.properties.metadata?.polygon_id &&
+              f.properties._dynamic?.polygon_id &&
               f.geometry.type === 'Point',
           )
         : [];
       const amenityFeatures = amenityId
         ? this.state.allFeatures.features.filter(
             (f) =>
-              f.properties.amenity === amenityId && f.properties.metadata?.polygon_id && f.geometry.type === 'Point',
+              f.properties.amenity === amenityId &&
+              f.properties._dynamic?.polygon_id &&
+              f.geometry.type === 'Point',
           )
         : [];
       if (activeFeatures.length > 0) {
         for (const f of activeFeatures) {
           const polygon = this.state.allFeatures.features.find(
-            (i) => i.properties.id === f.properties.metadata.polygon_id && i.properties.type === 'shop-custom',
+            (i) =>
+              i.properties.id === f.properties._dynamic?.polygon_id &&
+              i.properties._dynamic?.type === 'shop-custom',
           );
           if (polygon) {
             this.map.setFeatureState(
@@ -1409,7 +1425,9 @@ export class Map {
       if (amenityFeatures.length > 0) {
         for (const f of amenityFeatures) {
           const polygon = this.state.allFeatures.features.find(
-            (i) => i.properties.id === f.properties.metadata.polygon_id && i.properties.type === 'shop-custom',
+            (i) =>
+              i.properties.id === f.properties._dynamic?.polygon_id &&
+              i.properties._dynamic?.type === 'shop-custom',
           );
           if (polygon) {
             this.map.setFeatureState(
@@ -1438,29 +1456,31 @@ export class Map {
       if (this.map.getLayer(layer)) {
         setTimeout(() => {
           const l = this.map.getLayer(layer) as any;
-          const filters = [...l.filter];
-          const visibilityFilter = filters.findIndex((f) => f[1][1] === 'visibility');
-          if (visibilityFilter !== -1) {
-            // toggle pois visibility based on visibility param
-            if (filters[visibilityFilter][0] === '!=') {
-              // show all pois, the visibility params is not considered
-              filters[visibilityFilter] = [
-                'match',
-                ['get', 'visibility'],
-                ['visible', 'hidden', 'undefined'],
-                true,
-                false,
-              ];
+          if (l) {
+            const filters = [...l.filter];
+            const visibilityFilter = filters.findIndex((f) => f[1][1] === 'visibility');
+            if (visibilityFilter !== -1) {
+              // toggle pois visibility based on visibility param
+              if (filters[visibilityFilter][0] === '!=') {
+                // show all pois, the visibility params is not considered
+                filters[visibilityFilter] = [
+                  'match',
+                  ['get', 'visibility'],
+                  ['visible', 'hidden', 'undefined'],
+                  true,
+                  false,
+                ];
+              } else {
+                // hide pois with hidden visibility
+                filters[visibilityFilter] = ['!=', ['get', 'visibility'], 'hidden'];
+              }
             } else {
-              // hide pois with hidden visibility
-              filters[visibilityFilter] = ['!=', ['get', 'visibility'], 'hidden'];
+              // add visibility filter
+              filters.push(['!=', ['get', 'visibility'], 'hidden']);
             }
-          } else {
-            // add visibility filter
-            filters.push(['!=', ['get', 'visibility'], 'hidden']);
+            this.state.style.getLayer(layer).filter = filters;
+            this.map.setFilter(layer, filters);
           }
-          this.state.style.getLayer(layer).filter = filters;
-          this.map.setFilter(layer, filters);
         });
       }
     });

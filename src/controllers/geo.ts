@@ -2,45 +2,71 @@ import { axios, uuidv4 } from '../common';
 import Feature, { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 import { globalState } from '../components/map/main';
-import { FeatureCollection as FCModel, Feature as FModel } from '@turf/helpers';
+import { FeatureCollection as FCModel, Feature as FModel, Polygon, MultiPolygon } from '@turf/helpers';
+import { booleanPointInPolygon } from '@turf/turf';
 
 export const getFeatures = async (initPolygons?: boolean) => {
   const url = '/v5/geo/features';
   const res = await axios.get(url);
   if (initPolygons) {
     const featuresToAdd: any[] = [];
-    res.data.features = res.data.features.map((feature: any, key: number) => {
-      feature.id = feature.id ? feature.id.replace(/\{|\}/g, '') : null;
-      feature.properties.id = feature.properties.id ? feature.properties.id.replace(/\{|\}/g, '') : null;
+    const shopPolygons = res.data.features.filter(
+      (f) => f.properties.type === 'shop' && f.geometry.type === 'MultiPolygon',
+    );
 
-      if (feature.properties.type === 'poi' && feature.properties.metadata && feature.properties.metadata.polygon_id) {
-        feature.properties.type = 'poi-custom';
-        const polygon = res.data.features.find(
-          (f: any) =>
-            f.properties.id?.replace(/\{|\}/g, '') === feature.properties.metadata.polygon_id?.replace(/\{|\}/g, ''),
-        );
-        if (polygon) {
-          const polygonFeature = JSON.parse(JSON.stringify(polygon));
-          polygonFeature.properties.id = polygonFeature.properties.id?.replace(/\{|\}/g, '');
-          polygonFeature.properties.type = 'shop-custom';
-          polygonFeature.properties.poi_id = feature.properties.id;
-          polygonFeature.properties.amenity = feature.properties.amenity;
-          polygonFeature.id = JSON.stringify(key);
-          featuresToAdd.push(polygonFeature);
+    res.data.features = res.data.features.map((feature: any, key: number) => {
+      if (feature.properties.type === 'poi') {
+        feature.id = feature.id ? feature.id.replace(/\{|\}/g, '') : null;
+        feature.properties.id = feature.properties.id ? feature.properties.id.replace(/\{|\}/g, '') : null;
+
+        let connectedPolygon;
+        // check if feature is inside a polygon
+        shopPolygons.forEach((polygon) => {
+          if (feature.properties?.level === polygon.properties?.level) {
+            if (booleanPointInPolygon(feature, polygon)) {
+              connectedPolygon = polygon;
+            }
+          }
+        });
+
+        //or if not check if the polygon is defined in metadata and use it instead
+        if (!connectedPolygon && feature.properties.metadata && feature.properties.metadata.polygon_id) {
+          connectedPolygon = res.data.features.find(
+            (f: any) =>
+              f.properties.id?.replace(/\{|\}/g, '') === feature.properties.metadata.polygon_id?.replace(/\{|\}/g, ''),
+          );
+        }
+
+        if (connectedPolygon) {
+          feature.properties._dynamic = feature.properties._dynamic ? feature.properties._dynamic : {};
+          feature.properties._dynamic.id = feature.id;
+          feature.properties._dynamic.type = 'poi-custom';
+          feature.properties._dynamic.amenity = feature.properties.amenity;
+          feature.properties._dynamic.polygon_id = connectedPolygon.properties.id?.replace(/\{|\}/g, '');
+
+          connectedPolygon.properties._dynamic = connectedPolygon.properties._dynamic
+            ? connectedPolygon.properties._dynamic
+            : {};
+          connectedPolygon.properties._dynamic.id = connectedPolygon.properties.id?.replace(/\{|\}/g, '');
+          connectedPolygon.properties._dynamic.type = 'shop-custom';
+          connectedPolygon.properties._dynamic.poi_id = feature.properties.id;
+          connectedPolygon.properties._dynamic.amenity = feature.properties.amenity;
+          connectedPolygon.id = JSON.stringify(key);
           if (
-            polygonFeature.properties['label-line'] &&
-            polygonFeature.properties['label-line'][0] instanceof Array &&
-            polygonFeature.properties['label-line'][1] instanceof Array
+            connectedPolygon.properties['label-line'] &&
+            connectedPolygon.properties['label-line'][0] instanceof Array &&
+            connectedPolygon.properties['label-line'][1] instanceof Array
           ) {
             const labelLineFeature = JSON.parse(JSON.stringify(feature));
             labelLineFeature.geometry = {
-              coordinates: polygonFeature.properties['label-line'],
+              coordinates: connectedPolygon.properties['label-line'],
               type: 'LineString',
             };
             labelLineFeature.properties.id = JSON.stringify(key + 9999);
             labelLineFeature.id = JSON.stringify(key + 9999);
             labelLineFeature.properties.type = 'shop-label';
-            polygonFeature.properties.label_id = labelLineFeature.properties.id;
+            labelLineFeature.properties._dynamic.type = 'shop-label';
+            connectedPolygon.properties._dynamic.label_id = labelLineFeature.properties.id;
             featuresToAdd.push(labelLineFeature);
           }
         }

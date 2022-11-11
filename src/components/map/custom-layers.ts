@@ -9,7 +9,7 @@ export class PolygonsLayer extends FillExtrusionLayer {
     this.minzoom = 17;
     this.maxzoom = 24;
     this.source = 'main';
-    this.filter = ['all', ['==', ['get', 'type'], 'shop-custom'], ['==', ['to-number', ['get', 'level']], 0]];
+    this.filter = ['all', ['==', ['get', 'type', ['get', '_dynamic']], 'shop-custom'], ['==', ['to-number', ['get', 'level']], 0]];
     this.paint = new PaintProperties({
       'fill-extrusion-height': [
         'case',
@@ -47,7 +47,7 @@ export class PolygonIconsLayer extends SymbolLayer {
     this.minzoom = 17;
     this.maxzoom = 24;
     this.source = 'main';
-    this.filter = ['all', ['==', ['get', 'type'], 'poi-custom'], ['==', ['to-number', ['get', 'level']], 0]];
+    this.filter = ['all', ['==', ['get', 'type', ['get', '_dynamic']], 'poi-custom'], ['==', ['to-number', ['get', 'level']], 0]];
     this.layout = new LayoutProperties({
       'icon-image': '{amenity}',
       'icon-size': ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.5],

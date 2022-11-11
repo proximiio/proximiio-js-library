@@ -33,7 +33,7 @@ class App extends React.Component {
       level: 0
     }];
 
-    Proximiio.Auth.loginWithToken('token')
+    Proximiio.Auth.loginWithToken('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImlzcyI6IjQ0MDEwZjZmLTk5NjMtNDQzMy1hZDg2LTQwYjg5YjgyOWM0MSIsInR5cGUiOiJ1c2VyIiwidXNlciI6IkRlbW8gV2F5ZmluZGluZyIsInVzZXJfaWQiOiI1ZTBkNDVlMy0wMjVmLTRiMzItYmUwNy0wYzk0MjUxYmQ1NzMiLCJ0ZW5hbnRfaWQiOiI0NDAxMGY2Zi05OTYzLTQ0MzMtYWQ4Ni00MGI4OWI4MjljNDEifQ.reaAdK4uUqvGcDghQTmXtbsHR4mX9Hcinwwg4_uqwfQ')
       .then(res => {
         console.log('Logged in', res);
 
@@ -225,8 +225,8 @@ class App extends React.Component {
           </div>
           <button onClick={this.onFloorUp}>Floor Up</button>
           <button onClick={this.onFloorDown}>Floor Down</button>
-          <button onClick={this.onSetFeatureFilter.bind(this, 'P.D.')}>Set P.D. Filter</button>
-          <button onClick={this.onRemoveFeatureFilter.bind(this, 'P.D.')}>Remove P.D. Filter</button>
+          <button onClick={this.onSetFeatureFilter.bind(this, 'P.D. .')}>Set P.D. Filter</button>
+          <button onClick={this.onRemoveFeatureFilter.bind(this, 'P.D. .')}>Remove P.D. Filter</button>
           <button onClick={this.onSetFeatureFilter.bind(this, 'Olive Grove')}>Set Olive Grove Filter</button>
           <button onClick={this.onRemoveFeatureFilter.bind(this, 'Olive Grove')}>Remove Olive Grove Filter</button>
           <button onClick={this.onSetFilter.bind(this, '44010f6f-9963-4433-ad86-40b89b829c41:c693d414-4613-4c6c-95da-771e52759873', 'shop')}>Set Cafe Filter</button>
