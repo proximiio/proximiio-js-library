@@ -769,15 +769,13 @@ export class Map {
         const polygonPoi = this.state.allFeatures.features.find(
           (i) => i.properties.id === e.features[0].properties._dynamic?.poi_id,
         ) as Feature;
-        const poi = this.state.allFeatures.features.find(
-          (i) => {
-            if (e.features[0].properties._dynamic?.id) {
-              return i.id === e.features[0].properties._dynamic?.id
-            } else {
-              return i.properties.id === e.features[0].properties.id
-            }
-          },
-        ) as Feature;
+        const poi = this.state.allFeatures.features.find((i) => {
+          if (e.features[0].properties._dynamic?.id) {
+            return i.id === e.features[0].properties._dynamic?.id;
+          } else {
+            return i.properties.id === e.features[0].properties.id;
+          }
+        }) as Feature;
         if (polygonPoi) {
           this.handlePolygonSelection(polygonPoi);
         }
