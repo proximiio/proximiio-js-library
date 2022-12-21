@@ -53,6 +53,7 @@ interface Options {
         selectedPolygonHeight?: number;
         base?: number;
         opacity?: number;
+        removeOriginalPolygonsLayer?: boolean;
     };
     zoomLevel?: number;
     considerVisibilityParam?: boolean;

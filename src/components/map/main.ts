@@ -79,6 +79,7 @@ interface Options {
     selectedPolygonHeight?: number;
     base?: number;
     opacity?: number;
+    removeOriginalPolygonsLayer?: boolean;
   };
   zoomLevel?: number;
   considerVisibilityParam?: boolean;
@@ -183,6 +184,7 @@ export class Map {
       selectedPolygonHeight: 3,
       base: 0,
       opacity: 1,
+      removeOriginalPolygonsLayer: true
     },
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
@@ -723,20 +725,22 @@ export class Map {
 
   private initPolygons() {
     if (this.map) {
-      const polygonsLayer = new PolygonsLayer(this.defaultOptions.polygonsOptions);
-      polygonsLayer.setFilterLevel(this.state.floor.level);
-      this.state.style.addLayer(polygonsLayer.json);
+      const polygonTitlesLayer = new PolygonTitlesLayer(this.defaultOptions.polygonsOptions);
+      polygonTitlesLayer.setFilterLevel(this.state.floor.level);
+      this.state.style.addLayer(polygonTitlesLayer.json, 'proximiio-paths');
 
       const polygonIconsLayer = new PolygonIconsLayer(this.defaultOptions.polygonsOptions);
       polygonIconsLayer.setFilterLevel(this.state.floor.level);
-      this.state.style.addLayer(polygonIconsLayer.json);
+      this.state.style.addLayer(polygonIconsLayer.json, 'proximiio-paths');
 
-      const polygonTitlesLayer = new PolygonTitlesLayer(this.defaultOptions.polygonsOptions);
-      polygonTitlesLayer.setFilterLevel(this.state.floor.level);
-      this.state.style.addLayer(polygonTitlesLayer.json);
+      const polygonsLayer = new PolygonsLayer(this.defaultOptions.polygonsOptions);
+      polygonsLayer.setFilterLevel(this.state.floor.level);
+      this.state.style.addLayer(polygonsLayer.json, 'proximiio-paths');
 
       if (this.state.style.getLayer('proximiio-shop')) {
-        this.state.style.removeLayer('proximiio-shop');
+        if (this.defaultOptions.polygonsOptions.removeOriginalPolygonsLayer) {
+          this.state.style.removeLayer('proximiio-shop');
+        }
       }
 
       this.map.on('click', 'shop-custom', (e) => {
