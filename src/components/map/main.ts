@@ -184,7 +184,7 @@ export class Map {
       selectedPolygonHeight: 3,
       base: 0,
       opacity: 1,
-      removeOriginalPolygonsLayer: true
+      removeOriginalPolygonsLayer: true,
     },
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
