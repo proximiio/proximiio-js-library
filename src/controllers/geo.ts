@@ -29,7 +29,7 @@ export const getFeatures = async (initPolygons?: boolean) => {
           }
         });
 
-        //or if not check if the polygon is defined in metadata and use it instead
+        // or if not check if the polygon is defined in metadata and use it instead
         if (!connectedPolygon && feature.properties.metadata && feature.properties.metadata.polygon_id) {
           connectedPolygon = res.data.features.find(
             (f: any) =>
