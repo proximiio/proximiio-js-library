@@ -60,19 +60,19 @@ export const getFeatures = async (initPolygons?: boolean) => {
             ? JSON.parse(feature.properties.metadata['label-line'])
             : undefined;
           if (labelLine)
-          if (labelLine && labelLine[0] instanceof Array && labelLine[1] instanceof Array) {
-            const labelLineFeature = JSON.parse(JSON.stringify(feature));
-            labelLineFeature.geometry = {
-              coordinates: labelLine,
-              type: 'LineString',
-            };
-            labelLineFeature.properties.id = JSON.stringify(key + 9999);
-            labelLineFeature.id = JSON.stringify(key + 9999);
-            labelLineFeature.properties.type = 'shop-label';
-            labelLineFeature.properties._dynamic.type = 'shop-label';
-            connectedPolygon.properties._dynamic.label_id = labelLineFeature.properties.id;
-            featuresToAdd.push(labelLineFeature);
-          }
+            if (labelLine && labelLine[0] instanceof Array && labelLine[1] instanceof Array) {
+              const labelLineFeature = JSON.parse(JSON.stringify(feature));
+              labelLineFeature.geometry = {
+                coordinates: labelLine,
+                type: 'LineString',
+              };
+              labelLineFeature.properties.id = JSON.stringify(key + 9999);
+              labelLineFeature.id = JSON.stringify(key + 9999);
+              labelLineFeature.properties.type = 'shop-label';
+              labelLineFeature.properties._dynamic.type = 'shop-label';
+              connectedPolygon.properties._dynamic.label_id = labelLineFeature.properties.id;
+              featuresToAdd.push(labelLineFeature);
+            }
         }
       }
       return feature;
