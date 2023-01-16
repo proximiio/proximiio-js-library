@@ -939,16 +939,22 @@ export class Map {
     const urlParams = new URLSearchParams(window.location.search);
     const startParam = urlParams.get(this.defaultOptions.urlParams.startFeauture);
     const destinationParam = urlParams.get(this.defaultOptions.urlParams.destinationFeature);
+    const placeParam = urlParams.get(this.defaultOptions.urlParams.defaultPlace);
+    const defaultPlace = placeParam
+      ? this.state.places.find((p) => p.id === placeParam || p.name === placeParam)
+      : this.state.place;
     const startFeature = startParam
       ? (this.state.allFeatures.features.find(
           (f) =>
             f.properties.title &&
+            f.properties.place_id === defaultPlace.id &&
             (f.id === startParam || f.properties.id === startParam || f.properties.title === startParam),
         ) as Feature)
       : this.startPoint;
     const destinationFeature = this.state.allFeatures.features.find(
       (f) =>
         f.properties.title &&
+        f.properties.place_id === defaultPlace.id &&
         (f.id === destinationParam || f.properties.id === destinationParam || f.properties.title === destinationParam),
     ) as Feature;
 
