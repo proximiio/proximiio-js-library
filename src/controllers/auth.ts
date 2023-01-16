@@ -1,6 +1,8 @@
 import { axios } from '../common';
 import { LoginDataModel } from '../models/auth-data';
 
+let loggedUser = null;
+
 /**
  *  @memberof Auth
  *  @name login
@@ -30,6 +32,7 @@ export const login = async (email: string, password: string) => {
     if (loginRes.data) {
       console.info(`Logged in successfully as ${loginRes.data.user.email}`);
       axios.defaults.headers.common.Authorization = loginRes.data.token;
+      loggedUser = loginRes;
     }
     return loginRes;
   } catch (e) {
@@ -61,6 +64,7 @@ export const loginWithToken = async (token: string) => {
     const currentUser = await axios.get(`core/current_user`);
     if (currentUser.data) {
       console.info(`Logged in successfully as ${currentUser.data.email}`);
+      loggedUser = currentUser;
     }
     return currentUser;
   } catch (e) {
@@ -92,7 +96,7 @@ export const getUserConfig = async () => {
 
 export const getCurrentUser = async () => {
   try {
-    const currentUser = await axios.get(`core/current_user`);
+    const currentUser = loggedUser ? loggedUser : await axios.get(`core/current_user`);
     return currentUser.data;
   } catch (e) {
     throw new Error(`Fetching current user failed, ${e.message}`);

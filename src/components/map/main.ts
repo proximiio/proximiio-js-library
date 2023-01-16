@@ -238,6 +238,14 @@ export class Map {
       throw new Error(`It's not possible to use both isKiosk and useGpsLocation options as enabled!`);
     }
 
+    this.map = new mapboxgl.Map({
+      ...this.defaultOptions.mapboxOptions,
+      container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map',
+    });
+    this.map.on('load', (e) => {
+      this.onMapReady(e);
+    });
+
     this.onSourceChange = this.onSourceChange.bind(this);
     this.onSyntheticChange = this.onSyntheticChange.bind(this);
     this.onStyleChange = this.onStyleChange.bind(this);
@@ -336,14 +344,8 @@ export class Map {
       user,
     };
     style.on(this.onStyleChange);
-    this.map = new mapboxgl.Map({
-      ...this.defaultOptions.mapboxOptions,
-      container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map',
-    });
     this.map.setStyle(this.state.style);
-    this.map.on('load', (e) => {
-      this.onMapReady(e);
-    });
+    this.map.setCenter(center);
     if (this.defaultOptions.allowNewFeatureModal) {
       this.map.on(
         this.defaultOptions.newFeatureModalEvent ? this.defaultOptions.newFeatureModalEvent : 'dblclick',
