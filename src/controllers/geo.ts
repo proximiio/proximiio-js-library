@@ -53,11 +53,11 @@ export const getFeatures = async (initPolygons?: boolean) => {
           connectedPolygon.properties._dynamic.amenity = feature.properties.amenity;
           connectedPolygon.id = JSON.stringify(key);
           const labelLine = connectedPolygon.properties['label-line']
-            ? JSON.parse(connectedPolygon.properties['label-line'])
-            : connectedPolygon.properties.metadata['label-line']
-            ? JSON.parse(connectedPolygon.properties.metadata['label-line'])
-            : feature.properties.metadata['label-line']
-            ? JSON.parse(feature.properties.metadata['label-line'])
+            ? JSON.parse(JSON.stringify(connectedPolygon.properties['label-line']))
+            : connectedPolygon.properties.metadata && connectedPolygon.properties.metadata['label-line']
+            ? JSON.parse(JSON.stringify(connectedPolygon.properties.metadata['label-line']))
+            : feature.properties.metadata && feature.properties.metadata['label-line']
+            ? JSON.parse(JSON.stringify(feature.properties.metadata['label-line']))
             : undefined;
           if (labelLine)
             if (labelLine && labelLine[0] instanceof Array && labelLine[1] instanceof Array) {

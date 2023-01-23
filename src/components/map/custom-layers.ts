@@ -6,8 +6,8 @@ export class PolygonsLayer extends FillExtrusionLayer {
     super(data);
     this.id = 'shop-custom';
     this.type = 'fill-extrusion';
-    this.minzoom = 17;
-    this.maxzoom = 24;
+    this.minzoom = data.minZoom;
+    this.maxzoom = data.maxZoom;
     this.source = 'main';
     this.filter = [
       'all',
@@ -48,8 +48,8 @@ export class PolygonIconsLayer extends SymbolLayer {
     super(data);
     this.id = 'poi-custom-icons';
     this.type = 'symbol';
-    this.minzoom = 17;
-    this.maxzoom = 24;
+    this.minzoom = data.minZoom;
+    this.maxzoom = data.maxZoom;
     this.source = 'main';
     this.filter = [
       'all',
@@ -75,8 +75,8 @@ export class PolygonTitlesLayer extends SymbolLayer {
     super(data);
     this.id = 'shop-labels';
     this.type = 'symbol';
-    this.minzoom = 17;
-    this.maxzoom = 24;
+    this.minzoom = data.minZoom;
+    this.maxzoom = data.maxZoom;
     this.source = 'main';
     this.filter = ['all', ['==', ['get', 'type'], 'shop-label'], ['==', ['to-number', ['get', 'level']], 0]];
     this.layout = new LayoutProperties({

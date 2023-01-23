@@ -80,6 +80,8 @@ interface Options {
     base?: number;
     opacity?: number;
     removeOriginalPolygonsLayer?: boolean;
+    minZoom?: number;
+    maxZoom?: number;
   };
   zoomLevel?: number;
   considerVisibilityParam?: boolean;
@@ -185,6 +187,8 @@ export class Map {
       base: 0,
       opacity: 1,
       removeOriginalPolygonsLayer: true,
+      minZoom: 17,
+      maxZoom: 24
     },
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
@@ -1414,7 +1418,7 @@ export class Map {
         for (const f of activeFeatures) {
           const polygon = this.state.allFeatures.features.find(
             (i) =>
-              i.properties.id === f.properties._dynamic?.polygon_id && i.properties._dynamic?.type === 'shop-custom',
+              i.properties._dynamic?.id === f.properties._dynamic?.polygon_id && i.properties._dynamic?.type === 'shop-custom',
           );
           if (polygon) {
             this.map.setFeatureState(
@@ -1433,7 +1437,7 @@ export class Map {
         for (const f of amenityFeatures) {
           const polygon = this.state.allFeatures.features.find(
             (i) =>
-              i.properties.id === f.properties._dynamic?.polygon_id && i.properties._dynamic?.type === 'shop-custom',
+              i.properties._dynamic?.id === f.properties._dynamic?.polygon_id && i.properties._dynamic?.type === 'shop-custom',
           );
           if (polygon) {
             this.map.setFeatureState(

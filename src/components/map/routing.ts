@@ -29,6 +29,7 @@ export default class Routing {
   toggleOnlyAccessible(onlyAccessible: any) {
     if (onlyAccessible) {
       this.wayfinding.setConfiguration({
+        avoidEscalators: true,
         avoidStaircases: true,
         avoidBarriers: true,
         avoidNarrowPaths: true,

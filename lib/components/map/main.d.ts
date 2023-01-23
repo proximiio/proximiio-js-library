@@ -54,6 +54,8 @@ interface Options {
         base?: number;
         opacity?: number;
         removeOriginalPolygonsLayer?: boolean;
+        minZoom?: number;
+        maxZoom?: number;
     };
     zoomLevel?: number;
     considerVisibilityParam?: boolean;
