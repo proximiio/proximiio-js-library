@@ -116,6 +116,7 @@ interface Options {
   forceFloorLevel?: number;
   amenityIdProperty?: string;
   routeWithDetails?: boolean;
+  blockFeatureClickWhileRouting?: boolean;
 }
 
 interface PaddingOptions {
@@ -188,7 +189,7 @@ export class Map {
       opacity: 1,
       removeOriginalPolygonsLayer: true,
       minZoom: 17,
-      maxZoom: 24
+      maxZoom: 24,
     },
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
@@ -210,6 +211,7 @@ export class Map {
       position: 'top-right',
     },
     routeWithDetails: true,
+    blockFeatureClickWhileRouting: false,
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -770,32 +772,37 @@ export class Map {
   private onShopClick(
     e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined } & mapboxgl.EventData,
   ) {
-    if (e.features && e.features[0] && e.features[0].properties) {
-      e.features[0].properties._dynamic = e.features[0].properties._dynamic
-        ? JSON.parse(e.features[0].properties._dynamic)
-        : {};
-      if (this.defaultOptions.initPolygons) {
-        // @ts-ignore
-        const polygonPoi = this.state.allFeatures.features.find(
-          (i) => i.properties.id === e.features[0].properties._dynamic?.poi_id,
-        ) as Feature;
-        const poi = this.state.allFeatures.features.find((i) => {
-          if (e.features[0].properties._dynamic?.id) {
-            return i.id === e.features[0].properties._dynamic?.id;
-          } else {
-            return i.properties.id === e.features[0].properties.id;
+    if (
+      !this.defaultOptions.blockFeatureClickWhileRouting ||
+      (this.defaultOptions.blockFeatureClickWhileRouting && !this.routingSource.route)
+    ) {
+      if (e.features && e.features[0] && e.features[0].properties) {
+        e.features[0].properties._dynamic = e.features[0].properties._dynamic
+          ? JSON.parse(e.features[0].properties._dynamic)
+          : {};
+        if (this.defaultOptions.initPolygons) {
+          // @ts-ignore
+          const polygonPoi = this.state.allFeatures.features.find(
+            (i) => i.properties.id === e.features[0].properties._dynamic?.poi_id,
+          ) as Feature;
+          const poi = this.state.allFeatures.features.find((i) => {
+            if (e.features[0].properties._dynamic?.id) {
+              return i.id === e.features[0].properties._dynamic?.id;
+            } else {
+              return i.properties.id === e.features[0].properties.id;
+            }
+          }) as Feature;
+          if (polygonPoi) {
+            this.handlePolygonSelection(polygonPoi);
           }
-        }) as Feature;
-        if (polygonPoi) {
-          this.handlePolygonSelection(polygonPoi);
+          this.onPolygonClickListener.next(polygonPoi ? polygonPoi : poi);
+        } else {
+          // @ts-ignore
+          const poi = this.state.allFeatures.features.find(
+            (i) => i.properties.id === e.features[0].properties.id,
+          ) as Feature;
+          this.onPoiClickListener.next(poi);
         }
-        this.onPolygonClickListener.next(polygonPoi ? polygonPoi : poi);
-      } else {
-        // @ts-ignore
-        const poi = this.state.allFeatures.features.find(
-          (i) => i.properties.id === e.features[0].properties.id,
-        ) as Feature;
-        this.onPoiClickListener.next(poi);
       }
     }
   }
@@ -1418,7 +1425,8 @@ export class Map {
         for (const f of activeFeatures) {
           const polygon = this.state.allFeatures.features.find(
             (i) =>
-              i.properties._dynamic?.id === f.properties._dynamic?.polygon_id && i.properties._dynamic?.type === 'shop-custom',
+              i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
+              i.properties._dynamic?.type === 'shop-custom',
           );
           if (polygon) {
             this.map.setFeatureState(
@@ -1437,7 +1445,8 @@ export class Map {
         for (const f of amenityFeatures) {
           const polygon = this.state.allFeatures.features.find(
             (i) =>
-              i.properties._dynamic?.id === f.properties._dynamic?.polygon_id && i.properties._dynamic?.type === 'shop-custom',
+              i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
+              i.properties._dynamic?.type === 'shop-custom',
           );
           if (polygon) {
             this.map.setFeatureState(

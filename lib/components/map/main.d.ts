@@ -90,6 +90,7 @@ interface Options {
     forceFloorLevel?: number;
     amenityIdProperty?: string;
     routeWithDetails?: boolean;
+    blockFeatureClickWhileRouting?: boolean;
 }
 interface PaddingOptions {
     bottom: number;
