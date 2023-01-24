@@ -14,7 +14,14 @@ import ClusterSource from './sources/cluster_source';
 import ImageSourceManager from './sources/image_source_manager';
 import { AmenityModel } from '../../models/amenity';
 import { getBase64FromImage, getImageFromBase64, uuidv4 } from '../../common';
-import { chevron, pulsingDot, person as personIcon, floorchangeUpImage, floorchangeDownImage } from './icons';
+import {
+  chevron,
+  pulsingDot,
+  person as personIcon,
+  floorchangeUpImage,
+  floorchangeDownImage,
+  popupImage,
+} from './icons';
 import { MapboxEvent } from 'mapbox-gl';
 import { getPlaceFloors } from '../../controllers/floors';
 import { getPlaceById } from '../../controllers/places';
@@ -30,6 +37,7 @@ import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer } from './custom-l
 import PersonModel from '../../models/person';
 import { featureCollection, isNumber, lineString } from '@turf/helpers';
 import WayfindingLogger from '../logger/wayfinding';
+import { translations } from './i18n';
 
 interface State {
   readonly initializing: boolean;
@@ -210,6 +218,7 @@ export class Map {
       autoLocate: true,
       position: 'top-right',
     },
+    language: 'en',
     routeWithDetails: true,
     blockFeatureClickWhileRouting: false,
   };
@@ -406,11 +415,22 @@ export class Map {
       const decodedPersonIcon = await getImageFromBase64(personIcon);
       const decodedFloorchangeUpImage = await getImageFromBase64(floorchangeUpImage);
       const decodedFloorchangeDownImage = await getImageFromBase64(floorchangeDownImage);
+      const decodedPopupImage = await getImageFromBase64(popupImage);
       map.addImage('chevron_right', decodedChevron as any);
       map.addImage('pulsing-dot', pulsingDot, { pixelRatio: 2 });
       map.addImage('person', decodedPersonIcon as any);
       map.addImage('floorchange-up-image', decodedFloorchangeUpImage as any);
       map.addImage('floorchange-down-image', decodedFloorchangeDownImage as any);
+      map.addImage('popup', decodedPopupImage as any, {
+        // @ts-ignore
+        stretchX: [
+          [25, 55],
+          [85, 115],
+        ],
+        stretchY: [[25, 100]],
+        content: [25, 25, 115, 100],
+        pixelRatio: 2,
+      });
       this.onSourceChange();
       this.updateMapSource(this.geojsonSource);
       this.updateMapSource(this.routingSource);
@@ -572,6 +592,10 @@ export class Map {
 
   private initDirectionIcon() {
     if (this.map) {
+      const levelChangersLayer = this.map.getLayer('proximiio-levelchangers') as mapboxgl.Layer;
+      const levelChangersLayerImageSize = this.map.getLayoutProperty('proximiio-levelchangers', 'icon-size');
+      const radius = 50;
+
       this.state.style.addSource('direction-icon-source', {
         type: 'geojson',
         data: {
@@ -579,37 +603,126 @@ export class Map {
           features: [],
         },
       });
-      this.state.style.addLayer({
-        id: 'direction-icon-layer',
-        type: 'symbol',
-        source: 'direction-icon-source',
-        minzoom: 17,
-        maxzoom: 24,
-        layout: {
-          'icon-image': '{icon}',
-          'icon-size': ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.3],
-          'icon-offset': {
-            type: 'identity',
-            property: 'iconOffset',
+      this.state.style.addLayer(
+        {
+          id: 'direction-halo-layer',
+          type: 'circle',
+          source: 'direction-icon-source',
+          minzoom: levelChangersLayer.minzoom,
+          maxzoom: levelChangersLayer.maxzoom,
+          paint: {
+            'circle-radius':
+              levelChangersLayerImageSize[0] === 'interpolate'
+                ? [
+                    levelChangersLayerImageSize[0],
+                    levelChangersLayerImageSize[1],
+                    levelChangersLayerImageSize[2],
+                    levelChangersLayerImageSize[3],
+                    levelChangersLayerImageSize[4] * (radius ? radius : 50),
+                    levelChangersLayerImageSize[5],
+                    levelChangersLayerImageSize[6] * (radius ? radius : 50),
+                  ]
+                : radius,
+            'circle-color': '#000',
           },
-          'symbol-placement': 'point',
-          'icon-allow-overlap': true,
-          'text-allow-overlap': false,
+          filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
         },
-        filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
-      });
+        'proximiio-paths-names',
+      );
+      this.state.style.addLayer(
+        {
+          id: 'direction-popup-layer',
+          type: 'symbol',
+          source: 'direction-icon-source',
+          minzoom: levelChangersLayer.minzoom,
+          maxzoom: levelChangersLayer.maxzoom,
+          layout: {
+            'text-field': ['get', 'description'],
+            'icon-text-fit': 'both',
+            'icon-image': ['get', 'popupImage'],
+            'icon-allow-overlap': true,
+            'text-allow-overlap': true,
+            'icon-anchor': 'bottom',
+            'text-anchor': 'bottom',
+            'text-offset': [0, -2.4],
+          },
+          paint: {
+            'text-color': '#fff',
+          },
+          filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
+        },
+        'proximiio-polygons-above-paths',
+      );
       this.map.on('click', 'proximiio-levelchangers', (ev) => {
         if (this.routingSource.points) {
           const directionIcon = this.state.style
             .getSource('direction-icon-source')
             .data.features.find((f) => f.properties.level === this.state.floor.level);
-          const way = directionIcon ? (directionIcon.properties.icon === 'floorchange-up-image' ? 'up' : 'down') : null;
-          if (way && ev.features[0].properties.id === directionIcon.properties.levelChangerId) {
-            this.setFloorByWay(way);
+          if (
+            directionIcon?.properties?.destinationLevel &&
+            ev.features[0].properties.id === directionIcon.properties.levelChangerId
+          ) {
+            this.setFloorByLevel(directionIcon.properties.destinationLevel);
           }
         }
       });
     }
+  }
+
+  // Add direction features to the map
+  private addDirectionFeatures() {
+    // Filter the steps in textNavigation state to find level changers
+    const levelChangers = this.state.textNavigation.steps
+      .filter((i, index, array) => {
+        // Get the first part of the direction string
+        const direction = i.direction.split('_')[0];
+        // Check if the current step is a level changer and has a valid direction
+        if (i.levelChangerId && (direction === 'UP' || direction === 'DOWN')) {
+          // Set the destination level for the level changer
+          i.destinationLevel = array[index + 1] ? array[index + 1]?.level : null;
+          return i;
+        }
+      })
+      // Map the level changers to feature objects
+      .map((levelChanger) => {
+        // Find the level changer feature in allFeatures state
+        const levelChangerFeature = this.state.allFeatures.features.find(
+          (f) => f.id === levelChanger.levelChangerId,
+        ) as Feature;
+        // Get the first part of the direction string
+        const direction = levelChanger.direction.split('_')[0];
+        const levelChangerType = levelChanger.direction.split('_')[1];
+        const destinationFloor = this.state.floors.filter((f) => f.level === levelChanger.destinationLevel)
+          ? this.state.floors.filter((f) => f.level === levelChanger.destinationLevel)[0]
+          : this.state.floor;
+        // Create a new feature with the desired properties
+        return new Feature({
+          type: 'Feature',
+          geometry: levelChangerFeature.geometry,
+          properties: {
+            usecase: 'floor-change-symbol',
+            icon: direction === 'UP' ? 'floorchange-up-image' : 'floorchange-down-image',
+            iconOffset: direction === 'UP' ? [4, -90] : [4, 90],
+            popupImage: 'popup',
+            description: `${translations[this.defaultOptions.language][levelChangerType]} \n ${
+              translations[this.defaultOptions.language][direction]
+            } ${translations[this.defaultOptions.language]['TO_FLOOR']} ${
+              destinationFloor.name ? destinationFloor.name : levelChanger.destinationLevel
+            }`,
+            level: levelChanger.level,
+            destinationLevel: levelChanger.destinationLevel,
+            levelChangerId: levelChangerFeature.properties.id,
+          },
+        });
+      });
+
+    // Update the source data for the 'direction-icon-source' layer
+    this.state.style.sources['direction-icon-source'].data = {
+      type: 'FeatureCollection',
+      features: levelChangers,
+    };
+    // Update the style on the map with the new data
+    this.map.setStyle(this.state.style);
   }
 
   private onSetFeaturesHighlight(features: string[], color?: string, radius?: number, blur?: number) {
@@ -1853,10 +1966,13 @@ export class Map {
         map.setFilter('persons-layer', filter);
         this.state.style.getLayer('persons-layer').filter = filter;
       }
-      if (this.defaultOptions.showLevelDirectionIcon && map.getLayer('direction-icon-layer')) {
+      if (this.defaultOptions.showLevelDirectionIcon && map.getLayer('direction-halo-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
-        map.setFilter('direction-icon-layer', filter);
-        this.state.style.getLayer('direction-icon-layer').filter = filter;
+        map.setFilter('direction-halo-layer', filter);
+        this.state.style.getLayer('direction-halo-layer').filter = filter;
+
+        map.setFilter('direction-popup-layer', filter);
+        this.state.style.getLayer('direction-popup-layer').filter = filter;
       }
       if (this.defaultOptions.animatedRoute && map.getLayer('route-point')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
@@ -1990,39 +2106,6 @@ export class Map {
         ? +nextRoute.properties.level
         : this.state.floor.level;
     }
-  }
-
-  private addDirectionFeatures() {
-    const levelChangers = this.routingSource.points
-      .filter((i) => i.isLevelChanger)
-      .map((i, index, array) => {
-        const feature = this.state.allFeatures.features.find((f) => f.id === i.id) as Feature;
-        const targetPoint = turf.point(feature.geometry.coordinates);
-        const placeLevelChangers = new FeatureCollection({
-          features: this.state.levelChangers.features.filter((f) => f.properties.place_id === this.state.place.id),
-        });
-        const nearestLevelChanger = turf.nearestPoint(targetPoint, placeLevelChangers as any);
-        const nextLevelChanger = array[index + 1] ? array[index + 1] : array[index - 1];
-        return new Feature({
-          type: 'Feature',
-          geometry: nearestLevelChanger.geometry,
-          properties: {
-            usecase: 'floor-change-symbol',
-            icon:
-              nextLevelChanger.properties.level > i.properties.level
-                ? 'floorchange-up-image'
-                : 'floorchange-down-image',
-            iconOffset: nextLevelChanger.properties.level > i.properties.level ? [4, -90] : [4, 90],
-            level: i.properties.level,
-            levelChangerId: nearestLevelChanger.properties.id,
-          },
-        });
-      });
-    this.state.style.sources['direction-icon-source'].data = {
-      type: 'FeatureCollection',
-      features: levelChangers,
-    };
-    this.map.setStyle(this.state.style);
   }
 
   // Used to increment the value of the point measurement against the route.
@@ -2166,6 +2249,7 @@ export class Map {
   public setLanguage(language: string) {
     this.geojsonSource.language = language;
     this.geojsonSource.fetch(this.state.features);
+    this.defaultOptions.language = language;
     this.onFeaturesChange();
   }
 
