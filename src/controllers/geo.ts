@@ -3,7 +3,7 @@ import Feature, { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 import { globalState } from '../components/map/main';
 import { FeatureCollection as FCModel, Feature as FModel, Polygon, MultiPolygon } from '@turf/helpers';
-import { booleanPointInPolygon } from '@turf/turf';
+import { booleanPointInPolygon, pointOnFeature } from '@turf/turf';
 
 export const getFeatures = async (initPolygons?: boolean) => {
   const url = '/v5/geo/features';
@@ -13,6 +13,7 @@ export const getFeatures = async (initPolygons?: boolean) => {
     const shopPolygons = res.data.features.filter(
       (f) => f.properties.type === 'shop' && f.geometry.type === 'MultiPolygon',
     );
+    const labelLineFeatures = res.data.features.filter((f) => f.properties.type === 'label-line');
 
     res.data.features = res.data.features.map((feature: any, key: number) => {
       if (feature.properties.type === 'poi') {
@@ -20,6 +21,7 @@ export const getFeatures = async (initPolygons?: boolean) => {
         feature.properties.id = feature.properties.id ? feature.properties.id.replace(/\{|\}/g, '') : null;
 
         let connectedPolygon;
+        let connectedLabelLine;
         // check if feature is inside a polygon
         shopPolygons.forEach((polygon) => {
           if (feature.properties?.level === polygon.properties?.level) {
@@ -51,7 +53,36 @@ export const getFeatures = async (initPolygons?: boolean) => {
           connectedPolygon.properties._dynamic.type = 'shop-custom';
           connectedPolygon.properties._dynamic.poi_id = feature.properties.id;
           connectedPolygon.properties._dynamic.amenity = feature.properties.amenity;
+          // id have to be changed to numetic type so feature state will work
           connectedPolygon.id = JSON.stringify(key);
+
+          // check if feature is inside a polygon
+          labelLineFeatures.forEach((line) => {
+            if (connectedPolygon.properties?.level === line.properties?.level) {
+              if (booleanPointInPolygon(pointOnFeature(line), connectedPolygon)) {
+                connectedLabelLine = line;
+              }
+            }
+          });
+
+          if (connectedLabelLine) {
+            // id have to be changed to numetic type so feature state will work
+            connectedLabelLine.id = JSON.stringify(key + 9999);
+            feature.properties._dynamic.label_id = connectedLabelLine.id;
+            connectedPolygon.properties._dynamic.label_id = connectedLabelLine.id;
+
+            connectedLabelLine.properties._dynamic = connectedLabelLine.properties._dynamic
+              ? connectedLabelLine.properties._dynamic
+              : {};
+
+            connectedLabelLine.properties._dynamic.id = connectedLabelLine.properties.id?.replace(/\{|\}/g, '');
+            connectedLabelLine.properties._dynamic.type = 'shop-label';
+            connectedLabelLine.properties._dynamic.poi_id = feature.properties.id;
+            connectedLabelLine.properties._dynamic.polygon_id = connectedPolygon.properties._dynamic.id;
+            connectedLabelLine.properties.title = feature.properties.title;
+            connectedLabelLine.properties.title_i18n = feature.properties.title_i18n;
+          }
+
           const labelLine = connectedPolygon.properties['label-line']
             ? JSON.parse(JSON.stringify(connectedPolygon.properties['label-line']))
             : connectedPolygon.properties.metadata && connectedPolygon.properties.metadata['label-line']
@@ -80,7 +111,6 @@ export const getFeatures = async (initPolygons?: boolean) => {
       return feature;
     });
     res.data.features = res.data.features.concat(featuresToAdd);
-
   }
   return new FeatureCollection(res.data);
 };

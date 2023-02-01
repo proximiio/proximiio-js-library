@@ -78,7 +78,11 @@ export class PolygonTitlesLayer extends SymbolLayer {
     this.minzoom = data.minZoom;
     this.maxzoom = data.maxZoom;
     this.source = 'main';
-    this.filter = ['all', ['==', ['get', 'type'], 'shop-label'], ['==', ['to-number', ['get', 'level']], 0]];
+    this.filter = [
+      'all',
+      ['==', ['get', 'type', ['get', '_dynamic']], 'shop-label'],
+      ['==', ['to-number', ['get', 'level']], 0],
+    ];
     this.layout = new LayoutProperties({
       'symbol-placement': 'line-center',
       'text-anchor': 'top',
