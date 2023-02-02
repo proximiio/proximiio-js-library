@@ -1467,24 +1467,20 @@ export class Map {
       if (this.map.getLayer(layer)) {
         const l = this.map.getLayer(layer) as any;
         const filters = [...l.filter];
-        const amenityFilter = filters.findIndex((f) => f[1][1] === 'amenity');
+        const amenityFilter = filters.findIndex((f) => f[1][1] && f[1][1][1] === 'amenity');
         const featureFilter = filters.findIndex((f) => f[1][1] === 'id');
         if (this.filteredAmenities.length > 0) {
           if (amenityFilter !== -1) {
             filters[amenityFilter] = [
-              'match',
-              ['get', 'amenity'],
-              this.filteredAmenities ? this.filteredAmenities : ['undefined'],
-              true,
-              false,
+              'any',
+              ['in', ['get', 'amenity'], ['literal', this.filteredAmenities]],
+              ['in', ['get', 'amenity', ['get', '_dynamic']], ['literal', this.filteredAmenities]],
             ];
           } else {
             filters.push([
-              'match',
-              ['get', 'amenity'],
-              this.filteredAmenities ? this.filteredAmenities : ['undefined'],
-              true,
-              false,
+              'any',
+              ['in', ['get', 'amenity'], ['literal', this.filteredAmenities]],
+              ['in', ['get', 'amenity', ['get', '_dynamic']], ['literal', this.filteredAmenities]],
             ]);
           }
         }

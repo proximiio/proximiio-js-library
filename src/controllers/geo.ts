@@ -78,6 +78,7 @@ export const getFeatures = async (initPolygons?: boolean) => {
             connectedLabelLine.properties._dynamic.id = connectedLabelLine.properties.id?.replace(/\{|\}/g, '');
             connectedLabelLine.properties._dynamic.type = 'shop-label';
             connectedLabelLine.properties._dynamic.poi_id = feature.properties.id;
+            connectedLabelLine.properties._dynamic.amenity = feature.properties.amenity;
             connectedLabelLine.properties._dynamic.polygon_id = connectedPolygon.properties._dynamic.id;
             connectedLabelLine.properties.title = feature.properties.title;
             connectedLabelLine.properties.title_i18n = feature.properties.title_i18n;
