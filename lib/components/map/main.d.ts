@@ -64,6 +64,7 @@ interface Options {
     showLevelDirectionIcon?: boolean;
     showRasterFloorplans?: boolean;
     animatedRoute?: boolean;
+    animationLooping?: boolean;
     useRasterTiles?: boolean;
     rasterTilesOptions?: {
         tilesUrl: string[];
@@ -199,6 +200,7 @@ export declare class Map {
     private animationInstances;
     private addAnimatedRouteFeatures;
     private animate;
+    private restartAnimation;
     private cancelAnimation;
     private getClosestFeature;
     /**

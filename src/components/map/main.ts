@@ -98,6 +98,7 @@ interface Options {
   showLevelDirectionIcon?: boolean;
   showRasterFloorplans?: boolean;
   animatedRoute?: boolean;
+  animationLooping?: boolean;
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
     tilesUrl: string[];
@@ -205,6 +206,7 @@ export class Map {
     showLevelDirectionIcon: false,
     showRasterFloorplans: false,
     animatedRoute: false,
+    animationLooping: true,
     useRasterTiles: false,
     handleUrlParams: false,
     urlParams: {
@@ -1980,6 +1982,9 @@ export class Map {
         map.setFilter('highlight-icon-layer', filter);
         this.state.style.getLayer('highlight-icon-layer').filter = filter;
       }
+      if (this.defaultOptions.animatedRoute && !this.defaultOptions.animationLooping && this.routingSource.route) {
+        this.restartAnimation();
+      }
     }
     this.state = { ...this.state, floor, style: this.state.style };
     this.updateCluster();
@@ -2111,7 +2116,7 @@ export class Map {
   // Number of steps to use in the arc and animation, more steps means
   // a smoother arc and animation, but too many steps will result in a
   // low frame rate
-  private steps = 300;
+  private steps = 500;
   private animationInstances = [];
   private addAnimatedRouteFeatures() {
     this.counter = 0;
@@ -2142,39 +2147,66 @@ export class Map {
   }
 
   private animate() {
-    if (Object.keys(this.arc).length > 0) {
-      const pointsArray = [];
-      for (const [routeKey, routePositions] of Object.entries(this.arc)) {
-        if (routePositions[this.counter]) {
-          const point = turf.point(routePositions[this.counter], {
-            ...this.routingSource.route[routeKey].properties,
-            routePartId: routeKey,
-          });
-          pointsArray.push(point);
-        }
+    const source = this.map.getSource('route-point') as any;
+    const currentRoutePartId = this.routingSource.levelPaths?.[this.state.floor.level]?.paths?.[0]?.id;
+
+    if (currentRoutePartId) {
+      const point = turf.point(
+        this.arc[currentRoutePartId]?.[this.counter]
+          ? this.arc[currentRoutePartId]?.[this.counter]
+          : this.arc[currentRoutePartId]?.[this.counter - 1],
+        {
+          ...this.routingSource.route[currentRoutePartId].properties,
+          routePartId: currentRoutePartId,
+        },
+      );
+
+      const start = this.arc[currentRoutePartId]?.[this.counter >= this.steps ? this.counter - 1 : this.counter];
+      const end = this.arc[currentRoutePartId]?.[this.counter >= this.steps ? this.counter : this.counter + 1];
+
+      // Calculate the bearing to ensure the icon is rotated to match the route arc
+      // The bearing is calculated between the current point and the next point, except
+      // at the end of the arc, which uses the previous point and the current point
+      const currentBearing = this.map.getBearing();
+      const bearing = start && end ? turf.bearing(turf.point(start), turf.point(end)) : currentBearing;
+      let newBearing = currentBearing;
+
+      if (Math.abs(currentBearing - bearing) >= 6) {
+        newBearing = bearing;
       }
+
+      this.map.flyTo({
+        center: start,
+        bearing: newBearing,
+        duration: 200,
+        essential: true,
+      });
+
       // Update the source with this new data
-      this.state.style.sources['route-point'].data = turf.featureCollection(pointsArray);
-      this.map.setStyle(this.state.style);
+      source.setData(turf.featureCollection([point]));
 
       // Request the next frame of animation as long as the end has not been reached
       if (this.counter < this.steps) {
         const animationInstance = window.requestAnimationFrame(this.animate.bind(this));
         this.animationInstances.push(animationInstance);
       }
-      if (this.counter === this.steps) {
+      if (this.counter === this.steps && this.defaultOptions.animationLooping) {
         setTimeout(() => {
-          // Reset the counter
-          this.counter = 0;
-          // cancel animation
-          // this.cancelAnimation();
-          // Restart the animation
-          this.animate();
+          this.restartAnimation();
         }, 2000);
       }
 
       this.counter++;
     }
+  }
+
+  private restartAnimation() {
+    // Reset the counter
+    this.counter = 0;
+    // cancel animation
+    // this.cancelAnimation();
+    // Restart the animation
+    this.animate();
   }
 
   private cancelAnimation() {
