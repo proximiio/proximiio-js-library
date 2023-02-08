@@ -1409,7 +1409,7 @@ export class Map {
     }
     this.filteredAmenities = this.amenityFilters;
     this.filterOutFeatures();
-    if (!inverted && !Array.isArray(amenityId)) this.setActivePolygons(amenityId);
+    if (!inverted) this.setActivePolygons(amenityId);
   }
 
   private onRemoveAmenityFilter(amenityId: string | string[], category?: string, inverted?: boolean) {
@@ -1516,12 +1516,14 @@ export class Map {
   }
 
   private activePolygonsAmenity;
-  private setActivePolygons(amenityId: string | null) {
+  private setActivePolygons(amenityId: string | null | string[]) {
     if (this.defaultOptions.initPolygons) {
       const activeFeatures = this.activePolygonsAmenity
         ? this.state.allFeatures.features.filter(
             (f) =>
-              f.properties.amenity === this.activePolygonsAmenity &&
+              (Array.isArray(this.activePolygonsAmenity)
+                ? this.activePolygonsAmenity.includes(f.properties.amenity)
+                : f.properties.amenity === this.activePolygonsAmenity) &&
               f.properties._dynamic?.polygon_id &&
               f.geometry.type === 'Point',
           )
@@ -1529,7 +1531,11 @@ export class Map {
       const amenityFeatures = amenityId
         ? this.state.allFeatures.features.filter(
             (f) =>
-              f.properties.amenity === amenityId && f.properties._dynamic?.polygon_id && f.geometry.type === 'Point',
+              (Array.isArray(amenityId)
+                ? amenityId.includes(f.properties.amenity)
+                : f.properties.amenity === amenityId) &&
+              f.properties._dynamic?.polygon_id &&
+              f.geometry.type === 'Point',
           )
         : [];
       if (activeFeatures.length > 0) {
