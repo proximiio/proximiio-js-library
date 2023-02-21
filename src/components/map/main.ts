@@ -90,6 +90,7 @@ interface Options {
     removeOriginalPolygonsLayer?: boolean;
     minZoom?: number;
     maxZoom?: number;
+    labelFontSize?: (string | number | string[])[];
   };
   zoomLevel?: number;
   considerVisibilityParam?: boolean;
@@ -199,6 +200,29 @@ export class Map {
       removeOriginalPolygonsLayer: true,
       minZoom: 17,
       maxZoom: 24,
+      labelFontSize: [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        18,
+        4,
+        18.5,
+        6,
+        19,
+        14,
+        19.5,
+        16,
+        20,
+        18,
+        20.5,
+        24,
+        21,
+        30,
+        21.5,
+        36,
+        22,
+        42,
+      ],
     },
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
