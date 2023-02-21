@@ -11,6 +11,7 @@ import { AmenityModel } from '../models/amenity';
 export const getPackage = async (
   initPolygons?: boolean,
   amenityIdProperty?: string,
+  hiddenAmenities?: string[]
 ): Promise<{
   places: PlaceModel[];
   floors: FloorModel[];
@@ -25,7 +26,7 @@ export const getPackage = async (
     getFloors().then((floors) => (result.floors = floors.data)),
     getStyle().then((style) => (result.style = style)),
     getStyles().then((styles) => (result.styles = styles)),
-    getFeatures(initPolygons).then((features) => (result.features = features)),
+    getFeatures(initPolygons, hiddenAmenities).then((features) => (result.features = features)),
     getAmenities(amenityIdProperty).then((amenities) => (result.amenities = amenities)),
   ];
   await Promise.all(promises);

@@ -93,6 +93,7 @@ interface Options {
     amenityIdProperty?: string;
     routeWithDetails?: boolean;
     blockFeatureClickWhileRouting?: boolean;
+    hiddenAmenities?: string[];
 }
 interface PaddingOptions {
     bottom: number;

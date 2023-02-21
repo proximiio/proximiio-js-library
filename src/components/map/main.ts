@@ -127,6 +127,7 @@ interface Options {
   amenityIdProperty?: string;
   routeWithDetails?: boolean;
   blockFeatureClickWhileRouting?: boolean;
+  hiddenAmenities?: string[];
 }
 
 interface PaddingOptions {
@@ -320,6 +321,7 @@ export class Map {
     const { places, style, styles, features, amenities } = await Repository.getPackage(
       this.defaultOptions.initPolygons,
       this.defaultOptions.amenityIdProperty,
+      this.defaultOptions.hiddenAmenities,
     );
     const levelChangers = features.features.filter(
       (f) => f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
@@ -487,6 +489,26 @@ export class Map {
       if (this.defaultOptions.animatedRoute) {
         this.initAnimatedRoute();
       }
+      if (this.defaultOptions.hiddenAmenities) {
+        const layers = [
+          'proximiio-pois-icons',
+          'proximiio-pois-labels',
+          'pois-icons',
+          'pois-labels',
+          'poi-custom-icons',
+        ];
+        layers.forEach((layer) => {
+          const l = this.map.getLayer(layer) as any;
+          if (l) {
+            const filters = [...l.filter];
+
+            filters.push(['!=', ['get', 'hideIcon'], 'hide']);
+
+            this.state.style.getLayer(layer).filter = filters;
+            this.map.setFilter(layer, filters);
+          }
+        });
+      }
 
       this.initPersonsMap();
 
@@ -513,6 +535,7 @@ export class Map {
       const { features } = await Repository.getPackage(
         this.defaultOptions.initPolygons,
         this.defaultOptions.amenityIdProperty,
+        this.defaultOptions.hiddenAmenities
       );
       const levelChangers = features.features.filter(
         (f) =>

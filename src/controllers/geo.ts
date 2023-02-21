@@ -5,7 +5,7 @@ import { globalState } from '../components/map/main';
 import { FeatureCollection as FCModel, Feature as FModel, Polygon, MultiPolygon } from '@turf/helpers';
 import { booleanPointInPolygon, pointOnFeature } from '@turf/turf';
 
-export const getFeatures = async (initPolygons?: boolean) => {
+export const getFeatures = async (initPolygons?: boolean, hiddenAmenities?: string[]) => {
   const url = '/v5/geo/features';
   const res = await axios.get(url);
   if (initPolygons) {
@@ -16,6 +16,9 @@ export const getFeatures = async (initPolygons?: boolean) => {
     const labelLineFeatures = res.data.features.filter((f) => f.properties.type === 'label-line');
 
     res.data.features = res.data.features.map((feature: any, key: number) => {
+      if (hiddenAmenities && hiddenAmenities.length > 0 && hiddenAmenities.includes(feature.properties.amenity)) {
+        feature.properties.hideIcon = "hide";
+      }
       if (feature.properties.type === 'poi') {
         feature.id = feature.id ? feature.id.replace(/\{|\}/g, '') : null;
         feature.properties.id = feature.properties.id ? feature.properties.id.replace(/\{|\}/g, '') : null;
