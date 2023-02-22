@@ -535,7 +535,7 @@ export class Map {
       const { features } = await Repository.getPackage(
         this.defaultOptions.initPolygons,
         this.defaultOptions.amenityIdProperty,
-        this.defaultOptions.hiddenAmenities
+        this.defaultOptions.hiddenAmenities,
       );
       const levelChangers = features.features.filter(
         (f) =>
@@ -708,10 +708,19 @@ export class Map {
             .getSource('direction-icon-source')
             .data.features.find((f) => f.properties.level === this.state.floor.level);
           if (
-            directionIcon?.properties?.destinationLevel &&
+            directionIcon &&
+            directionIcon.properties &&
+            !isNaN(directionIcon.properties.destinationLevel) &&
             ev.features[0].properties.id === directionIcon.properties.levelChangerId
           ) {
             this.setFloorByLevel(directionIcon.properties.destinationLevel);
+          }
+        }
+      });
+      this.map.on('click', 'direction-popup-layer', (ev) => {
+        if (this.routingSource.points) {
+          if (ev.features[0].properties && !isNaN(ev.features[0].properties.destinationLevel)) {
+            this.setFloorByLevel(ev.features[0].properties.destinationLevel);
           }
         }
       });
