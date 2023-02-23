@@ -38,6 +38,7 @@ import PersonModel from '../../models/person';
 import { featureCollection, isNumber, lineString } from '@turf/helpers';
 import WayfindingLogger from '../logger/wayfinding';
 import { translations } from './i18n';
+import { WayfindingConfigModel } from '../../models/wayfinding';
 
 interface State {
   readonly initializing: boolean;
@@ -2474,6 +2475,7 @@ export class Map {
    *  @param idTo {string} finish feature id
    *  @param idFrom {string} start feature id, optional for kiosk
    *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
+   *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -2481,12 +2483,20 @@ export class Map {
    *    map.findRouteByIds('finishId, 'startId');
    *  });
    */
-  public findRouteByIds(idTo: string, idFrom?: string, accessibleRoute?: boolean) {
+  public findRouteByIds(
+    idTo: string,
+    idFrom?: string,
+    accessibleRoute?: boolean,
+    wayfindingConfig?: WayfindingConfigModel,
+  ) {
     const fromFeature = idFrom
       ? (this.state.allFeatures.features.find((f) => f.id === idFrom || f.properties.id === idFrom) as Feature)
       : this.startPoint;
     const toFeature = this.state.allFeatures.features.find((f) => f.id === idTo || f.properties.id === idTo) as Feature;
     this.routingSource.toggleAccessible(accessibleRoute);
+    if (wayfindingConfig) {
+      this.routingSource.setConfig(wayfindingConfig);
+    }
     this.onRouteUpdate(fromFeature, toFeature);
   }
 
@@ -2497,6 +2507,7 @@ export class Map {
    *  @param titleTo {string} finish feature title
    *  @param titleFrom {string} start feature title, optional for kiosk
    *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
+   *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -2504,12 +2515,20 @@ export class Map {
    *    map.findRouteByTitle('myFeatureTitle', 'anotherFeatureTitle');
    *  });
    */
-  public findRouteByTitle(titleTo: string, titleFrom?: string, accessibleRoute?: boolean) {
+  public findRouteByTitle(
+    titleTo: string,
+    titleFrom?: string,
+    accessibleRoute?: boolean,
+    wayfindingConfig?: WayfindingConfigModel,
+  ) {
     const fromFeature = titleFrom
       ? (this.state.allFeatures.features.find((f) => f.properties.title === titleFrom) as Feature)
       : this.startPoint;
     const toFeature = this.state.allFeatures.features.find((f) => f.properties.title === titleTo) as Feature;
     this.routingSource.toggleAccessible(accessibleRoute);
+    if (wayfindingConfig) {
+      this.routingSource.setConfig(wayfindingConfig);
+    }
     this.onRouteUpdate(fromFeature, toFeature);
   }
 
@@ -2524,6 +2543,7 @@ export class Map {
    *  @param lngFrom {number} start longitude coordinate, optional for kiosk
    *  @param levelFrom {number} start level, optional for kiosk
    *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
+   *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -2539,6 +2559,7 @@ export class Map {
     lngFrom?: number,
     levelFrom?: number,
     accessibleRoute?: boolean,
+    wayfindingConfig?: WayfindingConfigModel,
   ) {
     const fromFeature =
       latFrom && lngFrom && levelFrom
@@ -2546,6 +2567,9 @@ export class Map {
         : this.startPoint;
     const toFeature = turf.feature({ type: 'Point', coordinates: [lngTo, latTo] }, { level: levelTo }) as Feature;
     this.routingSource.toggleAccessible(accessibleRoute);
+    if (wayfindingConfig) {
+      this.routingSource.setConfig(wayfindingConfig);
+    }
     this.onRouteUpdate(fromFeature, toFeature);
   }
 
@@ -2556,6 +2580,7 @@ export class Map {
    *  @param amenityId {string} amenity id of a nearest feature to look for
    *  @param idFrom {string} start feature id, optional for kiosk
    *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
+   *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -2563,13 +2588,21 @@ export class Map {
    *    map.findRouteToNearestFeature('amenityId');
    *  });
    */
-  public findRouteToNearestFeature(amenityId: string, idFrom?: string, accessibleRoute?: boolean) {
+  public findRouteToNearestFeature(
+    amenityId: string,
+    idFrom?: string,
+    accessibleRoute?: boolean,
+    wayfindingConfig?: WayfindingConfigModel,
+  ) {
     const fromFeature = idFrom
       ? (this.state.allFeatures.features.find((f) => f.id === idFrom || f.properties.id === idFrom) as Feature)
       : this.startPoint;
     const toFeature: Feature | boolean = this.getClosestFeature(amenityId, fromFeature);
     if (toFeature) {
       this.routingSource.toggleAccessible(accessibleRoute);
+      if (wayfindingConfig) {
+        this.routingSource.setConfig(wayfindingConfig);
+      }
       this.onRouteUpdate(fromFeature, toFeature);
     } else {
       throw new Error(`Feature not found`);

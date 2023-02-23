@@ -1,6 +1,7 @@
 import DataSource from './data_source';
 import Feature, { FeatureCollection } from '../../../models/feature';
 import Routing from '../routing';
+import { WayfindingConfigModel } from '../../../models/wayfinding';
 
 interface ChangeContainer {
   action: string;
@@ -37,6 +38,10 @@ export default class RoutingSource extends DataSource {
 
   toggleAccessible(value: any) {
     this.routing.toggleOnlyAccessible(value);
+  }
+
+  setConfig(config: WayfindingConfigModel) {
+    this.routing.setConfig(config);
   }
 
   async update(start?: Feature, finish?: Feature) {

@@ -3,6 +3,7 @@ import { Wayfinding } from '../../../lib/assets/wayfinding';
 import Feature, { FeatureCollection } from '../../models/feature';
 import { lineString, point } from '@turf/helpers';
 import { kebabToCamel } from '../../common';
+import { WayfindingConfigModel } from '../../models/wayfinding';
 
 export default class Routing {
   data: FeatureCollection;
@@ -49,6 +50,10 @@ export default class Routing {
         avoidHills: false,
       });
     }
+  }
+
+  setConfig(config: WayfindingConfigModel) {
+    this.wayfinding.setConfiguration(config);
   }
 
   route(start: Feature, finish: Feature) {

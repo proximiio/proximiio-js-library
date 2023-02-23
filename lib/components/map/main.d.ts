@@ -6,6 +6,7 @@ import Feature, { FeatureCollection } from '../../models/feature';
 import { AmenityModel } from '../../models/amenity';
 import { MapboxOptions } from '../../models/mapbox-options';
 import PersonModel from '../../models/person';
+import { WayfindingConfigModel } from '../../models/wayfinding';
 interface State {
     readonly initializing: boolean;
     readonly floor: FloorModel;
@@ -325,6 +326,7 @@ export declare class Map {
      *  @param idTo {string} finish feature id
      *  @param idFrom {string} start feature id, optional for kiosk
      *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
+     *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -332,7 +334,7 @@ export declare class Map {
      *    map.findRouteByIds('finishId, 'startId');
      *  });
      */
-    findRouteByIds(idTo: string, idFrom?: string, accessibleRoute?: boolean): void;
+    findRouteByIds(idTo: string, idFrom?: string, accessibleRoute?: boolean, wayfindingConfig?: WayfindingConfigModel): void;
     /**
      * This method will generate route based on selected features by their titles
      *  @memberof Map
@@ -340,6 +342,7 @@ export declare class Map {
      *  @param titleTo {string} finish feature title
      *  @param titleFrom {string} start feature title, optional for kiosk
      *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
+     *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -347,7 +350,7 @@ export declare class Map {
      *    map.findRouteByTitle('myFeatureTitle', 'anotherFeatureTitle');
      *  });
      */
-    findRouteByTitle(titleTo: string, titleFrom?: string, accessibleRoute?: boolean): void;
+    findRouteByTitle(titleTo: string, titleFrom?: string, accessibleRoute?: boolean, wayfindingConfig?: WayfindingConfigModel): void;
     /**
      * This method will generate route based on selected features by their titles
      *  @memberof Map
@@ -359,6 +362,7 @@ export declare class Map {
      *  @param lngFrom {number} start longitude coordinate, optional for kiosk
      *  @param levelFrom {number} start level, optional for kiosk
      *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
+     *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -366,7 +370,7 @@ export declare class Map {
      *    map.findRouteByCoords(48.606703739771774, 17.833092384506614, 0, 48.60684545080579, 17.833450676669543, 0);
      *  });
      */
-    findRouteByCoords(latTo: number, lngTo: number, levelTo: number, latFrom?: number, lngFrom?: number, levelFrom?: number, accessibleRoute?: boolean): void;
+    findRouteByCoords(latTo: number, lngTo: number, levelTo: number, latFrom?: number, lngFrom?: number, levelFrom?: number, accessibleRoute?: boolean, wayfindingConfig?: WayfindingConfigModel): void;
     /**
      * This method will generate route to nearest amenity feature
      *  @memberof Map
@@ -374,6 +378,7 @@ export declare class Map {
      *  @param amenityId {string} amenity id of a nearest feature to look for
      *  @param idFrom {string} start feature id, optional for kiosk
      *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
+     *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -381,7 +386,7 @@ export declare class Map {
      *    map.findRouteToNearestFeature('amenityId');
      *  });
      */
-    findRouteToNearestFeature(amenityId: string, idFrom?: string, accessibleRoute?: boolean): void;
+    findRouteToNearestFeature(amenityId: string, idFrom?: string, accessibleRoute?: boolean, wayfindingConfig?: WayfindingConfigModel): void;
     /**
      * This method will cancel generated route
      *  @memberof Map
