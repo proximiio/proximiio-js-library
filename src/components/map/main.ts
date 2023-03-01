@@ -1124,21 +1124,21 @@ export class Map {
     const destinationParam = urlParams.get(this.defaultOptions.urlParams.destinationFeature);
     const placeParam = urlParams.get(this.defaultOptions.urlParams.defaultPlace);
     const defaultPlace = placeParam
-      ? this.state.places.find((p) => p.id === placeParam || p.name === placeParam)
+      ? this.state.places.find((p) => p.id === placeParam || p.name.toLowerCase() === placeParam.toLowerCase())
       : this.state.place;
     const startFeature = startParam
       ? (this.state.allFeatures.features.find(
           (f) =>
             f.properties.title &&
             f.properties.place_id === defaultPlace.id &&
-            (f.id === startParam || f.properties.id === startParam || f.properties.title === startParam),
+            (f.id === startParam || f.properties.id === startParam || f.properties.title.toLowerCase() === startParam.toLowerCase()),
         ) as Feature)
       : this.startPoint;
     const destinationFeature = this.state.allFeatures.features.find(
       (f) =>
         f.properties.title &&
         f.properties.place_id === defaultPlace.id &&
-        (f.id === destinationParam || f.properties.id === destinationParam || f.properties.title === destinationParam),
+        (f.id === destinationParam || f.properties.id === destinationParam || f.properties.title.toLowerCase() === destinationParam.toLowerCase()),
     ) as Feature;
 
     if (startFeature && startFeature.id && !destinationFeature) {
