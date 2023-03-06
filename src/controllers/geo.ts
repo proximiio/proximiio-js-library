@@ -17,7 +17,7 @@ export const getFeatures = async (initPolygons?: boolean, hiddenAmenities?: stri
 
     res.data.features = res.data.features.map((feature: any, key: number) => {
       if (hiddenAmenities && hiddenAmenities.length > 0 && hiddenAmenities.includes(feature.properties.amenity)) {
-        feature.properties.hideIcon = "hide";
+        feature.properties.hideIcon = 'hide';
       }
       if (feature.properties.type === 'poi') {
         feature.id = feature.id ? feature.id.replace(/\{|\}/g, '') : null;
