@@ -2191,22 +2191,24 @@ export class Map {
     const pointsArray = [];
 
     for (const routePart of this.routingSource.lines) {
-      // Calculate the distance in kilometers between route start/end point.
-      const lineDistance = turf.length(routePart);
+      if (routePart.geometry.type === 'LineString') {
+        // Calculate the distance in kilometers between route start/end point.
+        const lineDistance = turf.length(routePart);
 
-      this.arc[routePart.id] = [];
+        this.arc[routePart.id] = [];
 
-      // Draw an arc between the `origin` & `destination` of the two points
-      for (let i = 0; i < lineDistance; i += lineDistance / this.steps) {
-        const segment = turf.along(turf.lineString(routePart.geometry.coordinates), i);
-        this.arc[routePart.id].push(segment.geometry.coordinates);
+        // Draw an arc between the `origin` & `destination` of the two points
+        for (let i = 0; i < lineDistance; i += lineDistance / this.steps) {
+          const segment = turf.along(turf.lineString(routePart.geometry.coordinates), i);
+          this.arc[routePart.id].push(segment.geometry.coordinates);
+        }
+
+        const point = turf.point(routePart.geometry.coordinates[0], {
+          ...routePart.properties,
+          routePartId: routePart.id,
+        });
+        pointsArray.push(point);
       }
-
-      const point = turf.point(routePart.geometry.coordinates[0], {
-        ...routePart.properties,
-        routePartId: routePart.id,
-      });
-      pointsArray.push(point);
     }
     this.state.style.sources['route-point'].data = turf.featureCollection(pointsArray);
     this.map.setStyle(this.state.style);
@@ -2283,15 +2285,21 @@ export class Map {
   }
 
   private getClosestFeature(amenityId: string, fromFeature: Feature) {
-    const sameLevelfeatures = this.state.allFeatures.features.filter(
+    let sameLevelfeatures = this.state.allFeatures.features.filter(
       (i) =>
         i.properties.amenity === amenityId &&
         i.geometry.type === 'Point' &&
         i.properties.level === fromFeature.properties.level,
     );
-    const features = this.state.allFeatures.features.filter(
-      (i) => i.properties.amenity === amenityId && i.geometry.type === 'Point',
+    let features = this.state.allFeatures.features.filter(
+      (i) =>
+        i.properties.amenity === amenityId &&
+        i.geometry.type === 'Point',
     );
+    if (this.defaultOptions.defaultPlaceId) {
+      sameLevelfeatures = sameLevelfeatures.filter(i => i.properties.place_id === this.defaultOptions.defaultPlaceId);
+      features = features.filter(i => i.properties.place_id === this.defaultOptions.defaultPlaceId);
+    }
     const targetPoint = turf.point(fromFeature.geometry.coordinates);
     if (sameLevelfeatures.length > 0 || features.length > 0) {
       return turf.nearestPoint(

@@ -108,7 +108,7 @@ export default class Routing {
           paths[key] = new Feature((0, lineString)(pointsList.map((i: any) => i.geometry.coordinates)));
         } else {
           // @ts-ignore
-          paths[key] = new Feature((0, point)(pointsList.map((i: any) => i.geometry.coordinates)));
+          paths[key] = new Feature((0, point)(pointsList[0].geometry.coordinates));
         }
       } else {
         // @ts-ignore
@@ -117,7 +117,7 @@ export default class Routing {
           paths[key] = new Feature(lineString(pointsList.map((i: any) => i.geometry.coordinates)));
         } else {
           // @ts-ignore
-          paths[key] = new Feature(point(pointsList.map((i: any) => i.geometry.coordinates)));
+          paths[key] = new Feature(point(pointsList[0].geometry.coordinates));
         }
       }
       paths[key].id = key;
