@@ -2292,13 +2292,11 @@ export class Map {
         i.properties.level === fromFeature.properties.level,
     );
     let features = this.state.allFeatures.features.filter(
-      (i) =>
-        i.properties.amenity === amenityId &&
-        i.geometry.type === 'Point',
+      (i) => i.properties.amenity === amenityId && i.geometry.type === 'Point',
     );
     if (this.defaultOptions.defaultPlaceId) {
-      sameLevelfeatures = sameLevelfeatures.filter(i => i.properties.place_id === this.defaultOptions.defaultPlaceId);
-      features = features.filter(i => i.properties.place_id === this.defaultOptions.defaultPlaceId);
+      sameLevelfeatures = sameLevelfeatures.filter((i) => i.properties.place_id === this.defaultOptions.defaultPlaceId);
+      features = features.filter((i) => i.properties.place_id === this.defaultOptions.defaultPlaceId);
     }
     const targetPoint = turf.point(fromFeature.geometry.coordinates);
     if (sameLevelfeatures.length > 0 || features.length > 0) {
