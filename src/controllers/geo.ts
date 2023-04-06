@@ -95,7 +95,7 @@ export const getFeatures = async (initPolygons?: boolean, hiddenAmenities?: stri
             ? JSON.parse(JSON.stringify(feature.properties.metadata['label-line']))
             : undefined;
           if (labelLine && labelLine !== undefined && labelLine.length > 0) {
-            const parsedLabelLine = JSON.parse(labelLine);
+            const parsedLabelLine = typeof labelLine === 'string' ? JSON.parse(labelLine) : labelLine;
             if (parsedLabelLine[0] instanceof Array && parsedLabelLine[1] instanceof Array) {
               const labelLineFeature = JSON.parse(JSON.stringify(feature));
               labelLineFeature.geometry = {
