@@ -513,12 +513,14 @@ export class Map {
 
       this.initPersonsMap();
 
-      this.map.on('click', 'proximiio-pois-icons', (ev) => {
-        this.onShopClick(ev);
-      });
-      this.map.on('click', 'pois-icons', (ev) => {
-        this.onShopClick(ev);
-      });
+      if (!this.defaultOptions.initPolygons) {
+        this.map.on('click', 'proximiio-pois-icons', (ev) => {
+          this.onShopClick(ev);
+        });
+        this.map.on('click', 'pois-icons', (ev) => {
+          this.onShopClick(ev);
+        });
+      }
 
       this.onMapReadyListener.next(true);
 
