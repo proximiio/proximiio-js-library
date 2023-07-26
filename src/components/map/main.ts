@@ -1166,7 +1166,7 @@ export class Map {
   }
 
   private featureDialog(e: any) {
-    const features = this.map.queryRenderedFeatures(e.point, { layers: ['proximiio-pois-icons'] });
+    const features = this.map.queryRenderedFeatures(e.point, { layers: ['proximiio-pois-icons', 'proximiio-pois-labels'] });
     const edit = features.length > 0;
     const modal = new tingle.modal({
       footer: true,
@@ -1524,6 +1524,7 @@ export class Map {
 
   private filterOutFeatures() {
     // proximiio-pois-icons, proximiio-pois-labels, 'pois-icons', 'pois-labels'
+    
     const layers = ['proximiio-pois-icons', 'proximiio-pois-labels', 'pois-icons', 'pois-labels'];
     if (this.defaultOptions.initPolygons) {
       layers.push('poi-custom-icons', 'shop-labels');
