@@ -14,7 +14,7 @@ export interface FloorEditorModel {
         c4: Geopoint;
     } | number[][];
 }
-export declare type Coordinates = [number, number];
+export type Coordinates = [number, number];
 export declare class FloorModel extends BaseModel {
     name: string;
     placeId: string;
