@@ -54,6 +54,18 @@ export class PolygonIconsLayer extends SymbolLayer {
     this.filter = [
       'all',
       ['==', ['get', 'type', ['get', '_dynamic']], 'poi-custom'],
+      [
+        'any',
+        ['all', ['!', ['has', 'icon_only']], ['!', ['has', 'text_only']]],
+        ['all', ['has', 'icon_only'], ['==', ['get', 'icon_only'], true]],
+        [
+          'all',
+          ['has', 'icon_only'],
+          ['has', 'text_only'],
+          ['==', ['get', 'text_only'], false],
+          ['==', ['get', 'icon_only'], false],
+        ],
+      ],
       ['==', ['to-number', ['get', 'level']], 0],
     ];
     this.layout = new LayoutProperties({
@@ -66,6 +78,7 @@ export class PolygonIconsLayer extends SymbolLayer {
       'symbol-placement': 'point',
       'icon-allow-overlap': true,
       'text-allow-overlap': true,
+      visibility: false,
     });
   }
 }
