@@ -180,6 +180,8 @@ const map = new Proximiio.Map({
    forceFloorLevel: 0, // optional, define floor number if you want to force routes visible for single level
    amenityIdProperty: 'title', // optional, define amenity property to rewrite amenity id with, so poi icons can be initialized by different param
    routeWithDetails: true, // optional, you'll receive details object (distance and duration of route) in found route listener response, default: true
+   blockFeatureClickWhileRouting: false, //optional, you won't be able to click on any of the pois while routing after enabling,default: false
+   hiddenAmenities: string[], // you can define array of amenity id's to hide poi labels and icons while polygons remains functional
 });
 ```
 
