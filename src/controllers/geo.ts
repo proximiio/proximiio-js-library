@@ -27,6 +27,9 @@ export const getFeatures = async (initPolygons?: boolean, hiddenAmenities?: stri
         let connectedLabelLine;
         // check if feature is inside a polygon
         shopPolygons.forEach((polygon) => {
+          if (!polygon.properties.id) {
+            polygon.properties.id = polygon.id;
+          }
           if (feature.properties?.level === polygon.properties?.level) {
             if (booleanPointInPolygon(feature, polygon)) {
               connectedPolygon = polygon;

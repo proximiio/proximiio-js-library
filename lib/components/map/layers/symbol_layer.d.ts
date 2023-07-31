@@ -16,8 +16,8 @@ export declare class PaintProperties extends Serializable {
     textTranslateAnchor?: 'map' | 'viewport';
     constructor(data: any);
 }
-export type Placement = 'center' | 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-export type WritingMode = 'horizontal' | 'vertical';
+export declare type Placement = 'center' | 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+export declare type WritingMode = 'horizontal' | 'vertical';
 export declare class LayoutProperties extends Serializable {
     visibility: 'visible' | 'none';
     symbolPlacement: 'point' | 'line' | 'line-center';

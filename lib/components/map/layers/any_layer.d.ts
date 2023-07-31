@@ -6,4 +6,4 @@ import HeatmapLayer from './heatmap_layer';
 import LineLayer from './line_layer';
 import RasterLayer from './raster_layer';
 import SymbolLayer from './symbol_layer';
-export type AnyLayer = BackgroundLayer | CircleLayer | FillLayer | FillExtrusionLayer | HeatmapLayer | LineLayer | RasterLayer | SymbolLayer;
+export declare type AnyLayer = BackgroundLayer | CircleLayer | FillLayer | FillExtrusionLayer | HeatmapLayer | LineLayer | RasterLayer | SymbolLayer;

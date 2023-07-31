@@ -1,4 +1,4 @@
-type Datasets = 'Places' | 'Floors' | 'Pois' | undefined;
+declare type Datasets = 'Places' | 'Floors' | 'Pois' | undefined;
 interface AutocompleteOptions {
     name?: string;
     selector?: () => void | string;
