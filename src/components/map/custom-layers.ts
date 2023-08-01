@@ -97,7 +97,7 @@ export class PolygonTitlesLayer extends SymbolLayer {
       ['==', ['to-number', ['get', 'level']], 0],
     ];
     this.layout = new LayoutProperties({
-      'symbol-placement': 'line-center',
+      'symbol-placement': data.symbolPlacement,
       'text-anchor': 'top',
       'text-ignore-placement': true,
       'text-allow-overlap': true,

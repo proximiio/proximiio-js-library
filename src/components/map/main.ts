@@ -91,7 +91,8 @@ interface Options {
     removeOriginalPolygonsLayer?: boolean;
     minZoom?: number;
     maxZoom?: number;
-    labelFontSize?: (string | number | string[])[];
+    labelFontSize?: (string | number | string[])[] | number;
+    symbolPlacement?: 'point' | 'line' | 'line-center';
   };
   zoomLevel?: number;
   considerVisibilityParam?: boolean;
@@ -225,6 +226,7 @@ export class Map {
         22,
         42,
       ],
+      symbolPlacement: 'line-center',
     },
     considerVisibilityParam: true,
     fitBoundsPadding: 250,

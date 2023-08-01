@@ -147,6 +147,8 @@ const map = new Proximiio.Map({
       opacity: number; // optional, default: 1, default polygon opacity
       minZoom: number; // optional, default: 17, default polygon minimum zoom visibility
       maxZoom: number; // optional, default: 24, default polygon maximum zoom visibility
+      labelFontSize: (string | number | string[])[] | number; // optional, define polygon label font size, default is interpolate expression based on zoom level
+      symbolPlacement: 'point' | 'line' | 'line-center'; // optional, label placement relative to its geometry, default: 'line-center'
    }
    considerVisibilityParam: false, // optional, default: true, if enabled all pois with visibility property defined as 'hidden' will not be visible as default, will be possible to toggle them with toggleHiddenPois() method
    fitBoundsPadding: 200, // optional, default 250, number | PaddingOptions, the amount of padding in pixels to add to the given bounds for found route, https://docs.mapbox.com/mapbox-gl-js/api/properties/#paddingoptions
