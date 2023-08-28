@@ -30,7 +30,7 @@ export class FloorModel extends BaseModel {
   editor?: FloorEditorModel;
   geopoint?: [number, number];
   remoteId?: string;
-  metadata?: Object
+  metadata?: object
 
   constructor(data: any) {
     super(data);

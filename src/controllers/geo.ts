@@ -125,7 +125,7 @@ export const getFeatures = async (initPolygons?: boolean, autoLabelLines?: boole
               }
             } else if (autoLabelLines) {
               let longestBorder;
-              let labelLine;
+              let labelBorder;
 
               // loop through segments and find the longest border
               for (let i = 0; i < connectedPolygon.geometry.coordinates[0][0].length; i++) {
@@ -157,10 +157,10 @@ export const getFeatures = async (initPolygons?: boolean, autoLabelLines?: boole
               const distanceToCenter = pointToLineDistance(centroid(connectedPolygon), longestBorder);
 
               // offset border to polygon center and make it longer to get intersections with the polygon
-              labelLine = lineOffset(longestBorder, distanceToCenter);
-              labelLine = transformScale(labelLine, 10);
+              labelBorder = lineOffset(longestBorder, distanceToCenter);
+              labelBorder = transformScale(labelBorder, 10);
 
-              const intersection = lineIntersect(connectedPolygon, labelLine);
+              const intersection = lineIntersect(connectedPolygon, labelBorder);
 
               // if there are more than 1 intersections, get the line betweeen them
               if (intersection.features.length > 1) {
@@ -170,15 +170,15 @@ export const getFeatures = async (initPolygons?: boolean, autoLabelLines?: boole
                 ]);
 
                 // use the interstections line as the label line
-                labelLine.geometry = intersectedLine.geometry;
+                labelBorder.geometry = intersectedLine.geometry;
               }
 
-              labelLine.properties.id = JSON.stringify(key + 9999);
-              labelLine.id = JSON.stringify(key + 9999);
-              labelLine.properties.type = 'shop-label';
-              labelLine.properties._dynamic.type = 'shop-label';
-              connectedPolygon.properties._dynamic.label_id = labelLine.properties.id;
-              featuresToAdd.push(labelLine);
+              labelBorder.properties.id = JSON.stringify(key + 9999);
+              labelBorder.id = JSON.stringify(key + 9999);
+              labelBorder.properties.type = 'shop-label';
+              labelBorder.properties._dynamic.type = 'shop-label';
+              connectedPolygon.properties._dynamic.label_id = labelBorder.properties.id;
+              featuresToAdd.push(labelBorder);
             }
           }
         }
