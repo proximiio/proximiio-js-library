@@ -50,6 +50,7 @@ export class FloorModel extends BaseModel {
     this.editor = data.editor;
     this.geopoint = data.geopoint;
     this.remoteId = data.remote_id;
+    this.metadata = data.metadata;
   }
 
   get hasFloorplan() {
