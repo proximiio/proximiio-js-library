@@ -23,4 +23,12 @@ export const translations = {
     DOWN: 'down',
     TO_FLOOR: 'to floor',
   },
+  it: {
+    ELEVATOR: 'Ascensore',
+    ESCALATOR: 'Scala mobile',
+    SCALE: 'Scale',
+    UP: 'su',
+    DOWN: 'giù',
+    TO_FLOOR: 'al piano',
+  },
 };
