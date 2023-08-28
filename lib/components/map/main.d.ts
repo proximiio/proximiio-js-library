@@ -59,6 +59,7 @@ interface Options {
         maxZoom?: number;
         labelFontSize?: (string | number | string[])[] | number;
         symbolPlacement?: 'point' | 'line' | 'line-center';
+        autoLabelLines?: boolean;
     };
     zoomLevel?: number;
     considerVisibilityParam?: boolean;
@@ -207,6 +208,7 @@ export declare class Map {
     private restartAnimation;
     private cancelAnimation;
     private getClosestFeature;
+    private getFloorName;
     /**
      *  @memberof Map
      *  @name getMapboxInstance

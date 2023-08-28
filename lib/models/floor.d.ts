@@ -25,6 +25,7 @@ export declare class FloorModel extends BaseModel {
     editor?: FloorEditorModel;
     geopoint?: [number, number];
     remoteId?: string;
+    metadata?: Object;
     constructor(data: any);
     get hasFloorplan(): boolean;
 }

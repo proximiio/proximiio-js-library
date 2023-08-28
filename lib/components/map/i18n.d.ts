@@ -23,4 +23,12 @@ export declare const translations: {
         DOWN: string;
         TO_FLOOR: string;
     };
+    it: {
+        ELEVATOR: string;
+        ESCALATOR: string;
+        SCALE: string;
+        UP: string;
+        DOWN: string;
+        TO_FLOOR: string;
+    };
 };
