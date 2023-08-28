@@ -26,7 +26,7 @@ export const translations = {
   it: {
     ELEVATOR: 'Ascensore',
     ESCALATOR: 'Scala mobile',
-    SCALE: 'Scale',
+    STAIRS: 'Scale',
     UP: 'su',
     DOWN: 'giù',
     TO_FLOOR: 'al piano',
