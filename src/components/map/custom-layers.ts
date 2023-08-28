@@ -1,5 +1,8 @@
 import FillExtrusionLayer, { PaintProperties } from './layers/fill_extrusion_layer';
-import LineLayer, {LayoutProperties as LineLayoutProperties, PaintProperties as LinePaintProperties} from './layers/line_layer';
+import LineLayer, {
+  LayoutProperties as LineLayoutProperties,
+  PaintProperties as LinePaintProperties,
+} from './layers/line_layer';
 import SymbolLayer, { LayoutProperties, PaintProperties as PaintPropertiesSymbol } from './layers/symbol_layer';
 
 export class PolygonsLayer extends FillExtrusionLayer {
@@ -106,7 +109,7 @@ export class PolygonTitlesLayer extends SymbolLayer {
       'text-font': ['Open Sans Bold'],
       'text-size': data.labelFontSize,
       'text-letter-spacing': 0.005,
-      'text-max-width': 7
+      'text-max-width': 7,
     });
     this.paint = new PaintPropertiesSymbol({
       'text-color': [
@@ -136,11 +139,11 @@ export class PolygonTitlesLineLayer extends LineLayer {
     ];
     this.layout = new LineLayoutProperties({
       'line-join': 'round',
-			'line-cap': 'round'
+      'line-cap': 'round',
     });
     this.paint = new LinePaintProperties({
       'line-color': '#000',
-			'line-width': 3
+      'line-width': 3,
     });
   }
 }
