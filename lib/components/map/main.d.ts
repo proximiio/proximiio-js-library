@@ -57,7 +57,8 @@ interface Options {
         removeOriginalPolygonsLayer?: boolean;
         minZoom?: number;
         maxZoom?: number;
-        labelFontSize?: (string | number | string[])[];
+        labelFontSize?: (string | number | string[])[] | number;
+        symbolPlacement?: 'point' | 'line' | 'line-center';
     };
     zoomLevel?: number;
     considerVisibilityParam?: boolean;
