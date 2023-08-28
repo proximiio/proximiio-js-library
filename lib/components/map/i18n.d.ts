@@ -26,7 +26,7 @@ export declare const translations: {
     it: {
         ELEVATOR: string;
         ESCALATOR: string;
-        SCALE: string;
+        STAIRS: string;
         UP: string;
         DOWN: string;
         TO_FLOOR: string;
