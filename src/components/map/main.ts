@@ -773,7 +773,7 @@ export class Map {
             description: `${translations[this.defaultOptions.language][levelChangerType]} \n ${
               translations[this.defaultOptions.language][direction]
             } ${translations[this.defaultOptions.language]['TO_FLOOR']} ${
-              destinationFloor.name ? destinationFloor.name : levelChanger.destinationLevel
+              destinationFloor.name ? this.getFloorName(destinationFloor) : levelChanger.destinationLevel
             }`,
             level: levelChanger.level,
             destinationLevel: levelChanger.destinationLevel,
@@ -2316,6 +2316,14 @@ export class Map {
       ) as Feature;
     } else {
       return false;
+    }
+  }
+
+  private getFloorName(floor: FloorModel) {
+    if (floor.metadata && floor.metadata['title_' + this.defaultOptions.language]) {
+      return floor.metadata['title_' + this.defaultOptions.language];
+    } else {
+      return floor.name;
     }
   }
 
