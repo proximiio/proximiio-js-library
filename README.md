@@ -149,6 +149,7 @@ const map = new Proximiio.Map({
       maxZoom: number; // optional, default: 24, default polygon maximum zoom visibility
       labelFontSize: (string | number | string[])[] | number; // optional, define polygon label font size, default is interpolate expression based on zoom level
       symbolPlacement: 'point' | 'line' | 'line-center'; // optional, label placement relative to its geometry, default: 'line-center'
+      autoLabelLines: boolean; // optional, default: true, if no label-line is defined in the feature metadata, if enabled it's automatically generated based on the longest polygon border
    }
    considerVisibilityParam: false, // optional, default: true, if enabled all pois with visibility property defined as 'hidden' will not be visible as default, will be possible to toggle them with toggleHiddenPois() method
    fitBoundsPadding: 200, // optional, default 250, number | PaddingOptions, the amount of padding in pixels to add to the given bounds for found route, https://docs.mapbox.com/mapbox-gl-js/api/properties/#paddingoptions

@@ -33,7 +33,7 @@ import * as tingle from 'tingle.js/dist/tingle';
 import * as TBTNav from '../../../lib/assets/tbtnav';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
 import { MapboxOptions } from '../../models/mapbox-options';
-import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer } from './custom-layers';
+import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer, PolygonTitlesLineLayer } from './custom-layers';
 import PersonModel from '../../models/person';
 import { featureCollection, isNumber, lineString } from '@turf/helpers';
 import WayfindingLogger from '../logger/wayfinding';
@@ -93,6 +93,7 @@ interface Options {
     maxZoom?: number;
     labelFontSize?: (string | number | string[])[] | number;
     symbolPlacement?: 'point' | 'line' | 'line-center';
+    autoLabelLines?: boolean;
   };
   zoomLevel?: number;
   considerVisibilityParam?: boolean;
@@ -227,6 +228,7 @@ export class Map {
         42,
       ],
       symbolPlacement: 'line-center',
+      autoLabelLines: true,
     },
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
@@ -323,6 +325,7 @@ export class Map {
     }
     const { places, style, styles, features, amenities } = await Repository.getPackage(
       this.defaultOptions.initPolygons,
+      this.defaultOptions.polygonsOptions.autoLabelLines,
       this.defaultOptions.amenityIdProperty,
       this.defaultOptions.hiddenAmenities,
     );
@@ -542,6 +545,7 @@ export class Map {
       console.log('data should be refetched');
       const { features } = await Repository.getPackage(
         this.defaultOptions.initPolygons,
+        this.defaultOptions.polygonsOptions.autoLabelLines,
         this.defaultOptions.amenityIdProperty,
         this.defaultOptions.hiddenAmenities,
       );

@@ -3,9 +3,19 @@ import Feature, { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 import { globalState } from '../components/map/main';
 import { FeatureCollection as FCModel, Feature as FModel, Polygon, MultiPolygon } from '@turf/helpers';
-import { booleanPointInPolygon, pointOnFeature } from '@turf/turf';
+import {
+  booleanPointInPolygon,
+  pointOnFeature,
+  lineString,
+  length,
+  pointToLineDistance,
+  centroid,
+  lineOffset,
+  transformScale,
+  lineIntersect,
+} from '@turf/turf';
 
-export const getFeatures = async (initPolygons?: boolean, hiddenAmenities?: string[]) => {
+export const getFeatures = async (initPolygons?: boolean, autoLabelLines?: boolean, hiddenAmenities?: string[]) => {
   const url = '/v5/geo/features';
   const res = await axios.get(url);
   if (initPolygons) {
@@ -59,7 +69,7 @@ export const getFeatures = async (initPolygons?: boolean, hiddenAmenities?: stri
           connectedPolygon.properties._dynamic.type = 'shop-custom';
           connectedPolygon.properties._dynamic.poi_id = feature.properties.id;
           connectedPolygon.properties._dynamic.amenity = feature.properties.amenity;
-          // id have to be changed to numetic type so feature state will work
+          // id have to be changed to numeric type so feature state will work
           connectedPolygon.id = JSON.stringify(key);
 
           // check if feature is inside a polygon
@@ -72,7 +82,7 @@ export const getFeatures = async (initPolygons?: boolean, hiddenAmenities?: stri
           });
 
           if (connectedLabelLine) {
-            // id have to be changed to numetic type so feature state will work
+            // id have to be changed to numeric type so feature state will work
             connectedLabelLine.id = JSON.stringify(key + 9999);
             feature.properties._dynamic.label_id = connectedLabelLine.id;
             connectedPolygon.properties._dynamic.label_id = connectedLabelLine.id;
@@ -90,27 +100,85 @@ export const getFeatures = async (initPolygons?: boolean, hiddenAmenities?: stri
             connectedLabelLine.properties.title_i18n = feature.properties.title_i18n;
           }
 
-          const labelLine = connectedPolygon.properties['label-line']
-            ? JSON.parse(JSON.stringify(connectedPolygon.properties['label-line']))
-            : connectedPolygon.properties.metadata && connectedPolygon.properties.metadata['label-line']
-            ? JSON.parse(JSON.stringify(connectedPolygon.properties.metadata['label-line']))
-            : feature.properties.metadata && feature.properties.metadata['label-line']
-            ? JSON.parse(JSON.stringify(feature.properties.metadata['label-line']))
-            : undefined;
-          if (labelLine && labelLine !== undefined && labelLine.length > 0) {
-            const parsedLabelLine = typeof labelLine === 'string' ? JSON.parse(labelLine) : labelLine;
-            if (parsedLabelLine[0] instanceof Array && parsedLabelLine[1] instanceof Array) {
-              const labelLineFeature = JSON.parse(JSON.stringify(feature));
-              labelLineFeature.geometry = {
-                coordinates: parsedLabelLine,
-                type: 'LineString',
-              };
-              labelLineFeature.properties.id = JSON.stringify(key + 9999);
-              labelLineFeature.id = JSON.stringify(key + 9999);
-              labelLineFeature.properties.type = 'shop-label';
-              labelLineFeature.properties._dynamic.type = 'shop-label';
-              connectedPolygon.properties._dynamic.label_id = labelLineFeature.properties.id;
-              featuresToAdd.push(labelLineFeature);
+          if (!connectedLabelLine) {
+            const labelLine = connectedPolygon.properties['label-line']
+              ? JSON.parse(JSON.stringify(connectedPolygon.properties['label-line']))
+              : connectedPolygon.properties.metadata && connectedPolygon.properties.metadata['label-line']
+              ? JSON.parse(JSON.stringify(connectedPolygon.properties.metadata['label-line']))
+              : feature.properties.metadata && feature.properties.metadata['label-line']
+              ? JSON.parse(JSON.stringify(feature.properties.metadata['label-line']))
+              : undefined;
+            if (labelLine && labelLine !== undefined && labelLine.length > 0) {
+              const parsedLabelLine = typeof labelLine === 'string' ? JSON.parse(labelLine) : labelLine;
+              if (parsedLabelLine[0] instanceof Array && parsedLabelLine[1] instanceof Array) {
+                const labelLineFeature = JSON.parse(JSON.stringify(feature));
+                labelLineFeature.geometry = {
+                  coordinates: parsedLabelLine,
+                  type: 'LineString',
+                };
+                labelLineFeature.properties.id = JSON.stringify(key + 9999);
+                labelLineFeature.id = JSON.stringify(key + 9999);
+                labelLineFeature.properties.type = 'shop-label';
+                labelLineFeature.properties._dynamic.type = 'shop-label';
+                connectedPolygon.properties._dynamic.label_id = labelLineFeature.properties.id;
+                featuresToAdd.push(labelLineFeature);
+              }
+            } else if (autoLabelLines) {
+              let longestBorder;
+              let labelLine;
+
+              // loop through segments and find the longest border
+              for (let i = 0; i < connectedPolygon.geometry.coordinates[0][0].length; i++) {
+                const currentCoords = connectedPolygon.geometry.coordinates[0][0][i];
+                const nextCoords = connectedPolygon.geometry.coordinates[0][0][i + 1];
+
+                if (nextCoords) {
+                  const border = lineString([currentCoords, nextCoords], {
+                    ...feature.properties,
+                  });
+
+                  // measure border length
+                  const borderLength = length(border);
+                  border.properties._dynamic = { ...border.properties._dynamic, length: borderLength };
+
+                  // if there is not longest border define it
+                  if (!longestBorder) {
+                    longestBorder = border;
+                  } else {
+                    // if current segment border is longer, rewrite it
+                    if (borderLength > longestBorder.properties._dynamic.length) {
+                      longestBorder = border;
+                    }
+                  }
+                }
+              }
+
+              // measure length from longest border to polygon center
+              const distanceToCenter = pointToLineDistance(centroid(connectedPolygon), longestBorder);
+
+              // offset border to polygon center and make it longer to get intersections with the polygon
+              labelLine = lineOffset(longestBorder, distanceToCenter);
+              labelLine = transformScale(labelLine, 10);
+
+              const intersection = lineIntersect(connectedPolygon, labelLine);
+
+              // if there are more than 1 intersections, get the line betweeen them
+              if (intersection.features.length > 1) {
+                const intersectedLine = lineString([
+                  intersection.features[0].geometry.coordinates,
+                  intersection.features[intersection.features.length - 1].geometry.coordinates,
+                ]);
+
+                // use the interstections line as the label line
+                labelLine.geometry = intersectedLine.geometry;
+              }
+
+              labelLine.properties.id = JSON.stringify(key + 9999);
+              labelLine.id = JSON.stringify(key + 9999);
+              labelLine.properties.type = 'shop-label';
+              labelLine.properties._dynamic.type = 'shop-label';
+              connectedPolygon.properties._dynamic.label_id = labelLine.properties.id;
+              featuresToAdd.push(labelLine);
             }
           }
         }

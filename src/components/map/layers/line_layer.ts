@@ -2,13 +2,13 @@ import BaseLayer, { Serializable } from './base_layer';
 
 export class PaintProperties extends Serializable {
   lineColor: string;
-  lineOpacity: number;
-  lineTranslate: [number, number];
-  lineTranslateAnchor: 'map' | 'viewport';
+  lineOpacity?: number;
+  lineTranslate?: [number, number];
+  lineTranslateAnchor?: 'map' | 'viewport';
   lineWidth: number;
-  lineGapWidth: number;
-  lineOffset: number;
-  lineBlur: number;
+  lineGapWidth?: number;
+  lineOffset?: number;
+  lineBlur?: number;
   lineDasharray?: [number, number];
   linePattern?: string;
   lineGradient?: string;
@@ -30,11 +30,11 @@ export class PaintProperties extends Serializable {
 }
 
 export class LayoutProperties extends Serializable {
-  visibility: 'visible' | 'none';
+  visibility?: 'visible' | 'none';
   lineCap: 'butt' | 'round' | 'square';
   lineJoin: 'bevel' | 'round' | 'miter';
-  lineMiterLimit: number;
-  lineRoundLimit: number;
+  lineMiterLimit?: number;
+  lineRoundLimit?: number;
 
   constructor(data: any) {
     super();
