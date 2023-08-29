@@ -2156,16 +2156,15 @@ export class Map {
   }
 
   private updateImages() {
-    this.state.amenities
-      .forEach((amenity) => {
-        this.amenityIds.push(amenity.id);
-        if (amenity.icon) {
-          this.map.loadImage(amenity.icon, (error: any, image: any) => {
-            if (error) throw error;
-            this.map.addImage(amenity.id, image);
-          });
-        }
-      });
+    this.state.amenities.forEach((amenity) => {
+      this.amenityIds.push(amenity.id);
+      if (amenity.icon) {
+        this.map.loadImage(amenity.icon, (error: any, image: any) => {
+          if (error) throw error;
+          this.map.addImage(amenity.id, image);
+        });
+      }
+    });
   }
 
   private getUpcomingFloorNumber(way: string) {
