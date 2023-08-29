@@ -2157,13 +2157,14 @@ export class Map {
 
   private updateImages() {
     this.state.amenities
-      .filter((a) => a.icon)
       .forEach((amenity) => {
         this.amenityIds.push(amenity.id);
-        this.map.loadImage(amenity.icon, (error: any, image: any) => {
-          if (error) throw error;
-          this.map.addImage(amenity.id, image);
-        });
+        if (amenity.icon) {
+          this.map.loadImage(amenity.icon, (error: any, image: any) => {
+            if (error) throw error;
+            this.map.addImage(amenity.id, image);
+          });
+        }
       });
   }
 
