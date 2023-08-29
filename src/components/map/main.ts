@@ -181,6 +181,7 @@ export class Map {
   private onPolygonClickListener = new Subject<Feature>();
   private onPoiClickListener = new Subject<Feature>();
   private onPersonUpdateListener = new Subject<PersonModel[]>();
+  private onStepSetListener = new Subject<number>();
   private defaultOptions: Options = {
     selector: 'proximiioMap',
     allowNewFeatureModal: false,
@@ -267,6 +268,7 @@ export class Map {
   private amenityCategories: any = {};
   private hoveredPolygon: any;
   private selectedPolygon: any;
+  private currentStep = 0;
 
   constructor(options: Options) {
     // fix centering in case of kiosk with defined pitch/bearing/etc. in mapbox options
@@ -725,14 +727,16 @@ export class Map {
             !isNaN(directionIcon.properties.destinationLevel) &&
             ev.features[0].properties.id === directionIcon.properties.levelChangerId
           ) {
-            this.setFloorByLevel(directionIcon.properties.destinationLevel);
+            // this.setFloorByLevel(directionIcon.properties.destinationLevel);
+            this.setNavStep('next');
           }
         }
       });
       this.map.on('click', 'direction-popup-layer', (ev) => {
         if (this.routingSource.points) {
           if (ev.features[0].properties && !isNaN(ev.features[0].properties.destinationLevel)) {
-            this.setFloorByLevel(ev.features[0].properties.destinationLevel);
+            // this.setFloorByLevel(ev.features[0].properties.destinationLevel);
+            this.setNavStep('next');
           }
         }
       });
@@ -1770,6 +1774,7 @@ export class Map {
 
     if (event === 'loading-finished') {
       if (this.routingSource.route) {
+        this.currentStep = 0;
         const routeStart = this.routingSource.lines[0];
         const textNavigation = this.routeFactory.generateRoute(
           JSON.stringify(this.routingSource.points),
@@ -1794,7 +1799,7 @@ export class Map {
           });
         }
 
-        this.centerOnRoute(routeStart);
+        this.focusOnRoute();
 
         this.onRouteFoundListener.next({
           route: this.routingSource.route,
@@ -2015,22 +2020,7 @@ export class Map {
         this.imageSourceManager.setLevel(map, floor.level, this.state);
       });
       if (route) {
-        const routePoints = lineString(
-          this.routingSource.levelPoints[floor.level].map((i: any) => i.geometry.coordinates),
-        );
-        const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
-        const bbox = turf.bbox(routePoints);
-        if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
-          // @ts-ignore;
-          map.fitBounds(bbox, {
-            padding: this.defaultOptions.fitBoundsPadding,
-            bearing: this.map.getBearing(),
-            pitch: this.map.getPitch(),
-          });
-        } else {
-          // @ts-ignore
-          this.map.flyTo({ center: turf.center(routePoints).geometry.coordinates });
-        }
+        this.focusOnRoute(floor);
       }
       if (this.defaultOptions.isKiosk && map.getLayer('my-location-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
@@ -2122,30 +2112,34 @@ export class Map {
     }
   }
 
-  private centerOnRoute(route: Feature) {
+  private centerOnRoute({ route, wholeFloor }: { route: Feature; wholeFloor: boolean }) {
     if (route && route.properties) {
       if (this.state.floor.level !== +route.properties.level) {
         const floor = this.state.floors.find((f) => f.level === +route.properties.level);
         if (floor) this.onFloorSelect(floor);
       }
       if (this.map) {
-        const routePoints = lineString(
-          this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
-        );
-        const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
-        const bbox = turf.bbox(routePoints);
-        if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
-          // @ts-ignore;
-          this.map.fitBounds(bbox, {
-            padding: this.defaultOptions.fitBoundsPadding,
-            bearing: this.map.getBearing(),
-            pitch: this.map.getPitch(),
-          });
-        } else {
-          // @ts-ignore
-          this.map.flyTo({ center: turf.center(routePoints).geometry.coordinates });
-        }
+        this.focusOnRoute(wholeFloor ? this.state.floor : null);
       }
+    }
+  }
+
+  private focusOnRoute(floor?: FloorModel) {
+    const routePoints = floor
+      ? lineString(this.routingSource.levelPoints[floor.level].map((i: any) => i.geometry.coordinates))
+      : this.routingSource.route[`path-part-${this.currentStep}`];
+    const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
+    const bbox = turf.bbox(routePoints);
+    if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
+      // @ts-ignore;
+      this.map.fitBounds(bbox, {
+        padding: this.defaultOptions.fitBoundsPadding,
+        bearing: this.map.getBearing(),
+        pitch: this.map.getPitch(),
+      });
+    } else {
+      // @ts-ignore
+      this.map.flyTo({ center: turf.center(routePoints).geometry.coordinates });
     }
   }
 
@@ -2657,6 +2651,57 @@ export class Map {
   }
 
   /**
+   * This method will set the current step for route navigation so map can focus on a proper path part
+   *  @memberof Map
+   *  @name setNavStep
+   *  @param step { number } Number of route part to focus on
+   *  @returns active step
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.setNavStep(0);
+   *  });
+   */
+  public setNavStep(step: number | 'next' | 'previous') {
+    let newStep = 0;
+    if (isNumber(step)) {
+      newStep = +step;
+    }
+    if (step === 'next') {
+      newStep = this.currentStep + 1;
+    }
+    if (step === 'next' && (Object.keys(this.routingSource.route).length - 1) === this.currentStep) {
+      newStep = 0;
+    }
+    if (step === 'previous' && this.currentStep > 0) {
+      newStep = this.currentStep - 1;
+    }
+    if (this.routingSource && this.routingSource.route && this.routingSource.route[`path-part-${newStep}`]) {
+      this.currentStep = newStep;
+      this.centerOnRoute({ route: this.routingSource.route[`path-part-${newStep}`], wholeFloor: false });
+      this.onStepSetListener.next(this.currentStep);
+      return step;
+    } else {
+      console.error(`Route not found`);
+    }
+  }
+
+  /**
+   *  @memberof Map
+   *  @name getNavStepSetListener
+   *  @returns returns step set listener
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getNavStepSetListener().subscribe(step => {
+   *    console.log('new step has been set', step);
+   *  });
+   */
+  public getNavStepSetListener() {
+    return this.onStepSetListener.asObservable();
+  }
+
+  /**
    * This method will return turn by turn text navigation object.
    *  @memberof Map
    *  @name getTBTNav
@@ -2730,7 +2775,7 @@ export class Map {
   public centerToRoute() {
     if (this.routingSource && this.routingSource.route && this.routingSource.route['path-part-0']) {
       const routeStart = this.routingSource.route['path-part-0'] as Feature;
-      this.centerOnRoute(routeStart);
+      this.centerOnRoute({ route: routeStart, wholeFloor: true });
       return routeStart;
     } else {
       throw new Error(`Route not found`);
