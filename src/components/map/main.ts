@@ -869,7 +869,6 @@ export class Map {
           'circle-color': '#1d8a9f',
           'circle-radius': 10,
         },
-        filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
       });
     }
   }
@@ -2043,11 +2042,6 @@ export class Map {
         map.setFilter('direction-popup-layer', filter);
         this.state.style.getLayer('direction-popup-layer').filter = filter;
       }
-      if (this.defaultOptions.animatedRoute && map.getLayer('route-point')) {
-        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
-        map.setFilter('route-point', filter);
-        this.state.style.getLayer('route-point').filter = filter;
-      }
       if (map.getLayer('highlight-icon-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
         map.setFilter('highlight-icon-layer', filter);
@@ -2130,6 +2124,7 @@ export class Map {
       : this.routingSource.route[`path-part-${this.currentStep}`];
     const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
     const bbox = turf.bbox(routePoints);
+
     if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
       // @ts-ignore;
       this.map.fitBounds(bbox, {
@@ -2140,6 +2135,10 @@ export class Map {
     } else {
       // @ts-ignore
       this.map.flyTo({ center: turf.center(routePoints).geometry.coordinates });
+    }
+
+    if (this.defaultOptions.animatedRoute && this.map.getLayer('route-point') && this.routingSource.route) {
+      this.addAnimatedRouteFeatures();
     }
   }
 
@@ -2187,7 +2186,7 @@ export class Map {
   // Used to increment the value of the point measurement against the route.
   private counter = 0;
   // store route part animation points
-  private arc = {};
+  private arc = [];
   // Number of steps to use in the arc and animation, more steps means
   // a smoother arc and animation, but too many steps will result in a
   // low frame rate
@@ -2195,51 +2194,27 @@ export class Map {
   private animationInstances = [];
   private addAnimatedRouteFeatures() {
     this.counter = 0;
-    this.arc = {};
-    const pointsArray = [];
+    this.arc = [];
 
-    for (const routePart of this.routingSource.lines) {
-      if (routePart.geometry.type === 'LineString') {
-        // Calculate the distance in kilometers between route start/end point.
-        const lineDistance = turf.length(routePart);
+    const routePart = this.routingSource.route[`path-part-${this.currentStep}`];
+    const lineDistance = turf.length(routePart);
 
-        this.arc[routePart.id] = [];
-
-        // Draw an arc between the `origin` & `destination` of the two points
-        for (let i = 0; i < lineDistance; i += lineDistance / this.steps) {
-          const segment = turf.along(turf.lineString(routePart.geometry.coordinates), i);
-          this.arc[routePart.id].push(segment.geometry.coordinates);
-        }
-
-        const point = turf.point(routePart.geometry.coordinates[0], {
-          ...routePart.properties,
-          routePartId: routePart.id,
-        });
-        pointsArray.push(point);
-      }
+    // Draw an arc between the `origin` & `destination` of the two points
+    for (let i = 0; i < lineDistance; i += lineDistance / this.steps) {
+      const segment = turf.along(routePart, i);
+      this.arc.push(segment.geometry.coordinates);
     }
-    this.state.style.sources['route-point'].data = turf.featureCollection(pointsArray);
-    this.map.setStyle(this.state.style);
     this.animate();
   }
 
   private animate() {
     const source = this.map.getSource('route-point') as any;
-    const currentRoutePartId = this.routingSource.levelPaths?.[this.state.floor.level]?.paths?.[0]?.id;
 
-    if (currentRoutePartId) {
-      const point = turf.point(
-        this.arc[currentRoutePartId]?.[this.counter]
-          ? this.arc[currentRoutePartId]?.[this.counter]
-          : this.arc[currentRoutePartId]?.[this.counter - 1],
-        {
-          ...this.routingSource.route[currentRoutePartId].properties,
-          routePartId: currentRoutePartId,
-        },
-      );
+    if (this.arc && (this.arc[this.counter] || this.arc[this.counter - 1])) {
+      const point = turf.point(this.arc[this.counter] ? this.arc[this.counter] : this.arc[this.counter - 1]);
 
-      const start = this.arc[currentRoutePartId]?.[this.counter >= this.steps ? this.counter - 1 : this.counter];
-      const end = this.arc[currentRoutePartId]?.[this.counter >= this.steps ? this.counter : this.counter + 1];
+      const start = this.arc[this.counter >= this.steps ? this.counter - 1 : this.counter];
+      const end = this.arc[this.counter >= this.steps ? this.counter : this.counter + 1];
 
       // Calculate the bearing to ensure the icon is rotated to match the route arc
       // The bearing is calculated between the current point and the next point, except
@@ -2253,6 +2228,7 @@ export class Map {
       }
 
       this.map.flyTo({
+        zoom: 20,
         center: start,
         bearing: newBearing,
         duration: 200,
@@ -2269,7 +2245,7 @@ export class Map {
       }
       if (this.counter === this.steps && this.defaultOptions.animationLooping) {
         setTimeout(() => {
-          this.restartAnimation();
+          // this.restartAnimation();
         }, 2000);
       }
 
@@ -2283,7 +2259,7 @@ export class Map {
     // cancel animation
     // this.cancelAnimation();
     // Restart the animation
-    this.animate();
+    // this.animate();
   }
 
   private cancelAnimation() {
@@ -2671,11 +2647,14 @@ export class Map {
     if (step === 'next') {
       newStep = this.currentStep + 1;
     }
-    if (step === 'next' && (Object.keys(this.routingSource.route).length - 1) === this.currentStep) {
+    if (step === 'next' && Object.keys(this.routingSource.route).length - 1 === this.currentStep) {
       newStep = 0;
     }
     if (step === 'previous' && this.currentStep > 0) {
       newStep = this.currentStep - 1;
+    }
+    if (newStep === this.currentStep) {
+      return;
     }
     if (this.routingSource && this.routingSource.route && this.routingSource.route[`path-part-${newStep}`]) {
       this.currentStep = newStep;
