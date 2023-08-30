@@ -2250,7 +2250,7 @@ export class Map {
         const animationInstance = window.requestAnimationFrame(this.animate.bind(this));
         this.animationInstances.push(animationInstance);
       }
-      if (this.counter === this.steps && this.defaultOptions.animationLooping || (!start || !end)) {
+      if ((this.counter === this.steps && this.defaultOptions.animationLooping) || !start || !end) {
         setTimeout(() => {
           this.running = false;
           this.restartAnimation();
