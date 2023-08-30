@@ -125,6 +125,7 @@ export declare class Map {
     private onPolygonClickListener;
     private onPoiClickListener;
     private onPersonUpdateListener;
+    private onStepSetListener;
     private defaultOptions;
     private routeFactory;
     private startPoint?;
@@ -139,6 +140,7 @@ export declare class Map {
     private amenityCategories;
     private hoveredPolygon;
     private selectedPolygon;
+    private currentStep;
     constructor(options: Options);
     private initialize;
     private cancelObservers;
@@ -196,6 +198,7 @@ export declare class Map {
     private onRouteCancel;
     private centerOnPoi;
     private centerOnRoute;
+    private focusOnRoute;
     private centerOnCoords;
     private updateImages;
     private getUpcomingFloorNumber;
@@ -402,6 +405,31 @@ export declare class Map {
      *  });
      */
     cancelRoute(): void;
+    /**
+     * This method will set the current step for route navigation so map can focus on a proper path part
+     *  @memberof Map
+     *  @name setNavStep
+     *  @param step { number } Number of route part to focus on
+     *  @returns active step
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.setNavStep(0);
+     *  });
+     */
+    setNavStep(step: number | 'next' | 'previous'): number | "next" | "previous";
+    /**
+     *  @memberof Map
+     *  @name getNavStepSetListener
+     *  @returns returns step set listener
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getNavStepSetListener().subscribe(step => {
+     *    console.log('new step has been set', step);
+     *  });
+     */
+    getNavStepSetListener(): import("rxjs").Observable<number>;
     /**
      * This method will return turn by turn text navigation object.
      *  @memberof Map
