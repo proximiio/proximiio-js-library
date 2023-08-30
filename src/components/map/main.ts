@@ -2643,7 +2643,7 @@ export class Map {
    * This method will set the current step for route navigation so map can focus on a proper path part
    *  @memberof Map
    *  @name setNavStep
-   *  @param step { number } Number of route part to focus on
+   *  @param step { number | 'next' | 'previous' } Number of route part to focus on or string next or previous
    *  @returns active step
    *  @example
    *  const map = new Proximiio.Map();

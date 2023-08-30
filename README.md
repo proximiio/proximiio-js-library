@@ -434,6 +434,19 @@ map.getMapReadyListener().subscribe(ready => {
 });
 ```
 
+##### Set navigation step
+
+Use this method to set the current step for route navigation so map can focus on a proper path part.
+
+```
+@param step { number | 'next' | 'previous' } Number of route part to focus on, you can use also strings next and previous
+
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   map.setNavStep('next');
+});
+```
+
 ##### Get turn by turn navigation object
 
 Retrieves the turn by turn navigation object.
@@ -829,7 +842,15 @@ map.getRouteFailedListener().subscribe(() => {
 
 ```
 map.getRouteCancelListener().subscribe(() => {
-   console.log('route cancelled);
+   console.log('route cancelled');
+});
+```
+
+##### Listen to step change event
+
+```
+map.getNavStepSetListener().subscribe(step => {
+   console.log('step changed', step);
 });
 ```
 
