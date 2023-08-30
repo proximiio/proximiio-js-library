@@ -485,9 +485,6 @@ export class Map {
       if (this.defaultOptions.isKiosk) {
         this.initKiosk();
       }
-      if (this.defaultOptions.useGpsLocation) {
-        this.initGeoLocation();
-      }
       if (this.defaultOptions.considerVisibilityParam) {
         this.handlePoiVisibility();
       }
@@ -533,6 +530,10 @@ export class Map {
       }
 
       this.onMapReadyListener.next(true);
+
+      if (this.defaultOptions.useGpsLocation) {
+        this.initGeoLocation();
+      }
 
       if (this.defaultOptions.handleUrlParams) {
         this.initUrlParams();
@@ -629,7 +630,7 @@ export class Map {
       if (this.defaultOptions.geolocationControlOptions.autoTrigger) {
         setTimeout(() => {
           geolocate.trigger();
-        });
+        }, 300);
       }
 
       if (this.defaultOptions.geolocationControlOptions.autoLocate === false) {
