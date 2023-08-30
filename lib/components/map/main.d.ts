@@ -206,6 +206,7 @@ export declare class Map {
     private arc;
     private steps;
     private animationInstances;
+    private running;
     private addAnimatedRouteFeatures;
     private animate;
     private restartAnimation;
