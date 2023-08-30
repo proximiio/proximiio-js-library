@@ -2192,6 +2192,7 @@ export class Map {
   // low frame rate
   private steps = 500;
   private animationInstances = [];
+  private running = false;
   private addAnimatedRouteFeatures() {
     this.counter = 0;
     this.arc = [];
@@ -2208,6 +2209,7 @@ export class Map {
   }
 
   private animate() {
+    this.running = true;
     const source = this.map.getSource('route-point') as any;
 
     if (this.arc && (this.arc[this.counter] || this.arc[this.counter - 1])) {
@@ -2215,6 +2217,11 @@ export class Map {
 
       const start = this.arc[this.counter >= this.steps ? this.counter - 1 : this.counter];
       const end = this.arc[this.counter >= this.steps ? this.counter : this.counter + 1];
+
+      /*if (!start || !end) {
+        this.running = false;
+        return;
+      }*/
 
       // Calculate the bearing to ensure the icon is rotated to match the route arc
       // The bearing is calculated between the current point and the next point, except
@@ -2243,9 +2250,10 @@ export class Map {
         const animationInstance = window.requestAnimationFrame(this.animate.bind(this));
         this.animationInstances.push(animationInstance);
       }
-      if (this.counter === this.steps && this.defaultOptions.animationLooping) {
+      if (this.counter === this.steps && this.defaultOptions.animationLooping || (!start || !end)) {
         setTimeout(() => {
-          // this.restartAnimation();
+          this.running = false;
+          this.restartAnimation();
         }, 2000);
       }
 
@@ -2254,12 +2262,16 @@ export class Map {
   }
 
   private restartAnimation() {
-    // Reset the counter
-    this.counter = 0;
-    // cancel animation
-    // this.cancelAnimation();
-    // Restart the animation
-    // this.animate();
+    if (this.running) {
+      void 0;
+    } else {
+      // Reset the counter
+      this.counter = 0;
+      // cancel animation
+      this.cancelAnimation();
+      // Restart the animation
+      this.animate();
+    }
   }
 
   private cancelAnimation() {
