@@ -93,7 +93,7 @@ export default class Routing {
           pathPoints[`path-part-${pathPartIndex}`] = [];
         }
         pathPoints[`path-part-${pathPartIndex}`].push(p);
-        if (p.isLevelChanger && points[index + 1].isLevelChanger) {
+        if (p.isLevelChanger && p.properties.level !== points[index + 1].properties.level) {
           pathPartIndex++;
         }
       }

@@ -728,16 +728,16 @@ export class Map {
             !isNaN(directionIcon.properties.destinationLevel) &&
             ev.features[0].properties.id === directionIcon.properties.levelChangerId
           ) {
-            // this.setFloorByLevel(directionIcon.properties.destinationLevel);
-            this.setNavStep('next');
+            this.setFloorByLevel(directionIcon.properties.destinationLevel);
+            //this.setNavStep('next');
           }
         }
       });
       this.map.on('click', 'direction-popup-layer', (ev) => {
         if (this.routingSource.points) {
           if (ev.features[0].properties && !isNaN(ev.features[0].properties.destinationLevel)) {
-            // this.setFloorByLevel(ev.features[0].properties.destinationLevel);
-            this.setNavStep('next');
+            this.setFloorByLevel(ev.features[0].properties.destinationLevel);
+            //this.setNavStep('next');
           }
         }
       });
@@ -870,6 +870,7 @@ export class Map {
           'circle-color': '#1d8a9f',
           'circle-radius': 10,
         },
+        filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
       });
     }
   }
@@ -1774,7 +1775,7 @@ export class Map {
 
     if (event === 'loading-finished') {
       if (this.routingSource.route) {
-        this.currentStep = 0;
+        // this.currentStep = 0;
         const routeStart = this.routingSource.lines[0];
         const textNavigation = this.routeFactory.generateRoute(
           JSON.stringify(this.routingSource.points),
@@ -1799,7 +1800,8 @@ export class Map {
           });
         }
 
-        this.focusOnRoute();
+        //this.focusOnRoute();
+        this.centerOnRoute(routeStart);
 
         this.onRouteFoundListener.next({
           route: this.routingSource.route,
@@ -2020,7 +2022,22 @@ export class Map {
         this.imageSourceManager.setLevel(map, floor.level, this.state);
       });
       if (route) {
-        this.focusOnRoute(floor);
+        const routePoints = lineString(
+          this.routingSource.levelPoints[floor.level].map((i: any) => i.geometry.coordinates),
+        );
+        const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
+        const bbox = turf.bbox(routePoints);
+        if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
+          // @ts-ignore;
+          map.fitBounds(bbox, {
+            padding: this.defaultOptions.fitBoundsPadding,
+            bearing: this.map.getBearing(),
+            pitch: this.map.getPitch(),
+          });
+        } else {
+          // @ts-ignore
+          this.map.flyTo({ center: turf.center(routePoints).geometry.coordinates });
+        }
       }
       if (this.defaultOptions.isKiosk && map.getLayer('my-location-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
@@ -2042,6 +2059,11 @@ export class Map {
 
         map.setFilter('direction-popup-layer', filter);
         this.state.style.getLayer('direction-popup-layer').filter = filter;
+      }
+      if (this.defaultOptions.animatedRoute && map.getLayer('route-point')) {
+        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
+        map.setFilter('route-point', filter);
+        this.state.style.getLayer('route-point').filter = filter;
       }
       if (map.getLayer('highlight-icon-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
@@ -2107,19 +2129,34 @@ export class Map {
     }
   }
 
-  private centerOnRoute({ route, wholeFloor }: { route: Feature; wholeFloor: boolean }) {
+  private centerOnRoute(route: Feature) {
     if (route && route.properties) {
       if (this.state.floor.level !== +route.properties.level) {
         const floor = this.state.floors.find((f) => f.level === +route.properties.level);
         if (floor) this.onFloorSelect(floor);
       }
       if (this.map) {
-        this.focusOnRoute(wholeFloor ? this.state.floor : null);
+        const routePoints = lineString(
+          this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
+        );
+        const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
+        const bbox = turf.bbox(routePoints);
+        if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
+          // @ts-ignore;
+          this.map.fitBounds(bbox, {
+            padding: this.defaultOptions.fitBoundsPadding,
+            bearing: this.map.getBearing(),
+            pitch: this.map.getPitch(),
+          });
+        } else {
+          // @ts-ignore
+          this.map.flyTo({ center: turf.center(routePoints).geometry.coordinates });
+        }
       }
     }
   }
 
-  private focusOnRoute(floor?: FloorModel) {
+  /*private focusOnRoute(floor?: FloorModel) {
     const routePoints = floor
       ? lineString(this.routingSource.levelPoints[floor.level].map((i: any) => i.geometry.coordinates))
       : this.routingSource.route[`path-part-${this.currentStep}`];
@@ -2141,7 +2178,7 @@ export class Map {
     if (this.defaultOptions.animatedRoute && this.map.getLayer('route-point') && this.routingSource.route) {
       this.addAnimatedRouteFeatures();
     }
-  }
+  }*/
 
   private centerOnCoords(lat: number, lng: number, zoom?: number) {
     if (this.map) {
@@ -2187,42 +2224,59 @@ export class Map {
   // Used to increment the value of the point measurement against the route.
   private counter = 0;
   // store route part animation points
-  private arc = [];
+  private arc = {};
   // Number of steps to use in the arc and animation, more steps means
   // a smoother arc and animation, but too many steps will result in a
   // low frame rate
   private steps = 500;
   private animationInstances = [];
-  private running = false;
   private addAnimatedRouteFeatures() {
     this.counter = 0;
-    this.arc = [];
+    this.arc = {};
+    const pointsArray = [];
 
-    const routePart = this.routingSource.route[`path-part-${this.currentStep}`];
-    const lineDistance = turf.length(routePart);
+    for (const routePart of this.routingSource.lines) {
+      if (routePart.geometry.type === 'LineString') {
+        // Calculate the distance in kilometers between route start/end point.
+        const lineDistance = turf.length(routePart);
 
-    // Draw an arc between the `origin` & `destination` of the two points
-    for (let i = 0; i < lineDistance; i += lineDistance / this.steps) {
-      const segment = turf.along(routePart, i);
-      this.arc.push(segment.geometry.coordinates);
+        this.arc[routePart.id] = [];
+
+        // Draw an arc between the `origin` & `destination` of the two points
+        for (let i = 0; i < lineDistance; i += lineDistance / this.steps) {
+          const segment = turf.along(turf.lineString(routePart.geometry.coordinates), i);
+          this.arc[routePart.id].push(segment.geometry.coordinates);
+        }
+
+        const point = turf.point(routePart.geometry.coordinates[0], {
+          ...routePart.properties,
+          routePartId: routePart.id,
+        });
+        pointsArray.push(point);
+      }
     }
+    this.state.style.sources['route-point'].data = turf.featureCollection(pointsArray);
+    this.map.setStyle(this.state.style);
     this.animate();
   }
 
   private animate() {
-    this.running = true;
     const source = this.map.getSource('route-point') as any;
+    const currentRoutePartId = this.routingSource.levelPaths?.[this.state.floor.level]?.paths?.[0]?.id;
 
-    if (this.arc && (this.arc[this.counter] || this.arc[this.counter - 1])) {
-      const point = turf.point(this.arc[this.counter] ? this.arc[this.counter] : this.arc[this.counter - 1]);
+    if (currentRoutePartId) {
+      const point = turf.point(
+        this.arc[currentRoutePartId]?.[this.counter]
+          ? this.arc[currentRoutePartId]?.[this.counter]
+          : this.arc[currentRoutePartId]?.[this.counter - 1],
+        {
+          ...this.routingSource.route[currentRoutePartId].properties,
+          routePartId: currentRoutePartId,
+        },
+      );
 
-      const start = this.arc[this.counter >= this.steps ? this.counter - 1 : this.counter];
-      const end = this.arc[this.counter >= this.steps ? this.counter : this.counter + 1];
-
-      /*if (!start || !end) {
-        this.running = false;
-        return;
-      }*/
+      const start = this.arc[currentRoutePartId]?.[this.counter >= this.steps ? this.counter - 1 : this.counter];
+      const end = this.arc[currentRoutePartId]?.[this.counter >= this.steps ? this.counter : this.counter + 1];
 
       // Calculate the bearing to ensure the icon is rotated to match the route arc
       // The bearing is calculated between the current point and the next point, except
@@ -2236,7 +2290,6 @@ export class Map {
       }
 
       this.map.flyTo({
-        zoom: 20,
         center: start,
         bearing: newBearing,
         duration: 200,
@@ -2251,9 +2304,8 @@ export class Map {
         const animationInstance = window.requestAnimationFrame(this.animate.bind(this));
         this.animationInstances.push(animationInstance);
       }
-      if ((this.counter === this.steps && this.defaultOptions.animationLooping) || !start || !end) {
+      if (this.counter === this.steps && this.defaultOptions.animationLooping) {
         setTimeout(() => {
-          this.running = false;
           this.restartAnimation();
         }, 2000);
       }
@@ -2263,16 +2315,12 @@ export class Map {
   }
 
   private restartAnimation() {
-    if (this.running) {
-      void 0;
-    } else {
-      // Reset the counter
-      this.counter = 0;
-      // cancel animation
-      this.cancelAnimation();
-      // Restart the animation
-      this.animate();
-    }
+    // Reset the counter
+    this.counter = 0;
+    // cancel animation
+    // this.cancelAnimation();
+    // Restart the animation
+    this.animate();
   }
 
   private cancelAnimation() {
@@ -2652,7 +2700,7 @@ export class Map {
    *    map.setNavStep(0);
    *  });
    */
-  public setNavStep(step: number | 'next' | 'previous') {
+  /*public setNavStep(step: number | 'next' | 'previous') {
     let newStep = 0;
     if (isNumber(step)) {
       newStep = +step;
@@ -2677,7 +2725,7 @@ export class Map {
     } else {
       console.error(`Route not found`);
     }
-  }
+  }*/
 
   /**
    *  @memberof Map
@@ -2689,9 +2737,9 @@ export class Map {
    *    console.log('new step has been set', step);
    *  });
    */
-  public getNavStepSetListener() {
+  /*public getNavStepSetListener() {
     return this.onStepSetListener.asObservable();
-  }
+  }*/
 
   /**
    * This method will return turn by turn text navigation object.
@@ -2767,7 +2815,7 @@ export class Map {
   public centerToRoute() {
     if (this.routingSource && this.routingSource.route && this.routingSource.route['path-part-0']) {
       const routeStart = this.routingSource.route['path-part-0'] as Feature;
-      this.centerOnRoute({ route: routeStart, wholeFloor: true });
+      this.centerOnRoute(routeStart);
       return routeStart;
     } else {
       throw new Error(`Route not found`);
