@@ -729,7 +729,7 @@ export class Map {
             ev.features[0].properties.id === directionIcon.properties.levelChangerId
           ) {
             this.setFloorByLevel(directionIcon.properties.destinationLevel);
-            //this.setNavStep('next');
+            // this.setNavStep('next');
           }
         }
       });
@@ -737,7 +737,7 @@ export class Map {
         if (this.routingSource.points) {
           if (ev.features[0].properties && !isNaN(ev.features[0].properties.destinationLevel)) {
             this.setFloorByLevel(ev.features[0].properties.destinationLevel);
-            //this.setNavStep('next');
+            // this.setNavStep('next');
           }
         }
       });
@@ -1800,7 +1800,7 @@ export class Map {
           });
         }
 
-        //this.focusOnRoute();
+        // this.focusOnRoute();
         this.centerOnRoute(routeStart);
 
         this.onRouteFoundListener.next({
