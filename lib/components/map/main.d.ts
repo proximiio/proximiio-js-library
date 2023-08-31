@@ -198,7 +198,6 @@ export declare class Map {
     private onRouteCancel;
     private centerOnPoi;
     private centerOnRoute;
-    private focusOnRoute;
     private centerOnCoords;
     private updateImages;
     private getUpcomingFloorNumber;
@@ -206,7 +205,6 @@ export declare class Map {
     private arc;
     private steps;
     private animationInstances;
-    private running;
     private addAnimatedRouteFeatures;
     private animate;
     private restartAnimation;
@@ -410,7 +408,7 @@ export declare class Map {
      * This method will set the current step for route navigation so map can focus on a proper path part
      *  @memberof Map
      *  @name setNavStep
-     *  @param step { number } Number of route part to focus on
+     *  @param step { number | 'next' | 'previous' } Number of route part to focus on or string next or previous
      *  @returns active step
      *  @example
      *  const map = new Proximiio.Map();
@@ -419,7 +417,6 @@ export declare class Map {
      *    map.setNavStep(0);
      *  });
      */
-    setNavStep(step: number | 'next' | 'previous'): number | "next" | "previous";
     /**
      *  @memberof Map
      *  @name getNavStepSetListener
@@ -430,7 +427,6 @@ export declare class Map {
      *    console.log('new step has been set', step);
      *  });
      */
-    getNavStepSetListener(): import("rxjs").Observable<number>;
     /**
      * This method will return turn by turn text navigation object.
      *  @memberof Map
