@@ -2161,7 +2161,7 @@ export class Map {
       }
     }
   }
-  
+
   private centerOnCoords(lat: number, lng: number, zoom?: number) {
     if (this.map) {
       this.map.flyTo({ center: [lng, lat], zoom: zoom ? zoom : 18 });
