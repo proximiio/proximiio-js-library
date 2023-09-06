@@ -39,7 +39,7 @@ class App extends React.Component {
       },
     ];
 
-    Proximiio.Auth.loginWithToken('token')
+    Proximiio.Auth.loginWithToken('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImlzcyI6IjQ0MDEwZjZmLTk5NjMtNDQzMy1hZDg2LTQwYjg5YjgyOWM0MSIsInR5cGUiOiJ1c2VyIiwidXNlciI6IkRlbW8gV2F5ZmluZGluZyIsInVzZXJfaWQiOiI1ZTBkNDVlMy0wMjVmLTRiMzItYmUwNy0wYzk0MjUxYmQ1NzMiLCJ0ZW5hbnRfaWQiOiI0NDAxMGY2Zi05OTYzLTQ0MzMtYWQ4Ni00MGI4OWI4MjljNDEifQ.reaAdK4uUqvGcDghQTmXtbsHR4mX9Hcinwwg4_uqwfQ')
       .then((res) => {
         console.log('Logged in', res);
 
@@ -80,6 +80,8 @@ class App extends React.Component {
 
         this.map.getMapReadyListener().subscribe(async (res) => {
           console.log('map ready', res);
+
+          this.map.findRouteByIds('44010f6f-9963-4433-ad86-40b89b829c41:ff95cd74-4f26-4950-9b2b-e5a2be47d0b4', '44010f6f-9963-4433-ad86-40b89b829c41:a19f31a4-a235-4445-805a-9c7f7bce7073');
 
           this.map.getMapboxInstance().addControl(new mapboxgl.NavigationControl());
 

@@ -1,7 +1,8 @@
 import DataSource from './data_source';
 import Feature, { FeatureCollection } from '../../../models/feature';
 import Routing from '../routing';
-import { WayfindingConfigModel } from '../../../models/wayfinding';
+import { GuidanceStep, WayfindingConfigModel } from '../../../models/wayfinding';
+import GuidanceTextGenerator from '../guidanceTextGenerator';
 
 interface ChangeContainer {
   action: string;
@@ -29,6 +30,7 @@ export default class RoutingSource extends DataSource {
       shortest: number;
     };
   };
+  steps: GuidanceStep[];
 
   constructor() {
     super('route');
@@ -65,6 +67,8 @@ export default class RoutingSource extends DataSource {
       this.levelPaths = route?.levelPaths;
       this.levelPoints = route?.levelPoints;
       this.details = route?.details;
+      const guidanceTextGenerator = new GuidanceTextGenerator(route?.points);
+      this.steps = guidanceTextGenerator.steps;
 
       if (paths) {
         const lines = [] as Feature[];
@@ -101,6 +105,7 @@ export default class RoutingSource extends DataSource {
     this.levelPaths = undefined;
     this.levelPoints = undefined;
     this.details = undefined;
+    this.steps = undefined;
     this.data = new FeatureCollection({
       features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),
     });

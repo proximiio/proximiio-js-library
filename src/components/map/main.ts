@@ -1775,6 +1775,7 @@ export class Map {
 
     if (event === 'loading-finished') {
       if (this.routingSource.route) {
+        console.log('routing source', this.routingSource);
         this.currentStep = 0;
         const routeStart = this.routingSource.lines[0];
         const textNavigation = this.routeFactory.generateRoute(

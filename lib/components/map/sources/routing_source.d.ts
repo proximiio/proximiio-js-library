@@ -1,7 +1,7 @@
 import DataSource from './data_source';
 import Feature from '../../../models/feature';
 import Routing from '../routing';
-import { WayfindingConfigModel } from '../../../models/wayfinding';
+import { GuidanceStep, WayfindingConfigModel } from '../../../models/wayfinding';
 interface ChangeContainer {
     action: string;
     feature: Feature;
@@ -27,6 +27,7 @@ export default class RoutingSource extends DataSource {
             shortest: number;
         };
     };
+    steps: GuidanceStep[];
     constructor();
     toggleAccessible(value: any): void;
     setConfig(config: WayfindingConfigModel): void;
