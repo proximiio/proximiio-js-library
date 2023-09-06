@@ -32,6 +32,7 @@ export default class Feature extends BaseModel {
     get isElevator(): boolean;
     get isEscalator(): boolean;
     get isStairCase(): boolean;
+    get isRamp(): boolean;
     get isLevelChanger(): boolean;
     get isText(): boolean;
     get isSynthetic(): boolean;

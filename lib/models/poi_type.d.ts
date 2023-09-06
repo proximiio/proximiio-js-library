@@ -9,6 +9,7 @@ export declare const POI_TYPE: {
     ELEVATOR: string;
     ESCALATOR: string;
     STAIRCASE: string;
+    RAMP: string;
     TEXT: string;
 };
 export default class PoiType {
