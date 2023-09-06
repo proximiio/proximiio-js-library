@@ -417,6 +417,7 @@ export declare class Map {
      *    map.setNavStep(0);
      *  });
      */
+    setNavStep(step: number | 'next' | 'previous'): number | "next" | "previous";
     /**
      *  @memberof Map
      *  @name getNavStepSetListener
@@ -427,6 +428,7 @@ export declare class Map {
      *    console.log('new step has been set', step);
      *  });
      */
+    getNavStepSetListener(): import("rxjs").Observable<number>;
     /**
      * This method will return turn by turn text navigation object.
      *  @memberof Map
