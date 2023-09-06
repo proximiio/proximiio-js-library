@@ -9,6 +9,7 @@ export const POI_TYPE = {
   ELEVATOR: 'elevator',
   ESCALATOR: 'escalator',
   STAIRCASE: 'staircase',
+  RAMP: 'ramp',
   TEXT: 'text',
 };
 

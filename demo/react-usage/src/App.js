@@ -39,7 +39,7 @@ class App extends React.Component {
       },
     ];
 
-    Proximiio.Auth.loginWithToken('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImlzcyI6IjI3NzlhOGI1LTg3NTUtNDVhMC05NTc3LTBjMTc4NmI3YmI1NSIsInR5cGUiOiJhcHBsaWNhdGlvbiIsImFwcGxpY2F0aW9uX2lkIjoiNTExMzEyMTAtNmU0Yi00ZDU4LWE3ZjEtMWEzYmUzY2Y5ZDA3In0.aYfkGWaUEZEgZIW8qgwZ0cKVBilRp1hUDs8RxEeJZMU')
+    Proximiio.Auth.loginWithToken('token')
       .then((res) => {
         console.log('Logged in', res);
 
@@ -73,7 +73,7 @@ class App extends React.Component {
             pitch: 40,
           },
           initPolygons: true,
-          defaultPlaceId: 'd39e860a-2b0a-40d5-903b-169d7ac1029c',
+          // defaultPlaceId: 'default place id',
           showLevelDirectionIcon: true,
           animatedRoute: true
         });

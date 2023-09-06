@@ -118,8 +118,12 @@ export default class Feature extends BaseModel {
     return this.properties.type === POI_TYPE.STAIRCASE;
   }
 
+  get isRamp() {
+    return this.properties.type === POI_TYPE.RAMP;
+  }
+
   get isLevelChanger() {
-    return this.isElevator || this.isEscalator || this.isStairCase;
+    return this.isElevator || this.isEscalator || this.isStairCase || this.isRamp;
   }
 
   get isText() {
