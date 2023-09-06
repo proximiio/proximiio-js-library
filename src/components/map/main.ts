@@ -729,7 +729,7 @@ export class Map {
             ev.features[0].properties.id === directionIcon.properties.levelChangerId
           ) {
             this.setFloorByLevel(directionIcon.properties.destinationLevel);
-            // this.setNavStep('next');
+            this.setNavStep('next');
           }
         }
       });
@@ -737,7 +737,7 @@ export class Map {
         if (this.routingSource.points) {
           if (ev.features[0].properties && !isNaN(ev.features[0].properties.destinationLevel)) {
             this.setFloorByLevel(ev.features[0].properties.destinationLevel);
-            // this.setNavStep('next');
+            this.setNavStep('next');
           }
         }
       });
@@ -1775,7 +1775,7 @@ export class Map {
 
     if (event === 'loading-finished') {
       if (this.routingSource.route) {
-        // this.currentStep = 0;
+        this.currentStep = 0;
         const routeStart = this.routingSource.lines[0];
         const textNavigation = this.routeFactory.generateRoute(
           JSON.stringify(this.routingSource.points),
@@ -2022,9 +2022,11 @@ export class Map {
         this.imageSourceManager.setLevel(map, floor.level, this.state);
       });
       if (route) {
-        const routePoints = lineString(
-          this.routingSource.levelPoints[floor.level].map((i: any) => i.geometry.coordinates),
-        );
+        const routePoints =
+          this.routingSource.route[`path-part-${this.currentStep}`] &&
+          this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === floor.level
+            ? this.routingSource.route[`path-part-${this.currentStep}`]
+            : lineString(this.routingSource.levelPoints[floor.level].map((i: any) => i.geometry.coordinates));
         const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
         const bbox = turf.bbox(routePoints);
         if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
@@ -2136,9 +2138,13 @@ export class Map {
         if (floor) this.onFloorSelect(floor);
       }
       if (this.map) {
-        const routePoints = lineString(
-          this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
-        );
+        const routePoints =
+          this.routingSource.route[`path-part-${this.currentStep}`] &&
+          this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === this.state.floor.level
+            ? this.routingSource.route[`path-part-${this.currentStep}`]
+            : lineString(
+                this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
+              );
         const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
         const bbox = turf.bbox(routePoints);
         if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
@@ -2155,31 +2161,7 @@ export class Map {
       }
     }
   }
-
-  /*private focusOnRoute(floor?: FloorModel) {
-    const routePoints = floor
-      ? lineString(this.routingSource.levelPoints[floor.level].map((i: any) => i.geometry.coordinates))
-      : this.routingSource.route[`path-part-${this.currentStep}`];
-    const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
-    const bbox = turf.bbox(routePoints);
-
-    if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
-      // @ts-ignore;
-      this.map.fitBounds(bbox, {
-        padding: this.defaultOptions.fitBoundsPadding,
-        bearing: this.map.getBearing(),
-        pitch: this.map.getPitch(),
-      });
-    } else {
-      // @ts-ignore
-      this.map.flyTo({ center: turf.center(routePoints).geometry.coordinates });
-    }
-
-    if (this.defaultOptions.animatedRoute && this.map.getLayer('route-point') && this.routingSource.route) {
-      this.addAnimatedRouteFeatures();
-    }
-  }*/
-
+  
   private centerOnCoords(lat: number, lng: number, zoom?: number) {
     if (this.map) {
       this.map.flyTo({ center: [lng, lat], zoom: zoom ? zoom : 18 });
@@ -2262,7 +2244,11 @@ export class Map {
 
   private animate() {
     const source = this.map.getSource('route-point') as any;
-    const currentRoutePartId = this.routingSource.levelPaths?.[this.state.floor.level]?.paths?.[0]?.id;
+    const currentRoutePartId =
+      this.routingSource.route[`path-part-${this.currentStep}`] &&
+      this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === this.state.floor.level
+        ? this.routingSource.route[`path-part-${this.currentStep}`].id
+        : this.routingSource.levelPaths?.[this.state.floor.level]?.paths?.[0]?.id;
 
     if (currentRoutePartId) {
       const point = turf.point(
@@ -2700,7 +2686,7 @@ export class Map {
    *    map.setNavStep(0);
    *  });
    */
-  /*public setNavStep(step: number | 'next' | 'previous') {
+  public setNavStep(step: number | 'next' | 'previous') {
     let newStep = 0;
     if (isNumber(step)) {
       newStep = +step;
@@ -2719,13 +2705,13 @@ export class Map {
     }
     if (this.routingSource && this.routingSource.route && this.routingSource.route[`path-part-${newStep}`]) {
       this.currentStep = newStep;
-      this.centerOnRoute({ route: this.routingSource.route[`path-part-${newStep}`], wholeFloor: false });
+      this.centerOnRoute(this.routingSource.route[`path-part-${newStep}`]);
       this.onStepSetListener.next(this.currentStep);
       return step;
     } else {
       console.error(`Route not found`);
     }
-  }*/
+  }
 
   /**
    *  @memberof Map
@@ -2737,9 +2723,9 @@ export class Map {
    *    console.log('new step has been set', step);
    *  });
    */
-  /*public getNavStepSetListener() {
+  public getNavStepSetListener() {
     return this.onStepSetListener.asObservable();
-  }*/
+  }
 
   /**
    * This method will return turn by turn text navigation object.
