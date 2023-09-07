@@ -2,7 +2,7 @@ import DataSource from './data_source';
 import Feature, { FeatureCollection } from '../../../models/feature';
 import Routing from '../routing';
 import { GuidanceStep, WayfindingConfigModel } from '../../../models/wayfinding';
-import GuidanceTextGenerator from '../guidanceTextGenerator';
+import GuidanceStepsGenerator from '../guidanceStepsGenerator';
 
 interface ChangeContainer {
   action: string;
@@ -67,8 +67,8 @@ export default class RoutingSource extends DataSource {
       this.levelPaths = route?.levelPaths;
       this.levelPoints = route?.levelPoints;
       this.details = route?.details;
-      const guidanceTextGenerator = new GuidanceTextGenerator(route?.points);
-      this.steps = guidanceTextGenerator.steps;
+      const guidanceStepsGenerator = new GuidanceStepsGenerator(route?.points);
+      this.steps = guidanceStepsGenerator.steps;
 
       if (paths) {
         const lines = [] as Feature[];

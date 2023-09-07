@@ -39,7 +39,7 @@ class App extends React.Component {
       },
     ];
 
-    Proximiio.Auth.loginWithToken('eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImlzcyI6IjQ0MDEwZjZmLTk5NjMtNDQzMy1hZDg2LTQwYjg5YjgyOWM0MSIsInR5cGUiOiJ1c2VyIiwidXNlciI6IkRlbW8gV2F5ZmluZGluZyIsInVzZXJfaWQiOiI1ZTBkNDVlMy0wMjVmLTRiMzItYmUwNy0wYzk0MjUxYmQ1NzMiLCJ0ZW5hbnRfaWQiOiI0NDAxMGY2Zi05OTYzLTQ0MzMtYWQ4Ni00MGI4OWI4MjljNDEifQ.reaAdK4uUqvGcDghQTmXtbsHR4mX9Hcinwwg4_uqwfQ')
+    Proximiio.Auth.loginWithToken('token')
       .then((res) => {
         console.log('Logged in', res);
 

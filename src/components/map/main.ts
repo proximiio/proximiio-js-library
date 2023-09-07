@@ -29,8 +29,6 @@ import { Subject, throwIfEmpty } from 'rxjs';
 import * as turf from '@turf/turf';
 // @ts-ignore
 import * as tingle from 'tingle.js/dist/tingle';
-// @ts-ignore
-import * as TBTNav from '../../../lib/assets/tbtnav';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
 import { MapboxOptions } from '../../models/mapbox-options';
 import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer, PolygonTitlesLineLayer } from './custom-layers';
@@ -1775,13 +1773,13 @@ export class Map {
 
     if (event === 'loading-finished') {
       if (this.routingSource.route) {
-        console.log('routing source', this.routingSource);
         this.currentStep = 0;
         const routeStart = this.routingSource.lines[0];
-        const textNavigation = this.routeFactory.generateRoute(
-          JSON.stringify(this.routingSource.points),
-          JSON.stringify(this.endPoint),
-        );
+        const textNavigation = {
+          steps: this.routingSource.steps,
+          destination: this.endPoint,
+          start: this.startPoint,
+        };
         this.state = { ...this.state, loadingRoute: false, textNavigation };
 
         if (this.defaultOptions.showLevelDirectionIcon) {
