@@ -31,7 +31,9 @@ export default class GuidanceStepsGenerator {
 
   constructor(points: Feature[]) {
     this.points = points;
-    this.generateStepsFromPoints();
+    if (this.points && this.points.length > 0) {
+      this.generateStepsFromPoints();
+    }
   }
 
   private generateStepsFromPoints() {

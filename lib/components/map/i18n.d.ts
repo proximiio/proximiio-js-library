@@ -3,6 +3,7 @@ export declare const translations: {
         ELEVATOR: string;
         ESCALATOR: string;
         STAIRS: string;
+        RAMP: string;
         UP: string;
         DOWN: string;
         TO_FLOOR: string;
@@ -11,6 +12,7 @@ export declare const translations: {
         ELEVATOR: string;
         ESCALATOR: string;
         STAIRS: string;
+        RAMP: string;
         UP: string;
         DOWN: string;
         TO_FLOOR: string;
@@ -19,6 +21,7 @@ export declare const translations: {
         ELEVATOR: string;
         ESCALATOR: string;
         STAIRS: string;
+        RAMP: string;
         UP: string;
         DOWN: string;
         TO_FLOOR: string;
@@ -27,6 +30,7 @@ export declare const translations: {
         ELEVATOR: string;
         ESCALATOR: string;
         STAIRS: string;
+        RAMP: string;
         UP: string;
         DOWN: string;
         TO_FLOOR: string;

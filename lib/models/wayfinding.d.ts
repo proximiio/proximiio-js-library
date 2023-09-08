@@ -15,11 +15,10 @@ export interface GuidanceStep {
     coordinates: [number, number];
     direction: string;
     distanceFromLastStep: number;
-    isWaypoint: boolean;
     level: number;
     levelChangerId?: string;
     levelChangerType?: string;
-    levelChangeDirection?: 'UP' | 'DOWN';
+    levelChangerDirection?: 'UP' | 'DOWN';
+    levelChangerDestinationLevel?: number;
     lineStringFeatureFromLastStep?: Feature;
-    waypointId?: string;
 }

@@ -403,12 +403,6 @@ export class Map {
         },
       );
     }
-    if (this.defaultOptions.enableTBTNavigation) {
-      this.routeFactory = new TBTNav.RouteFactory(
-        JSON.stringify(this.state.allFeatures.features),
-        this.defaultOptions.language ? this.defaultOptions.language : 'en',
-      );
-    }
   }
 
   private async onMapReady(e: MapboxEvent) {
@@ -1392,12 +1386,6 @@ export class Map {
     this.onSourceChange();
     this.routingSource.routing.setData(this.state.allFeatures);
     this.updateMapSource(this.routingSource);
-    if (this.defaultOptions.enableTBTNavigation) {
-      this.routeFactory = new TBTNav.RouteFactory(
-        JSON.stringify(this.state.allFeatures.features),
-        this.defaultOptions.language ? this.defaultOptions.language : 'en',
-      );
-    }
   }
 
   private onSetFeatureFilter(query: string, inverted?: boolean) {

@@ -81,8 +81,6 @@ class App extends React.Component {
         this.map.getMapReadyListener().subscribe(async (res) => {
           console.log('map ready', res);
 
-          this.map.findRouteByIds('44010f6f-9963-4433-ad86-40b89b829c41:ff95cd74-4f26-4950-9b2b-e5a2be47d0b4', '44010f6f-9963-4433-ad86-40b89b829c41:a19f31a4-a235-4445-805a-9c7f7bce7073');
-
           this.map.getMapboxInstance().addControl(new mapboxgl.NavigationControl());
 
           this.map.setAmenitiesCategory('shop', [
