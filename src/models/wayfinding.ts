@@ -1,4 +1,4 @@
-import { Feature } from "@turf/helpers";
+import { Feature } from '@turf/helpers';
 
 export interface WayfindingConfigModel {
   avoidElevators: boolean;
@@ -20,7 +20,7 @@ export interface GuidanceStep {
   level: number;
   levelChangerId?: string;
   levelChangerType?: string;
-  levelChangerDirection?: 'UP' | 'DOWN'
+  levelChangerDirection?: 'UP' | 'DOWN';
   levelChangerDestinationLevel?: number;
   lineStringFeatureFromLastStep?: Feature;
 }
