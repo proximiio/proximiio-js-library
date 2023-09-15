@@ -1,5 +1,5 @@
 import Feature from '../../models/feature';
-import { MapboxGeoJSONFeature } from 'mapbox-gl';
+import { MapboxGeoJSONFeature } from 'maplibre-gl';
 
 export const FONTS = [
   'Klokantech Noto Sans Bold',

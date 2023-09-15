@@ -1,6 +1,6 @@
 import { Eventable } from '../../../eventable';
 import { FloorModel } from '../../../models/floor';
-import { ImageSourceRaw, RasterLayout } from 'mapbox-gl';
+import maplibregl, { ImageSourceRaw, RasterLayout } from 'maplibre-gl';
 import { getFloors } from '../../../controllers/floors';
 
 export default class ImageSourceManager extends Eventable {
@@ -18,7 +18,7 @@ export default class ImageSourceManager extends Eventable {
     this.floors = await getFloors();
   }
 
-  setLevel(map: mapboxgl.Map, level: number, state: any) {
+  setLevel(map: maplibregl.Map, level: number, state: any) {
     this.layers.forEach((id) => {
       try {
         if (state.style.getLayer(id)) {

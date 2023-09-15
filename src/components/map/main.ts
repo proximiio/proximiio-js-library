@@ -1,4 +1,4 @@
-import * as mapboxgl from 'mapbox-gl';
+import * as maplibregl from 'maplibre-gl';
 import Repository from '../../controllers/repository';
 import Auth from '../../controllers/auth';
 import { addFeatures, updateFeature, deleteFeatures } from '../../controllers/geo';
@@ -22,7 +22,7 @@ import {
   floorchangeDownImage,
   popupImage,
 } from './icons';
-import { MapboxEvent } from 'mapbox-gl';
+import { MapboxEvent } from 'maplibre-gl';
 import { getPlaceFloors } from '../../controllers/floors';
 import { getPlaceById } from '../../controllers/places';
 import { Subject, throwIfEmpty } from 'rxjs';
@@ -160,7 +160,7 @@ export const globalState: State = {
 };
 
 export class Map {
-  private map: mapboxgl.Map;
+  private map: maplibregl.Map;
   private state;
   private geojsonSource: GeoJSONSource = new GeoJSONSource(new FeatureCollection({}));
   private syntheticSource: SyntheticSource = new SyntheticSource(new FeatureCollection({}));
@@ -285,7 +285,7 @@ export class Map {
       throw new Error(`It's not possible to use both isKiosk and useGpsLocation options as enabled!`);
     }
 
-    this.map = new mapboxgl.Map({
+    this.map = new maplibregl.Map({
       ...this.defaultOptions.mapboxOptions,
       container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map',
     });
@@ -609,7 +609,7 @@ export class Map {
 
   private initGeoLocation() {
     if (this.map && this.defaultOptions.useGpsLocation) {
-      const geolocate = new mapboxgl.GeolocateControl({
+      const geolocate = new maplibregl.GeolocateControl({
         positionOptions: {
           enableHighAccuracy: true,
         },
@@ -630,9 +630,9 @@ export class Map {
           // @ts-ignore
           geolocate._watchState = 'BACKGROUND';
           // @ts-ignore
-          geolocate._geolocateButton.classList.add('mapboxgl-ctrl-geolocate-background');
+          geolocate._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');
           // @ts-ignore
-          geolocate._geolocateButton.classList.remove('mapboxgl-ctrl-geolocate-active');
+          geolocate._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
           // @ts-ignore
           geolocate.fire(new Event('trackuserlocationend'));
         });
@@ -648,7 +648,7 @@ export class Map {
 
   private initDirectionIcon() {
     if (this.map) {
-      const levelChangersLayer = this.map.getLayer('proximiio-levelchangers') as mapboxgl.Layer;
+      const levelChangersLayer = this.map.getLayer('proximiio-levelchangers') as maplibregl.Layer;
       const levelChangersLayerImageSize = this.map.getLayoutProperty('proximiio-levelchangers', 'icon-size');
       const radius = 50;
 
@@ -797,7 +797,7 @@ export class Map {
     const featuresToHiglight = this.state.allFeatures.features.filter((f) => {
       return features.includes(f.id || f.properties.id);
     });
-    const poisIconsLayer = this.map.getLayer('proximiio-pois-icons') as mapboxgl.Layer;
+    const poisIconsLayer = this.map.getLayer('proximiio-pois-icons') as maplibregl.Layer;
     const poisIconsImageSize = this.map.getLayoutProperty('proximiio-pois-icons', 'icon-size');
     if (map) {
       if (!map.getLayer('highlight-icon-layer')) {
@@ -950,7 +950,7 @@ export class Map {
   }
 
   private onShopClick(
-    e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined } & mapboxgl.EventData,
+    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapboxGeoJSONFeature[] | undefined } & maplibregl.EventData,
   ) {
     if (
       !this.defaultOptions.blockFeatureClickWhileRouting ||
@@ -1045,7 +1045,7 @@ export class Map {
   }
 
   private onShopMouseMove(
-    e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined } & mapboxgl.EventData,
+    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapboxGeoJSONFeature[] | undefined } & maplibregl.EventData,
   ) {
     if (e.features && e.features.length > 0) {
       e.features[0].properties._dynamic = JSON.parse(
@@ -1098,7 +1098,7 @@ export class Map {
   }
 
   private onShopMouseLeave(
-    e: mapboxgl.MapMouseEvent & { features?: mapboxgl.MapboxGeoJSONFeature[] | undefined } & mapboxgl.EventData,
+    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapboxGeoJSONFeature[] | undefined } & maplibregl.EventData,
   ) {
     this.map.getCanvas().style.cursor = '';
     if (this.hoveredPolygon) {

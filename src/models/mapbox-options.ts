@@ -1,4 +1,4 @@
-import { FitBoundsOptions, LngLatBoundsLike, LngLatLike, TransformRequestFunction } from 'mapbox-gl';
+import { FitBoundsOptions, LngLatBoundsLike, LngLatLike, TransformRequestFunction } from 'maplibre-gl';
 
 export interface MapboxOptions {
   /**
@@ -173,7 +173,7 @@ export interface MapboxOptions {
   scrollZoom?: boolean;
 
   /** stylesheet location */
-  style?: mapboxgl.Style | string;
+  style?: maplibregl.Style | string;
 
   /** If  true, the map will automatically resize when the browser window resizes */
   trackResize?: boolean;
