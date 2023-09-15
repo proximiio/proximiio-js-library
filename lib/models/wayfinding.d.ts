@@ -1,4 +1,4 @@
-import { Feature } from "@turf/helpers";
+import { Feature } from '@turf/helpers';
 export interface WayfindingConfigModel {
     avoidElevators: boolean;
     avoidEscalators: boolean;
