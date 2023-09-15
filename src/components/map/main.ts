@@ -22,7 +22,7 @@ import {
   floorchangeDownImage,
   popupImage,
 } from './icons';
-import { MapboxEvent } from 'maplibre-gl';
+import { MapLibreEvent } from 'maplibre-gl';
 import { getPlaceFloors } from '../../controllers/floors';
 import { getPlaceById } from '../../controllers/places';
 import { Subject, throwIfEmpty } from 'rxjs';
@@ -398,14 +398,14 @@ export class Map {
     if (this.defaultOptions.allowNewFeatureModal) {
       this.map.on(
         this.defaultOptions.newFeatureModalEvent ? this.defaultOptions.newFeatureModalEvent : 'dblclick',
-        (e: MapboxEvent | any) => {
+        (e: MapLibreEvent | any) => {
           this.featureDialog(e);
         },
       );
     }
   }
 
-  private async onMapReady(e: MapboxEvent) {
+  private async onMapReady(e: MapLibreEvent) {
     // set paths visible if available
     const map = e.target;
     if (map) {
@@ -495,14 +495,14 @@ export class Map {
           'poi-custom-icons',
         ];
         layers.forEach((layer) => {
-          const l = this.map.getLayer(layer) as any;
+          const l = this.map.getLayer(layer);
           if (l) {
-            const filters = [...l.filter];
+            const filters = [...(l.filter as maplibregl.FilterSpecification[])];
 
             filters.push(['!=', ['get', 'hideIcon'], 'hide']);
 
             this.state.style.getLayer(layer).filter = filters;
-            this.map.setFilter(layer, filters);
+            this.map.setFilter(layer, filters as maplibregl.FilterSpecification);
           }
         });
       }
@@ -630,9 +630,12 @@ export class Map {
           // @ts-ignore
           geolocate._watchState = 'BACKGROUND';
           // @ts-ignore
-          geolocate._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');
-          // @ts-ignore
-          geolocate._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
+          if (geolocate._geolocateButton) {
+            // @ts-ignore
+            geolocate._geolocateButton.classList.add('maplibregl-ctrl-geolocate-background');
+            // @ts-ignore
+            geolocate._geolocateButton.classList.remove('maplibregl-ctrl-geolocate-active');
+          }
           // @ts-ignore
           geolocate.fire(new Event('trackuserlocationend'));
         });
@@ -648,7 +651,7 @@ export class Map {
 
   private initDirectionIcon() {
     if (this.map) {
-      const levelChangersLayer = this.map.getLayer('proximiio-levelchangers') as maplibregl.Layer;
+      const levelChangersLayer = this.map.getLayer('proximiio-levelchangers');
       const levelChangersLayerImageSize = this.map.getLayoutProperty('proximiio-levelchangers', 'icon-size');
       const radius = 50;
 
@@ -797,7 +800,7 @@ export class Map {
     const featuresToHiglight = this.state.allFeatures.features.filter((f) => {
       return features.includes(f.id || f.properties.id);
     });
-    const poisIconsLayer = this.map.getLayer('proximiio-pois-icons') as maplibregl.Layer;
+    const poisIconsLayer = this.map.getLayer('proximiio-pois-icons');
     const poisIconsImageSize = this.map.getLayoutProperty('proximiio-pois-icons', 'icon-size');
     if (map) {
       if (!map.getLayer('highlight-icon-layer')) {
@@ -950,7 +953,7 @@ export class Map {
   }
 
   private onShopClick(
-    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapboxGeoJSONFeature[] | undefined } & maplibregl.EventData,
+    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] | undefined } & Object,
   ) {
     if (
       !this.defaultOptions.blockFeatureClickWhileRouting ||
@@ -1045,7 +1048,7 @@ export class Map {
   }
 
   private onShopMouseMove(
-    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapboxGeoJSONFeature[] | undefined } & maplibregl.EventData,
+    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] | undefined } & Object,
   ) {
     if (e.features && e.features.length > 0) {
       e.features[0].properties._dynamic = JSON.parse(
@@ -1098,7 +1101,7 @@ export class Map {
   }
 
   private onShopMouseLeave(
-    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapboxGeoJSONFeature[] | undefined } & maplibregl.EventData,
+    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] | undefined } & Object,
   ) {
     this.map.getCanvas().style.cursor = '';
     if (this.hoveredPolygon) {
@@ -1533,8 +1536,8 @@ export class Map {
     }
     layers.forEach((layer) => {
       if (this.map.getLayer(layer)) {
-        const l = this.map.getLayer(layer) as any;
-        const filters = [...l.filter];
+        const l = this.map.getLayer(layer);
+        const filters = [...(l.filter as maplibregl.FilterSpecification[])];
         const amenityFilter = filters.findIndex((f) => f[1][1] && f[1][1][1] === 'amenity');
         const featureFilter = filters.findIndex((f) => f[1][1] === 'id');
         if (this.filteredAmenities.length > 0) {
@@ -1575,7 +1578,7 @@ export class Map {
           }
         }
         this.state.style.getLayer(layer).filter = filters;
-        this.map.setFilter(layer, filters);
+        this.map.setFilter(layer, filters as maplibregl.FilterSpecification);
       }
     });
     this.state.style.notify('filter-change');
@@ -1657,9 +1660,9 @@ export class Map {
     layers.forEach((layer) => {
       if (this.map.getLayer(layer)) {
         setTimeout(() => {
-          const l = this.map.getLayer(layer) as any;
+          const l = this.map.getLayer(layer);
           if (l) {
-            const filters = [...l.filter];
+            const filters = [...(l.filter as maplibregl.FilterSpecification[])];
             const visibilityFilter = filters.findIndex((f) => f[1][1] === 'visibility');
             if (visibilityFilter !== -1) {
               // toggle pois visibility based on visibility param
@@ -1681,7 +1684,7 @@ export class Map {
               filters.push(['!=', ['get', 'visibility'], 'hidden']);
             }
             this.state.style.getLayer(layer).filter = filters;
-            this.map.setFilter(layer, filters);
+            this.map.setFilter(layer, filters as maplibregl.FilterSpecification);
           }
         });
       }
@@ -2030,7 +2033,7 @@ export class Map {
       }
       if (this.defaultOptions.isKiosk && map.getLayer('my-location-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
-        map.setFilter('my-location-layer', filter);
+        map.setFilter('my-location-layer', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('my-location-layer').filter = filter;
       }
       if (this.defaultOptions.useGpsLocation && this.startPoint) {
@@ -2038,25 +2041,25 @@ export class Map {
       }
       if (map.getLayer('persons-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
-        map.setFilter('persons-layer', filter);
+        map.setFilter('persons-layer', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('persons-layer').filter = filter;
       }
       if (this.defaultOptions.showLevelDirectionIcon && map.getLayer('direction-halo-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
-        map.setFilter('direction-halo-layer', filter);
+        map.setFilter('direction-halo-layer', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('direction-halo-layer').filter = filter;
 
-        map.setFilter('direction-popup-layer', filter);
+        map.setFilter('direction-popup-layer', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('direction-popup-layer').filter = filter;
       }
       if (this.defaultOptions.animatedRoute && map.getLayer('route-point')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
-        map.setFilter('route-point', filter);
+        map.setFilter('route-point', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('route-point').filter = filter;
       }
       if (map.getLayer('highlight-icon-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
-        map.setFilter('highlight-icon-layer', filter);
+        map.setFilter('highlight-icon-layer', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('highlight-icon-layer').filter = filter;
       }
       if (this.defaultOptions.animatedRoute && !this.defaultOptions.animationLooping && this.routingSource.route) {

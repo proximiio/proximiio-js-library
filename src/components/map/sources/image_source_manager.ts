@@ -1,6 +1,6 @@
 import { Eventable } from '../../../eventable';
 import { FloorModel } from '../../../models/floor';
-import maplibregl, { ImageSourceRaw, RasterLayout } from 'maplibre-gl';
+import { ImageSource } from 'maplibre-gl';
 import { getFloors } from '../../../controllers/floors';
 
 export default class ImageSourceManager extends Eventable {
@@ -46,7 +46,7 @@ export default class ImageSourceManager extends Eventable {
           url: floor.floorplanImageUrl,
           // tslint:disable-next-line:no-non-null-assertion
           coordinates: floor.anchors!,
-        } as ImageSourceRaw;
+        } as ImageSource;
 
         const sourceId = `image-source-${floor.id}`;
         state.style.addSource(sourceId, source);
@@ -58,7 +58,7 @@ export default class ImageSourceManager extends Eventable {
           source: sourceId,
           layout: {
             visibility: 'visible',
-          } as RasterLayout,
+          },
         };
 
         state.style.addLayer(layer, this.belowLayer);

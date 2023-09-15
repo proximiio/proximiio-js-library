@@ -1,5 +1,5 @@
 import Feature from '../../models/feature';
-import { MapboxGeoJSONFeature } from 'maplibre-gl';
+import { MapGeoJSONFeature } from 'maplibre-gl';
 
 export const FONTS = [
   'Klokantech Noto Sans Bold',
@@ -72,7 +72,7 @@ export const NEW_FEATURE_DIALOG = (e: any, currentFloor: number) => {
   `;
 };
 
-export const EDIT_FEATURE_DIALOG = (e: any, feature: MapboxGeoJSONFeature) => {
+export const EDIT_FEATURE_DIALOG = (e: any, feature: MapGeoJSONFeature) => {
   return `
     <h1>Edit Feature</h1>
     <form name="form" id="modal-form" class="modal-form" autocomplete="off" role="main">
