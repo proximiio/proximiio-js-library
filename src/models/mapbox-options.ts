@@ -29,7 +29,7 @@ export interface MapboxOptions {
   /**
    * The HTML element in which MapLibre GL JS will render the map, or the element's string `id`. The specified element must have no children.
    */
-  container: HTMLElement | string;
+  container?: HTMLElement | string;
   /**
    * The threshold, measured in degrees, that determines when the map's
    * bearing will snap to north. For example, with a `bearingSnap` of 7, if the user rotates
@@ -246,7 +246,7 @@ export interface MapboxOptions {
    * the schema described in the [MapLibre Style Specification](https://maplibre.org/maplibre-style-spec/),
    * or a URL to such JSON.
    */
-  style: StyleSpecification | string;
+  style?: StyleSpecification | string;
   /**
    * If `false`, the map's pitch (tilt) control with "drag to rotate" interaction will be disabled.
    * @defaultValue true
