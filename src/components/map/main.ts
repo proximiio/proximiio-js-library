@@ -286,7 +286,7 @@ export class Map {
     }
 
     this.map = new maplibregl.Map({
-      ...this.defaultOptions.mapboxOptions,
+      ...this.defaultOptions.mapboxOptions as MapboxOptions | any,
       container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map',
     });
     this.map.on('load', (e) => {
