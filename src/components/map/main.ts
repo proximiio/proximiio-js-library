@@ -129,6 +129,7 @@ interface Options {
   routeWithDetails?: boolean;
   blockFeatureClickWhileRouting?: boolean;
   hiddenAmenities?: string[];
+  useTimerangeData?: boolean;
 }
 
 interface PaddingOptions {
@@ -252,6 +253,7 @@ export class Map {
     language: 'en',
     routeWithDetails: true,
     blockFeatureClickWhileRouting: false,
+    useTimerangeData: false,
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -323,12 +325,13 @@ export class Map {
       const urlParams = new URLSearchParams(window.location.search);
       placeParam = urlParams.get(this.defaultOptions.urlParams.defaultPlace);
     }
-    const { places, style, styles, features, amenities } = await Repository.getPackage(
-      this.defaultOptions.initPolygons,
-      this.defaultOptions.polygonsOptions.autoLabelLines,
-      this.defaultOptions.amenityIdProperty,
-      this.defaultOptions.hiddenAmenities,
-    );
+    const { places, style, styles, features, amenities } = await Repository.getPackage({
+      initPolygons: this.defaultOptions.initPolygons,
+      autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
+      amenityIdProperty: this.defaultOptions.amenityIdProperty,
+      hiddenAmenities: this.defaultOptions.hiddenAmenities,
+      useTimerangeData: this.defaultOptions.useTimerangeData,
+    });
     const levelChangers = features.features.filter(
       (f) => f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
     );
@@ -538,12 +541,13 @@ export class Map {
   private async onRefetch() {
     if (this.map) {
       console.log('data should be refetched');
-      const { features } = await Repository.getPackage(
-        this.defaultOptions.initPolygons,
-        this.defaultOptions.polygonsOptions.autoLabelLines,
-        this.defaultOptions.amenityIdProperty,
-        this.defaultOptions.hiddenAmenities,
-      );
+      const { features } = await Repository.getPackage({
+        initPolygons: this.defaultOptions.initPolygons,
+        autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
+        amenityIdProperty: this.defaultOptions.amenityIdProperty,
+        hiddenAmenities: this.defaultOptions.hiddenAmenities,
+        useTimerangeData: this.defaultOptions.useTimerangeData,
+      });
       const levelChangers = features.features.filter(
         (f) =>
           f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',

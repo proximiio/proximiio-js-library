@@ -185,6 +185,7 @@ const map = new Proximiio.Map({
    routeWithDetails: true, // optional, you'll receive details object (distance and duration of route) in found route listener response, default: true
    blockFeatureClickWhileRouting: false, //optional, you won't be able to click on any of the pois while routing after enabling,default: false
    hiddenAmenities: string[], // you can define array of amenity id's to hide poi labels and icons while polygons remains functional
+   useTimerangeData: false, // if set to true only features inside defined time range in metadata.dateStart and metadata.dateEnd will be shown, default: false
 });
 ```
 

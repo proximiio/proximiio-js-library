@@ -2,7 +2,7 @@ import logo from './logo.svg';
 import './App.css';
 import React from 'react';
 import Proximiio from 'proximiio-js-library';
-import mapboxgl from 'mapbox-gl';
+import maplibregl from 'maplibre-gl';
 
 class App extends React.Component {
   constructor(props) {
@@ -75,13 +75,14 @@ class App extends React.Component {
           initPolygons: true,
           // defaultPlaceId: 'default place id',
           showLevelDirectionIcon: true,
-          animatedRoute: true
+          animatedRoute: true,
+          useTimerangeData: true
         });
 
         this.map.getMapReadyListener().subscribe(async (res) => {
           console.log('map ready', res);
 
-          this.map.getMapboxInstance().addControl(new mapboxgl.NavigationControl());
+          this.map.getMapboxInstance().addControl(new maplibregl.NavigationControl());
 
           this.map.setAmenitiesCategory('shop', [
             '44010f6f-9963-4433-ad86-40b89b829c41:c693d414-4613-4c6c-95da-771e52759873',

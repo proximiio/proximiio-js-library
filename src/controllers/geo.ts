@@ -15,7 +15,17 @@ import {
   lineIntersect,
 } from '@turf/turf';
 
-export const getFeatures = async (initPolygons?: boolean, autoLabelLines?: boolean, hiddenAmenities?: string[]) => {
+export const getFeatures = async ({
+  initPolygons,
+  autoLabelLines,
+  hiddenAmenities,
+  useTimerangeData,
+}: {
+  initPolygons?: boolean;
+  autoLabelLines?: boolean;
+  hiddenAmenities?: string[];
+  useTimerangeData?: boolean;
+}) => {
   const url = '/v5/geo/features';
   const res = await axios.get(url);
   if (initPolygons) {
@@ -24,6 +34,26 @@ export const getFeatures = async (initPolygons?: boolean, autoLabelLines?: boole
       (f) => f.properties.type === 'shop' && f.geometry.type === 'MultiPolygon',
     );
     const labelLineFeatures = res.data.features.filter((f) => f.properties.type === 'label-line');
+
+    if (useTimerangeData) {
+      res.data.features = res.data.features
+        .map((feature) => {
+          if (feature.properties && feature.properties.type === 'poi') {
+            if (
+              feature.properties.metadata &&
+              feature.properties.metadata.dateStart &&
+              feature.properties.metadata.dateEnd &&
+              feature.properties.metadata.dateStart <= Date.now() &&
+              feature.properties.metadata.dateEnd >= Date.now()
+            ) {
+              return feature;
+            }
+          } else {
+            return feature;
+          }
+        })
+        .filter((feature) => feature !== undefined);
+    }
 
     res.data.features = res.data.features.map((feature: any, key: number) => {
       if (hiddenAmenities && hiddenAmenities.length > 0 && hiddenAmenities.includes(feature.properties.amenity)) {

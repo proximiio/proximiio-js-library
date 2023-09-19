@@ -8,12 +8,19 @@ import { getAmenities, getFeatures } from './geo';
 import { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 
-export const getPackage = async (
-  initPolygons?: boolean,
-  autoLabelLines?: boolean,
-  amenityIdProperty?: string,
-  hiddenAmenities?: string[],
-): Promise<{
+export const getPackage = async ({
+  initPolygons,
+  autoLabelLines,
+  amenityIdProperty,
+  hiddenAmenities,
+  useTimerangeData
+}: {
+  initPolygons?: boolean;
+  autoLabelLines?: boolean;
+  amenityIdProperty?: string;
+  hiddenAmenities?: string[];
+  useTimerangeData?: boolean;
+}): Promise<{
   places: PlaceModel[];
   floors: FloorModel[];
   style: StyleModel;
@@ -27,7 +34,7 @@ export const getPackage = async (
     getFloors().then((floors) => (result.floors = floors.data)),
     getStyle().then((style) => (result.style = style)),
     getStyles().then((styles) => (result.styles = styles)),
-    getFeatures(initPolygons, autoLabelLines, hiddenAmenities).then((features) => (result.features = features)),
+    getFeatures({initPolygons, autoLabelLines, hiddenAmenities, useTimerangeData}).then((features) => (result.features = features)),
     getAmenities(amenityIdProperty).then((amenities) => (result.amenities = amenities)),
   ];
   await Promise.all(promises);
