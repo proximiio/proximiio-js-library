@@ -1,13 +1,23 @@
 import Feature, { FeatureCollection } from '../models/feature';
 import { FeatureCollection as FCModel, Feature as FModel } from '@turf/helpers';
-export declare const getFeatures: (initPolygons?: boolean, autoLabelLines?: boolean, hiddenAmenities?: string[]) => Promise<FeatureCollection>;
+export declare const getFeatures: ({ initPolygons, autoLabelLines, hiddenAmenities, useTimerangeData, }: {
+    initPolygons?: boolean;
+    autoLabelLines?: boolean;
+    hiddenAmenities?: string[];
+    useTimerangeData?: boolean;
+}) => Promise<FeatureCollection>;
 export declare const getAmenities: (amenityIdProperty?: string) => Promise<any>;
 export declare const getPois: () => Promise<Feature[]>;
 export declare const addFeatures: (featureCollection: FCModel) => Promise<void>;
 export declare const updateFeature: (featureData: FModel, featureId: string) => Promise<void>;
 export declare const deleteFeatures: (featureCollection: FCModel) => Promise<void>;
 declare const _default: {
-    getFeatures: (initPolygons?: boolean, autoLabelLines?: boolean, hiddenAmenities?: string[]) => Promise<FeatureCollection>;
+    getFeatures: ({ initPolygons, autoLabelLines, hiddenAmenities, useTimerangeData, }: {
+        initPolygons?: boolean;
+        autoLabelLines?: boolean;
+        hiddenAmenities?: string[];
+        useTimerangeData?: boolean;
+    }) => Promise<FeatureCollection>;
     addFeatures: (featureCollection: FCModel<import("@turf/helpers").Geometry | import("@turf/helpers").GeometryCollection, {
         [name: string]: any;
     }>) => Promise<void>;

@@ -1,4 +1,3 @@
-/// <reference types="mapbox-gl" />
 import { Eventable } from '../../../eventable';
 import { FloorModel } from '../../../models/floor';
 export default class ImageSourceManager extends Eventable {
@@ -12,5 +11,5 @@ export default class ImageSourceManager extends Eventable {
     enabled: boolean;
     constructor();
     initialize(): Promise<void>;
-    setLevel(map: mapboxgl.Map, level: number, state: any): void;
+    setLevel(map: maplibregl.Map, level: number, state: any): void;
 }

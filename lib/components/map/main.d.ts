@@ -1,4 +1,4 @@
-import * as mapboxgl from 'mapbox-gl';
+import * as maplibregl from 'maplibre-gl';
 import { PlaceModel } from '../../models/place';
 import { FloorModel } from '../../models/floor';
 import StyleModel from '../../models/style';
@@ -97,6 +97,7 @@ interface Options {
     routeWithDetails?: boolean;
     blockFeatureClickWhileRouting?: boolean;
     hiddenAmenities?: string[];
+    useTimerangeData?: boolean;
 }
 interface PaddingOptions {
     bottom: number;
@@ -219,7 +220,7 @@ export declare class Map {
      *  const map = new Proximiio.Map();
      *  map.getMapboxInstance();
      */
-    getMapboxInstance(): mapboxgl.Map;
+    getMapboxInstance(): maplibregl.Map;
     /**
      *  @memberof Map
      *  @name getMapReadyListener
