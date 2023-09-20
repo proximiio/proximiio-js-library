@@ -130,6 +130,7 @@ interface Options {
   blockFeatureClickWhileRouting?: boolean;
   hiddenAmenities?: string[];
   useTimerangeData?: boolean;
+  sendAnalytics?: boolean;
 }
 
 interface PaddingOptions {
@@ -254,6 +255,7 @@ export class Map {
     routeWithDetails: true,
     blockFeatureClickWhileRouting: false,
     useTimerangeData: false,
+    sendAnalytics: true,
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -288,7 +290,7 @@ export class Map {
     }
 
     this.map = new maplibregl.Map({
-      ...this.defaultOptions.mapboxOptions as MapboxOptions | any,
+      ...(this.defaultOptions.mapboxOptions as MapboxOptions | any),
       container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map',
     });
     this.map.on('load', (e) => {
@@ -1805,33 +1807,35 @@ export class Map {
           end: this.endPoint,
         });
 
-        const logger = new WayfindingLogger({
-          organization_id: this.state.user.organization.id,
-          organization_name: this.state.user.organization.name,
-          startLngLat: this.routingSource.start.geometry.coordinates,
-          startLevel: this.routingSource.start.properties.level,
-          startSegmentId: this.routingSource.start.id,
-          startSegmentName: this.defaultOptions.isKiosk ? 'kioskPoint' : this.routingSource.start.properties.title,
-          destinationFeatureId: this.routingSource.finish.id,
-          destinationName: this.routingSource.finish.properties.title,
-          destinationLngLat: this.routingSource.finish.geometry.coordinates,
-          destinationLevel: this.routingSource.finish.properties.level,
-          foundPath: this.routingSource.lines.length > 0,
-          optionAvoidBarrier: this.routingSource.routing.wayfinding.configuration.avoidBarriers,
-          optionAvoidElevators: this.routingSource.routing.wayfinding.configuration.avoidElevators,
-          optionAvoidEscalators: this.routingSource.routing.wayfinding.configuration.avoidEscalators,
-          optionAvoidNarrowPaths: this.routingSource.routing.wayfinding.configuration.avoidNarrowPaths,
-          optionAvoidRamps: this.routingSource.routing.wayfinding.configuration.avoidRamps,
-          optionAvoidStaircases: this.routingSource.routing.wayfinding.configuration.avoidStaircases,
-          optionAvoidTicketGates: this.routingSource.routing.wayfinding.configuration.avoidTicketGates,
-          route: this.routingSource.points.map((p) => [
-            p.geometry.coordinates[0],
-            p.geometry.coordinates[1],
-            p.properties.level,
-          ]),
-          rerouted: false,
-        });
-        await logger.save();
+        if (this.defaultOptions.sendAnalytics) {
+          const logger = new WayfindingLogger({
+            organization_id: this.state.user.organization.id,
+            organization_name: this.state.user.organization.name,
+            startLngLat: this.routingSource.start.geometry.coordinates,
+            startLevel: this.routingSource.start.properties.level,
+            startSegmentId: this.routingSource.start.id,
+            startSegmentName: this.defaultOptions.isKiosk ? 'kioskPoint' : this.routingSource.start.properties.title,
+            destinationFeatureId: this.routingSource.finish.id,
+            destinationName: this.routingSource.finish.properties.title,
+            destinationLngLat: this.routingSource.finish.geometry.coordinates,
+            destinationLevel: this.routingSource.finish.properties.level,
+            foundPath: this.routingSource.lines.length > 0,
+            optionAvoidBarrier: this.routingSource.routing.wayfinding.configuration.avoidBarriers,
+            optionAvoidElevators: this.routingSource.routing.wayfinding.configuration.avoidElevators,
+            optionAvoidEscalators: this.routingSource.routing.wayfinding.configuration.avoidEscalators,
+            optionAvoidNarrowPaths: this.routingSource.routing.wayfinding.configuration.avoidNarrowPaths,
+            optionAvoidRamps: this.routingSource.routing.wayfinding.configuration.avoidRamps,
+            optionAvoidStaircases: this.routingSource.routing.wayfinding.configuration.avoidStaircases,
+            optionAvoidTicketGates: this.routingSource.routing.wayfinding.configuration.avoidTicketGates,
+            route: this.routingSource.points.map((p) => [
+              p.geometry.coordinates[0],
+              p.geometry.coordinates[1],
+              p.properties.level,
+            ]),
+            rerouted: false,
+          });
+          await logger.save();
+        }
       }
       return;
     }
