@@ -98,6 +98,7 @@ interface Options {
     blockFeatureClickWhileRouting?: boolean;
     hiddenAmenities?: string[];
     useTimerangeData?: boolean;
+    sendAnalytics?: boolean;
 }
 interface PaddingOptions {
     bottom: number;
