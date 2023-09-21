@@ -10,6 +10,9 @@ export class PlaceModel extends BaseModel {
   };
   tags?: string[];
   remoteId?: string;
+  metadata?: {
+    [key: string]: string | undefined;
+  };
 
   constructor(data: any) {
     super(data);
