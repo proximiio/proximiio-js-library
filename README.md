@@ -104,10 +104,10 @@ q?: string // query to filter
 
 ### Map Component
 
-Map is generated using the [Mapbox GL library](https://docs.mapbox.com/mapbox-gl-js/api/map/), it's necessary to load it's css file in your html `<head>` tag.
+Map is generated using the [Maplibre GL library](https://maplibre.org/maplibre-gl-js/docs/), it's necessary to load it's css file in your html `<head>` tag.
 
 ```
-<link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
+<link href='https://unpkg.com/maplibre-gl/dist/maplibre-gl.css' rel='stylesheet' />
 ```
 
 To generate map, create div element with id param defined
