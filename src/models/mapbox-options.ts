@@ -45,7 +45,7 @@ export interface MapboxOptions {
   /**
    * Attribuition text to show in an {@link AttributionControl}. Only applicable if `options.attributionControl` is `true`.
    */
-  customAttribution?: string | Array<string>;
+  customAttribution?: string | string[];
   /**
    * If `true`, the MapLibre logo will be shown.
    * @defaultValue false

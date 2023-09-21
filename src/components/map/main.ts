@@ -959,7 +959,7 @@ export class Map {
   }
 
   private onShopClick(
-    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] | undefined } & Object,
+    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] | undefined } & object,
   ) {
     if (
       !this.defaultOptions.blockFeatureClickWhileRouting ||
@@ -1054,7 +1054,7 @@ export class Map {
   }
 
   private onShopMouseMove(
-    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] | undefined } & Object,
+    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] | undefined } & object,
   ) {
     if (e.features && e.features.length > 0) {
       e.features[0].properties._dynamic = JSON.parse(
@@ -1107,7 +1107,7 @@ export class Map {
   }
 
   private onShopMouseLeave(
-    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] | undefined } & Object,
+    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] | undefined } & object,
   ) {
     this.map.getCanvas().style.cursor = '';
     if (this.hoveredPolygon) {
