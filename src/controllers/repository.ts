@@ -13,7 +13,7 @@ export const getPackage = async ({
   autoLabelLines,
   amenityIdProperty,
   hiddenAmenities,
-  useTimerangeData
+  useTimerangeData,
 }: {
   initPolygons?: boolean;
   autoLabelLines?: boolean;
@@ -34,7 +34,9 @@ export const getPackage = async ({
     getFloors().then((floors) => (result.floors = floors.data)),
     getStyle().then((style) => (result.style = style)),
     getStyles().then((styles) => (result.styles = styles)),
-    getFeatures({initPolygons, autoLabelLines, hiddenAmenities, useTimerangeData}).then((features) => (result.features = features)),
+    getFeatures({ initPolygons, autoLabelLines, hiddenAmenities, useTimerangeData }).then(
+      (features) => (result.features = features),
+    ),
     getAmenities(amenityIdProperty).then((amenities) => (result.amenities = amenities)),
   ];
   await Promise.all(promises);
