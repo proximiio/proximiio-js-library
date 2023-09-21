@@ -3,7 +3,7 @@ import { FloorModel } from '../models/floor';
 import StyleModel from '../models/style';
 import { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
-export declare const getPackage: ({ initPolygons, autoLabelLines, amenityIdProperty, hiddenAmenities, useTimerangeData }: {
+export declare const getPackage: ({ initPolygons, autoLabelLines, amenityIdProperty, hiddenAmenities, useTimerangeData, }: {
     initPolygons?: boolean;
     autoLabelLines?: boolean;
     amenityIdProperty?: string;
@@ -18,7 +18,7 @@ export declare const getPackage: ({ initPolygons, autoLabelLines, amenityIdPrope
     amenities: AmenityModel[];
 }>;
 declare const _default: {
-    getPackage: ({ initPolygons, autoLabelLines, amenityIdProperty, hiddenAmenities, useTimerangeData }: {
+    getPackage: ({ initPolygons, autoLabelLines, amenityIdProperty, hiddenAmenities, useTimerangeData, }: {
         initPolygons?: boolean;
         autoLabelLines?: boolean;
         amenityIdProperty?: string;
