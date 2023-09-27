@@ -38,17 +38,20 @@ export const getFeatures = async ({
     if (useTimerangeData) {
       res.data.features = res.data.features
         .map((feature) => {
-          if (feature.properties && feature.properties.type === 'poi') {
+          if (feature.properties && feature.properties.metadata?.dateStart && feature.properties.metadata?.dateEnd) {
+            // if feature have dateStart and dateEnd check the range and filter
             if (
-              feature.properties.metadata &&
-              feature.properties.metadata.dateStart &&
-              feature.properties.metadata.dateEnd &&
               feature.properties.metadata.dateStart <= Date.now() &&
               feature.properties.metadata.dateEnd >= Date.now()
             ) {
+              // if feature is in range return feature
               return feature;
+            } else {
+              // if feature is outside of range return undefined
+              return undefined;
             }
           } else {
+            // if feature dont have dateStart and dateEnd return feature
             return feature;
           }
         })
