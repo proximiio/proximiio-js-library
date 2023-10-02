@@ -9,6 +9,9 @@ export declare class PlaceModel extends BaseModel {
     };
     tags?: string[];
     remoteId?: string;
+    metadata?: {
+        [key: string]: string | undefined;
+    };
     constructor(data: any);
     get hasLocation(): boolean;
 }

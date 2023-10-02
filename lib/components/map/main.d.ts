@@ -7,7 +7,7 @@ import { AmenityModel } from '../../models/amenity';
 import { MapboxOptions } from '../../models/mapbox-options';
 import PersonModel from '../../models/person';
 import { WayfindingConfigModel } from '../../models/wayfinding';
-interface State {
+export interface State {
     readonly initializing: boolean;
     readonly floor: FloorModel;
     readonly floors: FloorModel[];
@@ -28,7 +28,7 @@ interface State {
     readonly persons: PersonModel[];
     readonly user: any;
 }
-interface Options {
+export interface Options {
     selector?: string;
     allowNewFeatureModal?: boolean;
     newFeatureModalEvent?: string;
@@ -100,7 +100,7 @@ interface Options {
     useTimerangeData?: boolean;
     sendAnalytics?: boolean;
 }
-interface PaddingOptions {
+export interface PaddingOptions {
     bottom: number;
     left: number;
     right: number;
@@ -222,6 +222,15 @@ export declare class Map {
      *  map.getMapboxInstance();
      */
     getMapboxInstance(): maplibregl.Map;
+    /**
+     *  @memberof Map
+     *  @name getMapState
+     *  @returns returns map state
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapState();
+     */
+    getMapState(): any;
     /**
      *  @memberof Map
      *  @name getMapReadyListener
@@ -917,4 +926,3 @@ export declare class Map {
      */
     refetch(): void;
 }
-export {};
