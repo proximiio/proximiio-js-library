@@ -38,7 +38,7 @@ import WayfindingLogger from '../logger/wayfinding';
 import { translations } from './i18n';
 import { WayfindingConfigModel } from '../../models/wayfinding';
 
-interface State {
+export interface State {
   readonly initializing: boolean;
   readonly floor: FloorModel;
   readonly floors: FloorModel[];
@@ -60,7 +60,7 @@ interface State {
   readonly user;
 }
 
-interface Options {
+export interface Options {
   selector?: string;
   allowNewFeatureModal?: boolean;
   newFeatureModalEvent?: string;
@@ -133,7 +133,7 @@ interface Options {
   sendAnalytics?: boolean;
 }
 
-interface PaddingOptions {
+export interface PaddingOptions {
   bottom: number;
   left: number;
   right: number;
@@ -2356,6 +2356,18 @@ export class Map {
    */
   public getMapboxInstance() {
     return this.map;
+  }
+
+  /**
+   *  @memberof Map
+   *  @name getMapState
+   *  @returns returns map state
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapState();
+   */
+  public getMapState() {
+    return this.state;
   }
 
   /**
