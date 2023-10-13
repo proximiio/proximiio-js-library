@@ -131,6 +131,10 @@ export interface Options {
   hiddenAmenities?: string[];
   useTimerangeData?: boolean;
   sendAnalytics?: boolean;
+  defaultFilter?: {
+    key: string;
+    value: string;
+  };
 }
 
 export interface PaddingOptions {
@@ -333,6 +337,7 @@ export class Map {
       amenityIdProperty: this.defaultOptions.amenityIdProperty,
       hiddenAmenities: this.defaultOptions.hiddenAmenities,
       useTimerangeData: this.defaultOptions.useTimerangeData,
+      filter: this.defaultOptions.defaultFilter,
     });
     const levelChangers = features.features.filter(
       (f) => f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
@@ -549,6 +554,7 @@ export class Map {
         amenityIdProperty: this.defaultOptions.amenityIdProperty,
         hiddenAmenities: this.defaultOptions.hiddenAmenities,
         useTimerangeData: this.defaultOptions.useTimerangeData,
+        filter: this.defaultOptions.defaultFilter,
       });
       const levelChangers = features.features.filter(
         (f) =>
@@ -3054,6 +3060,27 @@ export class Map {
    */
   public setBoundsPadding(padding: number | PaddingOptions) {
     this.defaultOptions.fitBoundsPadding = padding;
+  }
+
+  /**
+   * With this method you can filter features with any of it's properties, if the property key doesn't exists in the feature properties or it's value is the same as defined in options they will pass the filtering and will be visible on map.
+   *  @memberof Map
+   *  @name setFiltering
+   *  @param options { key: string; value: string } | null, define property key and value to filter features, optional, if null filtering will be disabled.
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.setFiltering({ key: 'properties.metadata.exhibition', value: 'food'});
+   *  });
+   */
+  public setFiltering(options: { key: string; value: string } | null) {
+    if (options) {
+      this.defaultOptions.defaultFilter = options;
+    } else {
+      delete this.defaultOptions.defaultFilter;
+    }
+    this.onRefetch();
   }
 
   /**

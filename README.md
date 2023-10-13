@@ -187,6 +187,10 @@ const map = new Proximiio.Map({
    hiddenAmenities: string[], // you can define array of amenity id's to hide poi labels and icons while polygons remains functional
    useTimerangeData: false, // if set to true only features inside defined time range in metadata.dateStart and metadata.dateEnd will be shown, default: false
    sendAnalytics: true, // if enabled we automatically send analytics from routing to our API, default: true
+   defaultFilter?: {
+      key: string; // if defaultFilter is defined it will look for this key in feature object
+      value: string; // if the previous key exists in the feature object, it's value will be compared to this value and filtering will be processed in a way that only features with same value or features with missing property will be visible
+   };
 });
 ```
 
@@ -641,6 +645,20 @@ map.getMapReadyListener().subscribe(ready => {
 ```
 
 ##### Map Features Filtering
+
+###### Setting new global filter
+
+With this method you can filter features with any of it's properties, if the property key doesn't exists in the feature properties or it's value is the same as defined in options they will pass the filtering and will be visible on map.
+
+```
+// param options { key: string; value: string } | null, define property key and value to filter features, optional, if null filtering will be disabled.
+
+const map = new Proximiio.Map();
+map.getMapReadyListener().subscribe(ready => {
+   console.log('map ready', ready);
+   map.setFiltering({ key: 'properties.metadata.exhibition', value: 'food'});
+});
+```
 
 ###### Setting new feature filter
 

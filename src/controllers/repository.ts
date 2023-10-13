@@ -14,12 +14,14 @@ export const getPackage = async ({
   amenityIdProperty,
   hiddenAmenities,
   useTimerangeData,
+  filter,
 }: {
   initPolygons?: boolean;
   autoLabelLines?: boolean;
   amenityIdProperty?: string;
   hiddenAmenities?: string[];
   useTimerangeData?: boolean;
+  filter?: { key: string; value: string };
 }): Promise<{
   places: PlaceModel[];
   floors: FloorModel[];
@@ -34,7 +36,7 @@ export const getPackage = async ({
     getFloors().then((floors) => (result.floors = floors.data)),
     getStyle().then((style) => (result.style = style)),
     getStyles().then((styles) => (result.styles = styles)),
-    getFeatures({ initPolygons, autoLabelLines, hiddenAmenities, useTimerangeData }).then(
+    getFeatures({ initPolygons, autoLabelLines, hiddenAmenities, useTimerangeData, filter }).then(
       (features) => (result.features = features),
     ),
     getAmenities(amenityIdProperty).then((amenities) => (result.amenities = amenities)),

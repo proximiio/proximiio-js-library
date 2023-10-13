@@ -1,4 +1,4 @@
-import { axios, uuidv4 } from '../common';
+import { axios, getNestedObjectValue, uuidv4 } from '../common';
 import Feature, { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 import { globalState } from '../components/map/main';
@@ -20,11 +20,13 @@ export const getFeatures = async ({
   autoLabelLines,
   hiddenAmenities,
   useTimerangeData,
+  filter,
 }: {
   initPolygons?: boolean;
   autoLabelLines?: boolean;
   hiddenAmenities?: string[];
   useTimerangeData?: boolean;
+  filter?: { key: string; value: string };
 }) => {
   const url = '/v5/geo/features';
   const res = await axios.get(url);
@@ -52,6 +54,26 @@ export const getFeatures = async ({
             }
           } else {
             // if feature dont have dateStart and dateEnd return feature
+            return feature;
+          }
+        })
+        .filter((feature) => feature !== undefined);
+    }
+
+    if (filter && filter.key && filter.value) {
+      res.data.features = res.data.features
+        .map((feature) => {
+          if (getNestedObjectValue(feature, filter.key)) {
+            // if feature filter property exists
+            if (getNestedObjectValue(feature, filter.key) == filter.value) {
+              // if feature property value is same as filter value
+              return feature;
+            } else {
+              // if they are not same
+              return undefined;
+            }
+          } else {
+            // if feature filter property does not exists
             return feature;
           }
         })

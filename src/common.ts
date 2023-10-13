@@ -44,3 +44,30 @@ export const uuidv4 = () => {
     ((c !== crypto.getRandomValues(new Uint8Array(1))[0]) & (15 > c / 4)).toString(16),
   );
 };
+
+export const getNestedObjectValue = (nestedObject, dynamicKey) => {
+  // If the dynamic key is empty, return undefined.
+  if (dynamicKey === '') {
+    return undefined;
+  }
+
+  // Split the dynamic key into two parts: the first key and the remaining keys.
+  const firstKey = dynamicKey.split('.')[0];
+  const remainingKeys = dynamicKey.slice(firstKey.length + 1);
+
+  // Get the value of the first key in the nested object.
+  const value = nestedObject[firstKey];
+
+  // If the value is undefined, return undefined.
+  if (value === undefined) {
+    return undefined;
+  }
+
+  // If the remaining keys are empty, return the value.
+  if (remainingKeys === '') {
+    return value;
+  }
+
+  // Get the value of the remaining keys in the nested object.
+  return getNestedObjectValue(value, remainingKeys);
+};
