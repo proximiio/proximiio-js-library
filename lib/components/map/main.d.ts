@@ -99,6 +99,10 @@ export interface Options {
     hiddenAmenities?: string[];
     useTimerangeData?: boolean;
     sendAnalytics?: boolean;
+    defaultFilter?: {
+        key: string;
+        value: string;
+    };
 }
 export interface PaddingOptions {
     bottom: number;
@@ -671,6 +675,22 @@ export declare class Map {
      *  });
      */
     setBoundsPadding(padding: number | PaddingOptions): void;
+    /**
+     * With this method you can filter features with any of it's properties, if the property key doesn't exists in the feature properties or it's value is the same as defined in options they will pass the filtering and will be visible on map.
+     *  @memberof Map
+     *  @name setFiltering
+     *  @param options { key: string; value: string } | null, define property key and value to filter features, optional, if null filtering will be disabled.
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.setFiltering({ key: 'properties.metadata.exhibition', value: 'food'});
+     *  });
+     */
+    setFiltering(options: {
+        key: string;
+        value: string;
+    } | null): void;
     /**
      * With this method you can show only defined features, you can send both id or title, with inverted set to true defined feature will hide instead.
      *  @memberof Map

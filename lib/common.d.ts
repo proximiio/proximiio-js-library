@@ -5,3 +5,4 @@ export declare const kebabize: (data: any) => any;
 export declare const getImageFromBase64: (encoded: string) => Promise<HTMLImageElement>;
 export declare const getBase64FromImage: (file: File) => Promise<string>;
 export declare const uuidv4: () => any;
+export declare const getNestedObjectValue: (nestedObject: any, dynamicKey: any) => any;
