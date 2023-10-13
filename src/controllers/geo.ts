@@ -65,7 +65,7 @@ export const getFeatures = async ({
         .map((feature) => {
           if (getNestedObjectValue(feature, filter.key)) {
             // if feature filter property exists
-            if (getNestedObjectValue(feature, filter.key) == filter.value) {
+            if (getNestedObjectValue(feature, filter.key) === filter.value) {
               // if feature property value is same as filter value
               return feature;
             } else {
