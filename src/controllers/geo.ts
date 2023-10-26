@@ -32,10 +32,6 @@ export const getFeatures = async ({
   const res = await axios.get(url);
   if (initPolygons) {
     const featuresToAdd: any[] = [];
-    const shopPolygons = res.data.features.filter(
-      (f) => f.properties.type === 'shop' && f.geometry.type === 'MultiPolygon',
-    );
-    const labelLineFeatures = res.data.features.filter((f) => f.properties.type === 'label-line');
 
     if (useTimerangeData) {
       res.data.features = res.data.features
@@ -79,6 +75,11 @@ export const getFeatures = async ({
         })
         .filter((feature) => feature !== undefined);
     }
+
+    const shopPolygons = res.data.features.filter(
+      (f) => f.properties.type === 'shop' && f.geometry.type === 'MultiPolygon',
+    );
+    const labelLineFeatures = res.data.features.filter((f) => f.properties.type === 'label-line');
 
     res.data.features = res.data.features.map((feature: any, key: number) => {
       if (hiddenAmenities && hiddenAmenities.length > 0 && hiddenAmenities.includes(feature.properties.amenity)) {
