@@ -187,10 +187,11 @@ const map = new Proximiio.Map({
    hiddenAmenities: string[], // you can define array of amenity id's to hide poi labels and icons while polygons remains functional
    useTimerangeData: false, // if set to true only features inside defined time range in metadata.dateStart and metadata.dateEnd will be shown, default: false
    sendAnalytics: true, // if enabled we automatically send analytics from routing to our API, default: true
-   defaultFilter?: {
+   defaultFilter: {
       key: string; // if defaultFilter is defined it will look for this key in feature object
       value: string; // if the previous key exists in the feature object, it's value will be compared to this value and filtering will be processed in a way that only features with same value or features with missing property will be visible
    };
+   featuresMaxBounds: [[-73.9876, 40.7661], [-73.9397, 40.8002]] // only features within defined bounds will be retrieved from api, optional, [[southwest lng, lat], [northeast lng, lat]]
 });
 ```
 

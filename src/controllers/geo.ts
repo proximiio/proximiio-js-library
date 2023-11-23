@@ -14,6 +14,7 @@ import {
   transformScale,
   lineIntersect,
 } from '@turf/turf';
+import { LngLatBoundsLike } from 'maplibre-gl';
 
 export const getFeatures = async ({
   initPolygons,
@@ -21,14 +22,20 @@ export const getFeatures = async ({
   hiddenAmenities,
   useTimerangeData,
   filter,
+  featuresMaxBounds,
 }: {
   initPolygons?: boolean;
   autoLabelLines?: boolean;
   hiddenAmenities?: string[];
   useTimerangeData?: boolean;
   filter?: { key: string; value: string };
+  featuresMaxBounds?: LngLatBoundsLike;
 }) => {
-  const url = '/v5/geo/features';
+  let url = '/v5/geo/features';
+  if (featuresMaxBounds) {
+    url += `/${featuresMaxBounds[0][0]},${featuresMaxBounds[0][1]},${featuresMaxBounds[1][0]},${featuresMaxBounds[1][1]}`;
+    console.log('limit with bounds', featuresMaxBounds, url);
+  }
   const res = await axios.get(url);
   if (initPolygons) {
     const featuresToAdd: any[] = [];

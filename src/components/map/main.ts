@@ -22,7 +22,7 @@ import {
   floorchangeDownImage,
   popupImage,
 } from './icons';
-import { MapLibreEvent } from 'maplibre-gl';
+import { LngLatBoundsLike, MapLibreEvent } from 'maplibre-gl';
 import { getPlaceFloors } from '../../controllers/floors';
 import { getPlaceById } from '../../controllers/places';
 import { Subject, throwIfEmpty } from 'rxjs';
@@ -135,6 +135,7 @@ export interface Options {
     key: string;
     value: string;
   };
+  featuresMaxBounds?: LngLatBoundsLike;
 }
 
 export interface PaddingOptions {
@@ -338,6 +339,7 @@ export class Map {
       hiddenAmenities: this.defaultOptions.hiddenAmenities,
       useTimerangeData: this.defaultOptions.useTimerangeData,
       filter: this.defaultOptions.defaultFilter,
+      featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
     });
     const levelChangers = features.features.filter(
       (f) => f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
@@ -555,6 +557,7 @@ export class Map {
         hiddenAmenities: this.defaultOptions.hiddenAmenities,
         useTimerangeData: this.defaultOptions.useTimerangeData,
         filter: this.defaultOptions.defaultFilter,
+        featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
       });
       const levelChangers = features.features.filter(
         (f) =>

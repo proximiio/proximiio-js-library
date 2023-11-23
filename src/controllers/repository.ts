@@ -7,6 +7,7 @@ import StyleModel from '../models/style';
 import { getAmenities, getFeatures } from './geo';
 import { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
+import { LngLatBoundsLike } from 'maplibre-gl';
 
 export const getPackage = async ({
   initPolygons,
@@ -15,6 +16,7 @@ export const getPackage = async ({
   hiddenAmenities,
   useTimerangeData,
   filter,
+  featuresMaxBounds,
 }: {
   initPolygons?: boolean;
   autoLabelLines?: boolean;
@@ -22,6 +24,7 @@ export const getPackage = async ({
   hiddenAmenities?: string[];
   useTimerangeData?: boolean;
   filter?: { key: string; value: string };
+  featuresMaxBounds?: LngLatBoundsLike;
 }): Promise<{
   places: PlaceModel[];
   floors: FloorModel[];
@@ -36,7 +39,7 @@ export const getPackage = async ({
     getFloors().then((floors) => (result.floors = floors.data)),
     getStyle().then((style) => (result.style = style)),
     getStyles().then((styles) => (result.styles = styles)),
-    getFeatures({ initPolygons, autoLabelLines, hiddenAmenities, useTimerangeData, filter }).then(
+    getFeatures({ initPolygons, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds }).then(
       (features) => (result.features = features),
     ),
     getAmenities(amenityIdProperty).then((amenities) => (result.amenities = amenities)),
