@@ -34,7 +34,6 @@ export const getFeatures = async ({
   let url = '/v5/geo/features';
   if (featuresMaxBounds) {
     url += `/${featuresMaxBounds[0][0]},${featuresMaxBounds[0][1]},${featuresMaxBounds[1][0]},${featuresMaxBounds[1][1]}`;
-    console.log('limit with bounds', featuresMaxBounds, url);
   }
   const res = await axios.get(url);
   if (initPolygons) {
