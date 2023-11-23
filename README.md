@@ -191,7 +191,7 @@ const map = new Proximiio.Map({
       key: string; // if defaultFilter is defined it will look for this key in feature object
       value: string; // if the previous key exists in the feature object, it's value will be compared to this value and filtering will be processed in a way that only features with same value or features with missing property will be visible
    };
-   featuresMaxBounds: [[-73.9876, 40.7661], [-73.9397, 40.8002]] // only features within defined bounds will be retrieved from api, optional, [[southwest lng, lat], [northeast lng, lat]]
+   featuresMaxBounds: [[-73.9876, 40.7661], [-73.9397, 40.8002]] // only features within defined bounds will be retrieved from api, optional, [[topleft lng, lat], [bottomright lng, lat]]
 });
 ```
 
