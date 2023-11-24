@@ -3,7 +3,8 @@ import { FloorModel } from '../models/floor';
 import StyleModel from '../models/style';
 import { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
-export declare const getPackage: ({ initPolygons, autoLabelLines, amenityIdProperty, hiddenAmenities, useTimerangeData, filter, }: {
+import { LngLatBoundsLike } from 'maplibre-gl';
+export declare const getPackage: ({ initPolygons, autoLabelLines, amenityIdProperty, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, }: {
     initPolygons?: boolean;
     autoLabelLines?: boolean;
     amenityIdProperty?: string;
@@ -13,6 +14,7 @@ export declare const getPackage: ({ initPolygons, autoLabelLines, amenityIdPrope
         key: string;
         value: string;
     };
+    featuresMaxBounds?: LngLatBoundsLike;
 }) => Promise<{
     places: PlaceModel[];
     floors: FloorModel[];
@@ -22,7 +24,7 @@ export declare const getPackage: ({ initPolygons, autoLabelLines, amenityIdPrope
     amenities: AmenityModel[];
 }>;
 declare const _default: {
-    getPackage: ({ initPolygons, autoLabelLines, amenityIdProperty, hiddenAmenities, useTimerangeData, filter, }: {
+    getPackage: ({ initPolygons, autoLabelLines, amenityIdProperty, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, }: {
         initPolygons?: boolean;
         autoLabelLines?: boolean;
         amenityIdProperty?: string;
@@ -32,6 +34,7 @@ declare const _default: {
             key: string;
             value: string;
         };
+        featuresMaxBounds?: LngLatBoundsLike;
     }) => Promise<{
         places: PlaceModel[];
         floors: FloorModel[];

@@ -4,6 +4,7 @@ import { FloorModel } from '../../models/floor';
 import StyleModel from '../../models/style';
 import Feature, { FeatureCollection } from '../../models/feature';
 import { AmenityModel } from '../../models/amenity';
+import { LngLatBoundsLike } from 'maplibre-gl';
 import { MapboxOptions } from '../../models/mapbox-options';
 import PersonModel from '../../models/person';
 import { WayfindingConfigModel } from '../../models/wayfinding';
@@ -103,6 +104,7 @@ export interface Options {
         key: string;
         value: string;
     };
+    featuresMaxBounds?: LngLatBoundsLike;
 }
 export interface PaddingOptions {
     bottom: number;
