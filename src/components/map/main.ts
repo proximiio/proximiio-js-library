@@ -956,7 +956,7 @@ export class Map {
       this.map.on('click', 'proximiio-pois-icons', (ev) => {
         this.onShopClick(ev);
       });
-      
+
       this.map.on('click', 'pois-icons', (ev) => {
         this.onShopClick(ev);
       });
