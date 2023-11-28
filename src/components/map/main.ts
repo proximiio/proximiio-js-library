@@ -294,6 +294,12 @@ export class Map {
       throw new Error(`It's not possible to use both isKiosk and useGpsLocation options as enabled!`);
     }
 
+    //@ts-ignore
+    maplibregl.setRTLTextPlugin(
+      'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
+      null,
+      true, // Lazy load the plugin
+    );
     this.map = new maplibregl.Map({
       ...(this.defaultOptions.mapboxOptions as MapboxOptions | any),
       container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map',

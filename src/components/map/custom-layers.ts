@@ -106,7 +106,7 @@ export class PolygonTitlesLayer extends SymbolLayer {
       'text-ignore-placement': true,
       'text-allow-overlap': true,
       'text-field': '{title}',
-      'text-font': ['Open Sans Bold'],
+      'text-font': ['Amiri Bold'],
       'text-size': data.labelFontSize,
       'text-letter-spacing': 0.005,
       'text-max-width': 7,
