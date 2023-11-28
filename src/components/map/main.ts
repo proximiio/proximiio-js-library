@@ -725,6 +725,7 @@ export class Map {
             'icon-anchor': 'bottom',
             'text-anchor': 'bottom',
             'text-offset': [0, -2.4],
+            'text-font': ['Amiri Bold'],
           },
           paint: {
             'text-color': '#fff',
