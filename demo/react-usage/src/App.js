@@ -73,13 +73,12 @@ class App extends React.Component {
             pitch: 40,
           },
           initPolygons: true,
-          // defaultPlaceId: 'e905bda5-4900-48f5-a6b0-d8e39c05050f',
+          //defaultPlaceId: 'e905bda5-4900-48f5-a6b0-d8e39c05050f',
           showLevelDirectionIcon: true,
           routeAnimation: {
             enabled: true,
-            looping: false,
-            durationMultiplier: 30,
-            fps: 120,
+            lineWidth: 6,
+            lineOpacity: 0.4,
           },
           useTimerangeData: true,
         });

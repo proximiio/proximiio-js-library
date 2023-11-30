@@ -103,6 +103,7 @@ export interface Options {
   animationLooping?: boolean;
   routeAnimation?: {
     enabled?: boolean;
+    type?: 'point' | 'dash';
     looping?: boolean;
     followRoute?: boolean;
     duration?: number;
@@ -258,13 +259,14 @@ export class Map {
     animationLooping: true,
     routeAnimation: {
       enabled: false,
+      type: 'dash',
       looping: true,
       followRoute: true,
       durationMultiplier: 30,
-      fps: 30,
+      fps: 120,
       pointColor: '#1d8a9f',
       pointRadius: 8,
-      lineColor: 'steelblue',
+      lineColor: '#6945ed',
       lineWidth: 5,
       lineOpacity: 0.6,
     },
@@ -900,54 +902,92 @@ export class Map {
 
   private initAnimatedRoute() {
     if (this.map) {
-      this.state.style.addSource('lineAlong', {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: [],
-        },
-      });
+      if (this.defaultOptions.routeAnimation.type === 'point') {
+        this.state.style.addSource('lineAlong', {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: [],
+          },
+        });
 
-      this.state.style.addLayer(
-        {
-          id: 'lineAlong',
+        this.state.style.addLayer(
+          {
+            id: 'lineAlong',
+            type: 'line',
+            source: 'lineAlong',
+            minzoom: 17,
+            maxzoom: 24,
+            paint: {
+              'line-width': this.defaultOptions.routeAnimation.lineWidth,
+              'line-color': this.defaultOptions.routeAnimation.lineColor,
+              'line-opacity': this.defaultOptions.routeAnimation.lineOpacity,
+            },
+            filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
+          },
+          'proximiio-routing-line-remaining',
+        );
+
+        this.state.style.addSource('pointAlong', {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: [],
+          },
+        });
+
+        this.state.style.addLayer(
+          {
+            id: 'pointAlong',
+            type: 'circle',
+            source: 'pointAlong',
+            minzoom: 17,
+            maxzoom: 24,
+            paint: {
+              'circle-color': this.defaultOptions.routeAnimation.pointColor,
+              'circle-radius': this.defaultOptions.routeAnimation.pointRadius,
+            },
+            filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
+          },
+          'lineAlong',
+        );
+      }
+      if (this.defaultOptions.routeAnimation.type === 'dash') {
+        if (this.state.style.getLayer('proximiio-routing-line-remaining')) {
+          this.state.style.removeLayer('proximiio-routing-line-remaining');
+        }
+        this.state.style.addSource('lineAlong', {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: [],
+          },
+        });
+
+        // add a line layer without line-dasharray defined to fill the gaps in the dashed line
+        this.state.style.addLayer({
           type: 'line',
           source: 'lineAlong',
-          minzoom: 17,
-          maxzoom: 24,
+          id: 'line-background',
           paint: {
-            'line-width': this.defaultOptions.routeAnimation.lineWidth,
             'line-color': this.defaultOptions.routeAnimation.lineColor,
+            'line-width': this.defaultOptions.routeAnimation.lineWidth,
             'line-opacity': this.defaultOptions.routeAnimation.lineOpacity,
           },
-          filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
-        },
-        'proximiio-routing-line-remaining',
-      );
+        });
 
-      this.state.style.addSource('pointAlong', {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: [],
-        },
-      });
-
-      this.state.style.addLayer(
-        {
-          id: 'pointAlong',
-          type: 'circle',
-          source: 'pointAlong',
-          minzoom: 17,
-          maxzoom: 24,
+        // add a line layer with line-dasharray set to the first value in dashArraySequence
+        this.state.style.addLayer({
+          type: 'line',
+          source: 'lineAlong',
+          id: 'line-dashed',
           paint: {
-            'circle-color': this.defaultOptions.routeAnimation.pointColor,
-            'circle-radius': this.defaultOptions.routeAnimation.pointRadius,
+            'line-color': this.defaultOptions.routeAnimation.lineColor,
+            'line-width': this.defaultOptions.routeAnimation.lineWidth,
+            'line-dasharray': [0, 4, 3],
           },
-          filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
-        },
-        'lineAlong',
-      );
+        });
+      }
     }
   }
 
@@ -2198,17 +2238,19 @@ export class Map {
       if (this.defaultOptions.animatedRoute) {
         console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
       }
-      clearInterval(this.animationInterval);
-      //@ts-ignore
-      this.map.getSource('pointAlong').setData({
-        type: 'FeatureCollection',
-        features: [],
-      });
-      //@ts-ignore
-      this.map.getSource('lineAlong').setData({
-        type: 'FeatureCollection',
-        features: [],
-      });
+      if (this.defaultOptions.routeAnimation.type === 'point') {
+        clearInterval(this.animationInterval);
+        //@ts-ignore
+        this.map.getSource('pointAlong').setData({
+          type: 'FeatureCollection',
+          features: [],
+        });
+        //@ts-ignore
+        this.map.getSource('lineAlong').setData({
+          type: 'FeatureCollection',
+          features: [],
+        });
+      }
     }
     this.map.setStyle(this.state.style);
     this.routingSource.cancel();
@@ -2298,58 +2340,98 @@ export class Map {
   }
 
   private animationInterval;
+  private step = 0;
   private animateRoute = (route: Feature | any) => {
-    clearInterval(this.animationInterval);
-    const lineDistance = turf.length(route) * 1000;
-    const walkingSpeed = 1.4;
-    const walkingDuration = lineDistance / walkingSpeed;
-    const multiplier = this.defaultOptions.routeAnimation.durationMultiplier;
-    const vizDuration = this.defaultOptions.routeAnimation.duration
-      ? this.defaultOptions.routeAnimation.duration
-      : walkingDuration * (1 / multiplier);
-    const fps = this.defaultOptions.routeAnimation.fps;
+    if (this.defaultOptions.routeAnimation.type === 'point') {
+      clearInterval(this.animationInterval);
+      const lineDistance = turf.length(route) * 1000;
+      const walkingSpeed = 1.4;
+      const walkingDuration = lineDistance / walkingSpeed;
+      const multiplier = this.defaultOptions.routeAnimation.durationMultiplier;
+      const vizDuration = this.defaultOptions.routeAnimation.duration
+        ? this.defaultOptions.routeAnimation.duration
+        : walkingDuration * (1 / multiplier);
+      const fps = this.defaultOptions.routeAnimation.fps;
 
-    const frames = Math.round(fps * vizDuration);
+      const frames = Math.round(fps * vizDuration);
 
-    console.log(`Route Duration is ${walkingDuration} seconds`);
-    console.log(`Vizualization Duration is ${vizDuration} seconds`);
-    console.log(`Total Frames at ${fps}fps is ${frames}`);
+      console.log(`Route Duration is ${walkingDuration} seconds`);
+      console.log(`Vizualization Duration is ${vizDuration} seconds`);
+      console.log(`Total Frames at ${fps}fps is ${frames}`);
 
-    // divide length and duration by number of frames
-    const routeLength = turf.length(route);
-    const incrementLength = routeLength / frames;
-    const interval = (vizDuration / frames) * 1000;
+      // divide length and duration by number of frames
+      const routeLength = turf.length(route);
+      const incrementLength = routeLength / frames;
+      const interval = (vizDuration / frames) * 1000;
 
-    // updateData at the calculated interval
-    let counter = 0;
-    let start;
+      // updateData at the calculated interval
+      let counter = 0;
+      let start;
 
-    const animate = (timestamp) => {
-      if (!start) start = timestamp;
-      const progress = timestamp - start;
+      const animate = (timestamp) => {
+        if (!start) start = timestamp;
+        const progress = timestamp - start;
 
-      if (progress < vizDuration * 1000) {
-        const frameProgress = progress / (vizDuration * 1000);
-        counter = Math.floor(frameProgress * frames);
+        if (progress < vizDuration * 1000) {
+          const frameProgress = progress / (vizDuration * 1000);
+          counter = Math.floor(frameProgress * frames);
 
+          this.updateData(route, incrementLength, counter, frames);
+
+          requestAnimationFrame(animate);
+        } else {
+          // Animation completed
+          // Additional logic can be added here if needed
+        }
+      };
+
+      requestAnimationFrame(animate);
+      /*this.animationInterval = setInterval(() => {
         this.updateData(route, incrementLength, counter, frames);
+        if (counter === frames + 1) {
+          clearInterval(this.animationInterval);
+        } else {
+          counter += 1;
+        }
+      }, interval);*/
+    }
+    if (this.defaultOptions.routeAnimation.type === 'dash') {
+      const dashArraySequence = [
+        [0, 4, 3],
+        [0.5, 4, 2.5],
+        [1, 4, 2],
+        [1.5, 4, 1.5],
+        [2, 4, 1],
+        [2.5, 4, 0.5],
+        [3, 4, 0],
+        [0, 0.5, 3, 3.5],
+        [0, 1, 3, 3],
+        [0, 1.5, 3, 2.5],
+        [0, 2, 3, 2],
+        [0, 2.5, 3, 1.5],
+        [0, 3, 3, 1],
+        [0, 3.5, 3, 0.5],
+      ];
 
-        requestAnimationFrame(animate);
-      } else {
-        // Animation completed
-        // Additional logic can be added here if needed
-      }
-    };
+      //@ts-ignore
+      this.map.getSource('lineAlong').setData(route);
 
-    requestAnimationFrame(animate);
-    /*this.animationInterval = setInterval(() => {
-      this.updateData(route, incrementLength, counter, frames);
-      if (counter === frames + 1) {
-        clearInterval(this.animationInterval);
-      } else {
-        counter += 1;
-      }
-    }, interval);*/
+      const animateDashArray = (timestamp: number) => {
+        // Update line-dasharray using the next value in dashArraySequence. The
+        // divisor in the expression `timestamp / 50` controls the animation speed.
+        const newStep = Math.floor((timestamp / 50) % dashArraySequence.length);
+
+        if (newStep !== this.step) {
+          this.map.setPaintProperty('line-dashed', 'line-dasharray', dashArraySequence[this.step]);
+          this.step = newStep;
+        }
+
+        // Request the next frame of the animation.
+        requestAnimationFrame(animateDashArray);
+      };
+
+      requestAnimationFrame(animateDashArray);
+    }
   };
 
   // Cache the initial and final points along the route
@@ -2377,7 +2459,7 @@ export class Map {
 
     if (this.defaultOptions.routeAnimation.followRoute && !animationInProgress) {
       animationInProgress = true;
-      
+
       /*const prevPoint = counter === 0 ? turf.along(route, 0) : turf.along(route, previousFrameLength);
       const currentPoint = turf.along(route, frameLength);
 
