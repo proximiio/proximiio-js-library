@@ -107,6 +107,7 @@ export interface Options {
     followRoute?: boolean;
     duration?: number;
     durationMultiplier?: number;
+    fps?: number;
     pointColor?: string;
     pointRadius?: number;
     lineColor?: string;
@@ -260,6 +261,7 @@ export class Map {
       looping: true,
       followRoute: true,
       durationMultiplier: 30,
+      fps: 30,
       pointColor: '#1d8a9f',
       pointRadius: 8,
       lineColor: 'steelblue',
@@ -2197,14 +2199,16 @@ export class Map {
         console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
       }
       clearInterval(this.animationInterval);
-      this.state.style.sources['lineAlong'].data = {
+      //@ts-ignore
+      this.map.getSource('pointAlong').setData({
         type: 'FeatureCollection',
         features: [],
-      };
-      this.state.style.sources['pointAlong'].data = {
+      });
+      //@ts-ignore
+      this.map.getSource('lineAlong').setData({
         type: 'FeatureCollection',
         features: [],
-      };
+      });
     }
     this.map.setStyle(this.state.style);
     this.routingSource.cancel();
@@ -2303,7 +2307,7 @@ export class Map {
     const vizDuration = this.defaultOptions.routeAnimation.duration
       ? this.defaultOptions.routeAnimation.duration
       : walkingDuration * (1 / multiplier);
-    const fps = 120;
+    const fps = this.defaultOptions.routeAnimation.fps;
 
     const frames = Math.round(fps * vizDuration);
 
@@ -2318,18 +2322,39 @@ export class Map {
 
     // updateData at the calculated interval
     let counter = 0;
-    // console.log(frames)
-    this.animationInterval = setInterval(() => {
+    let start;
+
+    const animate = (timestamp) => {
+      if (!start) start = timestamp;
+      const progress = timestamp - start;
+
+      if (progress < vizDuration * 1000) {
+        const frameProgress = progress / (vizDuration * 1000);
+        counter = Math.floor(frameProgress * frames);
+
+        this.updateData(route, incrementLength, counter, frames);
+
+        requestAnimationFrame(animate);
+      } else {
+        // Animation completed
+        // Additional logic can be added here if needed
+      }
+    };
+
+    requestAnimationFrame(animate);
+    /*this.animationInterval = setInterval(() => {
       this.updateData(route, incrementLength, counter, frames);
       if (counter === frames + 1) {
         clearInterval(this.animationInterval);
       } else {
         counter += 1;
       }
-    }, interval);
+    }, interval);*/
   };
 
+  // Cache the initial and final points along the route
   private updateData = (route: Feature | any, incrementLength: number, counter: number, frames: number) => {
+    let animationInProgress = false;
     // console.log(counter, frames)
     // length to visualize for this frame
     const frameLength = incrementLength * counter;
@@ -2350,8 +2375,10 @@ export class Map {
     //@ts-ignore
     this.map.getSource('lineAlong').setData(lineAlong);
 
-    if (this.defaultOptions.routeAnimation.followRoute) {
-      const prevPoint = counter === 0 ? turf.along(route, 0) : turf.along(route, previousFrameLength);
+    if (this.defaultOptions.routeAnimation.followRoute && !animationInProgress) {
+      animationInProgress = true;
+      
+      /*const prevPoint = counter === 0 ? turf.along(route, 0) : turf.along(route, previousFrameLength);
       const currentPoint = turf.along(route, frameLength);
 
       const currentBearing = this.map.getBearing();
@@ -2360,14 +2387,18 @@ export class Map {
 
       if (Math.abs(currentBearing - bearing) >= 6) {
         newBearing = bearing;
-      }
+      }*/
 
-      this.map.jumpTo({
-        center: pointAlong.geometry.coordinates as [number, number],
-        //bearing: newBearing,
-        //duration: 100,
-        //essential: true,
-      });
+      setTimeout(() => {
+        this.map.jumpTo({
+          center: pointAlong.geometry.coordinates as [number, number],
+          //bearing: newBearing,
+          //duration: 100,
+          //essential: true,
+        });
+
+        animationInProgress = false;
+      }, 100); // Adjust this timeout for throttling
     }
 
     //if (counter === 0) map.getSource('startPoint').setData(pointAlong);
