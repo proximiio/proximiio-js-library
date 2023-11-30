@@ -2341,9 +2341,14 @@ export class Map {
     // cut the line at the point
     const lineAlong = turf.lineSplit(route, pointAlong).features[0];
 
-    this.state.style.sources['lineAlong'].data = lineAlong;
+    /*this.state.style.sources['lineAlong'].data = lineAlong;
     this.state.style.sources['pointAlong'].data = pointAlong;
-    this.map.setStyle(this.state.style);
+    this.map.setStyle(this.state.style);*/
+
+    //@ts-ignore
+    this.map.getSource('pointAlong').setData(pointAlong);
+    //@ts-ignore
+    this.map.getSource('lineAlong').setData(lineAlong);
 
     if (this.defaultOptions.routeAnimation.followRoute) {
       const prevPoint = counter === 0 ? turf.along(route, 0) : turf.along(route, previousFrameLength);
@@ -2368,11 +2373,11 @@ export class Map {
     //if (counter === 0) map.getSource('startPoint').setData(pointAlong);
     if (counter === frames) {
       //map.getSource('endPoint').setData(pointAlong);
-      this.state.style.sources['pointAlong'].data = {
+      //@ts-ignore
+      this.map.getSource('pointAlong').setData({
         type: 'FeatureCollection',
         features: [],
-      };
-      this.map.setStyle(this.state.style);
+      });
       if (this.defaultOptions.routeAnimation.looping) {
         setTimeout(() => {
           this.animateRoute(route);
