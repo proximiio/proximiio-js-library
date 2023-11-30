@@ -101,6 +101,18 @@ export interface Options {
   showRasterFloorplans?: boolean;
   animatedRoute?: boolean;
   animationLooping?: boolean;
+  routeAnimation?: {
+    enabled?: boolean;
+    looping?: boolean;
+    followRoute?: boolean;
+    duration?: number;
+    durationMultiplier?: number;
+    pointColor?: string;
+    pointRadius?: number;
+    lineColor?: string;
+    lineOpacity?: number;
+    lineWidth?: number;
+  };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
     tilesUrl: string[];
@@ -243,6 +255,17 @@ export class Map {
     showRasterFloorplans: false,
     animatedRoute: false,
     animationLooping: true,
+    routeAnimation: {
+      enabled: false,
+      looping: true,
+      followRoute: true,
+      durationMultiplier: 30,
+      pointColor: '#1d8a9f',
+      pointRadius: 8,
+      lineColor: 'steelblue',
+      lineWidth: 5,
+      lineOpacity: 0.6,
+    },
     useRasterTiles: false,
     handleUrlParams: false,
     urlParams: {
@@ -285,9 +308,11 @@ export class Map {
 
     const urlParams = { ...this.defaultOptions.urlParams, ...options.urlParams };
     const polygonsOptions = { ...this.defaultOptions.polygonsOptions, ...options.polygonsOptions };
+    const routeAnimation = { ...this.defaultOptions.routeAnimation, ...options.routeAnimation };
     this.defaultOptions = { ...this.defaultOptions, ...options };
     this.defaultOptions.urlParams = urlParams;
     this.defaultOptions.polygonsOptions = polygonsOptions;
+    this.defaultOptions.routeAnimation = routeAnimation;
     this.state = globalState;
 
     if (this.defaultOptions.isKiosk && this.defaultOptions.useGpsLocation) {
@@ -501,7 +526,10 @@ export class Map {
       if (this.defaultOptions.showLevelDirectionIcon) {
         this.initDirectionIcon();
       }
-      if (this.defaultOptions.animatedRoute) {
+      if (this.defaultOptions.animatedRoute || this.defaultOptions.routeAnimation.enabled) {
+        if (this.defaultOptions.animatedRoute) {
+          console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
+        }
         this.initAnimatedRoute();
       }
       if (this.defaultOptions.hiddenAmenities) {
@@ -870,25 +898,54 @@ export class Map {
 
   private initAnimatedRoute() {
     if (this.map) {
-      this.state.style.addSource('route-point', {
+      this.state.style.addSource('lineAlong', {
         type: 'geojson',
         data: {
           type: 'FeatureCollection',
           features: [],
         },
       });
-      this.state.style.addLayer({
-        id: 'route-point',
-        type: 'circle',
-        source: 'route-point',
-        minzoom: 17,
-        maxzoom: 24,
-        paint: {
-          'circle-color': '#1d8a9f',
-          'circle-radius': 10,
+
+      this.state.style.addLayer(
+        {
+          id: 'lineAlong',
+          type: 'line',
+          source: 'lineAlong',
+          minzoom: 17,
+          maxzoom: 24,
+          paint: {
+            'line-width': this.defaultOptions.routeAnimation.lineWidth,
+            'line-color': this.defaultOptions.routeAnimation.lineColor,
+            'line-opacity': this.defaultOptions.routeAnimation.lineOpacity,
+          },
+          filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
         },
-        filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
+        'proximiio-routing-line-remaining',
+      );
+
+      this.state.style.addSource('pointAlong', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [],
+        },
       });
+
+      this.state.style.addLayer(
+        {
+          id: 'pointAlong',
+          type: 'circle',
+          source: 'pointAlong',
+          minzoom: 17,
+          maxzoom: 24,
+          paint: {
+            'circle-color': this.defaultOptions.routeAnimation.pointColor,
+            'circle-radius': this.defaultOptions.routeAnimation.pointRadius,
+          },
+          filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
+        },
+        'lineAlong',
+      );
     }
   }
 
@@ -1807,8 +1864,11 @@ export class Map {
           this.addDirectionFeatures();
         }
 
-        if (this.defaultOptions.animatedRoute) {
-          this.addAnimatedRouteFeatures();
+        if (this.defaultOptions.animatedRoute || this.defaultOptions.routeAnimation.enabled) {
+          if (this.defaultOptions.animatedRoute) {
+            console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
+          }
+          this.animateRoute(routeStart);
         }
 
         if (this.defaultOptions.forceFloorLevel !== null && this.defaultOptions.forceFloorLevel !== undefined) {
@@ -2051,6 +2111,12 @@ export class Map {
             : lineString(this.routingSource.levelPoints[floor.level].map((i: any) => i.geometry.coordinates));
         const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
         const bbox = turf.bbox(routePoints);
+        if (this.defaultOptions.animatedRoute || this.defaultOptions.routeAnimation.enabled) {
+          if (this.defaultOptions.animatedRoute) {
+            console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
+          }
+          this.animateRoute(routePoints);
+        }
         if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
           // @ts-ignore;
           map.fitBounds(bbox, {
@@ -2084,18 +2150,10 @@ export class Map {
         map.setFilter('direction-popup-layer', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('direction-popup-layer').filter = filter;
       }
-      if (this.defaultOptions.animatedRoute && map.getLayer('route-point')) {
-        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
-        map.setFilter('route-point', filter as maplibregl.FilterSpecification);
-        this.state.style.getLayer('route-point').filter = filter;
-      }
       if (map.getLayer('highlight-icon-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
         map.setFilter('highlight-icon-layer', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('highlight-icon-layer').filter = filter;
-      }
-      if (this.defaultOptions.animatedRoute && !this.defaultOptions.animationLooping && this.routingSource.route) {
-        this.restartAnimation();
       }
     }
     this.state = { ...this.state, floor, style: this.state.style };
@@ -2111,7 +2169,10 @@ export class Map {
         this.handlePolygonSelection(finish);
       }
       if (finish && this.defaultOptions.animatedRoute) {
-        this.cancelAnimation();
+        if (this.defaultOptions.animatedRoute) {
+          console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
+        }
+        clearInterval(this.animationInterval);
       }
       this.routingSource.update(start, finish);
     } catch (e) {
@@ -2131,12 +2192,19 @@ export class Map {
         features: [],
       };
     }
-    if (this.defaultOptions.animatedRoute) {
-      this.state.style.sources['route-point'].data = {
+    if (this.defaultOptions.animatedRoute || this.defaultOptions.routeAnimation.enabled) {
+      if (this.defaultOptions.animatedRoute) {
+        console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
+      }
+      clearInterval(this.animationInterval);
+      this.state.style.sources['lineAlong'].data = {
         type: 'FeatureCollection',
         features: [],
       };
-      this.cancelAnimation();
+      this.state.style.sources['pointAlong'].data = {
+        type: 'FeatureCollection',
+        features: [],
+      };
     }
     this.map.setStyle(this.state.style);
     this.routingSource.cancel();
@@ -2225,117 +2293,93 @@ export class Map {
     }
   }
 
-  // Used to increment the value of the point measurement against the route.
-  private counter = 0;
-  // store route part animation points
-  private arc = {};
-  // Number of steps to use in the arc and animation, more steps means
-  // a smoother arc and animation, but too many steps will result in a
-  // low frame rate
-  private steps = 500;
-  private animationInstances = [];
-  private addAnimatedRouteFeatures() {
-    this.counter = 0;
-    this.arc = {};
-    const pointsArray = [];
+  private animationInterval;
+  private animateRoute = (route: Feature | any) => {
+    clearInterval(this.animationInterval);
+    const lineDistance = turf.length(route) * 1000;
+    const walkingSpeed = 1.4;
+    const walkingDuration = lineDistance / walkingSpeed;
+    const multiplier = this.defaultOptions.routeAnimation.durationMultiplier;
+    const vizDuration = this.defaultOptions.routeAnimation.duration
+      ? this.defaultOptions.routeAnimation.duration
+      : walkingDuration * (1 / multiplier);
+    const fps = 120;
 
-    for (const routePart of this.routingSource.lines) {
-      if (routePart.geometry.type === 'LineString') {
-        // Calculate the distance in kilometers between route start/end point.
-        const lineDistance = turf.length(routePart);
+    const frames = Math.round(fps * vizDuration);
 
-        this.arc[routePart.id] = [];
+    console.log(`Route Duration is ${walkingDuration} seconds`);
+    console.log(`Vizualization Duration is ${vizDuration} seconds`);
+    console.log(`Total Frames at ${fps}fps is ${frames}`);
 
-        // Draw an arc between the `origin` & `destination` of the two points
-        for (let i = 0; i < lineDistance; i += lineDistance / this.steps) {
-          const segment = turf.along(turf.lineString(routePart.geometry.coordinates), i);
-          this.arc[routePart.id].push(segment.geometry.coordinates);
-        }
+    // divide length and duration by number of frames
+    const routeLength = turf.length(route);
+    const incrementLength = routeLength / frames;
+    const interval = (vizDuration / frames) * 1000;
 
-        const point = turf.point(routePart.geometry.coordinates[0], {
-          ...routePart.properties,
-          routePartId: routePart.id,
-        });
-        pointsArray.push(point);
+    // updateData at the calculated interval
+    let counter = 0;
+    // console.log(frames)
+    this.animationInterval = setInterval(() => {
+      this.updateData(route, incrementLength, counter, frames);
+      if (counter === frames + 1) {
+        clearInterval(this.animationInterval);
+      } else {
+        counter += 1;
       }
-    }
-    this.state.style.sources['route-point'].data = turf.featureCollection(pointsArray);
+    }, interval);
+  };
+
+  private updateData = (route: Feature | any, incrementLength: number, counter: number, frames: number) => {
+    // console.log(counter, frames)
+    // length to visualize for this frame
+    const frameLength = incrementLength * counter;
+    const previousFrameLength = incrementLength * (counter - 1);
+
+    // calculate where to place the marker
+    const pointAlong = turf.along(route, frameLength);
+
+    // cut the line at the point
+    const lineAlong = turf.lineSplit(route, pointAlong).features[0];
+
+    this.state.style.sources['lineAlong'].data = lineAlong;
+    this.state.style.sources['pointAlong'].data = pointAlong;
     this.map.setStyle(this.state.style);
-    this.animate();
-  }
 
-  private animate() {
-    const source = this.map.getSource('route-point') as any;
-    const currentRoutePartId =
-      this.routingSource.route[`path-part-${this.currentStep}`] &&
-      this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === this.state.floor.level
-        ? this.routingSource.route[`path-part-${this.currentStep}`].id
-        : this.routingSource.levelPaths?.[this.state.floor.level]?.paths?.[0]?.id;
+    if (this.defaultOptions.routeAnimation.followRoute) {
+      const prevPoint = counter === 0 ? turf.along(route, 0) : turf.along(route, previousFrameLength);
+      const currentPoint = turf.along(route, frameLength);
 
-    if (currentRoutePartId) {
-      const point = turf.point(
-        this.arc[currentRoutePartId]?.[this.counter]
-          ? this.arc[currentRoutePartId]?.[this.counter]
-          : this.arc[currentRoutePartId]?.[this.counter - 1],
-        {
-          ...this.routingSource.route[currentRoutePartId].properties,
-          routePartId: currentRoutePartId,
-        },
-      );
-
-      const start = this.arc[currentRoutePartId]?.[this.counter >= this.steps ? this.counter - 1 : this.counter];
-      const end = this.arc[currentRoutePartId]?.[this.counter >= this.steps ? this.counter : this.counter + 1];
-
-      // Calculate the bearing to ensure the icon is rotated to match the route arc
-      // The bearing is calculated between the current point and the next point, except
-      // at the end of the arc, which uses the previous point and the current point
       const currentBearing = this.map.getBearing();
-      const bearing = start && end ? turf.bearing(turf.point(start), turf.point(end)) : currentBearing;
+      const bearing = prevPoint && currentPoint ? turf.bearing(prevPoint, currentPoint) : currentBearing;
       let newBearing = currentBearing;
 
       if (Math.abs(currentBearing - bearing) >= 6) {
         newBearing = bearing;
       }
 
-      this.map.flyTo({
-        center: start,
-        bearing: newBearing,
-        duration: 200,
-        essential: true,
+      this.map.jumpTo({
+        center: pointAlong.geometry.coordinates as [number, number],
+        //bearing: newBearing,
+        //duration: 100,
+        //essential: true,
       });
+    }
 
-      // Update the source with this new data
-      source.setData(turf.featureCollection([point]));
-
-      // Request the next frame of animation as long as the end has not been reached
-      if (this.counter < this.steps) {
-        const animationInstance = window.requestAnimationFrame(this.animate.bind(this));
-        this.animationInstances.push(animationInstance);
-      }
-      if (this.counter === this.steps && this.defaultOptions.animationLooping) {
+    //if (counter === 0) map.getSource('startPoint').setData(pointAlong);
+    if (counter === frames) {
+      //map.getSource('endPoint').setData(pointAlong);
+      this.state.style.sources['pointAlong'].data = {
+        type: 'FeatureCollection',
+        features: [],
+      };
+      this.map.setStyle(this.state.style);
+      if (this.defaultOptions.routeAnimation.looping) {
         setTimeout(() => {
-          this.restartAnimation();
+          this.animateRoute(route);
         }, 2000);
       }
-
-      this.counter++;
     }
-  }
-
-  private restartAnimation() {
-    // Reset the counter
-    this.counter = 0;
-    // cancel animation
-    // this.cancelAnimation();
-    // Restart the animation
-    this.animate();
-  }
-
-  private cancelAnimation() {
-    for (const instance of this.animationInstances) {
-      window.cancelAnimationFrame(instance);
-    }
-  }
+  };
 
   private getClosestFeature(amenityId: string, fromFeature: Feature) {
     let sameLevelfeatures = this.state.allFeatures.features.filter(
