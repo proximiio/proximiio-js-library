@@ -23,7 +23,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Now you can enable route animation via `routeAnimation.enabled` setting
-- For `point` type of animation, you can turn on/off loopint via `routeAnimation.looping`
+- For `point` type of animation, you can turn on/off looping via `routeAnimation.looping`
 
 ### Deprecated
 

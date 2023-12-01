@@ -1910,7 +1910,7 @@ export class Map {
           if (this.defaultOptions.animatedRoute) {
             console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
           }
-          this.animateRoute(routeStart);
+          this.animateRoute();
         }
 
         if (this.defaultOptions.forceFloorLevel !== null && this.defaultOptions.forceFloorLevel !== undefined) {
@@ -2153,12 +2153,6 @@ export class Map {
             : lineString(this.routingSource.levelPoints[floor.level].map((i: any) => i.geometry.coordinates));
         const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
         const bbox = turf.bbox(routePoints);
-        if (this.defaultOptions.animatedRoute || this.defaultOptions.routeAnimation.enabled) {
-          if (this.defaultOptions.animatedRoute) {
-            console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
-          }
-          this.animateRoute(routePoints);
-        }
         if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
           // @ts-ignore;
           map.fitBounds(bbox, {
@@ -2199,6 +2193,12 @@ export class Map {
       }
     }
     this.state = { ...this.state, floor, style: this.state.style };
+    if (this.defaultOptions.animatedRoute || (this.defaultOptions.routeAnimation.enabled && route)) {
+      if (this.defaultOptions.animatedRoute) {
+        console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
+      }
+      this.animateRoute();
+    }
     this.updateCluster();
     this.onFloorSelectListener.next(floor);
   }
@@ -2340,10 +2340,17 @@ export class Map {
   }
 
   private animationInterval;
+  private animationTimeout;
   private step = 0;
-  private animateRoute = (route: Feature | any) => {
+  private animateRoute = () => {
+    const route =
+      this.routingSource.route[`path-part-${this.currentStep}`] &&
+      this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === this.state.floor.level
+        ? this.routingSource.route[`path-part-${this.currentStep}`]
+        : lineString(this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates));
     if (this.defaultOptions.routeAnimation.type === 'point') {
       clearInterval(this.animationInterval);
+      clearTimeout(this.animationTimeout);
       const lineDistance = turf.length(route) * 1000;
       const walkingSpeed = 1.4;
       const walkingDuration = lineDistance / walkingSpeed;
@@ -2355,9 +2362,9 @@ export class Map {
 
       const frames = Math.round(fps * vizDuration);
 
-      console.log(`Route Duration is ${walkingDuration} seconds`);
-      console.log(`Vizualization Duration is ${vizDuration} seconds`);
-      console.log(`Total Frames at ${fps}fps is ${frames}`);
+      //console.log(`Route Duration is ${walkingDuration} seconds`);
+      //console.log(`Vizualization Duration is ${vizDuration} seconds`);
+      //console.log(`Total Frames at ${fps}fps is ${frames}`);
 
       // divide length and duration by number of frames
       const routeLength = turf.length(route);
@@ -2368,13 +2375,13 @@ export class Map {
       let counter = 0;
       let start;
 
-      const animate = (timestamp) => {
+      /*const animate = (timestamp) => {
         if (!start) start = timestamp;
         const progress = timestamp - start;
 
-        if (progress < vizDuration * 1000) {
+        if (progress <= vizDuration * 1000) {
           const frameProgress = progress / (vizDuration * 1000);
-          counter = Math.floor(frameProgress * frames);
+          counter = Math.round(frameProgress * frames);
 
           this.updateData(route, incrementLength, counter, frames);
 
@@ -2383,17 +2390,17 @@ export class Map {
           // Animation completed
           // Additional logic can be added here if needed
         }
-      };
+      };*/
 
-      requestAnimationFrame(animate);
-      /*this.animationInterval = setInterval(() => {
+      //requestAnimationFrame(animate);
+      this.animationInterval = setInterval(() => {
         this.updateData(route, incrementLength, counter, frames);
         if (counter === frames + 1) {
           clearInterval(this.animationInterval);
         } else {
           counter += 1;
         }
-      }, interval);*/
+      }, interval);
     }
     if (this.defaultOptions.routeAnimation.type === 'dash') {
       const dashArraySequence = [
@@ -2437,7 +2444,7 @@ export class Map {
   // Cache the initial and final points along the route
   private updateData = (route: Feature | any, incrementLength: number, counter: number, frames: number) => {
     let animationInProgress = false;
-    // console.log(counter, frames)
+    // console.log(counter, frames);
     // length to visualize for this frame
     const frameLength = incrementLength * counter;
     const previousFrameLength = incrementLength * (counter - 1);
@@ -2487,13 +2494,13 @@ export class Map {
     if (counter === frames) {
       //map.getSource('endPoint').setData(pointAlong);
       //@ts-ignore
-      this.map.getSource('pointAlong').setData({
+      /*this.map.getSource('pointAlong').setData({
         type: 'FeatureCollection',
         features: [],
-      });
+      });*/
       if (this.defaultOptions.routeAnimation.looping) {
-        setTimeout(() => {
-          this.animateRoute(route);
+        this.animationTimeout = setTimeout(() => {
+          this.animateRoute();
         }, 2000);
       }
     }
