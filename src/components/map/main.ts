@@ -89,7 +89,7 @@ export interface Options {
     removeOriginalPolygonsLayer?: boolean;
     minZoom?: number;
     maxZoom?: number;
-    labelFontSize?: (string | number | string[])[] | number;
+    labelFontSize?: (string | number | string[])[] | number | any;
     symbolPlacement?: 'point' | 'line' | 'line-center';
     autoLabelLines?: boolean;
   };
@@ -212,26 +212,38 @@ export class Map {
       maxZoom: 24,
       labelFontSize: [
         'interpolate',
-        ['linear'],
+        ['exponential', 1.75],
         ['zoom'],
-        18,
-        4,
-        18.5,
-        6,
-        19,
-        14,
-        19.5,
-        16,
-        20,
-        18,
-        20.5,
-        24,
-        21,
-        30,
-        21.5,
-        36,
-        22,
-        42,
+        18, // Zoom level 18
+        [
+          'interpolate',
+          ['linear'],
+          ['/', ['get', 'length', ['get', '_dynamic']], ['length', ['get', 'title']]],
+          1,
+          5, // Smaller polygon size -> smaller text size
+          5,
+          10, // Medium polygon size -> medium text size
+          10,
+          20, // Larger polygon size -> larger text size
+          15,
+          30, // Larger polygon size -> larger text size
+          // Add more stops as needed based on your data range
+        ],
+        22, // Zoom level 22
+        [
+          'interpolate',
+          ['linear'],
+          ['/', ['get', 'length', ['get', '_dynamic']], ['length', ['get', 'title']]],
+          1,
+          30, // Smaller polygon size -> larger text size at higher zoom
+          5,
+          50, // Medium polygon size -> larger text size at higher zoom
+          10,
+          60, // Larger polygon size -> larger text size at higher zoom
+          15,
+          70, // Larger polygon size -> larger text size at higher zoom
+          // Add more stops as needed based on your data range
+        ],
       ],
       symbolPlacement: 'line-center',
       autoLabelLines: true,

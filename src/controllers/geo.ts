@@ -158,6 +158,7 @@ export const getFeatures = async ({
             connectedLabelLine.properties._dynamic.poi_id = feature.properties.id;
             connectedLabelLine.properties._dynamic.amenity = feature.properties.amenity;
             connectedLabelLine.properties._dynamic.polygon_id = connectedPolygon.properties._dynamic.id;
+            connectedLabelLine.properties._dynamic.length = Math.ceil(length(connectedLabelLine) * 1000);
             connectedLabelLine.properties.title = feature.properties.title;
             connectedLabelLine.properties.title_i18n = feature.properties.title_i18n;
           }
@@ -182,6 +183,7 @@ export const getFeatures = async ({
                 labelLineFeature.id = JSON.stringify(key + 9999);
                 labelLineFeature.properties.type = 'shop-label';
                 labelLineFeature.properties._dynamic.type = 'shop-label';
+                labelLineFeature.properties._dynamic.length = Math.ceil(length(labelLineFeature) * 1000);
                 connectedPolygon.properties._dynamic.label_id = labelLineFeature.properties.id;
                 featuresToAdd.push(labelLineFeature);
               }
@@ -201,7 +203,7 @@ export const getFeatures = async ({
 
                   // measure border length
                   const borderLength = length(border);
-                  border.properties._dynamic = { ...border.properties._dynamic, length: borderLength };
+                  border.properties._dynamic = { ...border.properties._dynamic, length: Math.ceil(borderLength * 1000) };
 
                   // if there is not longest border define it
                   if (!longestBorder) {
