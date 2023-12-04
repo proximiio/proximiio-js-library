@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 
 - Now you can enable route animation via `routeAnimation.enabled` setting
 - For `point` type of animation, you can turn on/off looping via `routeAnimation.looping`
+- Changed text font to `Amiri Bold` for polygon labels and level changer popups to fix `ar` translation issue
 
 ### Deprecated
 
@@ -36,7 +37,9 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
----
+- Enable click events on `proximiio-pois-icons` and `pois-icons` layers while polygons are initiated 
+- Fixed some `ar` translations
+
 ### Security
 
 ---
