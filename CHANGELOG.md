@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.1] - 2023-12-04
+
+
+### Fixed
+
+- Fixed bug when calling route animation while there were no route yet
+
+
 ## [1.10.0] - 2023-12-04
 
 ### Added
