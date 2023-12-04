@@ -156,7 +156,21 @@ const map = new Proximiio.Map({
    minFitBoundsDistance: 50, // optional, default 15, number, the minimum route length in meters to zoom into it's bounds, if length is smaller regular center change will be used
    showLevelDirectionIcon: false // optional, default: false, if enabled arrow icon will be shown at the levelchanger indicating direction of level change along the found route,
    showRasterFloorplans: false // optional, default: false, if enabled raster floorplans will be visible,
-   animatedRoute: false // optional, default: false, EXPERIMENTAL, if enabled animated dot will be displayed along the route,
+   animatedRoute: false // DEPRECATED optional, default: false, EXPERIMENTAL, if enabled animated dot will be displayed along the route,
+   routeAnimation: {
+      enabled: false, optional, default: false, if enabled animated dot/line will be displayed along the route
+      type: 'dash', optional, default: 'dash', there are two types of route animation 'dash' for dashed line animation and 'point' for moving point along the route
+      looping: true, optional, default: true, if enabled animation will be looping
+      followRoute: true, optional, default: true, if enabled map center will change to follow animation
+      durationMultiplier: 30, optional, default: 30, the higher multiplier is animation should be faster
+      duration: 10, optional, set the animation duration, will ignore the multiplier, as default animation duration is calculated by average walking speed and route distance
+      fps: 60, optional, default: 120, higher fps = smoother animation
+      pointColor: '#1d8a9f', optional, default: '#1d8a9f', color of the point animated along the route
+      pointRadius: 8, optional, default: 8, radius of the point animated along the route
+      lineColor: 'steelblue', optional, default: 'steelblue', color of the line animated along the route
+      lineWidth: 5, optional, default: 5, width of the line animated along the route
+      lineOpacity: 0.6, optional, default: 0.6, opacity of the line animated along the route
+   },
    useRasterTiles: false, // optional, default: false, this will add raster tile source and layer with defined options from rasterTilesOptions
    rasterTilesOptions: {
       tilesUrl: string[], // mandatory

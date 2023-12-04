@@ -73,10 +73,14 @@ class App extends React.Component {
             pitch: 40,
           },
           initPolygons: true,
-          // defaultPlaceId: 'default place id',
+          //defaultPlaceId: 'e905bda5-4900-48f5-a6b0-d8e39c05050f',
           showLevelDirectionIcon: true,
-          animatedRoute: true,
-          useTimerangeData: true
+          routeAnimation: {
+            enabled: true,
+            lineWidth: 6,
+            lineOpacity: 0.4,
+          },
+          useTimerangeData: true,
         });
 
         this.map.getMapReadyListener().subscribe(async (res) => {
@@ -153,6 +157,9 @@ class App extends React.Component {
           placeHolder: 'Pick the start poi',
           resultItem: { highlight: { render: true } },
           selector: '#from-poi-select',
+          resultsList: {
+            maxResults: 15,
+          },
         });
         fromPoiSelect.getSelectListener().subscribe((poi) => {
           fromPoi = poi;

@@ -70,6 +70,20 @@ export interface Options {
     showRasterFloorplans?: boolean;
     animatedRoute?: boolean;
     animationLooping?: boolean;
+    routeAnimation?: {
+        enabled?: boolean;
+        type?: 'point' | 'dash';
+        looping?: boolean;
+        followRoute?: boolean;
+        duration?: number;
+        durationMultiplier?: number;
+        fps?: number;
+        pointColor?: string;
+        pointRadius?: number;
+        lineColor?: string;
+        lineOpacity?: number;
+        lineWidth?: number;
+    };
     useRasterTiles?: boolean;
     rasterTilesOptions?: {
         tilesUrl: string[];
@@ -209,14 +223,10 @@ export declare class Map {
     private centerOnCoords;
     private updateImages;
     private getUpcomingFloorNumber;
-    private counter;
-    private arc;
-    private steps;
-    private animationInstances;
-    private addAnimatedRouteFeatures;
-    private animate;
-    private restartAnimation;
-    private cancelAnimation;
+    private animationInterval;
+    private step;
+    private animateRoute;
+    private updateData;
     private getClosestFeature;
     private getFloorName;
     /**
