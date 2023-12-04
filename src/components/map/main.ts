@@ -2355,39 +2355,40 @@ export class Map {
   private animationTimeout;
   private step = 0;
   private animateRoute = () => {
-    const route =
-      this.routingSource.route[`path-part-${this.currentStep}`] &&
-      this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === this.state.floor.level
-        ? this.routingSource.route[`path-part-${this.currentStep}`]
-        : lineString(this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates));
-    if (this.defaultOptions.routeAnimation.type === 'point') {
-      clearInterval(this.animationInterval);
-      clearTimeout(this.animationTimeout);
-      const lineDistance = turf.length(route) * 1000;
-      const walkingSpeed = 1.4;
-      const walkingDuration = lineDistance / walkingSpeed;
-      const multiplier = this.defaultOptions.routeAnimation.durationMultiplier;
-      const vizDuration = this.defaultOptions.routeAnimation.duration
-        ? this.defaultOptions.routeAnimation.duration
-        : walkingDuration * (1 / multiplier);
-      const fps = this.defaultOptions.routeAnimation.fps;
+    if (this.routingSource && this.routingSource.route && this.routingSource.route[`path-part-${this.currentStep}`]) {
+      const route =
+        this.routingSource.route[`path-part-${this.currentStep}`] &&
+        this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === this.state.floor.level
+          ? this.routingSource.route[`path-part-${this.currentStep}`]
+          : lineString(this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates));
+      if (this.defaultOptions.routeAnimation.type === 'point') {
+        clearInterval(this.animationInterval);
+        clearTimeout(this.animationTimeout);
+        const lineDistance = turf.length(route) * 1000;
+        const walkingSpeed = 1.4;
+        const walkingDuration = lineDistance / walkingSpeed;
+        const multiplier = this.defaultOptions.routeAnimation.durationMultiplier;
+        const vizDuration = this.defaultOptions.routeAnimation.duration
+          ? this.defaultOptions.routeAnimation.duration
+          : walkingDuration * (1 / multiplier);
+        const fps = this.defaultOptions.routeAnimation.fps;
 
-      const frames = Math.round(fps * vizDuration);
+        const frames = Math.round(fps * vizDuration);
 
-      // console.log(`Route Duration is ${walkingDuration} seconds`);
-      // console.log(`Vizualization Duration is ${vizDuration} seconds`);
-      // console.log(`Total Frames at ${fps}fps is ${frames}`);
+        // console.log(`Route Duration is ${walkingDuration} seconds`);
+        // console.log(`Vizualization Duration is ${vizDuration} seconds`);
+        // console.log(`Total Frames at ${fps}fps is ${frames}`);
 
-      // divide length and duration by number of frames
-      const routeLength = turf.length(route);
-      const incrementLength = routeLength / frames;
-      const interval = (vizDuration / frames) * 1000;
+        // divide length and duration by number of frames
+        const routeLength = turf.length(route);
+        const incrementLength = routeLength / frames;
+        const interval = (vizDuration / frames) * 1000;
 
-      // updateData at the calculated interval
-      let counter = 0;
-      // let start;
+        // updateData at the calculated interval
+        let counter = 0;
+        // let start;
 
-      /*const animate = (timestamp) => {
+        /*const animate = (timestamp) => {
         if (!start) start = timestamp;
         const progress = timestamp - start;
 
@@ -2404,52 +2405,53 @@ export class Map {
         }
       };*/
 
-      // requestAnimationFrame(animate);
-      this.animationInterval = setInterval(() => {
-        this.updateData(route, incrementLength, counter, frames);
-        if (counter === frames + 1) {
-          clearInterval(this.animationInterval);
-        } else {
-          counter += 1;
-        }
-      }, interval);
-    }
-    if (this.defaultOptions.routeAnimation.type === 'dash') {
-      const dashArraySequence = [
-        [0, 4, 3],
-        [0.5, 4, 2.5],
-        [1, 4, 2],
-        [1.5, 4, 1.5],
-        [2, 4, 1],
-        [2.5, 4, 0.5],
-        [3, 4, 0],
-        [0, 0.5, 3, 3.5],
-        [0, 1, 3, 3],
-        [0, 1.5, 3, 2.5],
-        [0, 2, 3, 2],
-        [0, 2.5, 3, 1.5],
-        [0, 3, 3, 1],
-        [0, 3.5, 3, 0.5],
-      ];
+        // requestAnimationFrame(animate);
+        this.animationInterval = setInterval(() => {
+          this.updateData(route, incrementLength, counter, frames);
+          if (counter === frames + 1) {
+            clearInterval(this.animationInterval);
+          } else {
+            counter += 1;
+          }
+        }, interval);
+      }
+      if (this.defaultOptions.routeAnimation.type === 'dash') {
+        const dashArraySequence = [
+          [0, 4, 3],
+          [0.5, 4, 2.5],
+          [1, 4, 2],
+          [1.5, 4, 1.5],
+          [2, 4, 1],
+          [2.5, 4, 0.5],
+          [3, 4, 0],
+          [0, 0.5, 3, 3.5],
+          [0, 1, 3, 3],
+          [0, 1.5, 3, 2.5],
+          [0, 2, 3, 2],
+          [0, 2.5, 3, 1.5],
+          [0, 3, 3, 1],
+          [0, 3.5, 3, 0.5],
+        ];
 
-      // @ts-ignore
-      this.map.getSource('lineAlong').setData(route);
+        // @ts-ignore
+        this.map.getSource('lineAlong').setData(route);
 
-      const animateDashArray = (timestamp: number) => {
-        // Update line-dasharray using the next value in dashArraySequence. The
-        // divisor in the expression `timestamp / 50` controls the animation speed.
-        const newStep = Math.floor((timestamp / 50) % dashArraySequence.length);
+        const animateDashArray = (timestamp: number) => {
+          // Update line-dasharray using the next value in dashArraySequence. The
+          // divisor in the expression `timestamp / 50` controls the animation speed.
+          const newStep = Math.floor((timestamp / 50) % dashArraySequence.length);
 
-        if (newStep !== this.step) {
-          this.map.setPaintProperty('line-dashed', 'line-dasharray', dashArraySequence[this.step]);
-          this.step = newStep;
-        }
+          if (newStep !== this.step) {
+            this.map.setPaintProperty('line-dashed', 'line-dasharray', dashArraySequence[this.step]);
+            this.step = newStep;
+          }
 
-        // Request the next frame of the animation.
+          // Request the next frame of the animation.
+          requestAnimationFrame(animateDashArray);
+        };
+
         requestAnimationFrame(animateDashArray);
-      };
-
-      requestAnimationFrame(animateDashArray);
+      }
     }
   };
 
