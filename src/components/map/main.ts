@@ -335,7 +335,7 @@ export class Map {
       throw new Error(`It's not possible to use both isKiosk and useGpsLocation options as enabled!`);
     }
 
-    //@ts-ignore
+    // @ts-ignore
     maplibregl.setRTLTextPlugin(
       'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
       null,
@@ -2252,12 +2252,12 @@ export class Map {
       }
       if (this.defaultOptions.routeAnimation.type === 'point') {
         clearInterval(this.animationInterval);
-        //@ts-ignore
+        // @ts-ignore
         this.map.getSource('pointAlong').setData({
           type: 'FeatureCollection',
           features: [],
         });
-        //@ts-ignore
+        // @ts-ignore
         this.map.getSource('lineAlong').setData({
           type: 'FeatureCollection',
           features: [],
@@ -2374,9 +2374,9 @@ export class Map {
 
       const frames = Math.round(fps * vizDuration);
 
-      //console.log(`Route Duration is ${walkingDuration} seconds`);
-      //console.log(`Vizualization Duration is ${vizDuration} seconds`);
-      //console.log(`Total Frames at ${fps}fps is ${frames}`);
+      // console.log(`Route Duration is ${walkingDuration} seconds`);
+      // console.log(`Vizualization Duration is ${vizDuration} seconds`);
+      // console.log(`Total Frames at ${fps}fps is ${frames}`);
 
       // divide length and duration by number of frames
       const routeLength = turf.length(route);
@@ -2385,7 +2385,7 @@ export class Map {
 
       // updateData at the calculated interval
       let counter = 0;
-      let start;
+      // let start;
 
       /*const animate = (timestamp) => {
         if (!start) start = timestamp;
@@ -2404,7 +2404,7 @@ export class Map {
         }
       };*/
 
-      //requestAnimationFrame(animate);
+      // requestAnimationFrame(animate);
       this.animationInterval = setInterval(() => {
         this.updateData(route, incrementLength, counter, frames);
         if (counter === frames + 1) {
@@ -2432,7 +2432,7 @@ export class Map {
         [0, 3.5, 3, 0.5],
       ];
 
-      //@ts-ignore
+      // @ts-ignore
       this.map.getSource('lineAlong').setData(route);
 
       const animateDashArray = (timestamp: number) => {
@@ -2471,9 +2471,9 @@ export class Map {
     this.state.style.sources['pointAlong'].data = pointAlong;
     this.map.setStyle(this.state.style);*/
 
-    //@ts-ignore
+    // @ts-ignore
     this.map.getSource('pointAlong').setData(pointAlong);
-    //@ts-ignore
+    // @ts-ignore
     this.map.getSource('lineAlong').setData(lineAlong);
 
     if (this.defaultOptions.routeAnimation.followRoute && !animationInProgress) {
@@ -2493,19 +2493,19 @@ export class Map {
       setTimeout(() => {
         this.map.jumpTo({
           center: pointAlong.geometry.coordinates as [number, number],
-          //bearing: newBearing,
-          //duration: 100,
-          //essential: true,
+          // bearing: newBearing,
+          // duration: 100,
+          // essential: true,
         });
 
         animationInProgress = false;
       }, 100); // Adjust this timeout for throttling
     }
 
-    //if (counter === 0) map.getSource('startPoint').setData(pointAlong);
+    // if (counter === 0) map.getSource('startPoint').setData(pointAlong);
     if (counter === frames) {
-      //map.getSource('endPoint').setData(pointAlong);
-      //@ts-ignore
+      // map.getSource('endPoint').setData(pointAlong);
+      // @ts-ignore
       /*this.map.getSource('pointAlong').setData({
         type: 'FeatureCollection',
         features: [],
