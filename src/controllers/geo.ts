@@ -203,7 +203,10 @@ export const getFeatures = async ({
 
                   // measure border length
                   const borderLength = length(border);
-                  border.properties._dynamic = { ...border.properties._dynamic, length: Math.ceil(borderLength * 1000) };
+                  border.properties._dynamic = {
+                    ...border.properties._dynamic,
+                    length: Math.ceil(borderLength * 1000),
+                  };
 
                   // if there is not longest border define it
                   if (!longestBorder) {
