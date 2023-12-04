@@ -58,7 +58,7 @@ export interface Options {
         removeOriginalPolygonsLayer?: boolean;
         minZoom?: number;
         maxZoom?: number;
-        labelFontSize?: (string | number | string[])[] | number;
+        labelFontSize?: (string | number | string[])[] | number | any;
         symbolPlacement?: 'point' | 'line' | 'line-center';
         autoLabelLines?: boolean;
     };
@@ -224,6 +224,7 @@ export declare class Map {
     private updateImages;
     private getUpcomingFloorNumber;
     private animationInterval;
+    private animationTimeout;
     private step;
     private animateRoute;
     private updateData;
