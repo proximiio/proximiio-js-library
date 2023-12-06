@@ -1070,7 +1070,7 @@ export class Map {
       this.map.on('click', 'proximiio-pois-icons', (ev) => {
         this.onShopClick(ev);
       });
-      this.map.on('mouseenter', 'proximiio-pois-icons', (ev) => {
+      this.map.on('mousemove', 'proximiio-pois-icons', (ev) => {
         this.map.getCanvas().style.cursor = 'pointer';
       });
       this.map.on('mouseleave', 'proximiio-pois-icons', (ev) => {
@@ -1080,7 +1080,7 @@ export class Map {
       this.map.on('click', 'pois-icons', (ev) => {
         this.onShopClick(ev);
       });
-      this.map.on('mouseenter', 'pois-icons', (ev) => {
+      this.map.on('mousemove', 'pois-icons', (ev) => {
         this.map.getCanvas().style.cursor = 'pointer';
       });
       this.map.on('mouseleave', 'pois-icons', (ev) => {

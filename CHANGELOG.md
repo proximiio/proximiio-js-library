@@ -2,13 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.10.1] - 2023-12-04
+## [1.10.2] - 2023-12-06
 
+### Added
+
+- Add cursor style change on mouseenter and mouseleave events for 'proximiio-pois-icons' and 'pois-icons' layers
+
+## [1.10.1] - 2023-12-04
 
 ### Fixed
 
 - Fixed bug when calling route animation while there were no route yet
-
 
 ## [1.10.0] - 2023-12-04
 
