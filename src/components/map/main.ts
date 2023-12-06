@@ -1067,26 +1067,35 @@ export class Map {
         }
       }
 
-      this.map.on('click', 'shop-custom', (e) => {
-        this.onShopClick(e);
-      });
-
       this.map.on('click', 'proximiio-pois-icons', (ev) => {
         this.onShopClick(ev);
+      });
+      this.map.on('mouseenter', 'proximiio-pois-icons', (ev) => {
+        this.map.getCanvas().style.cursor = 'pointer';
+      });
+      this.map.on('mouseleave', 'proximiio-pois-icons', (ev) => {
+        this.map.getCanvas().style.cursor = '';
       });
 
       this.map.on('click', 'pois-icons', (ev) => {
         this.onShopClick(ev);
       });
+      this.map.on('mouseenter', 'pois-icons', (ev) => {
+        this.map.getCanvas().style.cursor = 'pointer';
+      });
+      this.map.on('mouseleave', 'pois-icons', (ev) => {
+        this.map.getCanvas().style.cursor = '';
+      });
 
+      this.map.on('click', 'shop-custom', (e) => {
+        this.onShopClick(e);
+      });
       this.map.on('mouseenter', 'shop-custom', () => {
         this.onShopMouseEnter();
       });
-
       this.map.on('mousemove', 'shop-custom', (e) => {
         this.onShopMouseMove(e);
       });
-
       this.map.on('mouseleave', 'shop-custom', (e) => {
         this.onShopMouseLeave(e);
       });
