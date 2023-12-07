@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.3] - 2023-12-07
+
+- New map constuctor option `polygonsOptions.textFont` for configuring font stack for displaying labels in polygons
+
 ## [1.10.2] - 2023-12-06
 
 ### Added
