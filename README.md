@@ -991,7 +991,7 @@ select.getSelectListener().subscribe(place => {
 - Open Sans Bold
 - Open Sans Italic
 - Open Sans Regular
-- Open Sans Regular, Arial Unicode MS Regular
+- Open Sans Regular,Arial Unicode MS Regular
 - Open Sans Semibold
 - Open Sans Semibold Italic 
 

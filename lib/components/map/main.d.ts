@@ -61,6 +61,7 @@ export interface Options {
         labelFontSize?: (string | number | string[])[] | number | any;
         symbolPlacement?: 'point' | 'line' | 'line-center';
         autoLabelLines?: boolean;
+        textFont?: string[];
     };
     zoomLevel?: number;
     considerVisibilityParam?: boolean;
