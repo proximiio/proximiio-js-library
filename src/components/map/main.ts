@@ -92,6 +92,7 @@ export interface Options {
     labelFontSize?: (string | number | string[])[] | number | any;
     symbolPlacement?: 'point' | 'line' | 'line-center';
     autoLabelLines?: boolean;
+    textFont?: string[];
   };
   zoomLevel?: number;
   considerVisibilityParam?: boolean;
@@ -259,6 +260,7 @@ export class Map {
           // Add more stops as needed based on your data range
         ],
       ],
+      textFont: ['Amiri Bold'],
       symbolPlacement: 'line-center',
       autoLabelLines: true,
     },
@@ -769,7 +771,7 @@ export class Map {
             'icon-anchor': 'bottom',
             'text-anchor': 'bottom',
             'text-offset': [0, -2.4],
-            'text-font': ['Amiri Bold'],
+            'text-font': this.defaultOptions.polygonsOptions.textFont,
           },
           paint: {
             'text-color': '#fff',

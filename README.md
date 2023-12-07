@@ -147,6 +147,7 @@ const map = new Proximiio.Map({
       opacity: number; // optional, default: 1, default polygon opacity
       minZoom: number; // optional, default: 17, default polygon minimum zoom visibility
       maxZoom: number; // optional, default: 24, default polygon maximum zoom visibility
+      textFont: string[] // optional, default: ['Amiri Bold'], define font stack to use for displaying labels, check Available fonts at the bottom
       labelFontSize: (string | number | string[])[] | number; // optional, define polygon label font size, default is interpolate expression based on zoom level
       symbolPlacement: 'point' | 'line' | 'line-center'; // optional, label placement relative to its geometry, default: 'line-center'
       autoLabelLines: boolean; // optional, default: true, if no label-line is defined in the feature metadata, if enabled it's automatically generated based on the longest polygon border
@@ -966,6 +967,34 @@ select.getSelectListener().subscribe(place => {
   console.log('place selected', place);
 });
 ```
+
+## Available fonts
+
+- Amiri Bold
+- Amiri Bold Slanted
+- Amiri Regular
+- Amiri Slanted
+- Klokantech Noto Sans Bold
+- KlokanTech Noto Sans Bold
+- Klokantech Noto Sans CJK Bold
+- KlokanTech Noto Sans CJK Bold
+- Klokantech Noto Sans CJK Regular
+- Klokantech Noto Sans Italic
+- KlokanTech Noto Sans Italic
+- Klokantech Noto Sans Regular
+- KlokanTech Noto Sans Regular
+- NeutraText-DemiSCAlt
+- Noto Sans Bold
+- Noto Sans Bold Italic
+- Noto Sans Italic
+- Noto Sans Regular
+- Open Sans Bold
+- Open Sans Italic
+- Open Sans Regular
+- Open Sans Regular, Arial Unicode MS Regular
+- Open Sans Semibold
+- Open Sans Semibold Italic 
+
 
 ## Examples
 
