@@ -2531,7 +2531,7 @@ export class Map {
     }
   };
 
-  private getClosestFeature(amenityId: string, fromFeature: Feature) {
+  public getClosestFeature(amenityId: string, fromFeature: Feature) {
     let sameLevelfeatures = this.state.allFeatures.features.filter(
       (i) =>
         i.properties.amenity === amenityId &&
@@ -2556,7 +2556,7 @@ export class Map {
     }
   }
 
-  private getFloorName(floor: FloorModel) {
+  public getFloorName(floor: FloorModel) {
     if (floor.metadata && floor.metadata['title_' + this.defaultOptions.language]) {
       return floor.metadata['title_' + this.defaultOptions.language];
     } else {

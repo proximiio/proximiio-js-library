@@ -2,7 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.4] - Unreleased
+
+### Changed
+
+- Method `getFloorName` has become public
+- Method `getClosestFeature` has become public
+
 ## [1.10.3] - 2023-12-07
+
+### Added
 
 - New map constuctor option `polygonsOptions.textFont` for configuring font stack for displaying labels in polygons
 
@@ -25,13 +34,13 @@ All notable changes to this project will be documented in this file.
 - New map constuctor option `routeAnimation` to replace deprecated `animatedRoute` and `animationLooping`
 - New map constuctor option `routeAnimation.enabled`
 - New map constuctor option `routeAnimation.type`, possible values are `dash` or `point`
-- New map constuctor option `routeAnimation.looping`, only applicable for `point` route animation 
-- New map constuctor option `routeAnimation.followRoute`, only applicable for `point` route animation 
-- New map constuctor option `routeAnimation.duration`, only applicable for `point` route animation 
-- New map constuctor option `routeAnimation.durationMultiplier`, only applicable for `point` route animation 
-- New map constuctor option `routeAnimation.fps`, only applicable for `point` route animation 
-- New map constuctor option `routeAnimation.pointColor`, only applicable for `point` route animation 
-- New map constuctor option `routeAnimation.pointRadius`, only applicable for `point` route animation 
+- New map constuctor option `routeAnimation.looping`, only applicable for `point` route animation
+- New map constuctor option `routeAnimation.followRoute`, only applicable for `point` route animation
+- New map constuctor option `routeAnimation.duration`, only applicable for `point` route animation
+- New map constuctor option `routeAnimation.durationMultiplier`, only applicable for `point` route animation
+- New map constuctor option `routeAnimation.fps`, only applicable for `point` route animation
+- New map constuctor option `routeAnimation.pointColor`, only applicable for `point` route animation
+- New map constuctor option `routeAnimation.pointRadius`, only applicable for `point` route animation
 - New map constuctor option `routeAnimation.lineColor`
 - New map constuctor option `routeAnimation.lineOpacity`
 - New map constuctor option `routeAnimation.lineWidth`
@@ -53,7 +62,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- Enable click events on `proximiio-pois-icons` and `pois-icons` layers while polygons are initiated 
+- Enable click events on `proximiio-pois-icons` and `pois-icons` layers while polygons are initiated
 - Fixed some `ar` translations
 
 ### Security

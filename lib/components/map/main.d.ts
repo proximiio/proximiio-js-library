@@ -229,8 +229,8 @@ export declare class Map {
     private step;
     private animateRoute;
     private updateData;
-    private getClosestFeature;
-    private getFloorName;
+    getClosestFeature(amenityId: string, fromFeature: Feature): false | Feature;
+    getFloorName(floor: FloorModel): string;
     /**
      *  @memberof Map
      *  @name getMapboxInstance
