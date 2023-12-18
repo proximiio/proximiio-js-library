@@ -338,11 +338,15 @@ export class Map {
     }
 
     // @ts-ignore
-    maplibregl.setRTLTextPlugin(
-      'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
-      null,
-      true, // Lazy load the plugin
-    );
+    if (mapboxgl.getRTLTextPluginStatus() !== 'loaded') {
+      // @ts-ignore
+      maplibregl.setRTLTextPlugin(
+        'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
+        null,
+        true, // Lazy load the plugin
+      );
+    }
+
     this.map = new maplibregl.Map({
       ...(this.defaultOptions.mapboxOptions as MapboxOptions | any),
       container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map',
@@ -1299,14 +1303,16 @@ export class Map {
               f.properties.title?.toLowerCase() === startParam?.toLowerCase()),
         ) as Feature)
       : this.startPoint;
-    const destinationFeature = this.state.allFeatures.features.find(
-      (f) =>
-        f.properties.title &&
-        f.properties.place_id === defaultPlace.id &&
-        (f.id === destinationParam ||
-          f.properties.id === destinationParam ||
-          f.properties.title?.toLowerCase() === destinationParam?.toLowerCase()),
-    ) as Feature;
+    const destinationFeature = destinationParam
+      ? (this.state.allFeatures.features.find(
+          (f) =>
+            f.properties.title &&
+            f.properties.place_id === defaultPlace.id &&
+            (f.id === destinationParam ||
+              f.properties.id === destinationParam ||
+              f.properties.title?.toLowerCase() === destinationParam?.toLowerCase()),
+        ) as Feature)
+      : undefined;
 
     if (startFeature && startFeature.id && !destinationFeature) {
       this.centerToFeature(startFeature.id);
