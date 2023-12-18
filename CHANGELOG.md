@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.6] - 2023-12-18
+
+### Fixed
+
+- Fix incorrect function name in if condition to check if RTL text plugin is loaded
+
 ## [1.10.5] - 2023-12-18
 
 ### Fixed
