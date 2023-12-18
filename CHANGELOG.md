@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.5] - 2023-12-18
+
+### Fixed
+
+- Add condition to check if RTL text plugin is already loaded before setting it to improve performance and prevent unnecessary loading
+- Handle case when destinationParam is undefined to prevent error when finding destinationFeature
+
 ## [1.10.4] - 2023-12-14
 
 ### Changed
