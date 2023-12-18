@@ -338,7 +338,7 @@ export class Map {
     }
 
     // @ts-ignore
-    if (mapboxgl.getRTLTextPluginStatus() !== 'loaded') {
+    if (maplibregl.getRTLTextPluginStatus() !== 'loaded') {
       // @ts-ignore
       maplibregl.setRTLTextPlugin(
         'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
