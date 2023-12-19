@@ -1545,6 +1545,8 @@ export class Map {
   private onFeaturesChange() {
     this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features];
     this.onSourceChange();
+    this.geojsonSource.language = this.defaultOptions.language;
+    this.geojsonSource.fetch(this.state.features);
     this.routingSource.routing.setData(this.state.allFeatures);
     this.updateMapSource(this.routingSource);
   }
@@ -2621,8 +2623,6 @@ export class Map {
    *  });
    */
   public setLanguage(language: string) {
-    this.geojsonSource.language = language;
-    this.geojsonSource.fetch(this.state.features);
     this.defaultOptions.language = language;
     this.onFeaturesChange();
   }
