@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.10.7] - Unreleased
+
+### Fixed
+
+- Fix `setLanguage` method to change features title based on current language dynamically
+
 ## [1.10.6] - 2023-12-18
 
 ### Fixed
