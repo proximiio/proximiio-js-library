@@ -1,4 +1,3 @@
-import * as maplibregl from 'maplibre-gl';
 import { PlaceModel } from '../../models/place';
 import { FloorModel } from '../../models/floor';
 import StyleModel from '../../models/style';
@@ -229,7 +228,7 @@ export declare class Map {
     private step;
     private animateRoute;
     private updateData;
-    getClosestFeature(amenityId: string, fromFeature: Feature): false | Feature;
+    getClosestFeature(amenityId: string, fromFeature?: Feature): false | Feature;
     getFloorName(floor: FloorModel): string;
     /**
      *  @memberof Map
@@ -239,7 +238,7 @@ export declare class Map {
      *  const map = new Proximiio.Map();
      *  map.getMapboxInstance();
      */
-    getMapboxInstance(): maplibregl.Map;
+    getMapboxInstance(): import("maplibre-gl").Map;
     /**
      *  @memberof Map
      *  @name getMapState
