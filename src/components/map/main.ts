@@ -2539,12 +2539,11 @@ export class Map {
     }
   };
 
-  public getClosestFeature(amenityId: string, fromFeature: Feature) {
-    let sameLevelfeatures = this.state.allFeatures.features.filter(
-      (i) =>
-        i.properties.amenity === amenityId &&
-        i.geometry.type === 'Point' &&
-        i.properties.level === fromFeature.properties.level,
+  public getClosestFeature(amenityId: string, fromFeature?: Feature) {
+    let sameLevelfeatures = this.state.allFeatures.features.filter((i) =>
+      i.properties.amenity === amenityId && i.geometry.type === 'Point' && i.properties.level === fromFeature
+        ? fromFeature.properties.level
+        : this.startPoint.properties.level,
     );
     let features = this.state.allFeatures.features.filter(
       (i) => i.properties.amenity === amenityId && i.geometry.type === 'Point',
@@ -2553,7 +2552,9 @@ export class Map {
       sameLevelfeatures = sameLevelfeatures.filter((i) => i.properties.place_id === this.defaultOptions.defaultPlaceId);
       features = features.filter((i) => i.properties.place_id === this.defaultOptions.defaultPlaceId);
     }
-    const targetPoint = turf.point(fromFeature.geometry.coordinates);
+    const targetPoint = turf.point(
+      fromFeature ? fromFeature.geometry.coordinates : this.startPoint.geometry.coordinates,
+    );
     if (sameLevelfeatures.length > 0 || features.length > 0) {
       return turf.nearestPoint(
         targetPoint,
