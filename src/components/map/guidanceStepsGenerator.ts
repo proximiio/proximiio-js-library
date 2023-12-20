@@ -1,6 +1,6 @@
 import Feature from '../../models/feature';
 import { GuidanceStep } from '../../models/wayfinding';
-import * as turf from '@turf/turf';
+import { bearing, distance, lineString } from '@turf/turf';
 
 enum Direction {
   Start = 'START',
@@ -78,8 +78,8 @@ export default class GuidanceStepsGenerator {
     if (!previousPoint) {
       return 0;
     }
-    const bearing = turf.bearing(previousPoint.geometry.coordinates, currentPoint.geometry.coordinates);
-    return bearing;
+    const bearingVar = bearing(previousPoint.geometry.coordinates, currentPoint.geometry.coordinates);
+    return bearingVar;
   }
 
   private getStepDirection({
@@ -107,10 +107,10 @@ export default class GuidanceStepsGenerator {
       return `${Direction.Exit}_${LevelChangerTypes[currentPoint.properties.type]}`;
     }
 
-    const bearing =
-      turf.bearing(currentPoint.geometry.coordinates, nextPoint.geometry.coordinates) -
-      turf.bearing(previousPoint.geometry.coordinates, currentPoint.geometry.coordinates);
-    const degreeNormalized = this.degreeNormalized(bearing);
+    const bearingVar =
+      bearing(currentPoint.geometry.coordinates, nextPoint.geometry.coordinates) -
+      bearing(previousPoint.geometry.coordinates, currentPoint.geometry.coordinates);
+    const degreeNormalized = this.degreeNormalized(bearingVar);
 
     if (Math.abs(degreeNormalized) < 22.5) {
       return Direction.Straight;
@@ -157,8 +157,8 @@ export default class GuidanceStepsGenerator {
     if (previousPoint.isLevelChanger && currentPoint.isLevelChanger) {
       return 0;
     }
-    const distance = turf.distance(previousPoint.geometry.coordinates, currentPoint.geometry.coordinates);
-    return distance * 1000;
+    const distanceVar = distance(previousPoint.geometry.coordinates, currentPoint.geometry.coordinates);
+    return distanceVar * 1000;
   }
 
   private getLevelChangerDirection({
@@ -193,8 +193,8 @@ export default class GuidanceStepsGenerator {
     if (currentPoint.properties.level !== previousPoint.properties.level) {
       return null;
     }
-    const lineString = turf.lineString([previousPoint.geometry.coordinates, currentPoint.geometry.coordinates]);
-    return lineString;
+    const lineStringVar = lineString([previousPoint.geometry.coordinates, currentPoint.geometry.coordinates]);
+    return lineStringVar;
   }
 
   private degreeNormalized(degrees: number) {

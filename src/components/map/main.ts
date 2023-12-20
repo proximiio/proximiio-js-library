@@ -1,7 +1,7 @@
-import * as maplibregl from 'maplibre-gl';
+import maplibregl from 'maplibre-gl';
 import Repository from '../../controllers/repository';
 import Auth from '../../controllers/auth';
-import { addFeatures, updateFeature, deleteFeatures } from '../../controllers/geo';
+import { addFeatures, deleteFeatures } from '../../controllers/geo';
 import { PlaceModel } from '../../models/place';
 import { FloorModel } from '../../models/floor';
 import StyleModel from '../../models/style';
@@ -25,15 +25,15 @@ import {
 import { LngLatBoundsLike, MapLibreEvent } from 'maplibre-gl';
 import { getPlaceFloors } from '../../controllers/floors';
 import { getPlaceById } from '../../controllers/places';
-import { Subject, throwIfEmpty } from 'rxjs';
-import * as turf from '@turf/turf';
+import { Subject } from 'rxjs';
 // @ts-ignore
 import * as tingle from 'tingle.js/dist/tingle';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
 import { MapboxOptions } from '../../models/mapbox-options';
-import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer, PolygonTitlesLineLayer } from './custom-layers';
+import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer } from './custom-layers';
 import PersonModel from '../../models/person';
-import { featureCollection, isNumber, lineString } from '@turf/helpers';
+import { bbox, length, center, along, lineSplit, nearestPoint } from '@turf/turf';
+import { isNumber, lineString, point, feature, featureCollection } from '@turf/helpers';
 import WayfindingLogger from '../logger/wayfinding';
 import { translations } from './i18n';
 import { WayfindingConfigModel } from '../../models/wayfinding';
@@ -634,7 +634,7 @@ export class Map {
     if (this.map) {
       this.showStartPoint = false;
       if (this.defaultOptions.kioskSettings) {
-        this.startPoint = turf.point(this.defaultOptions.kioskSettings.coordinates, {
+        this.startPoint = point(this.defaultOptions.kioskSettings.coordinates, {
           level: this.defaultOptions.kioskSettings.level,
         }) as Feature;
         this.showStartPoint = true;
@@ -665,7 +665,7 @@ export class Map {
         coordinates: [lng, lat],
         level,
       };
-      this.startPoint = turf.point(this.defaultOptions.kioskSettings.coordinates, {
+      this.startPoint = point(this.defaultOptions.kioskSettings.coordinates, {
         level: this.defaultOptions.kioskSettings.level,
       }) as Feature;
       this.state.style.sources['my-location'].data = {
@@ -713,7 +713,7 @@ export class Map {
       }
 
       geolocate.on('geolocate', (data) => {
-        this.startPoint = turf.point([data.coords.longitude, data.coords.latitude], {
+        this.startPoint = point([data.coords.longitude, data.coords.latitude], {
           level: this.state.floor.level,
         }) as Feature;
       });
@@ -1897,7 +1897,7 @@ export class Map {
       });
     }
     const personsCollection = this.state.persons.map((person) => {
-      return turf.point([person.lng, person.lat], {
+      return point([person.lng, person.lat], {
         level: person.level,
       }) as Feature;
     });
@@ -2182,18 +2182,18 @@ export class Map {
           this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === floor.level
             ? this.routingSource.route[`path-part-${this.currentStep}`]
             : lineString(this.routingSource.levelPoints[floor.level].map((i: any) => i.geometry.coordinates));
-        const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
-        const bbox = turf.bbox(routePoints);
+        const lengthInMeters = length(routePoints, { units: 'kilometers' }) * 1000;
+        const boundingBox = bbox(routePoints);
         if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
           // @ts-ignore;
-          map.fitBounds(bbox, {
+          map.fitBounds(boundingBox, {
             padding: this.defaultOptions.fitBoundsPadding,
             bearing: this.map.getBearing(),
             pitch: this.map.getPitch(),
           });
         } else {
           // @ts-ignore
-          this.map.flyTo({ center: turf.center(routePoints).geometry.coordinates });
+          this.map.flyTo({ center: center(routePoints).geometry.coordinates });
         }
       }
       if (this.defaultOptions.isKiosk && map.getLayer('my-location-layer')) {
@@ -2312,18 +2312,18 @@ export class Map {
             : lineString(
                 this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
               );
-        const lengthInMeters = turf.length(routePoints, { units: 'kilometers' }) * 1000;
-        const bbox = turf.bbox(routePoints);
+        const lengthInMeters = length(routePoints, { units: 'kilometers' }) * 1000;
+        const boundingBox = bbox(routePoints);
         if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
           // @ts-ignore;
-          this.map.fitBounds(bbox, {
+          this.map.fitBounds(boundingBox, {
             padding: this.defaultOptions.fitBoundsPadding,
             bearing: this.map.getBearing(),
             pitch: this.map.getPitch(),
           });
         } else {
           // @ts-ignore
-          this.map.flyTo({ center: turf.center(routePoints).geometry.coordinates });
+          this.map.flyTo({ center: center(routePoints).geometry.coordinates });
         }
       }
     }
@@ -2383,7 +2383,7 @@ export class Map {
       if (this.defaultOptions.routeAnimation.type === 'point') {
         clearInterval(this.animationInterval);
         clearTimeout(this.animationTimeout);
-        const lineDistance = turf.length(route) * 1000;
+        const lineDistance = length(route) * 1000;
         const walkingSpeed = 1.4;
         const walkingDuration = lineDistance / walkingSpeed;
         const multiplier = this.defaultOptions.routeAnimation.durationMultiplier;
@@ -2399,7 +2399,7 @@ export class Map {
         // console.log(`Total Frames at ${fps}fps is ${frames}`);
 
         // divide length and duration by number of frames
-        const routeLength = turf.length(route);
+        const routeLength = length(route);
         const incrementLength = routeLength / frames;
         const interval = (vizDuration / frames) * 1000;
 
@@ -2483,10 +2483,10 @@ export class Map {
     const previousFrameLength = incrementLength * (counter - 1);
 
     // calculate where to place the marker
-    const pointAlong = turf.along(route, frameLength);
+    const pointAlong = along(route, frameLength);
 
     // cut the line at the point
-    const lineAlong = turf.lineSplit(route, pointAlong).features[0];
+    const lineAlong = lineSplit(route, pointAlong).features[0];
 
     /*this.state.style.sources['lineAlong'].data = lineAlong;
     this.state.style.sources['pointAlong'].data = pointAlong;
@@ -2500,11 +2500,11 @@ export class Map {
     if (this.defaultOptions.routeAnimation.followRoute && !animationInProgress) {
       animationInProgress = true;
 
-      /*const prevPoint = counter === 0 ? turf.along(route, 0) : turf.along(route, previousFrameLength);
-      const currentPoint = turf.along(route, frameLength);
+      /*const prevPoint = counter === 0 ? along(route, 0) : along(route, previousFrameLength);
+      const currentPoint = along(route, frameLength);
 
       const currentBearing = this.map.getBearing();
-      const bearing = prevPoint && currentPoint ? turf.bearing(prevPoint, currentPoint) : currentBearing;
+      const bearing = prevPoint && currentPoint ? bearing(prevPoint, currentPoint) : currentBearing;
       let newBearing = currentBearing;
 
       if (Math.abs(currentBearing - bearing) >= 6) {
@@ -2540,10 +2540,11 @@ export class Map {
   };
 
   public getClosestFeature(amenityId: string, fromFeature?: Feature) {
-    let sameLevelfeatures = this.state.allFeatures.features.filter((i) =>
-      i.properties.amenity === amenityId && i.geometry.type === 'Point' && i.properties.level === fromFeature
-        ? fromFeature.properties.level
-        : this.startPoint.properties.level,
+    let sameLevelfeatures = this.state.allFeatures.features.filter(
+      (i) =>
+        i.properties.amenity === amenityId &&
+        i.geometry.type === 'Point' &&
+        i.properties.level === (fromFeature ? fromFeature.properties.level : this.startPoint.properties.level),
     );
     let features = this.state.allFeatures.features.filter(
       (i) => i.properties.amenity === amenityId && i.geometry.type === 'Point',
@@ -2552,13 +2553,11 @@ export class Map {
       sameLevelfeatures = sameLevelfeatures.filter((i) => i.properties.place_id === this.defaultOptions.defaultPlaceId);
       features = features.filter((i) => i.properties.place_id === this.defaultOptions.defaultPlaceId);
     }
-    const targetPoint = turf.point(
-      fromFeature ? fromFeature.geometry.coordinates : this.startPoint.geometry.coordinates,
-    );
+    const targetPoint = point(fromFeature ? fromFeature.geometry.coordinates : this.startPoint.geometry.coordinates);
     if (sameLevelfeatures.length > 0 || features.length > 0) {
-      return turf.nearestPoint(
+      return nearestPoint(
         targetPoint,
-        turf.featureCollection(sameLevelfeatures.length > 0 ? sameLevelfeatures : features),
+        featureCollection(sameLevelfeatures.length > 0 ? sameLevelfeatures : features),
       ) as Feature;
     } else {
       return false;
@@ -2847,9 +2846,9 @@ export class Map {
   ) {
     const fromFeature =
       latFrom && lngFrom && levelFrom
-        ? (turf.feature({ type: 'Point', coordinates: [lngFrom, latFrom] }, { level: levelFrom }) as Feature)
+        ? (feature({ type: 'Point', coordinates: [lngFrom, latFrom] }, { level: levelFrom }) as Feature)
         : this.startPoint;
-    const toFeature = turf.feature({ type: 'Point', coordinates: [lngTo, latTo] }, { level: levelTo }) as Feature;
+    const toFeature = feature({ type: 'Point', coordinates: [lngTo, latTo] }, { level: levelTo }) as Feature;
     this.routingSource.toggleAccessible(accessibleRoute);
     if (wayfindingConfig) {
       this.routingSource.setConfig(wayfindingConfig);
