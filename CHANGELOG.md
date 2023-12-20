@@ -2,12 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.10.7] - Unreleased
+## [1.11.0] - Unreleased
 
 ### Fixed
 
 - Fix `setLanguage` method to change features title based on current language dynamically
 - Fix bug in getClosestFeature method to handle case when fromFeature parameter is undefined
+
+### Changed
+
+- Typescript compiler options set to ES2015 (target, module)
+
+### Removed
+
+- Dropping support for webpack build as default, you can use `npm run build-weback` to build your own compiled file in case you need it
 
 ## [1.10.6] - 2023-12-18
 
