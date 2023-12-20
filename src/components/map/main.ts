@@ -402,17 +402,17 @@ export class Map {
       ? places.find((p) => p.id === placeParam || p.name === placeParam)
       : places.find((p) => p.id === this.defaultOptions.defaultPlaceId);
     const place = places.length > 0 ? (defaultPlace ? defaultPlace : places[0]) : new PlaceModel({});
-    let center: [number, number] = [place.location.lng, place.location.lat];
+    let centerVar: [number, number] = [place.location.lng, place.location.lat];
     if (this.defaultOptions.mapboxOptions?.center) {
-      center = this.defaultOptions.mapboxOptions.center as [number, number];
+      centerVar = this.defaultOptions.mapboxOptions.center as [number, number];
     }
     if (this.defaultOptions.isKiosk) {
-      center = this.defaultOptions.kioskSettings?.coordinates;
+      centerVar = this.defaultOptions.kioskSettings?.coordinates;
     }
     if (placeParam) {
-      center = [place.location.lng, place.location.lat];
+      centerVar = [place.location.lng, place.location.lat];
     }
-    style.center = center;
+    style.center = centerVar;
     if (this.defaultOptions.mapboxOptions) {
       this.defaultOptions.mapboxOptions.center = style.center;
     }
@@ -451,15 +451,15 @@ export class Map {
       features,
       allFeatures: new FeatureCollection(features),
       levelChangers: new FeatureCollection({ features: levelChangers }),
-      latitude: center[1],
-      longitude: center[0],
+      latitude: centerVar[1],
+      longitude: centerVar[0],
       zoom: this.defaultOptions.zoomLevel ? this.defaultOptions.zoomLevel : this.defaultOptions.mapboxOptions?.zoom,
       noPlaces: places.length === 0,
       user,
     };
     style.on(this.onStyleChange);
     this.map.setStyle(this.state.style);
-    this.map.setCenter(center);
+    this.map.setCenter(centerVar);
     if (this.defaultOptions.allowNewFeatureModal) {
       this.map.on(
         this.defaultOptions.newFeatureModalEvent ? this.defaultOptions.newFeatureModalEvent : 'dblclick',
@@ -1403,7 +1403,7 @@ export class Map {
       console.error(`Create feature failed: Feature with id '${featureId}' already exists!`);
       throw new Error(`Create feature failed: Feature with id '${featureId}' already exists!`);
     }
-    const feature = new Feature({
+    const featureVar = new Feature({
       type: 'Feature',
       id: featureId,
       geometry: new Geometry({
@@ -1432,23 +1432,23 @@ export class Map {
     }
 
     if (!isTemporary) {
-      this.state.features.features.push(feature);
+      this.state.features.features.push(featureVar);
       await addFeatures({
         type: 'FeatureCollection',
-        features: [feature.json],
+        features: [featureVar.json],
       });
     } else {
-      this.state.dynamicFeatures.features.push(feature);
+      this.state.dynamicFeatures.features.push(featureVar);
     }
 
     // this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features];
-    this.geojsonSource.create(feature);
+    this.geojsonSource.create(featureVar);
     // this.onSourceChange();
     // this.routingSource.routing.setData(this.state.allFeatures);
     // this.updateMapSource(this.routingSource);
     this.onFeaturesChange();
-    this.onFeatureAddListener.next(feature);
-    return feature;
+    this.onFeatureAddListener.next(featureVar);
+    return featureVar;
   }
 
   private async onUpdateFeature(
@@ -1468,19 +1468,19 @@ export class Map {
       console.error(`Update feature failed: Feature with id '${id}' has not been found!`);
       throw new Error(`Update feature failed: Feature with id '${id}' has not been found!`);
     }
-    const feature = new Feature(foundFeature);
-    feature.geometry.coordinates = [
-      lng ? lng : feature.geometry.coordinates[0],
-      lat ? lat : feature.geometry.coordinates[1],
+    const featureVar = new Feature(foundFeature);
+    featureVar.geometry.coordinates = [
+      lng ? lng : featureVar.geometry.coordinates[0],
+      lat ? lat : featureVar.geometry.coordinates[1],
     ];
-    feature.properties = {
-      ...feature.properties,
-      title: title ? title : feature.properties.title,
-      level: level ? level : feature.properties.level,
-      amenity: icon ? id : feature.properties.amenity,
-      images: icon ? [icon] : feature.properties.images,
-      place_id: placeId ? placeId : feature.properties.place_id,
-      floor_id: floorId ? floorId : feature.properties.floor_id,
+    featureVar.properties = {
+      ...featureVar.properties,
+      title: title ? title : featureVar.properties.title,
+      level: level ? level : featureVar.properties.level,
+      amenity: icon ? id : featureVar.properties.amenity,
+      images: icon ? [icon] : featureVar.properties.images,
+      place_id: placeId ? placeId : featureVar.properties.place_id,
+      floor_id: floorId ? floorId : featureVar.properties.floor_id,
       ...properties,
     };
     if (icon && icon.length > 0) {
@@ -1490,28 +1490,28 @@ export class Map {
 
     if (!isTemporary) {
       const featureIndex = this.state.features.features.findIndex(
-        (x) => x.id === feature.id || x.properties.id === feature.id,
+        (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
       );
-      this.state.features.features[featureIndex] = feature;
+      this.state.features.features[featureIndex] = featureVar;
       await addFeatures({
         type: 'FeatureCollection',
-        features: [feature.json],
+        features: [featureVar.json],
       });
     } else {
       const dynamicIndex = this.state.dynamicFeatures.features.findIndex(
-        (x) => x.id === feature.id || x.properties.id === feature.id,
+        (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
       );
-      this.state.dynamicFeatures.features[dynamicIndex] = feature;
+      this.state.dynamicFeatures.features[dynamicIndex] = featureVar;
     }
 
     // this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features]; // this is not probably updated with non dynamic feature update TODO
-    this.geojsonSource.update(feature);
+    this.geojsonSource.update(featureVar);
     // this.onSourceChange();
     // this.routingSource.routing.setData(this.state.allFeatures);
     // this.updateMapSource(this.routingSource);
     this.onFeaturesChange();
-    this.onFeatureUpdateListener.next(feature);
-    return feature;
+    this.onFeatureUpdateListener.next(featureVar);
+    return featureVar;
   }
 
   private async onDeleteFeature(id: string, isTemporary: boolean = true) {
@@ -1555,11 +1555,11 @@ export class Map {
     const features = this.state.allFeatures.features.filter(
       (f) => f.properties.id === query || f.id === query || f.properties.title === query,
     );
-    for (const feature of features) {
-      if (inverted && this.hiddenFeatures.findIndex((i) => i === feature.properties.id) === -1) {
-        this.hiddenFeatures.push(feature.properties.id);
-      } else if (!inverted && this.filteredFeatures.findIndex((i) => i === feature.properties.id) === -1) {
-        this.filteredFeatures.push(feature.properties.id);
+    for (const f of features) {
+      if (inverted && this.hiddenFeatures.findIndex((i) => i === f.properties.id) === -1) {
+        this.hiddenFeatures.push(f.properties.id);
+      } else if (!inverted && this.filteredFeatures.findIndex((i) => i === f.properties.id) === -1) {
+        this.filteredFeatures.push(f.properties.id);
       }
     }
     this.filterOutFeatures();
@@ -1569,15 +1569,15 @@ export class Map {
     const features = this.state.allFeatures.features.filter(
       (f) => f.properties.id === query || f.id === query || f.properties.title === query,
     );
-    for (const feature of features) {
-      if (inverted && this.hiddenFeatures.findIndex((i) => i === feature.properties.id) !== -1) {
+    for (const f of features) {
+      if (inverted && this.hiddenFeatures.findIndex((i) => i === f.properties.id) !== -1) {
         this.hiddenFeatures.splice(
-          this.hiddenFeatures.findIndex((i) => i === feature.properties.id),
+          this.hiddenFeatures.findIndex((i) => i === f.properties.id),
           1,
         );
-      } else if (!inverted && this.filteredFeatures.findIndex((i) => i === feature.properties.id) !== -1) {
+      } else if (!inverted && this.filteredFeatures.findIndex((i) => i === f.properties.id) !== -1) {
         this.filteredFeatures.splice(
-          this.filteredFeatures.findIndex((i) => i === feature.properties.id),
+          this.filteredFeatures.findIndex((i) => i === f.properties.id),
           1,
         );
       }
@@ -1945,11 +1945,11 @@ export class Map {
         }
 
         if (this.defaultOptions.forceFloorLevel !== null && this.defaultOptions.forceFloorLevel !== undefined) {
-          this.routingSource.data.features = this.routingSource.data.features.map((feature) => {
-            if (feature.properties.level !== this.defaultOptions.forceFloorLevel) {
-              feature.properties.level = this.defaultOptions.forceFloorLevel;
+          this.routingSource.data.features = this.routingSource.data.features.map((f) => {
+            if (f.properties.level !== this.defaultOptions.forceFloorLevel) {
+              f.properties.level = this.defaultOptions.forceFloorLevel;
             }
-            return feature;
+            return f;
           });
         }
 
@@ -3056,12 +3056,12 @@ export class Map {
    *  });
    */
   public centerToFeature(featureId: string) {
-    const feature = this.state.allFeatures.features.find(
+    const featureVar = this.state.allFeatures.features.find(
       (f) => f.id === featureId || f.properties.id === featureId,
     ) as Feature;
-    if (feature) {
-      this.centerOnPoi(feature);
-      return feature;
+    if (featureVar) {
+      this.centerOnPoi(featureVar);
+      return featureVar;
     } else {
       throw new Error(`Feature not found`);
     }
