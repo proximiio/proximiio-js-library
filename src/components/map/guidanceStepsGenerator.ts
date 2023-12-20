@@ -1,6 +1,8 @@
 import Feature from '../../models/feature';
 import { GuidanceStep } from '../../models/wayfinding';
-import { bearing, distance, lineString } from '@turf/turf';
+import bearing from '@turf/bearing';
+import distance from '@turf/distance';
+import { lineString } from '@turf/helpers';
 
 enum Direction {
   Start = 'START',

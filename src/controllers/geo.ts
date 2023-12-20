@@ -2,18 +2,16 @@ import { axios, getNestedObjectValue, uuidv4 } from '../common';
 import Feature, { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 import { globalState } from '../components/map/main';
-import { FeatureCollection as FCModel, Feature as FModel, Polygon, MultiPolygon } from '@turf/helpers';
-import {
-  booleanPointInPolygon,
-  pointOnFeature,
-  lineString,
-  length,
-  pointToLineDistance,
-  centroid,
-  lineOffset,
-  transformScale,
-  lineIntersect,
-} from '@turf/turf';
+import { FeatureCollection as FCModel, Feature as FModel } from '@turf/helpers';
+import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
+import pointOnFeature from '@turf/point-on-feature';
+import length from '@turf/length';
+import pointToLineDistance from '@turf/point-to-line-distance';
+import lineOffset from '@turf/line-offset';
+import centroid from '@turf/centroid';
+import transformScale from '@turf/transform-scale';
+import lineIntersect from '@turf/line-intersect';
+import { lineString } from '@turf/helpers';
 import { LngLatBoundsLike } from 'maplibre-gl';
 
 export const getFeatures = async ({
