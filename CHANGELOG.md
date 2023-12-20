@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - Fix `setLanguage` method to change features title based on current language dynamically
+- Fix bug in getClosestFeature method to handle case when fromFeature parameter is undefined
 
 ## [1.10.6] - 2023-12-18
 
