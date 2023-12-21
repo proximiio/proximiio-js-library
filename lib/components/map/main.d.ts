@@ -4,6 +4,7 @@ import StyleModel from '../../models/style';
 import Feature, { FeatureCollection } from '../../models/feature';
 import { AmenityModel } from '../../models/amenity';
 import { LngLatBoundsLike } from 'maplibre-gl';
+import { CustomSubject } from '../../customSubject';
 import { MapboxOptions } from '../../models/mapbox-options';
 import PersonModel from '../../models/person';
 import { WayfindingConfigModel } from '../../models/wayfinding';
@@ -258,7 +259,7 @@ export declare class Map {
      *    console.log('map ready', ready);
      *  });
      */
-    getMapReadyListener(): import("rxjs").Observable<boolean>;
+    getMapReadyListener(): CustomSubject<boolean>;
     /**
      * This method will set an active place, load floors etc. Have to be called after map is ready, see getMapReadyListener.
      *  @memberof Map
@@ -298,7 +299,7 @@ export declare class Map {
      *    console.log('selected place', place);
      *  });
      */
-    getPlaceSelectListener(): import("rxjs").Observable<PlaceModel>;
+    getPlaceSelectListener(): CustomSubject<PlaceModel>;
     /**
      * This method will set an active floor based on it's id. Have to be called after map is ready, see getMapReadyListener.
      *  @memberof Map
@@ -351,7 +352,7 @@ export declare class Map {
      *    console.log('selected floor', floor);
      *  });
      */
-    getFloorSelectListener(): import("rxjs").Observable<FloorModel>;
+    getFloorSelectListener(): CustomSubject<FloorModel>;
     /**
      * This method will generate route based on selected features by their ids
      *  @memberof Map
@@ -456,7 +457,7 @@ export declare class Map {
      *    console.log('new step has been set', step);
      *  });
      */
-    getNavStepSetListener(): import("rxjs").Observable<number>;
+    getNavStepSetListener(): CustomSubject<number>;
     /**
      * This method will return turn by turn text navigation object.
      *  @memberof Map
@@ -481,7 +482,7 @@ export declare class Map {
      *    console.log('turn by turn text navigation output', res.TBTNav);
      *  });
      */
-    getRouteFoundListener(): import("rxjs").Observable<any>;
+    getRouteFoundListener(): CustomSubject<any>;
     /**
      *  @memberof Map
      *  @name getRouteFailedListener
@@ -492,7 +493,7 @@ export declare class Map {
      *    console.log('route not found');
      *  });
      */
-    getRouteFailedListener(): import("rxjs").Observable<unknown>;
+    getRouteFailedListener(): CustomSubject<unknown>;
     /**
      *  @memberof Map
      *  @name getRouteCancelListener
@@ -503,7 +504,7 @@ export declare class Map {
      *    console.log('route cancelled);
      *  });
      */
-    getRouteCancelListener(): import("rxjs").Observable<unknown>;
+    getRouteCancelListener(): CustomSubject<unknown>;
     /**
      * This method will center the map to generated route bounds.
      *  @memberof Map
@@ -629,7 +630,7 @@ export declare class Map {
      *    console.log('feature added', feature);
      *  });
      */
-    getFeatureAddListener(): import("rxjs").Observable<Feature>;
+    getFeatureAddListener(): CustomSubject<Feature>;
     /**
      *  @memberof Map
      *  @name getFeatureUpdateListener
@@ -640,7 +641,7 @@ export declare class Map {
      *    console.log('feature updated', feature);
      *  });
      */
-    getFeatureUpdateListener(): import("rxjs").Observable<Feature>;
+    getFeatureUpdateListener(): CustomSubject<Feature>;
     /**
      *  @memberof Map
      *  @name getFeatureDeleteListener
@@ -651,7 +652,7 @@ export declare class Map {
      *    console.log('feature deleted');
      *  });
      */
-    getFeatureDeleteListener(): import("rxjs").Observable<unknown>;
+    getFeatureDeleteListener(): CustomSubject<unknown>;
     /**
      * This method will set new kiosk settings.
      *  @memberof Map
@@ -851,7 +852,7 @@ export declare class Map {
      *    console.log('polygon clicked', poi);
      *  });
      */
-    getPolygonClickListener(): import("rxjs").Observable<Feature>;
+    getPolygonClickListener(): CustomSubject<Feature>;
     /**
      *  @memberof Map
      *  @name getPoiClickListener
@@ -862,7 +863,7 @@ export declare class Map {
      *    console.log('poi clicked', poi);
      *  });
      */
-    getPoiClickListener(): import("rxjs").Observable<Feature>;
+    getPoiClickListener(): CustomSubject<Feature>;
     /**
      * Method for setting a person icon on a Map, this method is resetting the previous state of all persons added before
      *  @memberof Map
@@ -905,7 +906,7 @@ export declare class Map {
      *    console.log('current persons', personsList);
      *  });
      */
-    getPersonUpdateListener(): import("rxjs").Observable<PersonModel[]>;
+    getPersonUpdateListener(): CustomSubject<PersonModel[]>;
     /**
      * Method for toggling hidden pois visibility
      *  @memberof Map

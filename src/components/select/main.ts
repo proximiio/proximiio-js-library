@@ -3,7 +3,7 @@ import Floors from '../../controllers/floors';
 import Geo from '../../controllers/geo';
 // @ts-ignore
 import * as Autocomplete from '@tarekraafat/autocomplete.js';
-import { Subject } from 'rxjs';
+import { CustomSubject } from '../../customSubject';
 import { PlaceModel } from '../../models/place';
 import { FloorModel } from '../../models/floor';
 import Feature from '../../models/feature';
@@ -47,7 +47,7 @@ interface AutocompleteOptions {
 export class Select {
   private useApiSearch = false;
   private ac;
-  private onSelectListener = new Subject<PlaceModel | FloorModel | Feature | any>();
+  private onSelectListener = new CustomSubject<PlaceModel | FloorModel | Feature | any>();
 
   /**
    *  @memberof Select
@@ -148,6 +148,6 @@ export class Select {
    *  });
    */
   public getSelectListener() {
-    return this.onSelectListener.asObservable();
+    return this.onSelectListener;
   }
 }

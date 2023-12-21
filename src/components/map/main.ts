@@ -25,7 +25,7 @@ import {
 import { LngLatBoundsLike, MapLibreEvent } from 'maplibre-gl';
 import { getPlaceFloors } from '../../controllers/floors';
 import { getPlaceById } from '../../controllers/places';
-import { Subject } from 'rxjs';
+import { CustomSubject } from '../../customSubject';
 // @ts-ignore
 import * as tingle from 'tingle.js/dist/tingle';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
@@ -36,7 +36,7 @@ import bbox from '@turf/bbox';
 import length from '@turf/length';
 import center from '@turf/center';
 import along from '@turf/along';
-import lineSplit from '@turf/line-Split';
+import lineSplit from '@turf/line-split';
 import nearestPoint from '@turf/nearest-point';
 import { isNumber, lineString, point, feature, featureCollection } from '@turf/helpers';
 import WayfindingLogger from '../logger/wayfinding';
@@ -194,19 +194,19 @@ export class Map {
   private routingSource: RoutingSource = new RoutingSource();
   private clusterSource: ClusterSource = new ClusterSource();
   private imageSourceManager: ImageSourceManager = new ImageSourceManager();
-  private onMapReadyListener = new Subject<boolean>();
-  private onPlaceSelectListener = new Subject<PlaceModel>();
-  private onFloorSelectListener = new Subject<FloorModel>();
-  private onRouteFoundListener = new Subject<any>();
-  private onRouteFailedListener = new Subject();
-  private onRouteCancelListener = new Subject();
-  private onFeatureAddListener = new Subject<Feature>();
-  private onFeatureUpdateListener = new Subject<Feature>();
-  private onFeatureDeleteListener = new Subject();
-  private onPolygonClickListener = new Subject<Feature>();
-  private onPoiClickListener = new Subject<Feature>();
-  private onPersonUpdateListener = new Subject<PersonModel[]>();
-  private onStepSetListener = new Subject<number>();
+  private onMapReadyListener = new CustomSubject<boolean>();
+  private onPlaceSelectListener = new CustomSubject<PlaceModel>();
+  private onFloorSelectListener = new CustomSubject<FloorModel>();
+  private onRouteFoundListener = new CustomSubject<any>();
+  private onRouteFailedListener = new CustomSubject();
+  private onRouteCancelListener = new CustomSubject();
+  private onFeatureAddListener = new CustomSubject<Feature>();
+  private onFeatureUpdateListener = new CustomSubject<Feature>();
+  private onFeatureDeleteListener = new CustomSubject();
+  private onPolygonClickListener = new CustomSubject<Feature>();
+  private onPoiClickListener = new CustomSubject<Feature>();
+  private onPersonUpdateListener = new CustomSubject<PersonModel[]>();
+  private onStepSetListener = new CustomSubject<number>();
   private defaultOptions: Options = {
     selector: 'proximiioMap',
     allowNewFeatureModal: false,
@@ -2612,7 +2612,7 @@ export class Map {
    *  });
    */
   public getMapReadyListener() {
-    return this.onMapReadyListener.asObservable();
+    return this.onMapReadyListener;
   }
 
   /**
@@ -2665,7 +2665,7 @@ export class Map {
    *  });
    */
   public getPlaceSelectListener() {
-    return this.onPlaceSelectListener.asObservable();
+    return this.onPlaceSelectListener;
   }
 
   /**
@@ -2753,7 +2753,7 @@ export class Map {
    *  });
    */
   public getFloorSelectListener() {
-    return this.onFloorSelectListener.asObservable();
+    return this.onFloorSelectListener;
   }
 
   /**
@@ -2963,7 +2963,7 @@ export class Map {
    *  });
    */
   public getNavStepSetListener() {
-    return this.onStepSetListener.asObservable();
+    return this.onStepSetListener;
   }
 
   /**
@@ -2994,7 +2994,7 @@ export class Map {
    *  });
    */
   public getRouteFoundListener() {
-    return this.onRouteFoundListener.asObservable();
+    return this.onRouteFoundListener;
   }
 
   /**
@@ -3008,7 +3008,7 @@ export class Map {
    *  });
    */
   public getRouteFailedListener() {
-    return this.onRouteFailedListener.asObservable();
+    return this.onRouteFailedListener;
   }
 
   /**
@@ -3022,7 +3022,7 @@ export class Map {
    *  });
    */
   public getRouteCancelListener() {
-    return this.onRouteCancelListener.asObservable();
+    return this.onRouteCancelListener;
   }
 
   /**
@@ -3208,7 +3208,7 @@ export class Map {
    *  });
    */
   public getFeatureAddListener() {
-    return this.onFeatureAddListener.asObservable();
+    return this.onFeatureAddListener;
   }
 
   /**
@@ -3222,7 +3222,7 @@ export class Map {
    *  });
    */
   public getFeatureUpdateListener() {
-    return this.onFeatureUpdateListener.asObservable();
+    return this.onFeatureUpdateListener;
   }
 
   /**
@@ -3236,7 +3236,7 @@ export class Map {
    *  });
    */
   public getFeatureDeleteListener() {
-    return this.onFeatureDeleteListener.asObservable();
+    return this.onFeatureDeleteListener;
   }
 
   /**
@@ -3504,7 +3504,7 @@ export class Map {
    *  });
    */
   public getPolygonClickListener() {
-    return this.onPolygonClickListener.asObservable();
+    return this.onPolygonClickListener;
   }
 
   /**
@@ -3518,7 +3518,7 @@ export class Map {
    *  });
    */
   public getPoiClickListener() {
-    return this.onPoiClickListener.asObservable();
+    return this.onPoiClickListener;
   }
 
   /**
@@ -3575,7 +3575,7 @@ export class Map {
    *  });
    */
   public getPersonUpdateListener() {
-    return this.onPersonUpdateListener.asObservable();
+    return this.onPersonUpdateListener;
   }
 
   /**

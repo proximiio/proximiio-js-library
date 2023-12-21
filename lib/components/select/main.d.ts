@@ -1,3 +1,4 @@
+import { CustomSubject } from '../../customSubject';
 type Datasets = 'Places' | 'Floors' | 'Pois' | undefined;
 interface AutocompleteOptions {
     name?: string;
@@ -61,6 +62,6 @@ export declare class Select {
      *    console.log('place selected', place);
      *  });
      */
-    getSelectListener(): import("rxjs").Observable<any>;
+    getSelectListener(): CustomSubject<any>;
 }
 export {};
