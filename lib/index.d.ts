@@ -2,8 +2,8 @@ import { Map } from './components/map/main';
 import { Select } from './components/select/main';
 declare const _default: {
     Auth: {
-        login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any>>;
-        loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any>>;
+        login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any, any>>;
+        loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any, any>>;
         getUserConfig: () => Promise<any>;
         getCurrentUser: () => Promise<any>;
     };

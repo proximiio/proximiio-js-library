@@ -1,4 +1,16 @@
-import * as turf from '@turf/turf';
+import { featureCollection as TurfFeatureCollection } from '@turf/helpers'
+import { flatten as TurfFlatten } from '@turf/flatten';
+import { polygonToLine as TurfPolygonToLine } from '@turf/polygon-to-line';
+import { point as TurfPoint } from '@turf/helpers';
+import { lineString as TurfLineString } from '@turf/helpers';
+import { booleanContains as TurfBooleanContains } from '@turf/boolean-contains';
+import { destination as TurfDestination } from '@turf/distance';
+import { lineIntersect as TurfLineIntersect } from '@turf/line-intersect';
+import { bearing as TurfBearing } from '@turf/bearing';
+import { midpoint as TurfMidpoint } from '@turf/midpoint';
+import { pointToLineDistance as TurfPointToLineDistance } from '@turf/point-to-line-distance';
+import { distance as TurfDistance } from '@turf/distance';
+import { nearestPointOnLine as TurfNearestPointOnLine } from '@turf/nearest-point-on-line';
 
 export class Wayfinding {
   configuration = {
@@ -69,7 +81,7 @@ export class Wayfinding {
     let floorGeojsonMap = new Map();
     for (let level = minLevel; level <= maxLevel; level++) {
       let floorAreaFeature = routableAreaFeatureList.filter((feature) => feature.properties.level === level);
-      floorGeojsonMap.set(level, turf.featureCollection(floorAreaFeature !== undefined ? floorAreaFeature : []));
+      floorGeojsonMap.set(level, TurfFeatureCollection(floorAreaFeature !== undefined ? floorAreaFeature : []));
     }
     this.floorList = floorGeojsonMap;
 
@@ -161,8 +173,7 @@ export class Wayfinding {
 
       // Floor features == "walkable areas"
       floor.features.forEach((walkableArea) => {
-        let wallLineStringList = turf
-          .flatten(turf.polygonToLine(walkableArea))
+        let wallLineStringList = TurfFlatten(TurfPolygonToLine(walkableArea))
           .features.map((feature) => feature.geometry);
         // Floor wall lines, we wish to split to individual walls
         wallLineStringList.forEach((wallLineString) => {
@@ -173,7 +184,7 @@ export class Wayfinding {
           for (let index = 0; index < wallLineString.coordinates.length - 1; index++) {
             let point;
             if (index === 0) {
-              firstPoint = turf.point(wallLineString.coordinates[index]);
+              firstPoint = TurfPoint(wallLineString.coordinates[index]);
               firstPoint.properties.level = level;
               firstPoint.properties.neighbours = [];
               firstPoint.properties.walkableAreaId = walkableArea.id;
@@ -184,7 +195,7 @@ export class Wayfinding {
             if (index === wallLineString.coordinates.length - 2) {
               nextPoint = firstPoint;
             } else {
-              nextPoint = turf.point(wallLineString.coordinates[index + 1]);
+              nextPoint = TurfPoint(wallLineString.coordinates[index + 1]);
               nextPoint.properties.level = level;
               nextPoint.properties.neighbours = [];
               nextPoint.properties.walkableAreaId = walkableArea.id;
@@ -195,7 +206,7 @@ export class Wayfinding {
             floorWalls.push([point, nextPoint]);
           }
         });
-        floorAreas = floorAreas.concat(turf.flatten(walkableArea).features);
+        floorAreas = floorAreas.concat(TurfFlatten(walkableArea).features);
       });
 
       floorData.set(level, {
@@ -203,7 +214,7 @@ export class Wayfinding {
         points: floorPoints,
         walls: floorWalls,
         wallFeatures: floorWalls.map((wall) =>
-          turf.lineString([wall[0].geometry.coordinates, wall[1].geometry.coordinates]),
+          TurfLineString([wall[0].geometry.coordinates, wall[1].geometry.coordinates]),
         ),
       });
     });
@@ -215,30 +226,30 @@ export class Wayfinding {
       // List of physical POIs on this level that are within area
       let inAreaPoiList = this.accessibilityPoi
         .filter((poi) => floorLevel === poi.properties.level)
-        .filter((poi) => floorData.areas.filter((area) => turf.booleanContains(area, poi)).length > 0);
+        .filter((poi) => floorData.areas.filter((area) => TurfBooleanContains(area, poi)).length > 0);
 
       inAreaPoiList.forEach((poi) => {
         // Generate points around POI to allow going around, but only if they are "within area
         let detourPointList = [
-          turf.destination(poi.geometry.coordinates, poi.properties.radius + this.wallOffsetDistance, 0, {
+          TurfDestination(poi.geometry.coordinates, poi.properties.radius + this.wallOffsetDistance, 0, {
             units: this.UNIT_TYPE,
           }),
-          turf.destination(poi.geometry.coordinates, poi.properties.radius + this.wallOffsetDistance, 60, {
+          TurfDestination(poi.geometry.coordinates, poi.properties.radius + this.wallOffsetDistance, 60, {
             units: this.UNIT_TYPE,
           }),
-          turf.destination(poi.geometry.coordinates, poi.properties.radius + this.wallOffsetDistance, 120, {
+          TurfDestination(poi.geometry.coordinates, poi.properties.radius + this.wallOffsetDistance, 120, {
             units: this.UNIT_TYPE,
           }),
-          turf.destination(poi.geometry.coordinates, poi.properties.radius + this.wallOffsetDistance, 180, {
+          TurfDestination(poi.geometry.coordinates, poi.properties.radius + this.wallOffsetDistance, 180, {
             units: this.UNIT_TYPE,
           }),
-          turf.destination(poi.geometry.coordinates, poi.properties.radius + this.wallOffsetDistance, -120, {
+          TurfDestination(poi.geometry.coordinates, poi.properties.radius + this.wallOffsetDistance, -120, {
             units: this.UNIT_TYPE,
           }),
-          turf.destination(poi.geometry.coordinates, poi.properties.radius + this.wallOffsetDistance, -60, {
+          TurfDestination(poi.geometry.coordinates, poi.properties.radius + this.wallOffsetDistance, -60, {
             units: this.UNIT_TYPE,
           }),
-        ].filter((poi) => floorData.areas.filter((area) => turf.booleanContains(area, poi)).length > 0);
+        ].filter((poi) => floorData.areas.filter((area) => TurfBooleanContains(area, poi)).length > 0);
         detourPointList.forEach((point) => {
           point.properties.level = floorLevel;
           point.properties.isDetourPoint = true;
@@ -259,11 +270,11 @@ export class Wayfinding {
         if (lastPoint != null) {
           pointA = lastPoint;
         } else {
-          pointA = turf.point(coordinateList[i]);
+          pointA = TurfPoint(coordinateList[i]);
           pointA.properties.neighbours = [];
           pointA.properties.level = corridor.properties.level;
         }
-        let pointB = turf.point(coordinateList[i + 1]);
+        let pointB = TurfPoint(coordinateList[i + 1]);
         pointB.properties.level = corridor.properties.level;
         pointB.properties.neighbours = [];
 
@@ -284,7 +295,7 @@ export class Wayfinding {
           }
         }
 
-        let lineFeature = turf.lineString([pointA.geometry.coordinates, pointB.geometry.coordinates]);
+        let lineFeature = TurfLineString([pointA.geometry.coordinates, pointB.geometry.coordinates]);
         lineFeature.properties.level = corridor.properties.level;
 
         // Mark lineFeature accordingly
@@ -353,7 +364,7 @@ export class Wayfinding {
         }
 
         let segmentLineStringToTest = corridorLineFeatures[j];
-        let intersections = turf.lineIntersect(segmentLineString, segmentLineStringToTest).features;
+        let intersections = TurfLineIntersect(segmentLineString, segmentLineStringToTest).features;
         if (intersections.length > 0) {
           let intersectingPoint = intersections[0];
           intersectingPoint.properties.level = segment[0].properties.level;
@@ -434,7 +445,7 @@ export class Wayfinding {
 
       if (wallFeatures?.length > 0) {
         wallFeatures.forEach((wallFeature, wallIndex) => {
-          let intersections = turf.lineIntersect(segmentFeature, wallFeature).features;
+          let intersections = TurfLineIntersect(segmentFeature, wallFeature).features;
           if (intersections.length > 0) {
             let intersectPoint = intersections[0];
             intersectPoint.properties.level = segment[0].properties.level;
@@ -491,7 +502,7 @@ export class Wayfinding {
         });
 
         // Inject from last intersection to end of original segment
-        let newCorridor = turf.lineString([previousPoint.geometry.coordinates, segment[1].geometry.coordinates]);
+        let newCorridor = TurfLineString([previousPoint.geometry.coordinates, segment[1].geometry.coordinates]);
         newCorridor.properties.level = previousPoint.properties.level;
 
         // connect last intersection point with end point
@@ -626,7 +637,7 @@ export class Wayfinding {
       if (!offsetPoint) {
         return;
       }
-      let offsetLine = turf.lineString([point.geometry.coordinates, offsetPoint.geometry.coordinates]);
+      let offsetLine = TurfLineString([point.geometry.coordinates, offsetPoint.geometry.coordinates]);
       offsetLine.properties.level = point.properties.level;
       this.wallOffsetLineList.push(offsetLine);
     });
@@ -762,8 +773,8 @@ export class Wayfinding {
 
       let pointA = walls[0][0] === point ? walls[0][1] : walls[0][0];
       let pointB = walls[1][0] === point ? walls[1][1] : walls[1][0];
-      let pointABearing = turf.bearing(point, pointA);
-      let pointBBearing = turf.bearing(point, pointB);
+      let pointABearing = TurfBearing(point, pointA);
+      let pointBBearing = TurfBearing(point, pointB);
 
       // b) Get average bearing to points A,B
       let bearing = this._averageBearing(pointABearing, pointBBearing);
@@ -771,19 +782,19 @@ export class Wayfinding {
       // this.wallOffsetLineList.push(turf.lineString([point.geometry.coordinates, offsetPoint.geometry.coordinates]));
 
       // c) Generate two points M,N very close to point P
-      let pointM = turf.destination(point.geometry.coordinates, 0.01, bearing, {
+      let pointM = TurfDestination(point.geometry.coordinates, 0.01, bearing, {
         units: this.UNIT_TYPE,
       });
-      let pointN = turf.destination(point.geometry.coordinates, 0.01, oppositeBearing, { units: this.UNIT_TYPE });
+      let pointN = TurfDestination(point.geometry.coordinates, 0.01, oppositeBearing, { units: this.UNIT_TYPE });
 
       // d) Test which point is contained within accessible area
       let containedPoint = null;
       for (let areaIndex in this.floorData.get(point.properties.level).areas) {
         let area = this.floorData.get(point.properties.level).areas[areaIndex];
-        if (turf.booleanContains(area, pointM)) {
+        if (TurfBooleanContains(area, pointM)) {
           containedPoint = pointM;
           break;
-        } else if (turf.booleanContains(area, pointN)) {
+        } else if (TurfBooleanContains(area, pointN)) {
           containedPoint = pointN;
           break;
         }
@@ -794,7 +805,7 @@ export class Wayfinding {
       }
 
       // e) Generate point F at double the distance of wall offset
-      let pointF = turf.destination(
+      let pointF = TurfDestination(
         point.geometry.coordinates,
         this.wallOffsetDistance * 2,
         containedPoint === pointM ? bearing : oppositeBearing,
@@ -802,7 +813,7 @@ export class Wayfinding {
       );
 
       // f) Test if PF intersects with any wall, update point F and PF to shortest available size
-      let linePF = turf.lineString([point.geometry.coordinates, pointF.geometry.coordinates]);
+      let linePF = TurfLineString([point.geometry.coordinates, pointF.geometry.coordinates]);
       this.floorData.get(point.properties.level).walls.forEach((wall, index) => {
         // Do not test walls containing point P, they will intersect of course
         if (walls.includes(wall)) {
@@ -810,18 +821,18 @@ export class Wayfinding {
         }
         let lineWall = this.floorData.get(point.properties.level).wallFeatures[index];
         // Find intersection point, use it to produce new
-        let intersections = turf.lineIntersect(linePF, lineWall);
+        let intersections = TurfLineIntersect(linePF, lineWall);
         if (intersections.features.length > 0) {
-          pointF = turf.point(intersections.features[0].geometry.coordinates);
-          linePF = turf.lineString([point.geometry.coordinates, pointF.geometry.coordinates]);
+          pointF = TurfPoint(intersections.features[0].geometry.coordinates);
+          linePF = TurfLineString([point.geometry.coordinates, pointF.geometry.coordinates]);
         }
       });
 
       // g) Create wall offset point as midpoint between points P,F
-      let offsetPoint = turf.midpoint(point.geometry.coordinates, pointF.geometry.coordinates);
+      let offsetPoint = TurfMidpoint(point.geometry.coordinates, pointF.geometry.coordinates);
       offsetPoint.properties.level = point.properties.level;
       this.wallOffsets[pointList.indexOf(point)] = offsetPoint;
-      let offsetLine = turf.lineString([point.geometry.coordinates, offsetPoint.geometry.coordinates]);
+      let offsetLine = TurfLineString([point.geometry.coordinates, offsetPoint.geometry.coordinates]);
       offsetLine.properties.level = point.properties.level;
       this.wallOffsetLineList.push(offsetLine);
     });
@@ -926,7 +937,7 @@ export class Wayfinding {
     offsetPointList.push(currentOffsetPoint);
     let potentialOffsetPoints;
     do {
-      let line = turf.lineString([previousPoint.geometry.coordinates, currentOffsetPoint.geometry.coordinates]);
+      let line = TurfLineString([previousPoint.geometry.coordinates, currentOffsetPoint.geometry.coordinates]);
       potentialOffsetPoints = [];
       this.wallOffsetLineList.forEach((wallOffsetLine, index) => {
         // Do not process wall offsets from another floor
@@ -937,7 +948,7 @@ export class Wayfinding {
         if (index === previousPointIndex || index === currentPointIndex) {
           return;
         }
-        let intersection = turf.lineIntersect(line, wallOffsetLine);
+        let intersection = TurfLineIntersect(line, wallOffsetLine);
         if (intersection.features.length > 0) {
           let offsetPoint = this.wallOffsets[index];
           // store distance to previousPoint
@@ -961,15 +972,15 @@ export class Wayfinding {
     if (current === previous || current.properties.level !== previous.properties.level) {
       return [];
     }
-    let line = turf.lineString([current.geometry.coordinates, previous.geometry.coordinates]);
+    let line = TurfLineString([current.geometry.coordinates, previous.geometry.coordinates]);
     let intersectingWallOffsetPoints = [];
     this.wallOffsetLineList.forEach((wallOffsetLine, index) => {
       if (wallOffsetLine.properties.level !== current.properties.level) {
         return;
       }
-      if (turf.lineIntersect(line, wallOffsetLine).features.length > 0) {
+      if (TurfLineIntersect(line, wallOffsetLine).features.length > 0) {
         let point = this.wallOffsets[index];
-        point.properties.distance = turf.pointToLineDistance(current.geometry.coordinates, wallOffsetLine, {
+        point.properties.distance = TurfPointToLineDistance(current.geometry.coordinates, wallOffsetLine, {
           units: this.UNIT_TYPE,
         });
         intersectingWallOffsetPoints.push(point);
@@ -1116,7 +1127,7 @@ export class Wayfinding {
     }
     path.forEach((_, key) => {
       if (path[key + 1] !== undefined) {
-        distance += turf.distance(path[key], path[key + 1], {
+        distance += TurfDistance(path[key], path[key + 1], {
           units: this.UNIT_TYPE,
         });
       }
@@ -1233,7 +1244,7 @@ export class Wayfinding {
       let neighbours = this._getNeighbours(current, fixedStartPoint, fixedEndPoint);
 
       neighbours.forEach((n) =>
-        this.nbLines.push(turf.lineString([current.geometry.coordinates, n.geometry.coordinates])),
+        this.nbLines.push(TurfLineString([current.geometry.coordinates, n.geometry.coordinates])),
       );
 
       neighbours.forEach((neighbour) => {
@@ -1419,12 +1430,12 @@ export class Wayfinding {
     // Filter out lines that intersect revolving door POIs.
     let skip = false;
     if (accesibilityType === this.POI_TYPE.REVOLVING_DOOR && this.configuration.avoidRevolvingDoors) {
-      const line = turf.lineString([pointA.geometry.coordinates, pointB.geometry.coordinates]);
+      const line = TurfLineString([pointA.geometry.coordinates, pointB.geometry.coordinates]);
       const poiList = this.accessibilityPoi.filter(
         (poi) => poi.properties.level === level && poi.properties.type === accesibilityType,
       );
       poiList.forEach((poi) => {
-        const distance = turf.pointToLineDistance(poi.geometry.coordinates, line, { units: this.UNIT_TYPE });
+        const distance = TurfPointToLineDistance(poi.geometry.coordinates, line, { units: this.UNIT_TYPE });
         if (distance <= poi.properties.radius) {
           skip = true;
         }
@@ -1505,10 +1516,10 @@ export class Wayfinding {
 
       if (intersects) {
         // if (allowedIntersections >= 1) {
-        let midpoint = turf.midpoint(point.geometry.coordinates, proposedPoint.geometry.coordinates);
+        let midpoint = TurfMidpoint(point.geometry.coordinates, proposedPoint.geometry.coordinates);
         for (let polIndex in this.floorData.get(point.properties.level).areas) {
           let area = this.floorData.get(point.properties.level).areas[polIndex];
-          if (turf.booleanContains(area, midpoint)) {
+          if (TurfBooleanContains(area, midpoint)) {
             neighbours.push(proposedPoint);
             break;
           }
@@ -1613,8 +1624,8 @@ export class Wayfinding {
             intersections++;
           }
         } else {
-          let intersectPoints = turf.lineIntersect(
-            turf.lineString([fromCoordinates, toCoordinates]),
+          let intersectPoints = TurfLineIntersect(
+            TurfLineString([fromCoordinates, toCoordinates]),
             floorWallFeatures[index],
           ).features;
           if (intersectPoints.length > 0) {
@@ -1783,7 +1794,7 @@ export class Wayfinding {
   _distance(pointA, pointB) {
     let levelChangePenalty = 0;
     if (pointB.properties.level !== pointA.properties.level) levelChangePenalty = 10;
-    return turf.distance(pointA, pointB, { units: this.UNIT_TYPE }) + levelChangePenalty;
+    return TurfDistance(pointA, pointB, { units: this.UNIT_TYPE }) + levelChangePenalty;
   }
 
   /**
@@ -1815,7 +1826,7 @@ export class Wayfinding {
     let pointFound = undefined;
     if (floorData?.areas.length > 0) {
       floorData.areas.forEach((polygon) => {
-        if (turf.booleanContains(polygon, point)) {
+        if (TurfBooleanContains(polygon, point)) {
           pointFound = point;
           return;
         }
@@ -1831,7 +1842,7 @@ export class Wayfinding {
 
     if (floorData?.wallFeatures.length > 0) {
       floorData.wallFeatures.forEach((wall) => {
-        let distance = turf.pointToLineDistance(point.geometry.coordinates, wall, { units: this.UNIT_TYPE });
+        let distance = TurfPointToLineDistance(point.geometry.coordinates, wall, { units: this.UNIT_TYPE });
         if (distance <= bestWallDistance) {
           bestWall = wall;
           bestWallDistance = distance;
@@ -1846,7 +1857,7 @@ export class Wayfinding {
     let bestCorridorDistance = Infinity;
     levelCorridorFeatures.forEach((corridor) => {
       let corridorIndex = this.corridorLineFeatures.indexOf(corridor);
-      let corridorDistance = turf.pointToLineDistance(point.geometry.coordinates, corridor, { units: this.UNIT_TYPE });
+      let corridorDistance = TurfPointToLineDistance(point.geometry.coordinates, corridor, { units: this.UNIT_TYPE });
       if (corridorDistance < bestCorridorDistance) {
         bestCorridorIndex = corridorIndex;
         bestCorridorDistance = corridorDistance;
@@ -1864,7 +1875,7 @@ export class Wayfinding {
       if (bestCorridorIndex !== undefined && bestCorridorDistance < bestWallDistance) {
         // Create fixed point on line itself
         let line = this.corridorLineFeatures[bestCorridorIndex];
-        fixedPoint = turf.nearestPointOnLine(line, point);
+        fixedPoint = TurfNearestPointOnLine(line, point);
 
         // Mark this fixed point is on corridor, preset neighbours
         fixedPoint.properties.onCorridor = true;
@@ -1928,9 +1939,9 @@ export class Wayfinding {
         // Wall is closer
       } else if (bestWall !== null) {
         // Create fixed point inside area
-        let nearestPoint = turf.nearestPointOnLine(bestWall, point);
-        let bearing = turf.bearing(point, nearestPoint);
-        fixedPoint = turf.destination(point.geometry.coordinates, bestWallDistance + 0.05, bearing, {
+        let nearestPoint = TurfNearestPointOnLine(bestWall, point);
+        let bearing = TurfBearing(point, nearestPoint);
+        fixedPoint = TurfDestination(point.geometry.coordinates, bestWallDistance + 0.05, bearing, {
           units: this.UNIT_TYPE,
         });
       }
@@ -1948,7 +1959,7 @@ export class Wayfinding {
    * @return {Feature <Point>}
    */
   _copyPoint(pointFeature) {
-    let point = turf.point([pointFeature.geometry.coordinates[0], pointFeature.geometry.coordinates[1]]);
+    let point = TurfPoint([pointFeature.geometry.coordinates[0], pointFeature.geometry.coordinates[1]]);
     if (pointFeature.id !== undefined) point.id = pointFeature.id;
     if (pointFeature.properties.id !== undefined) point.properties.id = pointFeature.properties.id;
     if (pointFeature.properties.amenity !== undefined) point.properties.amenity = pointFeature.properties.amenity;
@@ -1984,8 +1995,8 @@ export class Wayfinding {
   }
 
   _comparePointsByDistanceFromReference(reference, intersectionA, intersectionB) {
-    let dA = turf.distance(reference, intersectionA);
-    let dB = turf.distance(reference, intersectionB);
+    let dA = TurfDistance(reference, intersectionA);
+    let dB = TurfDistance(reference, intersectionB);
     if (dA > dB) return 1;
     if (dB > dA) return -1;
     return 0;
@@ -2007,8 +2018,8 @@ export class Wayfinding {
         return true;
       }
       const coords = corridor.geometry.coordinates;
-      const corridorBearing = turf.bearing(coords[0], coords[1]);
-      const pathBearing = turf.bearing(start, end);
+      const corridorBearing = TurfBearing(coords[0], coords[1]);
+      const pathBearing = TurfBearing(start, end);
       const delta = parseInt(corridorBearing - pathBearing);
 
       const isSwappedDirection = corridor.properties.swapDirection !== undefined && corridor.properties.swapDirection;
