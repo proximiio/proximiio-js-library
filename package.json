@@ -6,8 +6,7 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm run babel && tsc",
-    "build-webpack": "npm run babel && tsc && webpack --mode=production",
+    "build": "npm run babel && tsc && webpack --mode=production",
     "babel": "babel assets -d lib/assets",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json",
