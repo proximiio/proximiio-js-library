@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.1] - 2023-12-21
+
+### Changed
+
+- Fix turf.js imports in wayfinding alghorithm
+
 ## [1.11.0] - 2023-12-20
 
 ### Fixed
@@ -12,10 +18,6 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - Typescript compiler options set to ES2015 (target, module)
-
-### Removed
-
-- Dropping support for webpack build as default, you can use `npm run build-weback` to build your own compiled file in case you need it
 
 ## [1.10.6] - 2023-12-18
 
