@@ -1,3 +1,4 @@
 {
-  "presets": ["@babel/preset-env"]
+  "presets": ["minify"],
+  "targets": ">15%"
 }
