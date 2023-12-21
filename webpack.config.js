@@ -8,8 +8,8 @@ module.exports = {
         test: /\.ts$/,
         use: 'ts-loader',
         exclude: /node_modules/,
-      }
-    ]
+      },
+    ],
   },
   resolve: {
     extensions: ['.ts', '.js'],
@@ -18,6 +18,10 @@ module.exports = {
     path: path.resolve(__dirname, 'lib'),
     filename: 'proximiio.js',
     library: 'Proximiio',
-    libraryTarget: 'var'
+    libraryTarget: 'var',
+  },
+  mode: 'development',
+  optimization: {
+    usedExports: true,
   },
 };
