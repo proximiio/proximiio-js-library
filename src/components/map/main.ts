@@ -963,7 +963,6 @@ export class Map {
               'line-color': this.defaultOptions.routeAnimation.lineColor,
               'line-opacity': this.defaultOptions.routeAnimation.lineOpacity,
             },
-            filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
           },
           'proximiio-routing-line-remaining',
         );
@@ -987,7 +986,6 @@ export class Map {
               'circle-color': this.defaultOptions.routeAnimation.pointColor,
               'circle-radius': this.defaultOptions.routeAnimation.pointRadius,
             },
-            filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
           },
           'lineAlong',
         );
