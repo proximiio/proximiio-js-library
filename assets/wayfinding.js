@@ -1,10 +1,14 @@
-import { featureCollection as TurfFeatureCollection, point as TurfPoint, lineString as TurfLineString } from '@turf/helpers'
-import * as TurfFlatten from '@turf/flatten';
-import * as TurfPolygonToLine from '@turf/polygon-to-line';
-import * as TurfBooleanContains from '@turf/boolean-contains';
-import * as TurfDestination from '@turf/distance';
+import {
+  featureCollection as TurfFeatureCollection,
+  point as TurfPoint,
+  lineString as TurfLineString,
+} from '@turf/helpers';
+import { default as TurfFlatten } from '@turf/flatten';
+import { polygonToLine as TurfPolygonToLine } from '@turf/polygon-to-line';
+import { default as TurfBooleanContains } from '@turf/boolean-contains';
+import { default as TurfDestination } from '@turf/destination';
 import * as TurfLineIntersect from '@turf/line-intersect';
-import * as TurfBearing from '@turf/bearing';
+import { default as TurfBearing } from '@turf/bearing';
 import * as TurfMidpoint from '@turf/midpoint';
 import * as TurfPointToLineDistance from '@turf/point-to-line-distance';
 import * as TurfDistance from '@turf/distance';
@@ -171,8 +175,9 @@ export class Wayfinding {
 
       // Floor features == "walkable areas"
       floor.features.forEach((walkableArea) => {
-        let wallLineStringList = TurfFlatten(TurfPolygonToLine(walkableArea))
-          .features.map((feature) => feature.geometry);
+        let wallLineStringList = TurfFlatten(TurfPolygonToLine(walkableArea)).features.map(
+          (feature) => feature.geometry,
+        );
         // Floor wall lines, we wish to split to individual walls
         wallLineStringList.forEach((wallLineString) => {
           let firstPoint;
@@ -1855,7 +1860,9 @@ export class Wayfinding {
     let bestCorridorDistance = Infinity;
     levelCorridorFeatures.forEach((corridor) => {
       let corridorIndex = this.corridorLineFeatures.indexOf(corridor);
-      let corridorDistance = TurfPointToLineDistance.default(point.geometry.coordinates, corridor, { units: this.UNIT_TYPE });
+      let corridorDistance = TurfPointToLineDistance.default(point.geometry.coordinates, corridor, {
+        units: this.UNIT_TYPE,
+      });
       if (corridorDistance < bestCorridorDistance) {
         bestCorridorIndex = corridorIndex;
         bestCorridorDistance = corridorDistance;
