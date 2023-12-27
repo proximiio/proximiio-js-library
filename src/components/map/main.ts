@@ -538,7 +538,11 @@ export class Map {
       this.updateImages();
       this.filteredAmenities = this.amenityIds;
       this.imageSourceManager.setLevel(map, this.state.floor?.level, this.state);
-      await this.onPlaceSelect(this.state.place, this.defaultOptions.zoomIntoPlace, this.defaultOptions.defaultFloorLevel);
+      await this.onPlaceSelect(
+        this.state.place,
+        this.defaultOptions.zoomIntoPlace,
+        this.defaultOptions.defaultFloorLevel,
+      );
 
       if (this.defaultOptions.useRasterTiles) {
         this.initRasterTiles();
