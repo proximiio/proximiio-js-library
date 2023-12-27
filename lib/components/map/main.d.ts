@@ -37,6 +37,7 @@ export interface Options {
     mapboxOptions?: MapboxOptions;
     zoomIntoPlace?: boolean;
     defaultPlaceId?: string;
+    defaultFloorLevel?: number;
     isKiosk?: boolean;
     kioskSettings?: {
         coordinates: [number, number];

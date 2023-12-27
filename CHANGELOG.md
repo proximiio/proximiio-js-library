@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.4] - 2023-12-27
+
+### Added
+
+- Add support for specifying default floor level in Proximiio.Map options `defaultFloorLevel` to set the initial floor level of the map feat(main.ts)
+
 ## [1.11.1] - 2023-12-21
 
 ### Changed
