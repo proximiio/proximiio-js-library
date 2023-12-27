@@ -392,7 +392,7 @@ export class Map {
       const urlParams = new URLSearchParams(window.location.search);
       placeParam = urlParams.get(this.defaultOptions.urlParams.defaultPlace);
     }
-    const { places, style, styles, features, amenities } = await Repository.getPackage({
+    const { places, style, styles, features, amenities, floors } = await Repository.getPackage({
       initPolygons: this.defaultOptions.initPolygons,
       autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
       amenityIdProperty: this.defaultOptions.amenityIdProperty,
@@ -408,7 +408,16 @@ export class Map {
     const defaultPlace = placeParam
       ? places.find((p) => p.id === placeParam || p.name === placeParam)
       : places.find((p) => p.id === this.defaultOptions.defaultPlaceId);
+    const defaultFloor =
+      defaultPlace &&
+      floors.find((f) => f.placeId === defaultPlace.id && f.level === this.defaultOptions.defaultFloorLevel);
     const place = places.length > 0 ? (defaultPlace ? defaultPlace : places[0]) : new PlaceModel({});
+    const floor =
+      defaultPlace && floors.length > 0
+        ? defaultFloor
+          ? defaultFloor
+          : floors.find((f) => f.placeId === defaultPlace.id)[0]
+        : new FloorModel({});
     let centerVar: [number, number] = [place.location.lng, place.location.lat];
     if (this.defaultOptions.mapboxOptions?.center) {
       centerVar = this.defaultOptions.mapboxOptions.center as [number, number];
@@ -452,6 +461,8 @@ export class Map {
       initializing: false,
       place,
       places,
+      floor,
+      floors,
       style,
       styles,
       amenities,
@@ -1924,7 +1935,7 @@ export class Map {
     style.setSource('synthetic', this.syntheticSource);
     style.setSource('route', this.routingSource);
     style.setSource('clusters', this.clusterSource);
-    style.setLevel(0);
+    style.setLevel(this.defaultOptions.defaultFloorLevel);
   }
 
   private async onRouteChange(event?: string) {
