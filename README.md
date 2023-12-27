@@ -126,6 +126,7 @@ const map = new Proximiio.Map({
    enableTBTNavigation: true, // optional, you'll receive turn-by-turn text navigation object in found route listener response, default: true
    mapboxOptions: { MapboxOptions }, // optional, you can pass mapbox initial options like center or zoom here, all options can be found at https://docs.mapbox.com/mapbox-gl-js/api/map/
    defaultPlaceId: 'my_place_id', // optional, you can specify default place, if not specified the first place found will be used as default
+   defaultFloorLevel: 0, // optional, you can specify default level, if not specified the first floor found will be used as default
    zoomIntoPlace: false // optional, the map will center and zoom into the default place location, default: true
    isKiosk: false, // optional, this will enable kiosk like behavior for the map (will add dot at spiecified coordinates in kioskSettings and this point will be set as a starting point for generated routes)
    kioskSettings: {

@@ -73,6 +73,7 @@ export interface Options {
   mapboxOptions?: MapboxOptions;
   zoomIntoPlace?: boolean;
   defaultPlaceId?: string;
+  defaultFloorLevel?: number;
   isKiosk?: boolean;
   kioskSettings?: {
     coordinates: [number, number];
@@ -213,6 +214,7 @@ export class Map {
     newFeatureModalEvent: 'click',
     enableTBTNavigation: true,
     zoomIntoPlace: true,
+    defaultFloorLevel: 0,
     isKiosk: false,
     initPolygons: false,
     polygonsOptions: {
@@ -536,7 +538,7 @@ export class Map {
       this.updateImages();
       this.filteredAmenities = this.amenityIds;
       this.imageSourceManager.setLevel(map, this.state.floor?.level, this.state);
-      await this.onPlaceSelect(this.state.place, this.defaultOptions.zoomIntoPlace);
+      await this.onPlaceSelect(this.state.place, this.defaultOptions.zoomIntoPlace, this.defaultOptions.defaultFloorLevel);
 
       if (this.defaultOptions.useRasterTiles) {
         this.initRasterTiles();
