@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.7] - 2024-01-15
+
+### Fixed
+
+- Minor fix of code by adding conditional check before modifying levelNeighboursMap
+
 ## [1.11.4] - 2023-12-27
 
 ### Added
