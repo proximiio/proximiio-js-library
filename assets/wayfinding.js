@@ -745,10 +745,12 @@ export class Wayfinding {
       }
 
       // Store relationship for corridor point
-      if (levelNeighboursMap[pointIndex] === undefined) {
-        levelNeighboursMap[pointIndex] = neighbours.map((neighbour) => points.indexOf(neighbour));
-      } else {
-        neighbours.forEach((neighbour) => levelNeighboursMap[pointIndex].push(points.indexOf(neighbour)));
+      if (levelNeighboursMap) {
+        if (levelNeighboursMap[pointIndex] === undefined) {
+          levelNeighboursMap[pointIndex] = neighbours.map((neighbour) => points.indexOf(neighbour));
+        } else {
+          neighbours.forEach((neighbour) => levelNeighboursMap[pointIndex].push(points.indexOf(neighbour)));
+        }
       }
     });
 
