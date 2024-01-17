@@ -59,18 +59,18 @@ export class ParkingPolygonsLayer extends PolygonsLayer {
     this.paint = new PaintProperties({
       'fill-extrusion-height': 0,
       'fill-extrusion-base': 0,
-      'fill-extrusion-opacity': 0.3,
+      'fill-extrusion-opacity': 1,
       'fill-extrusion-color': [
         'case',
         ['boolean', ['feature-state', 'selected'], false],
-        '#000000',
+        '#b31e8d',
         ['boolean', ['feature-state', 'hover'], false],
-        '#8a8a8a',
+        '#db56b9',
         ['boolean', ['feature-state', 'active'], false],
-        '#8a8a8a',
+        '#b31e8d',
         ['boolean', ['feature-state', 'disabled'], false],
-        '#8a8a8a',
-        '#ffffff',
+        '#c6c6c6',
+        '#c6c6c6',
       ],
     });
   }
