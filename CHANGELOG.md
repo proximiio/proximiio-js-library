@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.8] - 2024-01-17
+
+### Added
+
+-  Add support for parking spot polygons and labels (experimental)
+
 ## [1.11.7] - 2024-01-15
 
 ### Fixed
