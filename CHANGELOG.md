@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.9] - 2024-01-17
+
+### Changed
+
+- Parking spot polygons colors change
+
 ## [1.11.8] - 2024-01-17
 
 ### Added
