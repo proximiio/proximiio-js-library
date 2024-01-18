@@ -12,7 +12,7 @@ export const getKiosks = async (
 ): Promise<{ data: KioskModel[]; total: number }> => {
   let queryParams = ``;
   if (limit) {
-    queryParams += `?limit=${limit}`;
+    queryParams += `?limit=${limit ? limit : 1000}`;
   }
   if (skip) {
     queryParams += `&skip=${skip}`;
