@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.10] - Unreleased
+
+### Added
+
+- Added new model for kiosk
+- Added controller to handle api calls to retrieve list of kiosks and kiosk by id
+- Add get kiosks list in getPackage call
+- Save kiosks list from getPackage into map state
+
 ## [1.11.9] - 2024-01-17
 
 ### Changed
