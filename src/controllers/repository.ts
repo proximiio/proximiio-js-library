@@ -8,6 +8,8 @@ import { getAmenities, getFeatures } from './geo';
 import { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 import { LngLatBoundsLike } from 'maplibre-gl';
+import { getKiosks } from './kiosks';
+import { KioskModel } from '../models/kiosk';
 
 export const getPackage = async ({
   initPolygons,
@@ -28,6 +30,7 @@ export const getPackage = async ({
 }): Promise<{
   places: PlaceModel[];
   floors: FloorModel[];
+  kiosks: KioskModel[];
   style: StyleModel;
   styles: StyleModel[];
   features: FeatureCollection;
@@ -37,6 +40,7 @@ export const getPackage = async ({
   const promises = [
     getPlaces().then((places) => (result.places = places.data)),
     getFloors().then((floors) => (result.floors = floors.data)),
+    getKiosks().then((kiosks) => (result.kiosks = kiosks.data)),
     getStyle().then((style) => (result.style = style)),
     getStyles().then((styles) => (result.styles = styles)),
     getFeatures({ initPolygons, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds }).then(

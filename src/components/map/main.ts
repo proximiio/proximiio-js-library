@@ -48,6 +48,7 @@ import { isNumber, lineString, point, feature, featureCollection } from '@turf/h
 import WayfindingLogger from '../logger/wayfinding';
 import { translations } from './i18n';
 import { WayfindingConfigModel } from '../../models/wayfinding';
+import { KioskModel } from '../../models/kiosk';
 
 export interface State {
   readonly initializing: boolean;
@@ -55,6 +56,7 @@ export interface State {
   readonly floors: FloorModel[];
   readonly place: PlaceModel;
   readonly places: PlaceModel[];
+  readonly kiosks: KioskModel[];
   readonly style: StyleModel;
   readonly styles: StyleModel[];
   readonly amenities: AmenityModel[];
@@ -178,6 +180,7 @@ export const globalState: State = {
   floors: [],
   place: new PlaceModel({}),
   places: [],
+  kiosks: [],
   style: new StyleModel({}),
   styles: [],
   amenities: [],
@@ -398,7 +401,7 @@ export class Map {
       const urlParams = new URLSearchParams(window.location.search);
       placeParam = urlParams.get(this.defaultOptions.urlParams.defaultPlace);
     }
-    const { places, style, styles, features, amenities, floors } = await Repository.getPackage({
+    const { places, style, styles, features, amenities, floors, kiosks } = await Repository.getPackage({
       initPolygons: this.defaultOptions.initPolygons,
       autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
       amenityIdProperty: this.defaultOptions.amenityIdProperty,
@@ -469,6 +472,7 @@ export class Map {
       places,
       floor,
       floors,
+      kiosks,
       style,
       styles,
       amenities,
