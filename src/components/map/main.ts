@@ -1100,7 +1100,7 @@ export class Map {
       polygonIconsLayer.setFilterLevel(this.state.floor.level);
       this.state.style.addLayer(polygonIconsLayer.json, 'proximiio-paths');
 
-      for (let layer of this.defaultOptions.polygonLayers) {
+      for (const layer of this.defaultOptions.polygonLayers) {
         const polygonTitlesLayer = new PolygonTitlesLayer(layer);
         polygonTitlesLayer.setFilterLevel(this.state.floor.level);
         this.state.style.addLayer(polygonTitlesLayer.json, 'proximiio-paths');
