@@ -67,7 +67,7 @@ export interface State {
   readonly user;
 }
 
-export interface polygonOptions {
+export interface PolygonOptions {
   defaultPolygonColor?: string;
   hoverPolygonColor?: string;
   selectedPolygonColor?: string;
@@ -88,7 +88,7 @@ export interface polygonOptions {
   textFont?: string[];
 }
 
-export interface polygonLayer extends polygonOptions {
+export interface PolygonLayer extends PolygonOptions {
   featureType: string;
 }
 
@@ -107,8 +107,8 @@ export interface Options {
     level: number;
   };
   initPolygons?: boolean;
-  polygonsOptions?: polygonOptions;
-  polygonLayers?: polygonLayer[];
+  polygonsOptions?: PolygonOptions;
+  polygonLayers?: PolygonLayer[];
   zoomLevel?: number;
   considerVisibilityParam?: boolean;
   fitBoundsPadding?: number | PaddingOptions;

@@ -4,10 +4,10 @@ import LineLayer, {
   PaintProperties as LinePaintProperties,
 } from './layers/line_layer';
 import SymbolLayer, { LayoutProperties, PaintProperties as PaintPropertiesSymbol } from './layers/symbol_layer';
-import { polygonLayer, polygonOptions } from './main';
+import { PolygonLayer, PolygonOptions } from './main';
 
 export class PolygonsLayer extends FillExtrusionLayer {
-  constructor(data: polygonLayer) {
+  constructor(data: PolygonLayer) {
     super(data);
     this.id = `${data.featureType}-custom`;
     this.type = 'fill-extrusion';
@@ -49,7 +49,7 @@ export class PolygonsLayer extends FillExtrusionLayer {
 }
 
 export class PolygonIconsLayer extends SymbolLayer {
-  constructor(data: polygonOptions) {
+  constructor(data: PolygonOptions) {
     super(data);
     this.id = 'poi-custom-icons';
     this.type = 'symbol';
@@ -89,7 +89,7 @@ export class PolygonIconsLayer extends SymbolLayer {
 }
 
 export class PolygonTitlesLayer extends SymbolLayer {
-  constructor(data: polygonLayer) {
+  constructor(data: PolygonLayer) {
     super(data);
     this.id = `${data.featureType}-labels`;
     this.type = 'symbol';
@@ -126,7 +126,7 @@ export class PolygonTitlesLayer extends SymbolLayer {
 }
 
 export class PolygonTitlesLineLayer extends LineLayer {
-  constructor(data: polygonLayer) {
+  constructor(data: PolygonLayer) {
     super(data);
     this.id = `${data.featureType}-labels-line`;
     this.type = 'line';
