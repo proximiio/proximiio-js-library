@@ -45,9 +45,15 @@ export const getPackage = async ({
     getKiosks().then((kiosks) => (result.kiosks = kiosks.data)),
     getStyle().then((style) => (result.style = style)),
     getStyles().then((styles) => (result.styles = styles)),
-    getFeatures({ initPolygons, polygonFeatureTypes, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds }).then(
-      (features) => (result.features = features),
-    ),
+    getFeatures({
+      initPolygons,
+      polygonFeatureTypes,
+      autoLabelLines,
+      hiddenAmenities,
+      useTimerangeData,
+      filter,
+      featuresMaxBounds,
+    }).then((features) => (result.features = features)),
     getAmenities(amenityIdProperty).then((amenities) => (result.amenities = amenities)),
   ];
   await Promise.all(promises);
