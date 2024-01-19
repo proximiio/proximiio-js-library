@@ -29,7 +29,7 @@ npm install proximiio-js-library
 and then import into project with
 
 ```javascript
-import Proximiio from 'proximiio-js-library'
+import Proximiio from 'proximiio-js-library';
 ```
 
 ## Available methods
@@ -43,50 +43,50 @@ Successful log in is required for all other afterwards methods so execute this a
 
 ```javascript
 // node.js & react/angular
-Proximiio.Auth.login('email', 'password')
+Proximiio.Auth.login('email', 'password');
 
 // browser
-Proximiio.default.Auth.login('email', 'password')
+Proximiio.default.Auth.login('email', 'password');
 ```
 
 ###### Log in with token
 
 ```javascript
 // node.js & react/angular
-Proximiio.Auth.loginWithToken('token')
+Proximiio.Auth.loginWithToken('token');
 
 // browser
-Proximiio.default.Auth.loginWithToken('token')
+Proximiio.default.Auth.loginWithToken('token');
 ```
 
 ###### Get User Config Data
 
 ```javascript
 // node.js & react/angular
-Proximiio.Auth.getUserConfig()
+Proximiio.Auth.getUserConfig();
 
 // browser
-Proximiio.default.Auth.getUserConfig()
+Proximiio.default.Auth.getUserConfig();
 ```
 
 #### Get list of places
 
 ```javascript
 // node.js & react/angular
-Proximiio.Places.getPlaces()
+Proximiio.Places.getPlaces();
 
 // browser
-Proximiio.default.Places.getPlaces()
+Proximiio.default.Places.getPlaces();
 ```
 
 #### Get list of floors
 
 ```javascript
 // node.js & react/angular
-Proximiio.Floors.getFloors()
+Proximiio.Floors.getFloors();
 
 // browser
-Proximiio.default.Floors.getFloors()
+Proximiio.default.Floors.getFloors();
 ```
 
 ###### Available arguments for lists
@@ -107,7 +107,7 @@ q?: string // query to filter
 Map is generated using the [Maplibre GL library](https://maplibre.org/maplibre-gl-js/docs/), it's necessary to load it's css file in your html `<head>` tag.
 
 ```html
-<link href='https://unpkg.com/maplibre-gl/dist/maplibre-gl.css' rel='stylesheet' />
+<link href="https://unpkg.com/maplibre-gl/dist/maplibre-gl.css" rel="stylesheet" />
 ```
 
 To generate map, create div element with id param defined
@@ -154,7 +154,7 @@ const map = new Proximiio.Map({
    zoomIntoPlace: false,
 
    // Optional, this will enable kiosk-like behavior for the map
-   // (will add dot at specified coordinates in kioskSettings and this point will be 
+   // (will add dot at specified coordinates in kioskSettings and this point will be
    // set as a starting point for generated routes)
    isKiosk: false,
 
@@ -170,7 +170,7 @@ const map = new Proximiio.Map({
    // Optional, default: false, if enabled and yours GeoJSON includes required data
    // the map will show defined features as polygons with hover/click effect,
    // you can customize polygon colors for different states via polygonsOptions,
-   // only applied to features with type 'shop', to apply to other features 
+   // only applied to features with type 'shop', to apply to other features
    // see polygonLayers option below
    initPolygons: false,
 
@@ -219,7 +219,7 @@ const map = new Proximiio.Map({
       // check Available fonts at the bottom
       textFont: string[],
 
-      // Optional, define polygon label font size, default is interpolate 
+      // Optional, define polygon label font size, default is interpolate
       // expression based on zoom level
       labelFontSize: (string | number | string[])[] | number,
 
@@ -231,7 +231,7 @@ const map = new Proximiio.Map({
       autoLabelLines: boolean
    },
 
-   // Optional, you can define more features to display as polygons and enable 
+   // Optional, you can define more features to display as polygons and enable
    // hover/click effect with different formatting, you have to define only
    // featureType all other parameters are as default as polygonsOptions
    // those could be overriden by defining them separately
@@ -244,14 +244,14 @@ const map = new Proximiio.Map({
 
       // defaultPolygonColor will be overriden by this property
       defaultPolygonColor: '#000000'
-   }]
+   }],
 
    // Optional, default: true, if enabled all POIs with visibility property defined as 'hidden'
    // will not be visible as default, will be possible to toggle them with toggleHiddenPois() method
    considerVisibilityParam: false,
 
    // Optional, default 250, number | PaddingOptions, the amount of padding in pixels
-   // to add to the given bounds for found route, 
+   // to add to the given bounds for found route,
    // https://docs.mapbox.com/mapbox-gl-js/api/properties/#paddingoptions
    fitBoundsPadding: 200,
 
@@ -275,7 +275,7 @@ const map = new Proximiio.Map({
       // Optional, default: false, if enabled animated dot/line will be displayed along the route
       enabled: false,
 
-      // Optional, default: 'dash', there are two types of route animation 
+      // Optional, default: 'dash', there are two types of route animation
       // 'dash' for dashed line animation
       // and 'point' for moving point along the route
       type: 'dash',
@@ -495,9 +495,9 @@ This method will set an active place, load floors etc. Have to be called after m
 // @param zoomIntoPlace {boolean} should zoom into active place, optional
 // @param floorLevel {number} Level of the floor to be set as active on map, optional
 
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.setPlace(myPlaceId);
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.setPlace(myPlaceId);
 });
 ```
 
@@ -510,9 +510,9 @@ Have to be called after map is ready, see getMapReadyListener.
 This method will set an active floor based on it's id.
 
 ```javascript
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.setFloorById(myFloorId);
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.setFloorById(myFloorId);
 });
 ```
 
@@ -521,9 +521,9 @@ map.getMapReadyListener().subscribe(ready => {
 This method will set an active floor based on it's level.
 
 ```javascript
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.setFloorByLevel(0);
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.setFloorByLevel(0);
 });
 ```
 
@@ -532,9 +532,9 @@ map.getMapReadyListener().subscribe(ready => {
 This method will set an active floor based on the way of the next floor, e.g if we wanna go up or down.
 
 ```javascript
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.setFloorByWay('up');
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.setFloorByWay('up');
 });
 ```
 
@@ -544,15 +544,15 @@ With this method you can override kiosk coordinates position and it's floor leve
 
 ```javascript
 const map = new Proximiio.Map({
-    isKiosk: true,
-    kioskSettings: {
-        coordinates: [17.833135351538658, 48.60678469647394],
-        level: 0
-    }
+  isKiosk: true,
+  kioskSettings: {
+    coordinates: [17.833135351538658, 48.60678469647394],
+    level: 0,
+  },
 });
-map.getMapReadyListener().subscribe(ready => {
-    console.log('map ready', ready);
-    map.setKiosk(48.606703739771774, 17.833092384506614, 1);
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.setKiosk(48.606703739771774, 17.833092384506614, 1);
 });
 ```
 
@@ -562,11 +562,11 @@ This method will set padding for zooming into bounding box of found route
 
 ```javascript
 const map = new Proximiio.Map({
-    fitBoundsPadding: 200
+  fitBoundsPadding: 200,
 });
-map.getMapReadyListener().subscribe(ready => {
-    console.log('map ready', ready);
-    map.setBoundsPadding(50);
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.setBoundsPadding(50);
 });
 ```
 
@@ -581,9 +581,9 @@ This method will generate route based on selected features by their ids.
 // @param idFrom {string} start feature id, optional for kiosk
 // @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
 
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.findRouteByIds('idTo', 'idFrom');
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.findRouteByIds('idTo', 'idFrom');
 });
 ```
 
@@ -596,9 +596,9 @@ This method will generate route based on selected features by their titles.
 // @param titleFrom {string} start feature title, optional for kiosk
 // @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
 
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.findRouteByTitle('titleTo', 'titleFrom');
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.findRouteByTitle('titleTo', 'titleFrom');
 });
 ```
 
@@ -615,9 +615,9 @@ This method will generate route based on attached coords.
 // @param levelFrom {number} start level, optional for kiosk
 // @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
 
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.findRouteByCoords(48.606703739771774, 17.833092384506614, 0, 48.60684545080579, 17.833450676669543, 0);
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.findRouteByCoords(48.606703739771774, 17.833092384506614, 0, 48.60684545080579, 17.833450676669543, 0);
 });
 ```
 
@@ -634,9 +634,9 @@ This method will generate route based on attached coords.
 // @param levelFrom {number} start level, optional for kiosk
 // @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
 
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.findRouteByCoords(48.606703739771774, 17.833092384506614, 0, 48.60684545080579, 17.833450676669543, 0);
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.findRouteByCoords(48.606703739771774, 17.833092384506614, 0, 48.60684545080579, 17.833450676669543, 0);
 });
 ```
 
@@ -649,9 +649,9 @@ This method will generate route based on nearest amenity feature.
 // @param idFrom {string} start feature id, optional for kiosk
 // @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
 
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.findRouteToNearestFeature('amenityId');
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.findRouteToNearestFeature('amenityId');
 });
 ```
 
@@ -660,9 +660,9 @@ map.getMapReadyListener().subscribe(ready => {
 Use this method to cancel generated route.
 
 ```javascript
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.cancelRoute();
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.cancelRoute();
 });
 ```
 
@@ -684,9 +684,9 @@ map.getMapReadyListener().subscribe(ready => {
 Retrieves the turn by turn navigation object.
 
 ```javascript
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   const TBTNav = map.getTBTNav();
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  const TBTNav = map.getTBTNav();
 });
 ```
 
@@ -695,9 +695,9 @@ map.getMapReadyListener().subscribe(ready => {
 This method will center the map to generated route bounds.
 
 ```javascript
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.centerToRoute();
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.centerToRoute();
 });
 ```
 
@@ -706,9 +706,9 @@ map.getMapReadyListener().subscribe(ready => {
 This method will center the map to feature coordinates.
 
 ```javascript
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.centerToFeature('featureId');
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.centerToFeature('featureId');
 });
 ```
 
@@ -721,9 +721,9 @@ This method will center the map to provided coordinates.
 // @param lng {number} longitude coordinate, required
 // @param zoom {number} zoom level, optional, 18 as default
 
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.centerToCoordinates(48.60678469647394, 17.833135351538658, 20);
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.centerToCoordinates(48.60678469647394, 17.833135351538658, 20);
 });
 ```
 
@@ -732,9 +732,9 @@ map.getMapReadyListener().subscribe(ready => {
 This method will toggle hidden poi visibility based on the visibility param in poi properties.
 
 ```javascript
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.toggleHiddenPois();
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.toggleHiddenPois();
 });
 ```
 
@@ -743,9 +743,9 @@ map.getMapReadyListener().subscribe(ready => {
 This method will toggle raster floorplans visibility.
 
 ```javascript
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.toggleRasterFloorplans();
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.toggleRasterFloorplans();
 });
 ```
 
@@ -759,9 +759,9 @@ Method for adding circle layer as a highlight for defined features.
 // @param radius {number} highlight circle radius, optional, default: 50.
 // @param blur {number} blur of the highlight circle, optional, default: 0.8.
 
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.setFeaturesHighlight(['featureid']);
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.setFeaturesHighlight(['featureid']);
 });
 ```
 
@@ -782,9 +782,9 @@ Add new feature to map.
 // @param isTemporary {boolean} will add feature just temporary, it's not saved to db, optional, default
 // @return <Promise>{Feature} newly added feature
 
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   const myFeature = map.addCustomFeature('myPOI', 0, 48.606703739771774, 17.833092384506614);
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  const myFeature = map.addCustomFeature('myPOI', 0, 48.606703739771774, 17.833092384506614);
 });
 ```
 
@@ -805,9 +805,9 @@ Update existing map feature.
 // @param isTemporary {boolean} will update feature just temporary, it's not saved to db, optional, default
 // @return <Promise>{Feature} newly added feature
 
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   const myFeature = map.updateFeature('poiId', 'myPOI', 0, 48.606703739771774, 17.8330923845066);
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  const myFeature = map.updateFeature('poiId', 'myPOI', 0, 48.606703739771774, 17.8330923845066);
 });
 ```
 
@@ -819,7 +819,7 @@ Delete existing map feature.
 // @param id {string} feature id
 // @param isTemporary {boolean} will delete feature just temporary, it's not deleted from db, optional, default
 
-map.getMapReadyListener().subscribe(ready => {
+map.getMapReadyListener().subscribe((ready) => {
   console.log('map ready', ready);
   map.deleteFeature('poiId');
 });
@@ -830,9 +830,9 @@ map.getMapReadyListener().subscribe(ready => {
 Retrieves the list of only newly added features.
 
 ```javascript
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   const features = map.getCustomFeaturesList();
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  const features = map.getCustomFeaturesList();
 });
 ```
 
@@ -848,9 +848,9 @@ Method for setting a person icon on a Map, this method is resetting the previous
 // @param level {number} floor level of person.
 // @param id {string | number} id of person, optional.
 
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.setPerson(48.606703739771774, 17.833092384506614, 0);
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.setPerson(48.606703739771774, 17.833092384506614, 0);
 });
 ```
 
@@ -864,9 +864,9 @@ Method for add/update person icon on a Map.
 // @param level {number} floor level of person.
 // @param id {string | number} id of person, optional.
 
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.upsertPerson(48.606703739771774, 17.833092384506614, 0, 'person-1');
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.upsertPerson(48.606703739771774, 17.833092384506614, 0, 'person-1');
 });
 ```
 
@@ -880,9 +880,9 @@ With this method you can filter features with any of it's properties, if the pro
 // param options { key: string; value: string } | null, define property key and value to filter features, optional, if null filtering will be disabled.
 
 const map = new Proximiio.Map();
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.setFiltering({ key: 'properties.metadata.exhibition', value: 'food'});
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.setFiltering({ key: 'properties.metadata.exhibition', value: 'food' });
 });
 ```
 
@@ -895,9 +895,9 @@ With this method you set only defined poi feature to be visible, calling this me
 // param inverted {boolean} when set to true, defined feature will hide, optional
 
 const map = new Proximiio.Map();
-map.getMapReadyListener().subscribe(ready => {
-    console.log('map ready', ready);
-    map.setFeatureFilter('myfeature');
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.setFeatureFilter('myfeature');
 });
 ```
 
@@ -910,9 +910,9 @@ Method for removing previously created feature filters.
 // param inverted {boolean} have to be set to same value like it was in setFeatureFilter method, optional
 
 const map = new Proximiio.Map();
-map.getMapReadyListener().subscribe(ready => {
-    console.log('map ready', ready);
-    map.removeFeatureFilter('myfeature');
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.removeFeatureFilter('myfeature');
 });
 ```
 
@@ -922,9 +922,9 @@ Method for removing all active feature filters.
 
 ```javascript
 const map = new Proximiio.Map();
-map.getMapReadyListener().subscribe(ready => {
-    console.log('map ready', ready);
-    map.resetFeatureFilters();
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.resetFeatureFilters();
 });
 ```
 
@@ -934,9 +934,9 @@ Method for hiding all pois features on map.
 
 ```javascript
 const map = new Proximiio.Map();
-map.getMapReadyListener().subscribe(ready => {
-    console.log('map ready', ready);
-    map.hidePois();
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.hidePois();
 });
 ```
 
@@ -946,9 +946,9 @@ Method for refetching all pois features on map.
 
 ```javascript
 const map = new Proximiio.Map();
-map.getMapReadyListener().subscribe(ready => {
-    console.log('map ready', ready);
-    map.refetch();
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.refetch();
 });
 ```
 
@@ -962,11 +962,11 @@ You'll be able to show features only for defined amenity id on map with this met
 // param inverted {boolean} when set to true, defined amenity features will hide, optional
 
 const map = new Proximiio.Map();
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.setAmenityFilter('myamenity');
-   // inverted method
-   map.setAmenityFilter('myamenity', null, true);
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.setAmenityFilter('myamenity');
+  // inverted method
+  map.setAmenityFilter('myamenity', null, true);
 });
 ```
 
@@ -980,11 +980,11 @@ Method for removing previously created amenity filters. In case amenity filter h
 // param inverted {boolean} have to be set to same value like it was in setAmenityFilter method, optional
 
 const map = new Proximiio.Map();
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.removeAmenityFilter('myamenity');
-   // remove inverted method
-   map.removeAmenityFilter('myamenity', null, true);
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.removeAmenityFilter('myamenity');
+  // remove inverted method
+  map.removeAmenityFilter('myamenity', null, true);
 });
 ```
 
@@ -994,9 +994,9 @@ Method for removing all active amenity filters.
 
 ```javascript
 const map = new Proximiio.Map();
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.resetAmenityFilters();
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.resetAmenityFilters();
 });
 ```
 
@@ -1009,9 +1009,9 @@ You can define your own categories of amenities, which you can then use for adva
 // param amenities {Array of strings} list of the amenities id
 
 const map = new Proximiio.Map();
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.setAmenitiesCategory('shops', ['id1', 'id2']);
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.setAmenitiesCategory('shops', ['id1', 'id2']);
 });
 ```
 
@@ -1023,9 +1023,9 @@ Method for removing previously created categories.
 // param id {string} category id.
 
 const map = new Proximiio.Map();
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.removeAmenitiesCategory('shops');
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.removeAmenitiesCategory('shops');
 });
 ```
 
@@ -1035,9 +1035,9 @@ Method for removing all active amenity categories.
 
 ```javascript
 const map = new Proximiio.Map();
-map.getMapReadyListener().subscribe(ready => {
-   console.log('map ready', ready);
-   map.resetAmenitiesCategory();
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.resetAmenitiesCategory();
 });
 ```
 
@@ -1046,7 +1046,7 @@ map.getMapReadyListener().subscribe(ready => {
 ##### Listen to map ready event
 
 ```javascript
-map.getMapReadyListener().subscribe(ready => {
+map.getMapReadyListener().subscribe((ready) => {
   console.log('map ready', ready);
 });
 ```
@@ -1054,25 +1054,25 @@ map.getMapReadyListener().subscribe(ready => {
 ##### Listen to place select event
 
 ```javascript
-map.getPlaceSelectListener().subscribe(place => {
-   console.log('selected place', place);
+map.getPlaceSelectListener().subscribe((place) => {
+  console.log('selected place', place);
 });
 ```
 
 ##### Listen to floor select event
 
 ```javascript
-map.getFloorSelectListener().subscribe(floor => {
-   console.log('selected floor', floor);
+map.getFloorSelectListener().subscribe((floor) => {
+  console.log('selected floor', floor);
 });
 ```
 
 ##### Listen to route found event
 
 ```javascript
-map.getRouteFoundListener().subscribe(res => {
-   console.log('route found successfully', res.route);
-   console.log('turn by turn text navigation output', res.TBTNav);
+map.getRouteFoundListener().subscribe((res) => {
+  console.log('route found successfully', res.route);
+  console.log('turn by turn text navigation output', res.TBTNav);
 });
 ```
 
@@ -1080,7 +1080,7 @@ map.getRouteFoundListener().subscribe(res => {
 
 ```javascript
 map.getRouteFailedListener().subscribe(() => {
-   console.log('route not found');
+  console.log('route not found');
 });
 ```
 
@@ -1088,31 +1088,31 @@ map.getRouteFailedListener().subscribe(() => {
 
 ```javascript
 map.getRouteCancelListener().subscribe(() => {
-   console.log('route cancelled');
+  console.log('route cancelled');
 });
 ```
 
 ##### Listen to step change event
 
 ```javascript
-map.getNavStepSetListener().subscribe(step => {
-   console.log('step changed', step);
+map.getNavStepSetListener().subscribe((step) => {
+  console.log('step changed', step);
 });
 ```
 
 ##### Listen to feature add event
 
 ```javascript
-map.getFeatureAddListener().subscribe(feature => {
-   console.log('feature added', feature);
+map.getFeatureAddListener().subscribe((feature) => {
+  console.log('feature added', feature);
 });
 ```
 
 ##### Listen to feature update event
 
 ```javascript
-map.getFeatureUpdateListener().subscribe(feature => {
-   console.log('feature updated', feature);
+map.getFeatureUpdateListener().subscribe((feature) => {
+  console.log('feature updated', feature);
 });
 ```
 
@@ -1120,7 +1120,7 @@ map.getFeatureUpdateListener().subscribe(feature => {
 
 ```javascript
 map.getFeatureDeleteListener().subscribe(() => {
-   console.log('feature deleted');
+  console.log('feature deleted');
 });
 ```
 
@@ -1128,7 +1128,7 @@ map.getFeatureDeleteListener().subscribe(() => {
 
 ```javascript
 map.getPolygonClickListener().subscribe((poi) => {
-   console.log('polygon clicked', poi);
+  console.log('polygon clicked', poi);
 });
 ```
 
@@ -1136,7 +1136,7 @@ map.getPolygonClickListener().subscribe((poi) => {
 
 ```javascript
 map.getPoiClickListener().subscribe((poi) => {
-   console.log('poi clicked', poi);
+  console.log('poi clicked', poi);
 });
 ```
 
@@ -1144,7 +1144,7 @@ map.getPoiClickListener().subscribe((poi) => {
 
 ```javascript
 map.getPersonUpdateListener().subscribe((personsList) => {
-   console.log('current persons', personsList);
+  console.log('current persons', personsList);
 });
 ```
 
@@ -1155,7 +1155,7 @@ Select component is generated using the [Autocomplete.js](https://tarekraafat.gi
 To generate select widget, create input element with id param defined, for styling please assign also class param.
 
 ```html
-<input id="proximiioSelect" class="proximiio-select" type="text" tabIndex="1"/>
+<input id="proximiioSelect" class="proximiio-select" type="text" tabindex="1" />
 ```
 
 Now you can call
@@ -1165,7 +1165,10 @@ Now you can call
 // @param options { AutocompleteOptions } autocomplete.js options, check https://tarekraafat.github.io/autoComplete.js/#/configuration for more info
 // @param useApiSearch { boolean } use this option if you want to use api to filter the results, necessary if you have 100+ places | floors.
 
-const select = new Proximiio.Select('Places', { placeHolder: 'Pick the place', resultItem: { highlight: { render: true } } });
+const select = new Proximiio.Select('Places', {
+  placeHolder: 'Pick the place',
+  resultItem: { highlight: { render: true } },
+});
 ```
 
 #### Available Listeners
@@ -1173,7 +1176,7 @@ const select = new Proximiio.Select('Places', { placeHolder: 'Pick the place', r
 ##### Listen to select event
 
 ```javascript
-select.getSelectListener().subscribe(place => {
+select.getSelectListener().subscribe((place) => {
   console.log('place selected', place);
 });
 ```
@@ -1217,44 +1220,52 @@ const map = new Proximiio.Map();
 
 // listen to event when map component is loaded
 map.getMapReadyListener().subscribe(() => {
-    let fromPoi = null;
-    let toPoi = null;
+  let fromPoi = null;
+  let toPoi = null;
 
-    // initiate select component for starting point
-    const fromPoiSelect = new Proximiio.Select('Pois', { placeHolder: 'Pick the start poi', highlight: true, selector: '#from-poi-select' });
+  // initiate select component for starting point
+  const fromPoiSelect = new Proximiio.Select('Pois', {
+    placeHolder: 'Pick the start poi',
+    highlight: true,
+    selector: '#from-poi-select',
+  });
 
-    // listen to event when something is selected
-    fromPoiSelect.getSelectListener().subscribe(poi => {
-      fromPoi = poi;
-      map.centerToFeature(poi.id); // optional, this will centerize map to selected point
-      console.log('from poi selected', poi);
-      // generate route in case both start and end points are available
-      if (fromPoi && toPoi) {
-        map.findRouteByIds(fromPoi.id, toPoi.id);
-      }
-    })
+  // listen to event when something is selected
+  fromPoiSelect.getSelectListener().subscribe((poi) => {
+    fromPoi = poi;
+    map.centerToFeature(poi.id); // optional, this will centerize map to selected point
+    console.log('from poi selected', poi);
+    // generate route in case both start and end points are available
+    if (fromPoi && toPoi) {
+      map.findRouteByIds(fromPoi.id, toPoi.id);
+    }
+  });
 
-    // initiate select component for ending point
-    const toPoiSelect = new Proximiio.Select('Pois', { placeHolder: 'Pick the end poi', highlight: true, selector: '#to-poi-select' });
+  // initiate select component for ending point
+  const toPoiSelect = new Proximiio.Select('Pois', {
+    placeHolder: 'Pick the end poi',
+    highlight: true,
+    selector: '#to-poi-select',
+  });
 
-    // listen to event when something is selected
-    toPoiSelect.getSelectListener().subscribe(poi => {
-      toPoi = poi;
-      map.centerToFeature(poi.id); // optional, this will centerize map to selected point
-      console.log('to poi selected', poi);
-      // generate route in case both start and end points are available
-      if (fromPoi && toPoi) {
-        map.findRouteByIds(fromPoi.id, toPoi.id);
-      }
-    })
-})
+  // listen to event when something is selected
+  toPoiSelect.getSelectListener().subscribe((poi) => {
+    toPoi = poi;
+    map.centerToFeature(poi.id); // optional, this will centerize map to selected point
+    console.log('to poi selected', poi);
+    // generate route in case both start and end points are available
+    if (fromPoi && toPoi) {
+      map.findRouteByIds(fromPoi.id, toPoi.id);
+    }
+  });
+});
 ```
 
 HTML
 
 ```html
-<input id="from-poi-select" class="proximiio-select" type="text" tabIndex="1"/>
-<input id="to-poi-select" class="proximiio-select" type="text" tabIndex="1"/>
+<input id="from-poi-select" class="proximiio-select" type="text" tabindex="1" />
+<input id="to-poi-select" class="proximiio-select" type="text" tabindex="1" />
 ```
 
 ### Adding new features and updating their positions
@@ -1265,33 +1276,39 @@ JS
 
 ```javascript
 // lets assume you have a list of custom poi features
-const customPoiList = [{
-  id: 'custom-poi-1',
-  title: 'Custom Poi',
-  level: 0
-}, {
-  id: 'custom-poi-2',
-  title: 'Custom Poi 2',
-  level: 0
-}, {
-  id: 'custom-poi-3',
-  title: 'Custom Poi 3',
-  level: 0
-}, {
-  id: 'custom-poi-4',
-  title: 'Custom Poi 4',
-  level: 0
-}, {
-  id: 'custom-poi-5',
-  title: 'Custom Poi 5',
-  level: 0
-}];
+const customPoiList = [
+  {
+    id: 'custom-poi-1',
+    title: 'Custom Poi',
+    level: 0,
+  },
+  {
+    id: 'custom-poi-2',
+    title: 'Custom Poi 2',
+    level: 0,
+  },
+  {
+    id: 'custom-poi-3',
+    title: 'Custom Poi 3',
+    level: 0,
+  },
+  {
+    id: 'custom-poi-4',
+    title: 'Custom Poi 4',
+    level: 0,
+  },
+  {
+    id: 'custom-poi-5',
+    title: 'Custom Poi 5',
+    level: 0,
+  },
+];
 
 // initiate map component
 const map = new Proximiio.Map();
 
 // listen to event when map component is loaded
-map.getMapReadyListener().subscribe(res => {
+map.getMapReadyListener().subscribe((res) => {
   console.log('map ready', res);
 
   // get current mapbox instance bounds
