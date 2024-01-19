@@ -30,13 +30,7 @@ import { CustomSubject } from '../../customSubject';
 import * as tingle from 'tingle.js/dist/tingle';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
 import { MapboxOptions } from '../../models/mapbox-options';
-import {
-  PolygonsLayer,
-  PolygonIconsLayer,
-  PolygonTitlesLayer,
-  ParkingPolygonTitlesLayer,
-  ParkingPolygonsLayer,
-} from './custom-layers';
+import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer } from './custom-layers';
 import PersonModel from '../../models/person';
 import bbox from '@turf/bbox';
 import length from '@turf/length';
@@ -73,6 +67,31 @@ export interface State {
   readonly user;
 }
 
+export interface polygonOptions {
+  defaultPolygonColor?: string;
+  hoverPolygonColor?: string;
+  selectedPolygonColor?: string;
+  defaultLabelColor?: string;
+  hoverLabelColor?: string;
+  selectedLabelColor?: string;
+  defaultPolygonHeight?: number;
+  hoverPolygonHeight?: number;
+  selectedPolygonHeight?: number;
+  base?: number;
+  opacity?: number;
+  removeOriginalPolygonsLayer?: boolean;
+  minZoom?: number;
+  maxZoom?: number;
+  labelFontSize?: (string | number | string[])[] | number | any;
+  symbolPlacement?: 'point' | 'line' | 'line-center';
+  autoLabelLines?: boolean;
+  textFont?: string[];
+}
+
+export interface polygonLayer extends polygonOptions {
+  featureType: string;
+}
+
 export interface Options {
   selector?: string;
   allowNewFeatureModal?: boolean;
@@ -88,26 +107,8 @@ export interface Options {
     level: number;
   };
   initPolygons?: boolean;
-  polygonsOptions?: {
-    defaultPolygonColor?: string;
-    hoverPolygonColor?: string;
-    selectedPolygonColor?: string;
-    defaultLabelColor?: string;
-    hoverLabelColor?: string;
-    selectedLabelColor?: string;
-    defaultPolygonHeight?: number;
-    hoverPolygonHeight?: number;
-    selectedPolygonHeight?: number;
-    base?: number;
-    opacity?: number;
-    removeOriginalPolygonsLayer?: boolean;
-    minZoom?: number;
-    maxZoom?: number;
-    labelFontSize?: (string | number | string[])[] | number | any;
-    symbolPlacement?: 'point' | 'line' | 'line-center';
-    autoLabelLines?: boolean;
-    textFont?: string[];
-  };
+  polygonsOptions?: polygonOptions;
+  polygonLayers?: polygonLayer[];
   zoomLevel?: number;
   considerVisibilityParam?: boolean;
   fitBoundsPadding?: number | PaddingOptions;
@@ -353,6 +354,14 @@ export class Map {
       throw new Error(`It's not possible to use both isKiosk and useGpsLocation options as enabled!`);
     }
 
+    if (!this.defaultOptions.polygonLayers || this.defaultOptions.polygonLayers.length === 0) {
+      this.defaultOptions.polygonLayers = [{ ...this.defaultOptions.polygonsOptions, featureType: 'shop' }];
+    } else {
+      this.defaultOptions.polygonLayers = this.defaultOptions.polygonLayers.map((layer) => {
+        return { ...this.defaultOptions.polygonsOptions, ...layer };
+      });
+    }
+
     // @ts-ignore
     if (maplibregl.getRTLTextPluginStatus() !== 'loaded') {
       // @ts-ignore
@@ -403,6 +412,7 @@ export class Map {
     }
     const { places, style, styles, features, amenities, floors, kiosks } = await Repository.getPackage({
       initPolygons: this.defaultOptions.initPolygons,
+      polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => item.featureType),
       autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
       amenityIdProperty: this.defaultOptions.amenityIdProperty,
       hiddenAmenities: this.defaultOptions.hiddenAmenities,
@@ -640,6 +650,7 @@ export class Map {
       console.log('data should be refetched');
       const { features } = await Repository.getPackage({
         initPolygons: this.defaultOptions.initPolygons,
+        polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => item.featureType),
         autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
         amenityIdProperty: this.defaultOptions.amenityIdProperty,
         hiddenAmenities: this.defaultOptions.hiddenAmenities,
@@ -1085,30 +1096,37 @@ export class Map {
 
   private initPolygons() {
     if (this.map) {
-      const polygonTitlesLayer = new PolygonTitlesLayer(this.defaultOptions.polygonsOptions);
-      polygonTitlesLayer.setFilterLevel(this.state.floor.level);
-      this.state.style.addLayer(polygonTitlesLayer.json, 'proximiio-paths');
-
-      const parkingPolygonTitlesLayer = new ParkingPolygonTitlesLayer(this.defaultOptions.polygonsOptions);
-      parkingPolygonTitlesLayer.setFilterLevel(this.state.floor.level);
-      this.state.style.addLayer(parkingPolygonTitlesLayer.json, 'proximiio-paths');
-
       const polygonIconsLayer = new PolygonIconsLayer(this.defaultOptions.polygonsOptions);
       polygonIconsLayer.setFilterLevel(this.state.floor.level);
       this.state.style.addLayer(polygonIconsLayer.json, 'proximiio-paths');
 
-      const polygonsLayer = new PolygonsLayer(this.defaultOptions.polygonsOptions);
-      polygonsLayer.setFilterLevel(this.state.floor.level);
-      this.state.style.addLayer(polygonsLayer.json, 'proximiio-paths');
+      for (let layer of this.defaultOptions.polygonLayers) {
+        const polygonTitlesLayer = new PolygonTitlesLayer(layer);
+        polygonTitlesLayer.setFilterLevel(this.state.floor.level);
+        this.state.style.addLayer(polygonTitlesLayer.json, 'proximiio-paths');
 
-      const parkingPolygonsLayer = new ParkingPolygonsLayer(this.defaultOptions.polygonsOptions);
-      parkingPolygonsLayer.setFilterLevel(this.state.floor.level);
-      this.state.style.addLayer(parkingPolygonsLayer.json, 'proximiio-paths');
+        const polygonsLayer = new PolygonsLayer(layer);
+        polygonsLayer.setFilterLevel(this.state.floor.level);
+        this.state.style.addLayer(polygonsLayer.json, 'proximiio-paths');
 
-      if (this.state.style.getLayer('proximiio-shop')) {
-        if (this.defaultOptions.polygonsOptions.removeOriginalPolygonsLayer) {
-          this.state.style.removeLayer('proximiio-shop');
+        if (this.state.style.getLayer(`proximiio-${layer.featureType}`)) {
+          if (layer.removeOriginalPolygonsLayer) {
+            this.state.style.removeLayer(`proximiio-${layer.featureType}`);
+          }
         }
+
+        this.map.on('click', `${layer.featureType}-custom`, (e) => {
+          this.onShopClick(e);
+        });
+        this.map.on('mouseenter', `${layer.featureType}-custom`, () => {
+          this.onShopMouseEnter();
+        });
+        this.map.on('mousemove', `${layer.featureType}-custom`, (e) => {
+          this.onShopMouseMove(e);
+        });
+        this.map.on('mouseleave', `${layer.featureType}-custom`, (e) => {
+          this.onShopMouseLeave(e);
+        });
       }
 
       this.map.on('click', 'proximiio-pois-icons', (ev) => {
@@ -1129,31 +1147,6 @@ export class Map {
       });
       this.map.on('mouseleave', 'pois-icons', (ev) => {
         this.map.getCanvas().style.cursor = '';
-      });
-
-      this.map.on('click', 'shop-custom', (e) => {
-        this.onShopClick(e);
-      });
-      this.map.on('mouseenter', 'shop-custom', () => {
-        this.onShopMouseEnter();
-      });
-      this.map.on('mousemove', 'shop-custom', (e) => {
-        this.onShopMouseMove(e);
-      });
-      this.map.on('mouseleave', 'shop-custom', (e) => {
-        this.onShopMouseLeave(e);
-      });
-      this.map.on('click', 'parking_spot-custom', (e) => {
-        this.onShopClick(e);
-      });
-      this.map.on('mouseenter', 'parking_spot-custom', () => {
-        this.onShopMouseEnter();
-      });
-      this.map.on('mousemove', 'parking_spot-custom', (e) => {
-        this.onShopMouseMove(e);
-      });
-      this.map.on('mouseleave', 'parking_spot-custom', (e) => {
-        this.onShopMouseLeave(e);
       });
     }
   }
@@ -1224,7 +1217,9 @@ export class Map {
       this.selectedPolygon = this.state.allFeatures.features.find(
         (i) =>
           i.properties._dynamic?.id === connectedPolygonId &&
-          (i.properties._dynamic?.type === 'shop-custom' || i.properties._dynamic?.type === 'parking_spot-custom'),
+          this.defaultOptions.polygonLayers
+            .map((layer) => `${layer.featureType}-custom`)
+            .includes(i.properties._dynamic?.type),
       );
       if (this.selectedPolygon) {
         this.map.setFeatureState(
@@ -1824,7 +1819,9 @@ export class Map {
           const polygon = this.state.allFeatures.features.find(
             (i) =>
               i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
-              (i.properties._dynamic?.type === 'shop-custom' || i.properties._dynamic?.type === 'parking_spot-custom'),
+              this.defaultOptions.polygonLayers
+                .map((layer) => `${layer.featureType}-custom`)
+                .includes(i.properties._dynamic?.type),
           );
           if (polygon) {
             this.map.setFeatureState(
@@ -1844,7 +1841,9 @@ export class Map {
           const polygon = this.state.allFeatures.features.find(
             (i) =>
               i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
-              (i.properties._dynamic?.type === 'shop-custom' || i.properties._dynamic?.type === 'parking_spot-custom'),
+              this.defaultOptions.polygonLayers
+                .map((layer) => `${layer.featureType}-custom`)
+                .includes(i.properties._dynamic?.type),
           );
           if (polygon) {
             this.map.setFeatureState(

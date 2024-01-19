@@ -13,6 +13,7 @@ import { KioskModel } from '../models/kiosk';
 
 export const getPackage = async ({
   initPolygons,
+  polygonFeatureTypes,
   autoLabelLines,
   amenityIdProperty,
   hiddenAmenities,
@@ -21,6 +22,7 @@ export const getPackage = async ({
   featuresMaxBounds,
 }: {
   initPolygons?: boolean;
+  polygonFeatureTypes?: string[];
   autoLabelLines?: boolean;
   amenityIdProperty?: string;
   hiddenAmenities?: string[];
@@ -43,7 +45,7 @@ export const getPackage = async ({
     getKiosks().then((kiosks) => (result.kiosks = kiosks.data)),
     getStyle().then((style) => (result.style = style)),
     getStyles().then((styles) => (result.styles = styles)),
-    getFeatures({ initPolygons, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds }).then(
+    getFeatures({ initPolygons, polygonFeatureTypes, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds }).then(
       (features) => (result.features = features),
     ),
     getAmenities(amenityIdProperty).then((amenities) => (result.amenities = amenities)),

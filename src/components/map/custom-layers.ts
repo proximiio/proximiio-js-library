@@ -4,18 +4,19 @@ import LineLayer, {
   PaintProperties as LinePaintProperties,
 } from './layers/line_layer';
 import SymbolLayer, { LayoutProperties, PaintProperties as PaintPropertiesSymbol } from './layers/symbol_layer';
+import { polygonLayer, polygonOptions } from './main';
 
 export class PolygonsLayer extends FillExtrusionLayer {
-  constructor(data: any) {
+  constructor(data: polygonLayer) {
     super(data);
-    this.id = 'shop-custom';
+    this.id = `${data.featureType}-custom`;
     this.type = 'fill-extrusion';
     this.minzoom = data.minZoom;
     this.maxzoom = data.maxZoom;
     this.source = 'main';
     this.filter = [
       'all',
-      ['==', ['get', 'type', ['get', '_dynamic']], 'shop-custom'],
+      ['==', ['get', 'type', ['get', '_dynamic']], `${data.featureType}-custom`],
       ['==', ['to-number', ['get', 'level']], 0],
     ];
     this.paint = new PaintProperties({
@@ -47,37 +48,8 @@ export class PolygonsLayer extends FillExtrusionLayer {
   }
 }
 
-export class ParkingPolygonsLayer extends PolygonsLayer {
-  constructor(data: any) {
-    super(data);
-    this.id = 'parking_spot-custom';
-    this.filter = [
-      'all',
-      ['==', ['get', 'type', ['get', '_dynamic']], 'parking_spot-custom'],
-      ['==', ['to-number', ['get', 'level']], 0],
-    ];
-    this.paint = new PaintProperties({
-      'fill-extrusion-height': 0,
-      'fill-extrusion-base': 0,
-      'fill-extrusion-opacity': 1,
-      'fill-extrusion-color': [
-        'case',
-        ['boolean', ['feature-state', 'selected'], false],
-        '#b31e8d',
-        ['boolean', ['feature-state', 'hover'], false],
-        '#db56b9',
-        ['boolean', ['feature-state', 'active'], false],
-        '#b31e8d',
-        ['boolean', ['feature-state', 'disabled'], false],
-        '#c6c6c6',
-        '#c6c6c6',
-      ],
-    });
-  }
-}
-
 export class PolygonIconsLayer extends SymbolLayer {
-  constructor(data: any) {
+  constructor(data: polygonOptions) {
     super(data);
     this.id = 'poi-custom-icons';
     this.type = 'symbol';
@@ -117,16 +89,16 @@ export class PolygonIconsLayer extends SymbolLayer {
 }
 
 export class PolygonTitlesLayer extends SymbolLayer {
-  constructor(data: any) {
+  constructor(data: polygonLayer) {
     super(data);
-    this.id = 'shop-labels';
+    this.id = `${data.featureType}-labels`;
     this.type = 'symbol';
     this.minzoom = data.minZoom;
     this.maxzoom = data.maxZoom;
     this.source = 'main';
     this.filter = [
       'all',
-      ['==', ['get', 'type', ['get', '_dynamic']], 'shop-label'],
+      ['==', ['get', 'type', ['get', '_dynamic']], `${data.featureType}-label`],
       ['==', ['to-number', ['get', 'level']], 0],
     ];
     this.layout = new LayoutProperties({
@@ -153,50 +125,17 @@ export class PolygonTitlesLayer extends SymbolLayer {
   }
 }
 
-export class ParkingPolygonTitlesLayer extends PolygonTitlesLayer {
-  constructor(data: any) {
-    super(data);
-    this.id = 'parking_spot-labels';
-    this.filter = [
-      'all',
-      ['==', ['get', 'type', ['get', '_dynamic']], 'parking_spot-label'],
-      ['==', ['to-number', ['get', 'level']], 0],
-    ];
-    /*this.layout = new LayoutProperties({
-      'symbol-placement': data.symbolPlacement,
-      'text-anchor': 'top',
-      'text-ignore-placement': true,
-      'text-allow-overlap': true,
-      'text-field': '{title}',
-      'text-font': data.textFont,
-      'text-size': data.labelFontSize,
-      'text-letter-spacing': 0.005,
-      'text-max-width': 7,
-    });
-    this.paint = new PaintPropertiesSymbol({
-      'text-color': [
-        'case',
-        ['boolean', ['feature-state', 'selected'], false],
-        data.selectedLabelColor,
-        ['boolean', ['feature-state', 'hover'], false],
-        data.hoverLabelColor,
-        data.defaultLabelColor,
-      ],
-    });*/
-  }
-}
-
 export class PolygonTitlesLineLayer extends LineLayer {
-  constructor(data: any) {
+  constructor(data: polygonLayer) {
     super(data);
-    this.id = 'shop-labels-line';
+    this.id = `${data.featureType}-labels-line`;
     this.type = 'line';
     this.minzoom = data.minZoom;
     this.maxzoom = data.maxZoom;
     this.source = 'main';
     this.filter = [
       'all',
-      ['==', ['get', 'type', ['get', '_dynamic']], 'shop-label'],
+      ['==', ['get', 'type', ['get', '_dynamic']], `${data.featureType}-labels`],
       ['==', ['to-number', ['get', 'level']], 0],
     ];
     this.layout = new LineLayoutProperties({

@@ -1,4 +1,4 @@
-import { axios, getNestedObjectValue, uuidv4 } from '../common';
+import { axios, getNestedObjectValue } from '../common';
 import Feature, { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 import { globalState } from '../components/map/main';
@@ -16,6 +16,7 @@ import { LngLatBoundsLike } from 'maplibre-gl';
 
 export const getFeatures = async ({
   initPolygons,
+  polygonFeatureTypes,
   autoLabelLines,
   hiddenAmenities,
   useTimerangeData,
@@ -23,6 +24,7 @@ export const getFeatures = async ({
   featuresMaxBounds,
 }: {
   initPolygons?: boolean;
+  polygonFeatureTypes?: string[];
   autoLabelLines?: boolean;
   hiddenAmenities?: string[];
   useTimerangeData?: boolean;
@@ -80,11 +82,9 @@ export const getFeatures = async ({
         .filter((feature) => feature !== undefined);
     }
 
-    const clickableLayers = ['shop', 'parking_spot'];
-
-    clickableLayers.forEach((layerId, index) => {
+    polygonFeatureTypes.forEach((featureType, index) => {
       const shopPolygons = res.data.features.filter(
-        (f) => f.properties.type === layerId && f.geometry.type === 'MultiPolygon',
+        (f) => f.properties.type === featureType && f.geometry.type === 'MultiPolygon',
       );
       const labelLineFeatures = res.data.features.filter((f) => f.properties.type === 'label-line');
 
@@ -130,7 +130,7 @@ export const getFeatures = async ({
               ? connectedPolygon.properties._dynamic
               : {};
             connectedPolygon.properties._dynamic.id = connectedPolygon.properties.id?.replace(/\{|\}/g, '');
-            connectedPolygon.properties._dynamic.type = `${layerId}-custom`;
+            connectedPolygon.properties._dynamic.type = `${featureType}-custom`;
             connectedPolygon.properties._dynamic.poi_id = feature.properties.id;
             connectedPolygon.properties._dynamic.amenity = feature.properties.amenity;
             // id have to be changed to numeric type so feature state will work
@@ -156,7 +156,7 @@ export const getFeatures = async ({
                 : {};
 
               connectedLabelLine.properties._dynamic.id = connectedLabelLine.properties.id?.replace(/\{|\}/g, '');
-              connectedLabelLine.properties._dynamic.type = `${layerId}-label`;
+              connectedLabelLine.properties._dynamic.type = `${featureType}-label`;
               connectedLabelLine.properties._dynamic.poi_id = feature.properties.id;
               connectedLabelLine.properties._dynamic.amenity = feature.properties.amenity;
               connectedLabelLine.properties._dynamic.polygon_id = connectedPolygon.properties._dynamic.id;
@@ -183,8 +183,8 @@ export const getFeatures = async ({
                   };
                   labelLineFeature.properties.id = JSON.stringify(key + 9999 + index);
                   labelLineFeature.id = JSON.stringify(key + 9999 + index);
-                  labelLineFeature.properties.type = `${layerId}-label`;
-                  labelLineFeature.properties._dynamic.type = `${layerId}-label`;
+                  labelLineFeature.properties.type = `${featureType}-label`;
+                  labelLineFeature.properties._dynamic.type = `${featureType}-label`;
                   labelLineFeature.properties._dynamic.length = Math.ceil(length(labelLineFeature) * 1000);
                   connectedPolygon.properties._dynamic.label_id = labelLineFeature.properties.id;
                   featuresToAdd.push(labelLineFeature);
@@ -244,8 +244,8 @@ export const getFeatures = async ({
 
                 labelBorder.properties.id = JSON.stringify(key + 9999 + index);
                 labelBorder.id = JSON.stringify(key + 9999 + index);
-                labelBorder.properties.type = `${layerId}-label`;
-                labelBorder.properties._dynamic.type = `${layerId}-label`;
+                labelBorder.properties.type = `${featureType}-label`;
+                labelBorder.properties._dynamic.type = `${featureType}-label`;
                 connectedPolygon.properties._dynamic.label_id = labelBorder.properties.id;
                 featuresToAdd.push(labelBorder);
               }
