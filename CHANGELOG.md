@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.11.10] - Unreleased
+## [1.11.10] - 2024-01-19
 
 ### Added
 
@@ -10,6 +10,30 @@ All notable changes to this project will be documented in this file.
 - Added controller to handle api calls to retrieve list of kiosks and kiosk by id
 - Add get kiosks list in getPackage call
 - Save kiosks list from getPackage into map state
+- New map constuctor option `polygonLayers` to allow define additional features to behave like clickable polygons
+
+  Example configuration:
+
+  ```javascript
+  // Optional, you can define more features to display as polygons and enable
+  // hover/click effect with different formatting, you have to define only
+  // featureType all other parameters are as default as polygonsOptions
+  // those could be overriden by defining them separately
+  polygonLayers: [{
+    // polygons behavior will be applied to all features with type 'shop'
+    featureType: 'shop'
+  }, {
+    // polygons behavior will be applied to all features with type 'parking_spot'
+    featureType: 'parking_spot',
+
+    // defaultPolygonColor will be overriden by this property
+    defaultPolygonColor: '#000000'
+  }],
+  ```
+
+### Removed
+
+- Removed experimental support for parking spot polygons, use polygonLayers property instead
 
 ## [1.11.9] - 2024-01-17
 
@@ -21,7 +45,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--  Add support for parking spot polygons and labels (experimental)
+- Add support for parking spot polygons and labels (experimental)
 
 ## [1.11.7] - 2024-01-15
 
