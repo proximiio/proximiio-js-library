@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.11] - 2024-01-25
+
+### Fixed
+
+- Update condition to check for multiple RTLTextPluginStatus values to ensure proper handling of plugin status
+
 ## [1.11.10] - 2024-01-19
 
 ### Added
