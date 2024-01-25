@@ -363,7 +363,11 @@ export class Map {
     }
 
     // @ts-ignore
-    if (maplibregl.getRTLTextPluginStatus() !== 'loaded') {
+    if (
+      maplibregl.getRTLTextPluginStatus() !== 'loaded' &&
+      maplibregl.getRTLTextPluginStatus() !== 'unavailable' &&
+      maplibregl.getRTLTextPluginStatus() !== 'deferred'
+    ) {
       // @ts-ignore
       maplibregl.setRTLTextPlugin(
         'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
