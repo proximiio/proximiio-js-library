@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.12] - Unreleased
+
+### Added
+
+- New SelectLogger component to log selected/clicked feature, amenity or amenity_category
+
 ## [1.11.11] - 2024-01-25
 
 ### Fixed
