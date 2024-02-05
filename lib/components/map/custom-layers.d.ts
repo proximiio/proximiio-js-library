@@ -1,21 +1,16 @@
 import FillExtrusionLayer from './layers/fill_extrusion_layer';
 import LineLayer from './layers/line_layer';
 import SymbolLayer from './layers/symbol_layer';
+import { PolygonLayer, PolygonOptions } from './main';
 export declare class PolygonsLayer extends FillExtrusionLayer {
-    constructor(data: any);
-}
-export declare class ParkingPolygonsLayer extends PolygonsLayer {
-    constructor(data: any);
+    constructor(data: PolygonLayer);
 }
 export declare class PolygonIconsLayer extends SymbolLayer {
-    constructor(data: any);
+    constructor(data: PolygonOptions);
 }
 export declare class PolygonTitlesLayer extends SymbolLayer {
-    constructor(data: any);
-}
-export declare class ParkingPolygonTitlesLayer extends PolygonTitlesLayer {
-    constructor(data: any);
+    constructor(data: PolygonLayer);
 }
 export declare class PolygonTitlesLineLayer extends LineLayer {
-    constructor(data: any);
+    constructor(data: PolygonLayer);
 }

@@ -8,12 +8,14 @@ import { CustomSubject } from '../../customSubject';
 import { MapboxOptions } from '../../models/mapbox-options';
 import PersonModel from '../../models/person';
 import { WayfindingConfigModel } from '../../models/wayfinding';
+import { KioskModel } from '../../models/kiosk';
 export interface State {
     readonly initializing: boolean;
     readonly floor: FloorModel;
     readonly floors: FloorModel[];
     readonly place: PlaceModel;
     readonly places: PlaceModel[];
+    readonly kiosks: KioskModel[];
     readonly style: StyleModel;
     readonly styles: StyleModel[];
     readonly amenities: AmenityModel[];
@@ -28,6 +30,29 @@ export interface State {
     readonly textNavigation: any;
     readonly persons: PersonModel[];
     readonly user: any;
+}
+export interface PolygonOptions {
+    defaultPolygonColor?: string;
+    hoverPolygonColor?: string;
+    selectedPolygonColor?: string;
+    defaultLabelColor?: string;
+    hoverLabelColor?: string;
+    selectedLabelColor?: string;
+    defaultPolygonHeight?: number;
+    hoverPolygonHeight?: number;
+    selectedPolygonHeight?: number;
+    base?: number;
+    opacity?: number;
+    removeOriginalPolygonsLayer?: boolean;
+    minZoom?: number;
+    maxZoom?: number;
+    labelFontSize?: (string | number | string[])[] | number | any;
+    symbolPlacement?: 'point' | 'line' | 'line-center';
+    autoLabelLines?: boolean;
+    textFont?: string[];
+}
+export interface PolygonLayer extends PolygonOptions {
+    featureType: string;
 }
 export interface Options {
     selector?: string;
@@ -44,26 +69,8 @@ export interface Options {
         level: number;
     };
     initPolygons?: boolean;
-    polygonsOptions?: {
-        defaultPolygonColor?: string;
-        hoverPolygonColor?: string;
-        selectedPolygonColor?: string;
-        defaultLabelColor?: string;
-        hoverLabelColor?: string;
-        selectedLabelColor?: string;
-        defaultPolygonHeight?: number;
-        hoverPolygonHeight?: number;
-        selectedPolygonHeight?: number;
-        base?: number;
-        opacity?: number;
-        removeOriginalPolygonsLayer?: boolean;
-        minZoom?: number;
-        maxZoom?: number;
-        labelFontSize?: (string | number | string[])[] | number | any;
-        symbolPlacement?: 'point' | 'line' | 'line-center';
-        autoLabelLines?: boolean;
-        textFont?: string[];
-    };
+    polygonsOptions?: PolygonOptions;
+    polygonLayers?: PolygonLayer[];
     zoomLevel?: number;
     considerVisibilityParam?: boolean;
     fitBoundsPadding?: number | PaddingOptions;

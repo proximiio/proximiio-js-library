@@ -1,8 +1,9 @@
 import Feature, { FeatureCollection } from '../models/feature';
 import { FeatureCollection as FCModel, Feature as FModel } from '@turf/helpers';
 import { LngLatBoundsLike } from 'maplibre-gl';
-export declare const getFeatures: ({ initPolygons, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, }: {
+export declare const getFeatures: ({ initPolygons, polygonFeatureTypes, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, }: {
     initPolygons?: boolean;
+    polygonFeatureTypes?: string[];
     autoLabelLines?: boolean;
     hiddenAmenities?: string[];
     useTimerangeData?: boolean;
@@ -18,8 +19,9 @@ export declare const addFeatures: (featureCollection: FCModel) => Promise<void>;
 export declare const updateFeature: (featureData: FModel, featureId: string) => Promise<void>;
 export declare const deleteFeatures: (featureCollection: FCModel) => Promise<void>;
 declare const _default: {
-    getFeatures: ({ initPolygons, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, }: {
+    getFeatures: ({ initPolygons, polygonFeatureTypes, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, }: {
         initPolygons?: boolean;
+        polygonFeatureTypes?: string[];
         autoLabelLines?: boolean;
         hiddenAmenities?: string[];
         useTimerangeData?: boolean;
