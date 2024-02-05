@@ -4,6 +4,7 @@ export default class SelectLogger {
   clickedElementId: string;
   clickedElementTitle: string;
   clickedElementType: 'amenity' | 'feature' | 'amenity_category';
+  source: 'manual' | 'urlParam' | 'qr';
   kioskId?: string;
   metadata?: Record<string, string>;
 
@@ -11,12 +12,14 @@ export default class SelectLogger {
     clickedElementId: string;
     clickedElementTitle: string;
     clickedElementType: 'amenity' | 'feature' | 'amenity_category';
+    source: 'manual' | 'urlParam' | 'qr';
     kioskId?: string;
     metadata?: Record<string, string>;
   }) {
     this.clickedElementId = data.clickedElementId;
     this.clickedElementTitle = data.clickedElementTitle;
     this.clickedElementType = data.clickedElementType;
+    this.source = data.source;
     this.kioskId = data.kioskId;
     this.metadata = data.metadata;
 
