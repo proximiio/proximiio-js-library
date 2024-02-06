@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.13] - 2024-02-06
+
+### Changed
+
+- Improved polygon labels auto positioning
+
 ## [1.11.12] - 2024-02-06
 
 ### Added
