@@ -2,11 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.11.12] - Unreleased
+## [1.11.12] - 2024-02-06
 
 ### Added
 
 - New SelectLogger component to log selected/clicked feature, amenity or amenity_category
+- Added new model for ad
+- Added controller to handle api calls to retrieve list of ads
 
 ## [1.11.11] - 2024-01-25
 

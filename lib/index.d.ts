@@ -29,6 +29,11 @@ declare const _default: {
         }>;
         getKioskById: (kioskId: string) => Promise<import("./models/kiosk").KioskModel>;
     };
+    Ads: {
+        getAds: () => Promise<{
+            data: import("./models/ad").AdModel[];
+        }>;
+    };
     Map: typeof Map;
     Select: typeof Select;
     SelectLogger: typeof SelectLogger;
