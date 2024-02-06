@@ -8,11 +8,11 @@ import pointOnFeature from '@turf/point-on-feature';
 import length from '@turf/length';
 import pointToLineDistance from '@turf/point-to-line-distance';
 import lineOffset from '@turf/line-offset';
-import centroid from '@turf/centroid';
 import transformScale from '@turf/transform-scale';
 import lineIntersect from '@turf/line-intersect';
 import { lineString } from '@turf/helpers';
 import { LngLatBoundsLike } from 'maplibre-gl';
+import center from '@turf/center';
 
 export const getFeatures = async ({
   initPolygons,
@@ -193,55 +193,71 @@ export const getFeatures = async ({
                 let longestBorder;
                 let labelBorder;
 
+                // Extract the exterior ring coordinates of the connectedPolygon
+                const exteriorRing = connectedPolygon.geometry.coordinates[0][0];
+
+                // Initialize variables to store the longest border length and its index
+                let longestBorderLength = 0;
+                let longestBorderIndex = -1;
+
                 // loop through segments and find the longest border
-                for (let i = 0; i < connectedPolygon.geometry.coordinates[0][0].length; i++) {
-                  const currentCoords = connectedPolygon.geometry.coordinates[0][0][i];
-                  const nextCoords = connectedPolygon.geometry.coordinates[0][0][i + 1];
+                for (let i = 0; i < exteriorRing.length - 1; i++) {
+                  const currentCoords = exteriorRing[i];
+                  const nextCoords = exteriorRing[i + 1];
 
-                  if (nextCoords) {
-                    const border = lineString([currentCoords, nextCoords], {
-                      ...feature.properties,
-                    });
+                  // Create a line string for the current segment
+                  const border = lineString([currentCoords, nextCoords], { ...feature.properties });
 
-                    // measure border length
-                    const borderLength = length(border);
-                    border.properties._dynamic = {
-                      ...border.properties._dynamic,
-                      length: Math.ceil(borderLength * 1000),
-                    };
+                  // Measure border length
+                  const borderLength = length(border);
+                  border.properties._dynamic = {
+                    ...border.properties._dynamic,
+                    length: Math.ceil(borderLength * 1000),
+                  };
 
-                    // if there is not longest border define it
-                    if (!longestBorder) {
-                      longestBorder = border;
-                    } else {
-                      // if current segment border is longer, rewrite it
-                      if (borderLength > longestBorder.properties._dynamic.length) {
-                        longestBorder = border;
-                      }
-                    }
+                  // Update the longest border if the current segment is longer
+                  if (borderLength > longestBorderLength) {
+                    longestBorderLength = borderLength;
+                    longestBorderIndex = i;
                   }
                 }
 
-                // measure length from longest border to polygon center
-                const distanceToCenter = pointToLineDistance(centroid(connectedPolygon), longestBorder);
+                // Check if a longest border was found
+                if (longestBorderIndex !== -1) {
+                  // Create the longest border line string
+                  longestBorder = lineString([exteriorRing[longestBorderIndex], exteriorRing[longestBorderIndex + 1]], {
+                    ...feature.properties,
+                  });
+                  longestBorder.properties._dynamic = {
+                    ...longestBorder.properties._dynamic,
+                    length: Math.ceil(length(longestBorder) * 1000),
+                  };
 
-                // offset border to polygon center and make it longer to get intersections with the polygon
-                labelBorder = lineOffset(longestBorder, distanceToCenter);
-                labelBorder = transformScale(labelBorder, 10);
+                  // Measure length from longest border to polygon center
+                  const distanceToCenter = pointToLineDistance(center(connectedPolygon), longestBorder);
 
-                const intersection = lineIntersect(connectedPolygon, labelBorder);
+                  // Offset border to polygon center and make it longer to get intersections with the polygon
+                  labelBorder = transformScale(lineOffset(longestBorder, distanceToCenter), 10);
 
-                // if there are more than 1 intersections, get the line betweeen them
-                if (intersection.features.length > 1) {
-                  const intersectedLine = lineString([
-                    intersection.features[0].geometry.coordinates,
-                    intersection.features[intersection.features.length - 1].geometry.coordinates,
-                  ]);
+                  // Find intersections between connectedPolygon and labelBorder
+                  const intersection = lineIntersect(connectedPolygon, labelBorder);
 
-                  // use the interstections line as the label line
-                  labelBorder.geometry = intersectedLine.geometry;
+                  // If there are more than 1 intersections, get the line between them
+                  if (intersection.features.length > 1) {
+                    const intersectedLine = lineString([
+                      intersection.features[0].geometry.coordinates,
+                      intersection.features[intersection.features.length - 1].geometry.coordinates,
+                    ]);
+
+                    // Use the intersected line as the label line
+                    labelBorder.geometry = intersectedLine.geometry;
+                  }
+                } else {
+                  // Handle case where no longest border was found
+                  console.error('No longest border found.');
                 }
 
+                // labelBorder.properties = { ...labelBorder.properties, ...feature.properties };
                 labelBorder.properties.id = JSON.stringify(key + 9999 + index);
                 labelBorder.id = JSON.stringify(key + 9999 + index);
                 labelBorder.properties.type = `${featureType}-label`;

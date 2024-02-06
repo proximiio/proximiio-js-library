@@ -30,7 +30,7 @@ import { CustomSubject } from '../../customSubject';
 import * as tingle from 'tingle.js/dist/tingle';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
 import { MapboxOptions } from '../../models/mapbox-options';
-import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer } from './custom-layers';
+import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer, PolygonTitlesLineLayer } from './custom-layers';
 import PersonModel from '../../models/person';
 import bbox from '@turf/bbox';
 import length from '@turf/length';
@@ -250,7 +250,7 @@ export class Map {
         [
           'interpolate',
           ['linear'],
-          ['/', ['get', 'length', ['get', '_dynamic']], ['length', ['get', 'title']]],
+          ['/', ['get', 'length', ['get', '_dynamic']], ['/', ['length', ['get', 'title']], 1.5]],
           1,
           5, // Smaller polygon size -> smaller text size
           5,
@@ -265,7 +265,7 @@ export class Map {
         [
           'interpolate',
           ['linear'],
-          ['/', ['get', 'length', ['get', '_dynamic']], ['length', ['get', 'title']]],
+          ['/', ['get', 'length', ['get', '_dynamic']], ['/', ['length', ['get', 'title']], 1.5]],
           1,
           30, // Smaller polygon size -> larger text size at higher zoom
           5,
@@ -1132,6 +1132,10 @@ export class Map {
           this.onShopMouseLeave(e);
         });
       }
+
+      //const polygonTitlesLineLayer = new PolygonTitlesLineLayer({featureType: 'shop'});
+      //polygonTitlesLineLayer.setFilterLevel(this.state.floor.level);
+      //this.state.style.addLayer(polygonTitlesLineLayer.json, 'proximiio-polygons-above-paths');
 
       this.map.on('click', 'proximiio-pois-icons', (ev) => {
         this.onShopClick(ev);

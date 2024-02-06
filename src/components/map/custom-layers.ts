@@ -103,7 +103,7 @@ export class PolygonTitlesLayer extends SymbolLayer {
     ];
     this.layout = new LayoutProperties({
       'symbol-placement': data.symbolPlacement,
-      'text-anchor': 'top',
+      'text-anchor': 'center',
       'text-ignore-placement': true,
       'text-allow-overlap': true,
       'text-field': '{title}',
@@ -128,14 +128,14 @@ export class PolygonTitlesLayer extends SymbolLayer {
 export class PolygonTitlesLineLayer extends LineLayer {
   constructor(data: PolygonLayer) {
     super(data);
-    this.id = `${data.featureType}-labels-line`;
+    this.id = `shop-labels-line`;
     this.type = 'line';
-    this.minzoom = data.minZoom;
-    this.maxzoom = data.maxZoom;
+    this.minzoom = 12;
+    this.maxzoom = 22;
     this.source = 'main';
     this.filter = [
       'all',
-      ['==', ['get', 'type', ['get', '_dynamic']], `${data.featureType}-labels`],
+      ['==', ['get', 'type', ['get', '_dynamic']], `shop-label`],
       ['==', ['to-number', ['get', 'level']], 0],
     ];
     this.layout = new LineLayoutProperties({
