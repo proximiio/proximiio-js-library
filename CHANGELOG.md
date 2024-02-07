@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.15] - 2024-02-07
+
+### Added
+
+- New map constuctor option `kioskSettings.showLabel` to allow showing label 'You are here' under the kiosk point
+- New map constuctor option `routeAnimation.pointIconUrl` and `routeAnimation.pointIconSize` to allow defining route point icon and size
+
 ## [1.11.14] - 2024-02-06
 
 ### Fixed

@@ -164,7 +164,10 @@ const map = new Proximiio.Map({
       coordinates: [number, number],
 
       // Floor level of a kiosk starting point
-      level: number
+      level: number,
+
+      // Show/hide 'You are here' label under the kiosk point, default: false
+      showLabel: false
    },
 
    // Optional, default: false, if enabled and yours GeoJSON includes required data
@@ -295,6 +298,12 @@ const map = new Proximiio.Map({
 
       // Optional, default: 120, higher fps = smoother animation
       fps: 60,
+
+      // Optional, you can define icon via url to be displayed on the route instead of circular point
+      pointIconUrl: 'https://upload.wikimedia.org/wikipedia/commons/7/7c/201408_cat.png',
+
+      // Optional, default: '1', scales the original size of the icon by the provided factor
+      pointIconSize: '1',
 
       // Optional, default: '#1d8a9f', color of the point animated along the route
       pointColor: '#1d8a9f',

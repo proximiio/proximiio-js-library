@@ -298,7 +298,7 @@ export class Map {
       followRoute: true,
       durationMultiplier: 30,
       fps: 120,
-      pointIconSize: 0.25,
+      pointIconSize: 1,
       pointColor: '#1d8a9f',
       pointRadius: 8,
       lineColor: '#6945ed',
