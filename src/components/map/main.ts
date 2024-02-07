@@ -125,6 +125,8 @@ export interface Options {
     duration?: number;
     durationMultiplier?: number;
     fps?: number;
+    pointIconUrl?: string;
+    pointIconSize?: number;
     pointColor?: string;
     pointRadius?: number;
     lineColor?: string;
@@ -295,6 +297,7 @@ export class Map {
       followRoute: true,
       durationMultiplier: 30,
       fps: 120,
+      pointIconSize: 0.25,
       pointColor: '#1d8a9f',
       pointRadius: 8,
       lineColor: '#6945ed',
@@ -597,6 +600,16 @@ export class Map {
       if (this.defaultOptions.animatedRoute || this.defaultOptions.routeAnimation.enabled) {
         if (this.defaultOptions.animatedRoute) {
           console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
+        }
+        if (this.defaultOptions.routeAnimation.pointIconUrl) {
+          map.loadImage(this.defaultOptions.routeAnimation.pointIconUrl, (error, image) => {
+            if (error) {
+              console.error(error);
+            }
+            if (image) {
+              map.addImage('pointIcon', image);
+            }
+          });
         }
         this.initAnimatedRoute();
       }
@@ -1000,20 +1013,38 @@ export class Map {
           },
         });
 
-        this.state.style.addLayer(
-          {
-            id: 'pointAlong',
-            type: 'circle',
-            source: 'pointAlong',
-            minzoom: 17,
-            maxzoom: 24,
-            paint: {
-              'circle-color': this.defaultOptions.routeAnimation.pointColor,
-              'circle-radius': this.defaultOptions.routeAnimation.pointRadius,
+        if (this.defaultOptions.routeAnimation.pointIconUrl) {
+          this.state.style.addLayer(
+            {
+              id: 'pointAlong',
+              type: 'symbol',
+              source: 'pointAlong',
+              minzoom: 17,
+              maxzoom: 24,
+              layout: {
+                'icon-image': 'pointIcon',
+                'icon-size': this.defaultOptions.routeAnimation.pointIconSize,
+                'icon-allow-overlap': true,
+              },
             },
-          },
-          'lineAlong',
-        );
+            'lineAlong',
+          );
+        } else {
+          this.state.style.addLayer(
+            {
+              id: 'pointAlong',
+              type: 'circle',
+              source: 'pointAlong',
+              minzoom: 17,
+              maxzoom: 24,
+              paint: {
+                'circle-color': this.defaultOptions.routeAnimation.pointColor,
+                'circle-radius': this.defaultOptions.routeAnimation.pointRadius,
+              },
+            },
+            'lineAlong',
+          );
+        }
       }
       if (this.defaultOptions.routeAnimation.type === 'dash') {
         if (this.state.style.getLayer('proximiio-routing-line-remaining')) {
