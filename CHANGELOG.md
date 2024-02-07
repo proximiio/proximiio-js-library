@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.16] - 2024-02-07
+
+### Fixed
+
+- Fix kiosk label translation
+
 ## [1.11.15] - 2024-02-07
 
 ### Added
