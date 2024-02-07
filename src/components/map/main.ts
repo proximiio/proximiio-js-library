@@ -1,4 +1,4 @@
-import maplibregl from 'maplibre-gl';
+import maplibregl, { SymbolLayerSpecification } from 'maplibre-gl';
 import Repository from '../../controllers/repository';
 import Auth from '../../controllers/auth';
 import { addFeatures, deleteFeatures } from '../../controllers/geo';
@@ -105,6 +105,7 @@ export interface Options {
   kioskSettings?: {
     coordinates: [number, number];
     level: number;
+    showLabel?: boolean;
   };
   initPolygons?: boolean;
   polygonsOptions?: PolygonOptions;
@@ -705,7 +706,7 @@ export class Map {
             features: [this.startPoint as any],
           },
         });
-        this.state.style.addLayer({
+        let kioskLayer: SymbolLayerSpecification = {
           id: 'my-location-layer',
           type: 'symbol',
           source: 'my-location',
@@ -713,7 +714,26 @@ export class Map {
             'icon-image': 'pulsing-dot',
           },
           filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
-        });
+        };
+        if (this.defaultOptions.kioskSettings.showLabel) {
+          kioskLayer = {
+            ...kioskLayer,
+            layout: {
+              ...kioskLayer.layout,
+              'text-field': translations[this.defaultOptions.language].YOU_ARE_HERE,
+              'text-font': ['Amiri Bold'],
+              'text-offset': [0, 0.6],
+              'text-anchor': 'top',
+              'text-allow-overlap': true,
+              'text-size': 18,
+            },
+            paint: {
+              'text-halo-width': 1,
+              'text-halo-color': '#ffffff',
+            },
+          };
+        }
+        this.state.style.addLayer(kioskLayer);
         this.centerOnPoi(this.startPoint);
       }
     }
@@ -2629,6 +2649,20 @@ export class Map {
     }
   };
 
+  private translateLayers() {
+    if (
+      this.defaultOptions.isKiosk &&
+      this.defaultOptions.kioskSettings.showLabel &&
+      this.map.getLayer('my-location-layer')
+    ) {
+      this.map.setLayoutProperty(
+        'my-location-layer',
+        'text-field',
+        translations[this.defaultOptions.language].YOU_ARE_HERE,
+      );
+    }
+  }
+
   public getClosestFeature(amenityId: string, fromFeature?: Feature) {
     let sameLevelfeatures = this.state.allFeatures.features.filter(
       (i) =>
@@ -2715,6 +2749,7 @@ export class Map {
   public setLanguage(language: string) {
     this.defaultOptions.language = language;
     this.onFeaturesChange();
+    this.translateLayers();
   }
 
   /**
