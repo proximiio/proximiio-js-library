@@ -742,6 +742,7 @@ export class Map {
   private onSetKiosk(lat: number, lng: number, level: number) {
     if (this.map && this.defaultOptions.isKiosk) {
       this.defaultOptions.kioskSettings = {
+        ...this.defaultOptions.kioskSettings,
         coordinates: [lng, lat],
         level,
       };
