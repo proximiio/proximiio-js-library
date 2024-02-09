@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.17] - Unreleased
+
+### Changed
+
+- Select logger model extended with `language` and `session` fields
+
 ## [1.11.16] - 2024-02-07
 
 ### Fixed
