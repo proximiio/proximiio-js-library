@@ -7,6 +7,7 @@ export declare const translations: {
         UP: string;
         DOWN: string;
         TO_FLOOR: string;
+        YOU_ARE_HERE: string;
     };
     fi: {
         ELEVATOR: string;
@@ -16,6 +17,7 @@ export declare const translations: {
         UP: string;
         DOWN: string;
         TO_FLOOR: string;
+        YOU_ARE_HERE: string;
     };
     ar: {
         ELEVATOR: string;
@@ -25,6 +27,7 @@ export declare const translations: {
         UP: string;
         DOWN: string;
         TO_FLOOR: string;
+        YOU_ARE_HERE: string;
     };
     it: {
         ELEVATOR: string;
@@ -34,5 +37,6 @@ export declare const translations: {
         UP: string;
         DOWN: string;
         TO_FLOOR: string;
+        YOU_ARE_HERE: string;
     };
 };

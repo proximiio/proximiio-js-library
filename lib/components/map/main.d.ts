@@ -67,6 +67,7 @@ export interface Options {
     kioskSettings?: {
         coordinates: [number, number];
         level: number;
+        showLabel?: boolean;
     };
     initPolygons?: boolean;
     polygonsOptions?: PolygonOptions;
@@ -87,6 +88,8 @@ export interface Options {
         duration?: number;
         durationMultiplier?: number;
         fps?: number;
+        pointIconUrl?: string;
+        pointIconSize?: number;
         pointColor?: string;
         pointRadius?: number;
         lineColor?: string;
@@ -237,6 +240,7 @@ export declare class Map {
     private step;
     private animateRoute;
     private updateData;
+    private translateLayers;
     getClosestFeature(amenityId: string, fromFeature?: Feature): false | Feature;
     getFloorName(floor: FloorModel): string;
     /**

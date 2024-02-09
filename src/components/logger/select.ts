@@ -7,6 +7,8 @@ export default class SelectLogger {
   source: 'manual' | 'urlParam' | 'qr';
   kioskId?: string;
   metadata?: Record<string, string>;
+  language?: string;
+  session?: string;
 
   constructor(data: {
     clickedElementId: string;
@@ -15,6 +17,8 @@ export default class SelectLogger {
     source: 'manual' | 'urlParam' | 'qr';
     kioskId?: string;
     metadata?: Record<string, string>;
+    language?: string;
+    session?: string;
   }) {
     this.clickedElementId = data.clickedElementId;
     this.clickedElementTitle = data.clickedElementTitle;
@@ -22,6 +26,8 @@ export default class SelectLogger {
     this.source = data.source;
     this.kioskId = data.kioskId;
     this.metadata = data.metadata;
+    this.language = data.language;
+    this.session = data.session;
 
     this.logSelectedElement();
   }
