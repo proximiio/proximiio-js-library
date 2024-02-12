@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.18] - 2024-02-12
+
+### Added
+
+- Tranlation strings for Indonesian `id` mutation
+
 ## [1.11.17] - 2024-02-09
 
 ### Changed
