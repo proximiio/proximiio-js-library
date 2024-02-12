@@ -39,4 +39,13 @@ export declare const translations: {
         TO_FLOOR: string;
         YOU_ARE_HERE: string;
     };
+    id: {
+        ELEVATOR: string;
+        ESCALATOR: string;
+        STAIRS: string;
+        RAMP: string;
+        UP: string;
+        DOWN: string;
+        TO_FLOOR: string;
+    };
 };
