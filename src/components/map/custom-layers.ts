@@ -83,7 +83,6 @@ export class PolygonIconsLayer extends SymbolLayer {
       'symbol-placement': 'point',
       'icon-allow-overlap': true,
       'text-allow-overlap': true,
-      'icon-pitch-alignment': 'map',
       visibility: false,
     });
   }
@@ -100,6 +99,18 @@ export class PolygonTitlesLayer extends SymbolLayer {
     this.filter = [
       'all',
       ['==', ['get', 'type', ['get', '_dynamic']], `${data.featureType}-label`],
+      /*[
+        'any',
+        ['all', ['!', ['has', 'icon_only']], ['!', ['has', 'text_only']]],
+        ['all', ['has', 'text_only'], ['==', ['get', 'text_only'], true]],
+        [
+          'all',
+          ['has', 'icon_only'],
+          ['has', 'text_only'],
+          ['==', ['get', 'text_only'], false],
+          ['==', ['get', 'icon_only'], false],
+        ],
+      ],*/
       ['==', ['to-number', ['get', 'level']], 0],
     ];
     this.layout = new LayoutProperties({
