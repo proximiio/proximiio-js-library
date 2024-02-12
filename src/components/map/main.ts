@@ -1152,9 +1152,9 @@ export class Map {
 
   private initPolygons() {
     if (this.map) {
-      const polygonIconsLayer = new PolygonIconsLayer(this.defaultOptions.polygonsOptions);
-      polygonIconsLayer.setFilterLevel(this.state.floor.level);
-      this.state.style.addLayer(polygonIconsLayer.json, 'proximiio-paths');
+      // const polygonIconsLayer = new PolygonIconsLayer(this.defaultOptions.polygonsOptions);
+      // polygonIconsLayer.setFilterLevel(this.state.floor.level);
+      // this.state.style.addLayer(polygonIconsLayer.json, 'proximiio-paths');
 
       for (const layer of this.defaultOptions.polygonLayers) {
         const polygonTitlesLayer = new PolygonTitlesLayer(layer);

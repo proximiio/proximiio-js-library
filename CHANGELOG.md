@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.19] - Unreleased
+
+### Changed
+
+- Scale label line down to prevent label repeat
+- Prevent adding separate layer for poi icons
+
 ## [1.11.18] - 2024-02-12
 
 ### Added

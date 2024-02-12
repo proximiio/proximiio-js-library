@@ -83,6 +83,7 @@ export class PolygonIconsLayer extends SymbolLayer {
       'symbol-placement': 'point',
       'icon-allow-overlap': true,
       'text-allow-overlap': true,
+      'icon-pitch-alignment': 'map',
       visibility: false,
     });
   }
