@@ -1185,7 +1185,7 @@ export class Map {
         });
       }
 
-      // const polygonTitlesLineLayer = new PolygonTitlesLineLayer({featureType: 'shop'});
+      // const polygonTitlesLineLayer = new PolygonTitlesLineLayer({ featureType: 'shop' });
       // polygonTitlesLineLayer.setFilterLevel(this.state.floor.level);
       // this.state.style.addLayer(polygonTitlesLineLayer.json, 'proximiio-polygons-above-paths');
 

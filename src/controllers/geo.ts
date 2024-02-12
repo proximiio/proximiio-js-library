@@ -251,7 +251,9 @@ export const getFeatures = async ({
 
                     // Use the intersected line as the label line
                     labelBorder.geometry = intersectedLine.geometry;
-                  }
+
+                    labelBorder = transformScale(labelBorder, -0.75);
+                  }                  
                 } else {
                   // Handle case where no longest border was found
                   console.error('No longest border found.');
