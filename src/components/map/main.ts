@@ -90,6 +90,7 @@ export interface PolygonOptions {
 
 export interface PolygonLayer extends PolygonOptions {
   featureType: string;
+  iconImage?: string;
 }
 
 export interface Options {
@@ -280,7 +281,7 @@ export class Map {
           // Add more stops as needed based on your data range
         ],
       ],
-      textFont: ['Amiri Bold'],
+      textFont: ['Quicksand Bold', 'Noto Sans Arabic Bold'],
       symbolPlacement: 'line-center',
       autoLabelLines: true,
     },
@@ -1152,11 +1153,11 @@ export class Map {
 
   private initPolygons() {
     if (this.map) {
-      // const polygonIconsLayer = new PolygonIconsLayer(this.defaultOptions.polygonsOptions);
-      // polygonIconsLayer.setFilterLevel(this.state.floor.level);
-      // this.state.style.addLayer(polygonIconsLayer.json, 'proximiio-paths');
-
       for (const layer of this.defaultOptions.polygonLayers) {
+        const polygonIconsLayer = new PolygonIconsLayer(layer);
+        polygonIconsLayer.setFilterLevel(this.state.floor.level);
+        this.state.style.addLayer(polygonIconsLayer.json, 'proximiio-paths');
+
         const polygonTitlesLayer = new PolygonTitlesLayer(layer);
         polygonTitlesLayer.setFilterLevel(this.state.floor.level);
         this.state.style.addLayer(polygonTitlesLayer.json, 'proximiio-paths');
@@ -2456,6 +2457,17 @@ export class Map {
         });
       }
     });
+    this.state.features.features
+      .filter((f) => f.properties.metadata['anchor-logo'] && f.properties.type !== 'poi')
+      .forEach((feature) => {
+        this.map.loadImage(
+          `${feature.properties.metadata['anchor-logo']}?token=${this.state.user.token}`,
+          (error: any, image: any) => {
+            if (error) throw error;
+            this.map.addImage(feature.id, image);
+          },
+        );
+      });
   }
 
   private getUpcomingFloorNumber(way: string) {

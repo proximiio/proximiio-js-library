@@ -49,16 +49,16 @@ export class PolygonsLayer extends FillExtrusionLayer {
 }
 
 export class PolygonIconsLayer extends SymbolLayer {
-  constructor(data: PolygonOptions) {
+  constructor(data: PolygonLayer) {
     super(data);
-    this.id = 'poi-custom-icons';
+    this.id = `${data.featureType}-icons`;
     this.type = 'symbol';
     this.minzoom = data.minZoom;
     this.maxzoom = data.maxZoom;
     this.source = 'main';
     this.filter = [
       'all',
-      ['==', ['get', 'type', ['get', '_dynamic']], 'poi-custom'],
+      ['==', ['get', 'type', ['get', '_dynamic']], `${data.featureType}-label`],
       [
         'any',
         ['all', ['!', ['has', 'icon_only']], ['!', ['has', 'text_only']]],
@@ -74,15 +74,12 @@ export class PolygonIconsLayer extends SymbolLayer {
       ['==', ['to-number', ['get', 'level']], 0],
     ];
     this.layout = new LayoutProperties({
-      'icon-image': '{amenity}',
+      'icon-image': data.iconImage ? data.iconImage : undefined,
+      'symbol-placement': data.symbolPlacement,
       'icon-size': ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.5],
-      'text-anchor': 'top',
-      'text-offset': [0, 2],
-      'text-font': ['Open Sans Regular'],
-      'text-size': 14,
-      'symbol-placement': 'point',
       'icon-allow-overlap': true,
-      'text-allow-overlap': true,
+      'icon-ignore-placement': true,
+      'icon-keep-upright': true,
       visibility: false,
     });
   }
@@ -99,7 +96,7 @@ export class PolygonTitlesLayer extends SymbolLayer {
     this.filter = [
       'all',
       ['==', ['get', 'type', ['get', '_dynamic']], `${data.featureType}-label`],
-      /*[
+      [
         'any',
         ['all', ['!', ['has', 'icon_only']], ['!', ['has', 'text_only']]],
         ['all', ['has', 'text_only'], ['==', ['get', 'text_only'], true]],
@@ -110,7 +107,7 @@ export class PolygonTitlesLayer extends SymbolLayer {
           ['==', ['get', 'text_only'], false],
           ['==', ['get', 'icon_only'], false],
         ],
-      ],*/
+      ],
       ['==', ['to-number', ['get', 'level']], 0],
     ];
     this.layout = new LayoutProperties({

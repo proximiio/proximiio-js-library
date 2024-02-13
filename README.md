@@ -218,7 +218,7 @@ const map = new Proximiio.Map({
       // Optional, default: 24, default polygon maximum zoom visibility
       maxZoom: number,
 
-      // Optional, default: ['Amiri Bold'], define font stack to use for displaying labels,
+      // Optional, default: ['Quicksand Bold', 'Noto Sans Arabic Bold'], define font stack to use for displaying labels,
       // check Available fonts at the bottom
       textFont: string[],
 
@@ -247,6 +247,12 @@ const map = new Proximiio.Map({
 
       // defaultPolygonColor will be overriden by this property
       defaultPolygonColor: '#000000'
+   }, {
+      // polygons behavior will be applied to all features with type 'anchor-shop'
+      featureType: 'anchor-shop',
+
+      // anchor shop images are loaded within map by feature id
+      iconImage: '{id}'
    }],
 
    // Optional, default: true, if enabled all POIs with visibility property defined as 'hidden'
@@ -1210,12 +1216,18 @@ select.getSelectListener().subscribe((place) => {
 - Noto Sans Bold Italic
 - Noto Sans Italic
 - Noto Sans Regular
+- Noto Sans Arabic Regular
+- Noto Sans Arabic Bold
 - Open Sans Bold
 - Open Sans Italic
 - Open Sans Regular
 - Open Sans Regular,Arial Unicode MS Regular
 - Open Sans Semibold
 - Open Sans Semibold Italic
+- Quicksand Regular
+- Quicksand Bold
+- Quicksand Regular,Noto Sans Arabic Regular
+- Quicksand Bold,Noto Sans Arabic Bold
 
 ## Examples
 
