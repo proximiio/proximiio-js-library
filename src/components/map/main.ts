@@ -2459,12 +2459,12 @@ export class Map {
     });
     this.state.features.features
       .filter((f) => f.properties.metadata['anchor-logo'] && f.properties.type !== 'poi')
-      .forEach((feature) => {
+      .forEach((f) => {
         this.map.loadImage(
-          `${feature.properties.metadata['anchor-logo']}?token=${this.state.user.token}`,
+          `${f.properties.metadata['anchor-logo']}?token=${this.state.user.token}`,
           (error: any, image: any) => {
             if (error) throw error;
-            this.map.addImage(feature.id, image);
+            this.map.addImage(f.id, image);
           },
         );
       });
