@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [1.11.19] - Unreleased
 
+### Added
+
+- Add support for anchor shop icons to be loaded within the map by feature id
+- Add iconImage property to PolygonLayer interface in Map class to support loading anchor shop icons within the map by feature id
+
 ### Fixed
 
 - Fix route visibility issue if animation is set to `dash`
@@ -12,6 +17,7 @@ All notable changes to this project will be documented in this file.
 
 - Scale label line down to prevent label repeat
 - Prevent adding separate layer for poi icons
+- Change textFont value in defaultOptions to include 'Quicksand Bold' and 'Noto Sans Arabic Bold' for better language support
 
 ## [1.11.18] - 2024-02-12
 

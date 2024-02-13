@@ -53,6 +53,7 @@ export interface PolygonOptions {
 }
 export interface PolygonLayer extends PolygonOptions {
     featureType: string;
+    iconImage?: string;
 }
 export interface Options {
     selector?: string;
