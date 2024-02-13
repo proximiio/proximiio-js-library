@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.20] - 2024-02-13
+
+### Fixed
+
+- Add null check for properties.metadata before accessing 'anchor-logo' property to prevent potential error
+
 ## [1.11.19] - 2024-02-13
 
 ### Added
