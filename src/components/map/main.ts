@@ -2458,7 +2458,7 @@ export class Map {
       }
     });
     this.state.features.features
-      .filter((f) => f.properties.metadata['anchor-logo'] && f.properties.type !== 'poi')
+      .filter((f) => f.properties.metadata && f.properties.metadata['anchor-logo'] && f.properties.type !== 'poi')
       .forEach((f) => {
         this.map.loadImage(
           `${f.properties.metadata['anchor-logo']}?token=${this.state.user.token}`,
