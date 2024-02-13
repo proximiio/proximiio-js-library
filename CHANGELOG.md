@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [1.11.19] - Unreleased
 
+### Fixed
+
+- Fix route visibility issue if animation is set to `dash`
+
 ### Changed
 
 - Scale label line down to prevent label repeat

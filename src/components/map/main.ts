@@ -2490,7 +2490,10 @@ export class Map {
         this.routingSource.route[`path-part-${this.currentStep}`] &&
         this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === this.state.floor.level
           ? this.routingSource.route[`path-part-${this.currentStep}`]
-          : lineString(this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates));
+          : lineString(
+              this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
+              { level: this.state.floor.level },
+            );
       if (this.defaultOptions.routeAnimation.type === 'point') {
         clearInterval(this.animationInterval);
         clearTimeout(this.animationTimeout);
@@ -2563,8 +2566,10 @@ export class Map {
           [0, 3.5, 3, 0.5],
         ];
 
-        // @ts-ignore
-        this.map.getSource('lineAlong').setData(route);
+        setTimeout(() => {
+          // @ts-ignore
+          this.map.getSource('lineAlong').setData(route);
+        });
 
         const animateDashArray = (timestamp: number) => {
           // Update line-dasharray using the next value in dashArraySequence. The
