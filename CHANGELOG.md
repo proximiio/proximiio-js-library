@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [1.11.21] - Unreleased
 
+### Added
+
+- New map constuctor option `kioskSettings.pointColor` to allow customizing color of kiosk point
+
 ### Changed
 
 - Change 'text-font' property in kiosk layer to include 'Quicksand Bold' and 'Noto Sans Arabic Bold' fonts for better text rendering

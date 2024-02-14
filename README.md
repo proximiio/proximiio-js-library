@@ -166,8 +166,11 @@ const map = new Proximiio.Map({
       // Floor level of a kiosk starting point
       level: number,
 
-      // Show/hide 'You are here' label under the kiosk point, default: false
-      showLabel: false
+      // Show/hide 'You are here' label under the kiosk point, default: false, optional
+      showLabel: false,
+
+      // RGB color values to customize kiosk point color, default: '189,82,255', optional
+      pointColor: '255,91,53'
    },
 
    // Optional, default: false, if enabled and yours GeoJSON includes required data
