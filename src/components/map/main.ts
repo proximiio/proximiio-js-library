@@ -107,6 +107,7 @@ export interface Options {
     coordinates: [number, number];
     level: number;
     showLabel?: boolean;
+    pointColor?: string;
   };
   initPolygons?: boolean;
   polygonsOptions?: PolygonOptions;
@@ -557,7 +558,7 @@ export class Map {
       const decodedFloorchangeDownImage = await getImageFromBase64(floorchangeDownImage);
       const decodedPopupImage = await getImageFromBase64(popupImage);
       map.addImage('chevron_right', decodedChevron as any);
-      map.addImage('pulsing-dot', pulsingDot, { pixelRatio: 2 });
+      map.addImage('pulsing-dot', pulsingDot(this.defaultOptions.kioskSettings.pointColor), { pixelRatio: 2 });
       map.addImage('person', decodedPersonIcon as any);
       map.addImage('floorchange-up-image', decodedFloorchangeUpImage as any);
       map.addImage('floorchange-down-image', decodedFloorchangeDownImage as any);

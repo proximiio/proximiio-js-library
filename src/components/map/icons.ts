@@ -49,53 +49,55 @@ export const popupImage =
 
 const size = 120;
 
-export const pulsingDot = {
-  width: size,
-  height: size,
-  data: new Uint8Array(size * size * 4),
+export const pulsingDot = (rgbValues?: string) => {
+  return {
+    width: size,
+    height: size,
+    data: new Uint8Array(size * size * 4),
 
-  // get rendering context for the map canvas when layer is added to the map
-  onAdd(map, gl) {
-    const canvas = document.createElement('canvas');
-    canvas.width = this.width;
-    canvas.height = this.height;
-    this.context = canvas.getContext('2d');
-    this.map = map;
-  },
+    // get rendering context for the map canvas when layer is added to the map
+    onAdd(map, gl) {
+      const canvas = document.createElement('canvas');
+      canvas.width = this.width;
+      canvas.height = this.height;
+      this.context = canvas.getContext('2d');
+      this.map = map;
+    },
 
-  // called once before every frame where the icon will be used
-  render(gl, matrix) {
-    const duration = 1000;
-    const t = (performance.now() % duration) / duration;
+    // called once before every frame where the icon will be used
+    render(gl, matrix) {
+      const duration = 1000;
+      const t = (performance.now() % duration) / duration;
 
-    const radius = (size / 2) * 0.3;
-    const outerRadius = (size / 2) * 0.7 * t + radius;
-    const context = this.context;
-    const map = this.map;
+      const radius = (size / 2) * 0.3;
+      const outerRadius = (size / 2) * 0.7 * t + radius;
+      const context = this.context;
+      const map = this.map;
 
-    // draw outer circle
-    context.clearRect(0, 0, this.width, this.height);
-    context.beginPath();
-    context.arc(this.width / 2, this.height / 2, outerRadius, 0, Math.PI * 2);
-    context.fillStyle = 'rgba(189,82,255,' + (1 - t) + ')';
-    context.fill();
+      // draw outer circle
+      context.clearRect(0, 0, this.width, this.height);
+      context.beginPath();
+      context.arc(this.width / 2, this.height / 2, outerRadius, 0, Math.PI * 2);
+      context.fillStyle = `rgba(${rgbValues ? rgbValues : '189,82,255'},${1 - t})`;
+      context.fill();
 
-    // draw inner circle
-    context.beginPath();
-    context.arc(this.width / 2, this.height / 2, radius, 0, Math.PI * 2);
-    context.fillStyle = 'rgb(189,82,255)';
-    context.strokeStyle = 'white';
-    context.lineWidth = 2 + 4 * (1 - t);
-    context.fill();
-    context.stroke();
+      // draw inner circle
+      context.beginPath();
+      context.arc(this.width / 2, this.height / 2, radius, 0, Math.PI * 2);
+      context.fillStyle = `rgb(${rgbValues ? rgbValues : '189,82,255'})`;
+      context.strokeStyle = 'white';
+      context.lineWidth = 2 + 4 * (1 - t);
+      context.fill();
+      context.stroke();
 
-    // update this image's data with data from the canvas
-    this.data = context.getImageData(0, 0, this.width, this.height).data;
+      // update this image's data with data from the canvas
+      this.data = context.getImageData(0, 0, this.width, this.height).data;
 
-    // continuously repaint the map, resulting in the smooth animation of the dot
-    map.triggerRepaint();
+      // continuously repaint the map, resulting in the smooth animation of the dot
+      map.triggerRepaint();
 
-    // return `true` to let the map know that the image was updated
-    return true;
-  },
+      // return `true` to let the map know that the image was updated
+      return true;
+    },
+  };
 };
