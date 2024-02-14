@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.21] - Unreleased
+
+### Changed
+
+- Change 'text-font' property in kiosk layer to include 'Quicksand Bold' and 'Noto Sans Arabic Bold' fonts for better text rendering
+
 ## [1.11.20] - 2024-02-13
 
 ### Fixed
