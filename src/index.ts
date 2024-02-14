@@ -6,6 +6,7 @@ import Ads from './controllers/ads';
 import { Map } from './components/map/main';
 import { Select } from './components/select/main';
 import SelectLogger from './components/logger/select';
+import SearchLogger from './components/logger/search';
 
 export default {
   Auth,
@@ -16,4 +17,5 @@ export default {
   Map,
   Select,
   SelectLogger,
+  SearchLogger,
 };
