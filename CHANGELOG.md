@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - New map constuctor option `kioskSettings.pointColor` to allow customizing color of kiosk point
+- New SearchLogger component to log search entries
 
 ### Changed
 
