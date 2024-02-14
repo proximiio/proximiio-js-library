@@ -34,7 +34,7 @@ export default class SearchLogger {
 
   async saveLog() {
     try {
-      await axios.post(`web-analytics/collector/search`, this);
+      await axios.post(`web-analytics/collector/searches`, this);
     } catch (e) {
       console.error(`Log saving failed, ${e.message}`);
     }
