@@ -722,7 +722,7 @@ export class Map {
             layout: {
               ...kioskLayer.layout,
               'text-field': translations[this.defaultOptions.language].YOU_ARE_HERE,
-              'text-font': ['Amiri Bold'],
+              'text-font': ['Quicksand Bold', 'Noto Sans Arabic Bold'],
               'text-offset': [0, 0.6],
               'text-anchor': 'top',
               'text-allow-overlap': true,
