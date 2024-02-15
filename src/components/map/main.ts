@@ -688,7 +688,7 @@ export class Map {
         allFeatures: new FeatureCollection(features),
         levelChangers: new FeatureCollection({ features: levelChangers }),
       };
-      this.geojsonSource.fetch(this.state.features);
+      //this.geojsonSource.fetch(this.state.features);
       this.onFeaturesChange();
     }
   }

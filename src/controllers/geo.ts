@@ -1,4 +1,4 @@
-import { axios, getNestedObjectValue } from '../common';
+import { axios, getNestedObjectValue, removeNonNumeric } from '../common';
 import Feature, { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 import { globalState } from '../components/map/main';
@@ -134,7 +134,7 @@ export const getFeatures = async ({
             connectedPolygon.properties._dynamic.poi_id = feature.properties.id;
             connectedPolygon.properties._dynamic.amenity = feature.properties.amenity;
             // id have to be changed to numeric type so feature state will work
-            connectedPolygon.id = JSON.stringify(key);
+            connectedPolygon.id = removeNonNumeric(connectedPolygon.id);
 
             // check if feature is inside a polygon
             labelLineFeatures.forEach((line) => {
@@ -147,7 +147,7 @@ export const getFeatures = async ({
 
             if (connectedLabelLine) {
               // id have to be changed to numeric type so feature state will work
-              connectedLabelLine.id = JSON.stringify(key + 9999 + index);
+              connectedLabelLine.id = removeNonNumeric(connectedLabelLine.id);
               feature.properties._dynamic.label_id = connectedLabelLine.id;
               connectedPolygon.properties._dynamic.label_id = connectedLabelLine.id;
 
@@ -181,8 +181,8 @@ export const getFeatures = async ({
                     coordinates: parsedLabelLine,
                     type: 'LineString',
                   };
-                  labelLineFeature.properties.id = JSON.stringify(key + 9999 + index);
-                  labelLineFeature.id = JSON.stringify(key + 9999 + index);
+                  labelLineFeature.properties.id = `${removeNonNumeric(connectedPolygon.id)}9999`;
+                  labelLineFeature.id = `${removeNonNumeric(connectedPolygon.id)}9999`;
                   labelLineFeature.properties.type = `${featureType}-label`;
                   labelLineFeature.properties._dynamic.type = `${featureType}-label`;
                   labelLineFeature.properties._dynamic.length = Math.ceil(length(labelLineFeature) * 1000);
@@ -260,8 +260,8 @@ export const getFeatures = async ({
                 }
 
                 // labelBorder.properties = { ...labelBorder.properties, ...feature.properties };
-                labelBorder.properties.id = JSON.stringify(key + 9999 + index);
-                labelBorder.id = JSON.stringify(key + 9999 + index);
+                labelBorder.properties.id = `${removeNonNumeric(connectedPolygon.id)}9999`;
+                labelBorder.id = `${removeNonNumeric(connectedPolygon.id)}9999`;
                 labelBorder.properties.type = `${featureType}-label`;
                 labelBorder.properties._dynamic.type = `${featureType}-label`;
                 connectedPolygon.properties._dynamic.label_id = labelBorder.properties.id;
