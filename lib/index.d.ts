@@ -1,6 +1,7 @@
 import { Map } from './components/map/main';
 import { Select } from './components/select/main';
 import SelectLogger from './components/logger/select';
+import SearchLogger from './components/logger/search';
 declare const _default: {
     Auth: {
         login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any, any>>;
@@ -37,5 +38,6 @@ declare const _default: {
     Map: typeof Map;
     Select: typeof Select;
     SelectLogger: typeof SelectLogger;
+    SearchLogger: typeof SearchLogger;
 };
 export default _default;

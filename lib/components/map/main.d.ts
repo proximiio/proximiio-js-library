@@ -69,6 +69,7 @@ export interface Options {
         coordinates: [number, number];
         level: number;
         showLabel?: boolean;
+        pointColor?: string;
     };
     initPolygons?: boolean;
     polygonsOptions?: PolygonOptions;
