@@ -2,12 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.11.22] - Unreleased
+## [1.11.22] - 2024-02-16
 
 ### Added
 
 - Add function removeNonNumeric to remove non-numeric characters from a UUID string
 - Use removeNonNumeric function to convert feature ids to numeric type for feature state
+
+### Fixed
+
+- Translations toggling on features refetch
 
 ## [1.11.21] - 2024-02-15
 
