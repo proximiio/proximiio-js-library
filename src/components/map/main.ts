@@ -2679,7 +2679,10 @@ export class Map {
         'text-field',
         translations[this.defaultOptions.language].YOU_ARE_HERE,
       );
+      const styleLayer = this.state.style.layers.find((layer) => layer.id === 'my-location-layer');
+      styleLayer.layout['text-field'] = translations[this.defaultOptions.language].YOU_ARE_HERE;
     }
+    this.state.style.setSource('main', this.geojsonSource);
   }
 
   public getClosestFeature(amenityId: string, fromFeature?: Feature) {
