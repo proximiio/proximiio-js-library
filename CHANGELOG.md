@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.23] - 2024-02-26
+
+### Changed
+
+- Removed 1 minute timeout for api callss
+
 ## [1.11.22] - 2024-02-16
 
 ### Added

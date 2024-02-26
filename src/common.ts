@@ -2,7 +2,6 @@ import Axios from 'axios';
 
 export const axios = Axios.create({
   baseURL: 'https://api.proximi.fi',
-  timeout: 60000,
 });
 
 export const camelToKebab = (input: string) => input.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
