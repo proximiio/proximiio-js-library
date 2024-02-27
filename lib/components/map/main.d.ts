@@ -150,6 +150,7 @@ export declare class Map {
     private clusterSource;
     private imageSourceManager;
     private onMapReadyListener;
+    private onMapFailedListener;
     private onPlaceSelectListener;
     private onFloorSelectListener;
     private onRouteFoundListener;
@@ -274,6 +275,17 @@ export declare class Map {
      *  });
      */
     getMapReadyListener(): CustomSubject<boolean>;
+    /**
+     *  @memberof Map
+     *  @name getMapFailedListener
+     *  @returns returns map failed listener
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapFailedListener().subscribe(failed => {
+     *    console.log('map failed', failed);
+     *  });
+     */
+    getMapFailedListener(): CustomSubject<boolean>;
     /**
      * This method will set an active place, load floors etc. Have to be called after map is ready, see getMapReadyListener.
      *  @memberof Map
