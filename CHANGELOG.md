@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.24] - 2024-02-27
+
+### Added
+
+- New Map component listener getMapFailedListener() to handle cases when map loading fails for some reason
+
 ## [1.11.23] - 2024-02-26
 
 ### Changed

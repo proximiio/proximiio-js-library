@@ -1069,6 +1069,14 @@ map.getMapReadyListener().subscribe((ready) => {
 });
 ```
 
+##### Listen to map failed event
+
+```javascript
+map.getMapFailedListener().subscribe((failed) => {
+  console.log('map failed', failed);
+});
+```
+
 ##### Listen to place select event
 
 ```javascript

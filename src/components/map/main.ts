@@ -211,6 +211,7 @@ export class Map {
   private clusterSource: ClusterSource = new ClusterSource();
   private imageSourceManager: ImageSourceManager = new ImageSourceManager();
   private onMapReadyListener = new CustomSubject<boolean>();
+  private onMapFailedListener = new CustomSubject<boolean>();
   private onPlaceSelectListener = new CustomSubject<PlaceModel>();
   private onFloorSelectListener = new CustomSubject<FloorModel>();
   private onRouteFoundListener = new CustomSubject<any>();
@@ -389,6 +390,10 @@ export class Map {
     this.map.on('load', (e) => {
       this.onMapReady(e);
     });
+    this.map.on('error', (e) => {
+      console.log('map error', e);
+      this.onMapFailedListener.next(true);
+    });
 
     this.onSourceChange = this.onSourceChange.bind(this);
     this.onSyntheticChange = this.onSyntheticChange.bind(this);
@@ -405,7 +410,12 @@ export class Map {
     this.geojsonSource.on(this.onSourceChange);
     this.syntheticSource.on(this.onSyntheticChange);
     this.routingSource.on(this.onRouteChange);
-    await this.fetch();
+    try {
+      await this.fetch();
+    } catch (e) {
+      console.log('fetch failed', e);
+      this.onMapFailedListener.next(true);
+    }
   }
 
   private async cancelObservers() {
@@ -415,106 +425,111 @@ export class Map {
   }
 
   private async fetch() {
-    let placeParam = null;
-    if (this.defaultOptions.handleUrlParams) {
-      const urlParams = new URLSearchParams(window.location.search);
-      placeParam = urlParams.get(this.defaultOptions.urlParams.defaultPlace);
-    }
-    const { places, style, styles, features, amenities, floors, kiosks } = await Repository.getPackage({
-      initPolygons: this.defaultOptions.initPolygons,
-      polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => item.featureType),
-      autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
-      amenityIdProperty: this.defaultOptions.amenityIdProperty,
-      hiddenAmenities: this.defaultOptions.hiddenAmenities,
-      useTimerangeData: this.defaultOptions.useTimerangeData,
-      filter: this.defaultOptions.defaultFilter,
-      featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
-    });
-    const levelChangers = features.features.filter(
-      (f) => f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
-    );
-    const user = await Auth.getCurrentUser();
-    const defaultPlace = placeParam
-      ? places.find((p) => p.id === placeParam || p.name === placeParam)
-      : places.find((p) => p.id === this.defaultOptions.defaultPlaceId);
-    const defaultFloor =
-      defaultPlace &&
-      floors.find((f) => f.placeId === defaultPlace.id && f.level === this.defaultOptions.defaultFloorLevel);
-    const place = places.length > 0 ? (defaultPlace ? defaultPlace : places[0]) : new PlaceModel({});
-    const floor =
-      defaultPlace && floors.length > 0
-        ? defaultFloor
-          ? defaultFloor
-          : floors.find((f) => f.placeId === defaultPlace.id)[0]
-        : new FloorModel({});
-    let centerVar: [number, number] = [place.location.lng, place.location.lat];
-    if (this.defaultOptions.mapboxOptions?.center) {
-      centerVar = this.defaultOptions.mapboxOptions.center as [number, number];
-    }
-    if (this.defaultOptions.isKiosk) {
-      centerVar = this.defaultOptions.kioskSettings?.coordinates;
-    }
-    if (placeParam) {
-      centerVar = [place.location.lng, place.location.lat];
-    }
-    style.center = centerVar;
-    if (this.defaultOptions.mapboxOptions) {
-      this.defaultOptions.mapboxOptions.center = style.center;
-    }
-    if (this.defaultOptions.zoomLevel) {
-      style.zoom = this.defaultOptions.zoomLevel;
-    }
-    if (this.defaultOptions.language) {
-      this.geojsonSource.language = this.defaultOptions.language;
-    }
-    if (this.defaultOptions.routeColor) {
-      const routeLayer = style.layers.find((l) => l.id === 'proximiio-routing-line-remaining');
-      if (routeLayer) {
-        routeLayer.paint['line-color'] = this.defaultOptions.routeColor;
+    try {
+      let placeParam = null;
+      if (this.defaultOptions.handleUrlParams) {
+        const urlParams = new URLSearchParams(window.location.search);
+        placeParam = urlParams.get(this.defaultOptions.urlParams.defaultPlace);
       }
-    }
-    if (this.defaultOptions.forceFloorLevel !== null && this.defaultOptions.forceFloorLevel !== undefined) {
-      this.routingSource.routing.forceFloorLevel = this.defaultOptions.forceFloorLevel;
-    }
-    if (this.defaultOptions.routeWithDetails !== null && this.defaultOptions.routeWithDetails !== undefined) {
-      this.routingSource.routing.routeWithDetails = this.defaultOptions.routeWithDetails;
-    }
-    this.geojsonSource.fetch(features);
-    this.routingSource.routing.setData(new FeatureCollection(features));
-    this.prepareStyle(style);
-    this.imageSourceManager.enabled = this.defaultOptions.showRasterFloorplans;
-    this.imageSourceManager.belowLayer = style.usesPrefixes() ? 'proximiio-floors' : 'floors';
-    this.imageSourceManager.initialize();
-    this.state = {
-      ...this.state,
-      initializing: false,
-      place,
-      places,
-      floor,
-      floors,
-      kiosks,
-      style,
-      styles,
-      amenities,
-      features,
-      allFeatures: new FeatureCollection(features),
-      levelChangers: new FeatureCollection({ features: levelChangers }),
-      latitude: centerVar[1],
-      longitude: centerVar[0],
-      zoom: this.defaultOptions.zoomLevel ? this.defaultOptions.zoomLevel : this.defaultOptions.mapboxOptions?.zoom,
-      noPlaces: places.length === 0,
-      user,
-    };
-    style.on(this.onStyleChange);
-    this.map.setStyle(this.state.style);
-    this.map.setCenter(centerVar);
-    if (this.defaultOptions.allowNewFeatureModal) {
-      this.map.on(
-        this.defaultOptions.newFeatureModalEvent ? this.defaultOptions.newFeatureModalEvent : 'dblclick',
-        (e: MapLibreEvent | any) => {
-          this.featureDialog(e);
-        },
+      const { places, style, styles, features, amenities, floors, kiosks } = await Repository.getPackage({
+        initPolygons: this.defaultOptions.initPolygons,
+        polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => item.featureType),
+        autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
+        amenityIdProperty: this.defaultOptions.amenityIdProperty,
+        hiddenAmenities: this.defaultOptions.hiddenAmenities,
+        useTimerangeData: this.defaultOptions.useTimerangeData,
+        filter: this.defaultOptions.defaultFilter,
+        featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
+      });
+      const levelChangers = features.features.filter(
+        (f) =>
+          f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
       );
+      const user = await Auth.getCurrentUser();
+      const defaultPlace = placeParam
+        ? places.find((p) => p.id === placeParam || p.name === placeParam)
+        : places.find((p) => p.id === this.defaultOptions.defaultPlaceId);
+      const defaultFloor =
+        defaultPlace &&
+        floors.find((f) => f.placeId === defaultPlace.id && f.level === this.defaultOptions.defaultFloorLevel);
+      const place = places.length > 0 ? (defaultPlace ? defaultPlace : places[0]) : new PlaceModel({});
+      const floor =
+        defaultPlace && floors.length > 0
+          ? defaultFloor
+            ? defaultFloor
+            : floors.find((f) => f.placeId === defaultPlace.id)[0]
+          : new FloorModel({});
+      let centerVar: [number, number] = [place.location.lng, place.location.lat];
+      if (this.defaultOptions.mapboxOptions?.center) {
+        centerVar = this.defaultOptions.mapboxOptions.center as [number, number];
+      }
+      if (this.defaultOptions.isKiosk) {
+        centerVar = this.defaultOptions.kioskSettings?.coordinates;
+      }
+      if (placeParam) {
+        centerVar = [place.location.lng, place.location.lat];
+      }
+      style.center = centerVar;
+      if (this.defaultOptions.mapboxOptions) {
+        this.defaultOptions.mapboxOptions.center = style.center;
+      }
+      if (this.defaultOptions.zoomLevel) {
+        style.zoom = this.defaultOptions.zoomLevel;
+      }
+      if (this.defaultOptions.language) {
+        this.geojsonSource.language = this.defaultOptions.language;
+      }
+      if (this.defaultOptions.routeColor) {
+        const routeLayer = style.layers.find((l) => l.id === 'proximiio-routing-line-remaining');
+        if (routeLayer) {
+          routeLayer.paint['line-color'] = this.defaultOptions.routeColor;
+        }
+      }
+      if (this.defaultOptions.forceFloorLevel !== null && this.defaultOptions.forceFloorLevel !== undefined) {
+        this.routingSource.routing.forceFloorLevel = this.defaultOptions.forceFloorLevel;
+      }
+      if (this.defaultOptions.routeWithDetails !== null && this.defaultOptions.routeWithDetails !== undefined) {
+        this.routingSource.routing.routeWithDetails = this.defaultOptions.routeWithDetails;
+      }
+      this.geojsonSource.fetch(features);
+      this.routingSource.routing.setData(new FeatureCollection(features));
+      this.prepareStyle(style);
+      this.imageSourceManager.enabled = this.defaultOptions.showRasterFloorplans;
+      this.imageSourceManager.belowLayer = style.usesPrefixes() ? 'proximiio-floors' : 'floors';
+      this.imageSourceManager.initialize();
+      this.state = {
+        ...this.state,
+        initializing: false,
+        place,
+        places,
+        floor,
+        floors,
+        kiosks,
+        style,
+        styles,
+        amenities,
+        features,
+        allFeatures: new FeatureCollection(features),
+        levelChangers: new FeatureCollection({ features: levelChangers }),
+        latitude: centerVar[1],
+        longitude: centerVar[0],
+        zoom: this.defaultOptions.zoomLevel ? this.defaultOptions.zoomLevel : this.defaultOptions.mapboxOptions?.zoom,
+        noPlaces: places.length === 0,
+        user,
+      };
+      style.on(this.onStyleChange);
+      this.map.setStyle(this.state.style);
+      this.map.setCenter(centerVar);
+      if (this.defaultOptions.allowNewFeatureModal) {
+        this.map.on(
+          this.defaultOptions.newFeatureModalEvent ? this.defaultOptions.newFeatureModalEvent : 'dblclick',
+          (e: MapLibreEvent | any) => {
+            this.featureDialog(e);
+          },
+        );
+      }
+    } catch (e) {
+      console.log('fetch failed', e);
     }
   }
 
@@ -2754,6 +2769,20 @@ export class Map {
    */
   public getMapReadyListener() {
     return this.onMapReadyListener;
+  }
+
+  /**
+   *  @memberof Map
+   *  @name getMapFailedListener
+   *  @returns returns map failed listener
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapFailedListener().subscribe(failed => {
+   *    console.log('map failed', failed);
+   *  });
+   */
+  public getMapFailedListener() {
+    return this.onMapFailedListener;
   }
 
   /**
