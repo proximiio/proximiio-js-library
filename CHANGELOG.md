@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.25] - 2024-02-29
+
+### Fixed
+
+- Improve listener getMapFailedListener() for better network issues handling
+
 ## [1.11.24] - 2024-02-27
 
 ### Added
