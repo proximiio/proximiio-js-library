@@ -246,6 +246,7 @@ export declare class Map {
     private translateLayers;
     getClosestFeature(amenityId: string, fromFeature?: Feature): false | Feature;
     getFloorName(floor: FloorModel): string;
+    private handleControllerError;
     /**
      *  @memberof Map
      *  @name getMapboxInstance

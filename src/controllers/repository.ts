@@ -38,14 +38,20 @@ export const getPackage = async ({
   features: FeatureCollection;
   amenities: AmenityModel[];
 }> => {
-  const result: any = {};
-  const promises = [
-    getPlaces().then((places) => (result.places = places.data)),
-    getFloors().then((floors) => (result.floors = floors.data)),
-    getKiosks().then((kiosks) => (result.kiosks = kiosks.data)),
-    getStyle().then((style) => (result.style = style)),
-    getStyles().then((styles) => (result.styles = styles)),
-    getFeatures({
+  try {
+    const result: any = {};
+
+    const placesPromise = getPlaces().then((places) => (result.places = places.data));
+
+    const floorsPromise = getFloors().then((floors) => (result.floors = floors.data));
+
+    const kiosksPromise = getKiosks().then((kiosks) => (result.kiosks = kiosks.data));
+
+    const stylePromise = getStyle().then((style) => (result.style = style));
+
+    const stylesPromise = getStyles().then((styles) => (result.styles = styles));
+
+    const featuresPromise = getFeatures({
       initPolygons,
       polygonFeatureTypes,
       autoLabelLines,
@@ -53,11 +59,24 @@ export const getPackage = async ({
       useTimerangeData,
       filter,
       featuresMaxBounds,
-    }).then((features) => (result.features = features)),
-    getAmenities(amenityIdProperty).then((amenities) => (result.amenities = amenities)),
-  ];
-  await Promise.all(promises);
-  return result;
+    }).then((features) => (result.features = features));
+
+    const amenitiesPromise = getAmenities(amenityIdProperty).then((amenities) => (result.amenities = amenities));
+
+    await Promise.all([
+      placesPromise,
+      floorsPromise,
+      kiosksPromise,
+      stylePromise,
+      stylesPromise,
+      featuresPromise,
+      amenitiesPromise,
+    ]);
+
+    return result;
+  } catch (error) {
+    throw new Error(`Retrieving repository failed, ${error.message}`);
+  }
 };
 
 export default {

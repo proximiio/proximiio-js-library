@@ -8,7 +8,7 @@ export const getAds = async (): Promise<{ data: AdModel[] }> => {
       data: res.data.map((item: any) => new AdModel(item)) as AdModel[],
     };
   } catch (e) {
-    throw new Error(`Retrieving kiosks failed, ${e.message}`);
+    throw new Error(`Retrieving ads failed, ${e.message}`);
   }
 };
 

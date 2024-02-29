@@ -1,7 +1,6 @@
 import maplibregl, { SymbolLayerSpecification } from 'maplibre-gl';
-import Repository from '../../controllers/repository';
 import Auth from '../../controllers/auth';
-import { addFeatures, deleteFeatures } from '../../controllers/geo';
+import { addFeatures, deleteFeatures, getAmenities, getFeatures } from '../../controllers/geo';
 import { PlaceModel } from '../../models/place';
 import { FloorModel } from '../../models/floor';
 import StyleModel from '../../models/style';
@@ -23,8 +22,8 @@ import {
   popupImage,
 } from './icons';
 import { LngLatBoundsLike, MapLibreEvent } from 'maplibre-gl';
-import { getPlaceFloors } from '../../controllers/floors';
-import { getPlaceById } from '../../controllers/places';
+import { getFloors, getPlaceFloors } from '../../controllers/floors';
+import { getPlaceById, getPlaces } from '../../controllers/places';
 import { CustomSubject } from '../../customSubject';
 // @ts-ignore
 import * as tingle from 'tingle.js/dist/tingle';
@@ -43,6 +42,8 @@ import WayfindingLogger from '../logger/wayfinding';
 import { translations } from './i18n';
 import { WayfindingConfigModel } from '../../models/wayfinding';
 import { KioskModel } from '../../models/kiosk';
+import { getStyle, getStyles } from '../../controllers/style';
+import { getKiosks } from '../../controllers/kiosks';
 
 export interface State {
   readonly initializing: boolean;
@@ -410,12 +411,7 @@ export class Map {
     this.geojsonSource.on(this.onSourceChange);
     this.syntheticSource.on(this.onSyntheticChange);
     this.routingSource.on(this.onRouteChange);
-    try {
-      await this.fetch();
-    } catch (e) {
-      console.log('fetch failed', e);
-      this.onMapFailedListener.next(true);
-    }
+    await this.fetch();
   }
 
   private async cancelObservers() {
@@ -425,39 +421,49 @@ export class Map {
   }
 
   private async fetch() {
-    try {
-      let placeParam = null;
-      if (this.defaultOptions.handleUrlParams) {
-        const urlParams = new URLSearchParams(window.location.search);
-        placeParam = urlParams.get(this.defaultOptions.urlParams.defaultPlace);
-      }
-      const { places, style, styles, features, amenities, floors, kiosks } = await Repository.getPackage({
-        initPolygons: this.defaultOptions.initPolygons,
-        polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => item.featureType),
-        autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
-        amenityIdProperty: this.defaultOptions.amenityIdProperty,
-        hiddenAmenities: this.defaultOptions.hiddenAmenities,
-        useTimerangeData: this.defaultOptions.useTimerangeData,
-        filter: this.defaultOptions.defaultFilter,
-        featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
-      });
+    let placeParam = null;
+
+    if (this.defaultOptions.handleUrlParams) {
+      const urlParams = new URLSearchParams(window.location.search);
+      placeParam = urlParams.get(this.defaultOptions.urlParams.defaultPlace);
+    }
+
+    const places = await getPlaces().catch((error) => this.handleControllerError(error));
+    const style = await getStyle().catch((error) => this.handleControllerError(error));
+    const styles = await getStyles().catch((error) => this.handleControllerError(error));
+    const features = await getFeatures({
+      initPolygons: this.defaultOptions.initPolygons,
+      polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => item.featureType),
+      autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
+      hiddenAmenities: this.defaultOptions.hiddenAmenities,
+      useTimerangeData: this.defaultOptions.useTimerangeData,
+      filter: this.defaultOptions.defaultFilter,
+      featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
+    }).catch((error) => this.handleControllerError(error));
+    const amenities = await getAmenities(this.defaultOptions.amenityIdProperty).catch((error) =>
+      this.handleControllerError(error),
+    );
+    const floors = await getFloors().catch((error) => this.handleControllerError(error));
+    const kiosks = await getKiosks().catch((error) => this.handleControllerError(error));
+
+    if (places && features && floors && style && kiosks) {
       const levelChangers = features.features.filter(
         (f) =>
           f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
       );
       const user = await Auth.getCurrentUser();
       const defaultPlace = placeParam
-        ? places.find((p) => p.id === placeParam || p.name === placeParam)
-        : places.find((p) => p.id === this.defaultOptions.defaultPlaceId);
+        ? places.data.find((p) => p.id === placeParam || p.name === placeParam)
+        : places.data.find((p) => p.id === this.defaultOptions.defaultPlaceId);
       const defaultFloor =
         defaultPlace &&
-        floors.find((f) => f.placeId === defaultPlace.id && f.level === this.defaultOptions.defaultFloorLevel);
-      const place = places.length > 0 ? (defaultPlace ? defaultPlace : places[0]) : new PlaceModel({});
+        floors.data.find((f) => f.placeId === defaultPlace.id && f.level === this.defaultOptions.defaultFloorLevel);
+      const place = places.data.length > 0 ? (defaultPlace ? defaultPlace : places[0]) : new PlaceModel({});
       const floor =
-        defaultPlace && floors.length > 0
+        defaultPlace && floors.data.length > 0
           ? defaultFloor
             ? defaultFloor
-            : floors.find((f) => f.placeId === defaultPlace.id)[0]
+            : floors.data.find((f) => f.placeId === defaultPlace.id)[0]
           : new FloorModel({});
       let centerVar: [number, number] = [place.location.lng, place.location.lat];
       if (this.defaultOptions.mapboxOptions?.center) {
@@ -501,10 +507,10 @@ export class Map {
         ...this.state,
         initializing: false,
         place,
-        places,
+        places: places.data,
         floor,
-        floors,
-        kiosks,
+        floors: floors.data,
+        kiosks: kiosks.data,
         style,
         styles,
         amenities,
@@ -514,7 +520,7 @@ export class Map {
         latitude: centerVar[1],
         longitude: centerVar[0],
         zoom: this.defaultOptions.zoomLevel ? this.defaultOptions.zoomLevel : this.defaultOptions.mapboxOptions?.zoom,
-        noPlaces: places.length === 0,
+        noPlaces: places.data.length === 0,
         user,
       };
       style.on(this.onStyleChange);
@@ -528,8 +534,6 @@ export class Map {
           },
         );
       }
-    } catch (e) {
-      console.log('fetch failed', e);
     }
   }
 
@@ -683,28 +687,29 @@ export class Map {
   private async onRefetch() {
     if (this.map) {
       console.log('data should be refetched');
-      const { features } = await Repository.getPackage({
+      const features = await getFeatures({
         initPolygons: this.defaultOptions.initPolygons,
         polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => item.featureType),
         autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
-        amenityIdProperty: this.defaultOptions.amenityIdProperty,
         hiddenAmenities: this.defaultOptions.hiddenAmenities,
         useTimerangeData: this.defaultOptions.useTimerangeData,
         filter: this.defaultOptions.defaultFilter,
         featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
-      });
-      const levelChangers = features.features.filter(
-        (f) =>
-          f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
-      );
-      this.state = {
-        ...this.state,
-        features,
-        allFeatures: new FeatureCollection(features),
-        levelChangers: new FeatureCollection({ features: levelChangers }),
-      };
-      // this.geojsonSource.fetch(this.state.features);
-      this.onFeaturesChange();
+      }).catch((error) => this.handleControllerError(error));
+      if (features) {
+        const levelChangers = features.features.filter(
+          (f) =>
+            f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
+        );
+        this.state = {
+          ...this.state,
+          features,
+          allFeatures: new FeatureCollection(features),
+          levelChangers: new FeatureCollection({ features: levelChangers }),
+        };
+        // this.geojsonSource.fetch(this.state.features);
+        this.onFeaturesChange();
+      }
     }
   }
 
@@ -2263,27 +2268,29 @@ export class Map {
 
   private async onPlaceSelect(place: PlaceModel, zoomIntoPlace: boolean | undefined, floorLevel?: number) {
     this.state = { ...this.state, place };
-    const floors = await getPlaceFloors(place.id);
-    const state: any = { floors: floors.sort((a, b) => a.level - b.level) };
+    const floors = await getPlaceFloors(place.id).catch(this.handleControllerError);
+    if (floors) {
+      const state: any = { floors: floors.sort((a, b) => a.level - b.level) };
 
-    if (floors.length > 0) {
-      const defaultFloor = floorLevel
-        ? floors.find((floor) => floor.level === floorLevel)
-        : floors.find((floor) => floor.level === 0);
-      if (defaultFloor) {
-        state.floor = defaultFloor;
-      } else {
-        state.floor = floors[0];
+      if (floors.length > 0) {
+        const defaultFloor = floorLevel
+          ? floors.find((floor) => floor.level === floorLevel)
+          : floors.find((floor) => floor.level === 0);
+        if (defaultFloor) {
+          state.floor = defaultFloor;
+        } else {
+          state.floor = floors[0];
+        }
       }
-    }
-    this.state = { ...this.state, ...state };
-    const map = this.map;
-    if (map && zoomIntoPlace) {
-      map.flyTo({ center: [place.location.lng, place.location.lat] });
-    }
-    this.onPlaceSelectListener.next(place);
-    if (state.floor) {
-      this.onFloorSelect(state.floor);
+      this.state = { ...this.state, ...state };
+      const map = this.map;
+      if (map && zoomIntoPlace) {
+        map.flyTo({ center: [place.location.lng, place.location.lat] });
+      }
+      this.onPlaceSelectListener.next(place);
+      if (state.floor) {
+        this.onFloorSelect(state.floor);
+      }
     }
   }
 
@@ -2732,6 +2739,10 @@ export class Map {
       return floor.name;
     }
   }
+
+  private handleControllerError = (err) => {
+    this.onMapFailedListener.next(true);
+  };
 
   /**
    *  @memberof Map
