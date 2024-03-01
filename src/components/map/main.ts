@@ -458,7 +458,7 @@ export class Map {
       const defaultFloor =
         defaultPlace &&
         floors.data.find((f) => f.placeId === defaultPlace.id && f.level === this.defaultOptions.defaultFloorLevel);
-      const place = places.data.length > 0 ? (defaultPlace ? defaultPlace : places[0]) : new PlaceModel({});
+      const place = places.data.length > 0 ? (defaultPlace ? defaultPlace : places.data[0]) : new PlaceModel({});
       const floor =
         defaultPlace && floors.data.length > 0
           ? defaultFloor
