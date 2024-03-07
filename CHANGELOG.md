@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.11.26] - 2024-03-07
+## [1.11.28] - 2024-02-29
+
+### Fixed
+
+- ImageDetection component - Stop media stream after screenshot analyzation
+
+## [1.11.27] - 2024-03-07
 
 ### Added
 
