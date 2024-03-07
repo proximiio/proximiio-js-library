@@ -12,7 +12,7 @@ interface Options {
   returnResults?: number;
 }
 
-const constraints = {
+const defaultConstraints = {
   video: {
     width: {
       min: 1280,
@@ -356,14 +356,14 @@ class ImageDetection {
       container.appendChild(captureButton);
     };
 
-    const startStream = async (constraints) => {
+    const startStream = async (constraints: MediaStreamConstraints) => {
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       handleStream(stream);
     };
 
     if ('mediaDevices' in navigator && navigator.mediaDevices.getUserMedia) {
       const updatedConstraints = {
-        ...constraints,
+        ...defaultConstraints,
       };
       startStream(updatedConstraints);
     }
