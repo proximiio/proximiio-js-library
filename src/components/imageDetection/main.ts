@@ -193,6 +193,7 @@ const css = `
 class ImageDetection {
   static init(options: Options, onSelect: (item: SortedPoiItemModel) => void) {
     let streamStarted = false;
+    let stream: MediaStream;
 
     if (!document.getElementById('gvision-css')) {
       InjectCSS({ id: 'gvision-css', css });
@@ -338,6 +339,14 @@ class ImageDetection {
       }
     };
 
+    const stopStream = () => {
+      if (streamStarted) {
+        stream.getTracks().forEach((track) => track.stop());
+        streamStarted = false;
+      }
+      container.remove();
+    };
+
     const doScreenshot = async () => {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -345,20 +354,20 @@ class ImageDetection {
       const imageSrc = canvas.toDataURL('image/jpeg');
       displayLoading();
       await analyzeScreenshot(imageSrc);
-      container.remove();
+      stopStream();
     };
 
     captureButton.onclick = doScreenshot;
 
-    const handleStream = (stream: MediaStream) => {
+    const handleStream = () => {
       video.srcObject = stream;
       streamStarted = true;
       container.appendChild(captureButton);
     };
 
     const startStream = async (constraints: MediaStreamConstraints) => {
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      handleStream(stream);
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      handleStream();
     };
 
     if ('mediaDevices' in navigator && navigator.mediaDevices.getUserMedia) {

@@ -1,5 +1,5 @@
-import { Geometry } from "./feature";
-import { FloorModel } from "./floor";
+import { Geometry } from './feature';
+import { FloorModel } from './floor';
 export interface SortedPoiItemModel {
     type: 'Feature';
     id: string;
