@@ -7,6 +7,7 @@ import { Map } from './components/map/main';
 import { Select } from './components/select/main';
 import SelectLogger from './components/logger/select';
 import SearchLogger from './components/logger/search';
+import { ImageDetection } from './components/imageDetection/main';
 
 export default {
   Auth,
@@ -19,3 +20,5 @@ export default {
   SelectLogger,
   SearchLogger,
 };
+
+export { ImageDetection };

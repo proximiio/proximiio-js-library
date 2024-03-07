@@ -111,3 +111,13 @@ export const removeNonNumeric = (uuid: string) => {
 
   return result;
 };
+
+export const InjectCSS = ({ id, css }: { id: string; css: string }) => {
+  // Create the css
+  const style = document.createElement('style');
+  style.id = id;
+  style.innerHTML = css;
+
+  const head = document.getElementsByTagName('head')[0];
+  head.insertBefore(style, head.lastChild);
+};

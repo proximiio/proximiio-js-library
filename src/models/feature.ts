@@ -32,6 +32,7 @@ export default class Feature extends BaseModel {
   id: string;
   geometry: Geometry;
   properties: any;
+  score?: number;
 
   constructor(data: any) {
     super(data);

@@ -7,3 +7,7 @@ export declare const getBase64FromImage: (file: File) => Promise<string>;
 export declare const uuidv4: () => any;
 export declare const getNestedObjectValue: (nestedObject: any, dynamicKey: any) => any;
 export declare const removeNonNumeric: (uuid: string) => string;
+export declare const InjectCSS: ({ id, css }: {
+    id: string;
+    css: string;
+}) => void;

@@ -2,6 +2,7 @@ import { Map } from './components/map/main';
 import { Select } from './components/select/main';
 import SelectLogger from './components/logger/select';
 import SearchLogger from './components/logger/search';
+import { ImageDetection } from './components/imageDetection/main';
 declare const _default: {
     Auth: {
         login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any, any>>;
@@ -41,3 +42,4 @@ declare const _default: {
     SearchLogger: typeof SearchLogger;
 };
 export default _default;
+export { ImageDetection };
