@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.26] - 2024-03-07
+
+### Added
+
+- New component ImageDetection to detect poi from image camera output
+
 ## [1.11.25] - 2024-02-29
 
 ### Fixed

@@ -1197,6 +1197,37 @@ const select = new Proximiio.Select('Places', {
 });
 ```
 
+### ImageDetection Component
+
+ImageDetection component is useful for detecting nearby poi from user camera device output. It's using Google Vision Cloud REST API to analyze the image.
+
+```javascript
+// @param options
+// @param options.gVisionApiKey {string}, required, your Google Vision Cloud Api key
+// @param options.pois {SortedPoiItemModel[]}, required, pois list to compare Google Vision results with
+// @param options.captureButtonText {string}, optional, capture button text content
+// @param options.closeButtonText {string}, optional, close button text content
+// @param options.noResultsText {string}, optional, no results from Google Vision text content
+// @param options.resultsHeadingText {string}, optional, results heading text content
+// @param options.returnResults {number}, optional, number of results to show from comparing function
+// @callback return selected poi.
+
+import { ImageDetection } from 'proximiio-js-library';
+
+ImageDetection.init(
+  {
+    gVisionApiKey: import.meta.env.VITE_WAYFINDING_GVISION_APIKEY,
+    pois,
+  },
+  (item) => {
+    const feature = features.find((f) => f.id === item.id);
+    if (feature) {
+      setRouteStart(feature);
+    }
+  },
+);
+```
+
 #### Available Listeners
 
 ##### Listen to select event
