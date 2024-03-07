@@ -1,4 +1,4 @@
-import { InjectCSS } from '../../common';
+import { InjectCSS, calculateDimensions } from '../../common';
 import { SortedPoiItemModel } from '../../models/sortedPoiItemModel';
 import { compareResults } from './comparator';
 
@@ -319,18 +319,25 @@ class ImageDetection {
         const data = await response.json();
 
         let output = [];
+
         if (data.responses[0].textAnnotations?.length > 0) {
+          data.responses[0].textAnnotations.forEach((result) => {
+            result.dimension = calculateDimensions(result.boundingPoly.vertices);
+          });
+          data.responses[0].textAnnotations.sort((a, b) => b.dimension.area - a.dimension.area);
+          data.responses[0].textAnnotations = data.responses[0].textAnnotations.slice(1, 11);
           output.push(...data.responses[0].textAnnotations.map((i) => i.description));
         }
+
         if (data.responses[0].logoAnnotations?.length > 0) {
           output.push(...data.responses[0].logoAnnotations.map((i) => i.description));
         }
-        output = output.slice(1);
 
         if (output.length > 0) {
           const comparationResults = compareResults(options.pois, output);
           comparationResults.sort((a, b) => b.score - a.score);
           output = comparationResults.slice(0, options.returnResults ? options.returnResults : 3);
+          output = output.filter((i) => i.score > 0);
         }
 
         showResults(output);
@@ -343,6 +350,7 @@ class ImageDetection {
       if (streamStarted) {
         stream.getTracks().forEach((track) => track.stop());
         streamStarted = false;
+        window.removeEventListener('touchstart', touchHandler);
       }
       container.remove();
     };
@@ -369,6 +377,14 @@ class ImageDetection {
       stream = await navigator.mediaDevices.getUserMedia(constraints);
       handleStream();
     };
+
+    const touchHandler = (event: TouchEvent) => {
+      if (event.touches.length > 1) {
+        if (streamStarted) event.preventDefault();
+      }
+    };
+
+    window.addEventListener('touchstart', touchHandler, { passive: false });
 
     if ('mediaDevices' in navigator && navigator.mediaDevices.getUserMedia) {
       const updatedConstraints = {

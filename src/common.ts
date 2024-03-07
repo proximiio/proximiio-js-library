@@ -121,3 +121,27 @@ export const InjectCSS = ({ id, css }: { id: string; css: string }) => {
   const head = document.getElementsByTagName('head')[0];
   head.insertBefore(style, head.lastChild);
 };
+
+// Function to calculate boundingPoly dimensions
+const calculateDimensions = (vertices: [{ x: number; y: number }]) => {
+  let minX = Number.MAX_SAFE_INTEGER;
+  let minY = Number.MAX_SAFE_INTEGER;
+  let maxX = Number.MIN_SAFE_INTEGER;
+  let maxY = Number.MIN_SAFE_INTEGER;
+
+  for (let i = 0; i < vertices.length; i++) {
+    const vertex = vertices[i];
+    minX = Math.min(minX, vertex.x);
+    minY = Math.min(minY, vertex.y);
+    maxX = Math.max(maxX, vertex.x);
+    maxY = Math.max(maxY, vertex.y);
+  }
+
+  const width = maxX - minX;
+  const height = maxY - minY;
+  const area = width * height;
+
+  return { width, height, area };
+};
+
+export { calculateDimensions };

@@ -11,3 +11,12 @@ export declare const InjectCSS: ({ id, css }: {
     id: string;
     css: string;
 }) => void;
+declare const calculateDimensions: (vertices: [{
+    x: number;
+    y: number;
+}]) => {
+    width: number;
+    height: number;
+    area: number;
+};
+export { calculateDimensions };

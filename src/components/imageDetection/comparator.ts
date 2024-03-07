@@ -7,17 +7,39 @@ const compareResults = (pois: SortedPoiItemModel[], visionTextResults: string[])
 
     // Loop through each word in OCR results
     visionTextResults.forEach((ocrWord) => {
+      const containsWordScore = containsWordFromTitle(ocrWord, poi.properties.title);
       // Calculate similarity score between store title and OCR word
       const similarityScore = calculateSimilarity(poi.properties.title, ocrWord);
       // Update the total score for the current store
-      totalScore += similarityScore;
+      totalScore += containsWordScore > 0 ? similarityScore : 0;
+      // Check if the OCR word contains at least one word from the shop title and raise score based on it
+      totalScore += containsWordScore;
     });
 
     // Assign the total score to the store object
-    poi.score = totalScore / visionTextResults.length; // Normalize the score
+    poi.score = totalScore;
   });
 
   return pois;
+};
+
+const containsWordFromTitle = (text: string, title: string) => {
+  let score = 0;
+  // Convert strings to lowercase for case-insensitive comparison
+  const lowercaseText = text.toLowerCase();
+  const lowercaseTitle = title.toLowerCase();
+
+  // Split the title into words
+  const titleWords = lowercaseTitle.split(' ');
+
+  // Check if any word from the title is present in the text
+  if (titleWords.some((word) => lowercaseText.includes(word))) {
+    score += 0.5;
+  }
+  if (titleWords.some((word) => lowercaseText === word)) {
+    score += 1;
+  }
+  return score;
 };
 
 const calculateSimilarity = (str1: string, str2: string) => {
@@ -36,7 +58,15 @@ const calculateSimilarity = (str1: string, str2: string) => {
   // Normalize the similarity score between 0 and 1
   const similarity = 1 - distance / maxLength;
 
-  return similarity;
+  // Convert strings to lowercase for case-insensitive comparison
+  const set1 = new Set(str1.toLowerCase().split(''));
+  const set2 = new Set(str2.toLowerCase().split(''));
+
+  // Calculate Jaccard similarity
+  const intersection = new Set([...set1].filter((x) => set2.has(x)));
+  const union = new Set([...set1, ...set2]);
+
+  return intersection.size / union.size + similarity;
 };
 
 // Function to calculate Levenshtein Distance between two strings
