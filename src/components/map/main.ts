@@ -145,6 +145,7 @@ export interface Options {
     maxZoom?: number;
     beforeLayer?: string;
     attribution?: string;
+    useProxy?: boolean;
   };
   handleUrlParams?: boolean;
   urlParams?: {
@@ -1134,8 +1135,16 @@ export class Map {
       this.state.style.addSource('raster-tiles', {
         type: 'raster',
         tiles: this.defaultOptions.rasterTilesOptions?.tilesUrl
-          ? [`${this.defaultOptions.rasterTilesOptions.tilesUrl}`]
-          : [`${metadata['proximiio:raster:tileurl']}`],
+          ? [
+              `${this.defaultOptions.rasterTilesOptions.useProxy && 'https://api.proximi.fi/imageproxy/source='}${
+                this.defaultOptions.rasterTilesOptions.tilesUrl
+              }`,
+            ]
+          : [
+              `${this.defaultOptions.rasterTilesOptions.useProxy && 'https://api.proximi.fi/imageproxy/source='}${
+                metadata['proximiio:raster:tileurl']
+              }`,
+            ],
         tileSize: this.defaultOptions.rasterTilesOptions?.tileSize
           ? this.defaultOptions.rasterTilesOptions.tileSize
           : metadata['proximiio:raster:tilesize']
