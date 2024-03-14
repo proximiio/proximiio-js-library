@@ -1136,12 +1136,12 @@ export class Map {
         type: 'raster',
         tiles: this.defaultOptions.rasterTilesOptions?.tilesUrl
           ? [
-              `${this.defaultOptions.rasterTilesOptions?.useProxy && 'https://api.proximi.fi/imageproxy/source='}${
+              `${this.defaultOptions.rasterTilesOptions?.useProxy ? 'https://api.proximi.fi/imageproxy/source=' : ''}${
                 this.defaultOptions.rasterTilesOptions.tilesUrl
               }`,
             ]
           : [
-              `${this.defaultOptions.rasterTilesOptions?.useProxy && 'https://api.proximi.fi/imageproxy/source='}${
+              `${this.defaultOptions.rasterTilesOptions?.useProxy ? 'https://api.proximi.fi/imageproxy/source=' : ''}${
                 metadata['proximiio:raster:tileurl']
               }`,
             ],

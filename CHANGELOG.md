@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.32] - 2024-03-14
+
+### Fixed
+
+- Fix imageproxy url
+
 ## [1.11.31] - 2024-03-14
 
 ### Fixed

@@ -100,7 +100,7 @@ export interface Options {
     };
     useRasterTiles?: boolean;
     rasterTilesOptions?: {
-        tilesUrl: string[];
+        tilesUrl?: string[];
         tileSize?: number;
         minZoom?: number;
         maxZoom?: number;
