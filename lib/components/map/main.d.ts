@@ -106,6 +106,7 @@ export interface Options {
         maxZoom?: number;
         beforeLayer?: string;
         attribution?: string;
+        useProxy?: boolean;
     };
     handleUrlParams?: boolean;
     urlParams?: {
