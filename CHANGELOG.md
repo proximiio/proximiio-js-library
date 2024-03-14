@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [1.11.30] - 2024-03-14
 
+### Fixed
+
+- Fix optional properties in `rasterTilesOptions`
+
+## [1.11.30] - 2024-03-14
+
 ### Added
 
 - New property `rasterTilesOptions.useProxy` which is a boolean indicating whether to use a proxy for raster tile URLs.
