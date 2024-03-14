@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.30] - 2024-03-14
+
+### Added
+
+- New property `rasterTilesOptions.useProxy` which is a boolean indicating whether to use a proxy for raster tile URLs.
+
+### Changed
+
+- `raster-tiles` source has been updated to conditionally include the proxy URL based on the value of `useProxy`. If `useProxy` is `true`, the proxy URL is prepended to the tile URL. If `useProxy` is `false`, the original tile URL is used.
+
 ## [1.11.29] - 2024-03-14
 
 ### Fixed
