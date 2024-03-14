@@ -1134,8 +1134,8 @@ export class Map {
       this.state.style.addSource('raster-tiles', {
         type: 'raster',
         tiles: this.defaultOptions.rasterTilesOptions?.tilesUrl
-          ? [`https://api.proximi.fi/imageproxy/source=${this.defaultOptions.rasterTilesOptions.tilesUrl}`]
-          : [`https://api.proximi.fi/imageproxy/source=${metadata['proximiio:raster:tileurl']}`],
+          ? [`${this.defaultOptions.rasterTilesOptions.tilesUrl}`]
+          : [`${metadata['proximiio:raster:tileurl']}`],
         tileSize: this.defaultOptions.rasterTilesOptions?.tileSize
           ? this.defaultOptions.rasterTilesOptions.tileSize
           : metadata['proximiio:raster:tilesize']

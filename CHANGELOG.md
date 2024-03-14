@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.29] - 2024-03-14
+
+### Fixed
+
+- ImageDetection component - Improve scoring algorithm
+
+### Removed
+
+- Imageproxy for loading raster tiles has been removed
+
 ## [1.11.28] - 2024-03-07
 
 ### Fixed
