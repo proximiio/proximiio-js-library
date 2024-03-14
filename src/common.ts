@@ -129,8 +129,7 @@ const calculateDimensions = (vertices: [{ x: number; y: number }]) => {
   let maxX = Number.MIN_SAFE_INTEGER;
   let maxY = Number.MIN_SAFE_INTEGER;
 
-  for (let i = 0; i < vertices.length; i++) {
-    const vertex = vertices[i];
+  for (const vertex of vertices) {
     minX = Math.min(minX, vertex.x);
     minY = Math.min(minY, vertex.y);
     maxX = Math.max(maxX, vertex.x);
