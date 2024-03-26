@@ -1,4 +1,6 @@
-import maplibregl, { SymbolLayerSpecification } from 'maplibre-gl';
+import maplibregl, { LngLatLike, SymbolLayerSpecification } from 'maplibre-gl';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Auth from '../../controllers/auth';
 import { addFeatures, deleteFeatures, getAmenities, getFeatures } from '../../controllers/geo';
 import { PlaceModel } from '../../models/place';
@@ -173,6 +175,12 @@ export interface Options {
     value: string;
   };
   featuresMaxBounds?: LngLatBoundsLike;
+  GLTFModels?: {
+    modelUrl: string;
+    features: string[];
+    amenities: string[];
+    scale?: number;
+  }[];
 }
 
 export interface PaddingOptions {
@@ -679,6 +687,10 @@ export class Map {
 
       if (this.defaultOptions.handleUrlParams) {
         this.initUrlParams();
+      }
+
+      if (this.defaultOptions.GLTFModels.length > 0) {
+        this.initGLTFModels();
       }
 
       this.map.setStyle(this.state.style);
@@ -2050,6 +2062,120 @@ export class Map {
     this.onPersonUpdateListener.next(this.state.persons);
   }
 
+  private initGLTFModels() {
+    const sceneOrigin = new maplibregl.LngLat(this.state.place.location.lng, this.state.place.location.lat);
+    const sceneOriginMercator = maplibregl.MercatorCoordinate.fromLngLat(sceneOrigin, 0);
+
+    const self = this;
+    let camera, scene, renderer, mapFor3D;
+    const customLayer = {
+      id: '3d-model',
+      type: 'custom',
+      renderingMode: '3d',
+      onAdd(map, gl) {
+        camera = new THREE.Camera();
+        scene = new THREE.Scene();
+        mapFor3D = map;
+
+        // In threejs, y points up - we're rotating the scene such that it's y points along maplibre's up.
+        scene.rotateX(Math.PI / 2);
+        // In threejs, z points toward the viewer - mirroring it such that z points along maplibre's north.
+        scene.scale.multiply(new THREE.Vector3(1, 1, -1));
+        // We now have a scene with (x=east, y=up, z=north)
+
+        // create two three.js lights to illuminate the model
+        const directionalLight = new THREE.DirectionalLight(0xffffff);
+        directionalLight.position.set(0, -70, 100).normalize();
+        scene.add(directionalLight);
+
+        const directionalLight2 = new THREE.DirectionalLight(0xffffff);
+        directionalLight2.position.set(0, 70, 100).normalize();
+        scene.add(directionalLight2);
+
+        for (const GLTFModel of self.defaultOptions.GLTFModels) {
+          const features = self.state.allFeatures.features.filter((f) => {
+            if (f.properties.level !== self.state.floor.level) {
+              return false;
+            }
+            if (GLTFModel.amenities.includes(f.properties.amenity)) {
+              return f;
+            }
+            if (GLTFModel.features.includes(f.id) || GLTFModel.features.includes(f.properties.id)) {
+              return f;
+            }
+          });
+
+          for (const feature of features) {
+            const loader = new GLTFLoader();
+            loader.load(GLTFModel.modelUrl, (gltf) => {
+              const model = gltf.scene;
+              const modelOrigin = feature.geometry.coordinates as LngLatLike;
+              const modelAltitude = 0;
+
+              // Getting model x and y (in meters) relative to scene origin.
+              const modelMercator = maplibregl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
+              const { dEastMeter: modelEast, dNorthMeter: modelNorth } = self.calculateDistanceMercatorToMeters(
+                sceneOriginMercator,
+                modelMercator,
+              );
+
+              model.position.set(modelEast, modelAltitude, modelNorth);
+
+              const scale = GLTFModel.scale ? GLTFModel.scale : 1;
+              model.scale.set(scale, scale, scale);
+              scene.add(model);
+            });
+          }
+        }
+
+        // use the MapLibre GL JS map canvas for three.js
+        renderer = new THREE.WebGLRenderer({
+          canvas: map.getCanvas(),
+          context: gl,
+          antialias: true,
+        });
+
+        renderer.autoClear = false;
+      },
+      render(gl, mercatorMatrix) {
+        const sceneTransform = {
+          translateX: sceneOriginMercator.x,
+          translateY: sceneOriginMercator.y,
+          translateZ: sceneOriginMercator.z,
+          scale: sceneOriginMercator.meterInMercatorCoordinateUnits(),
+        };
+
+        const m = new THREE.Matrix4().fromArray(mercatorMatrix);
+        const l = new THREE.Matrix4()
+          .makeTranslation(sceneTransform.translateX, sceneTransform.translateY, sceneTransform.translateZ)
+          .scale(new THREE.Vector3(sceneTransform.scale, -sceneTransform.scale, sceneTransform.scale));
+
+        camera.projectionMatrix = m.multiply(l);
+        renderer.resetState();
+        renderer.render(scene, camera);
+        mapFor3D.triggerRepaint();
+      },
+    };
+
+    setTimeout(() => {
+      if (this.map.getLayer('3d-model')) {
+        this.map.removeLayer('3d-model');
+      }
+      this.map.addLayer(customLayer as any);
+    });
+  }
+
+  private calculateDistanceMercatorToMeters(from, to) {
+    const mercatorPerMeter = from.meterInMercatorCoordinateUnits();
+    // mercator x: 0=west, 1=east
+    const dEast = to.x - from.x;
+    const dEastMeter = dEast / mercatorPerMeter;
+    // mercator y: 0=north, 1=south
+    const dNorth = from.y - to.y;
+    const dNorthMeter = dNorth / mercatorPerMeter;
+    return { dEastMeter, dNorthMeter };
+  }
+
   private prepareStyle(style: StyleModel) {
     style.setSource('main', this.geojsonSource);
     style.setSource('synthetic', this.syntheticSource);
@@ -2245,6 +2371,9 @@ export class Map {
         // @ts-ignore
         map.addLayer(layer);
       });
+      if (this.defaultOptions.GLTFModels.length > 0) {
+        this.initGLTFModels();
+      }
     }
     // @ts-ignore
     this.map.setStyle(this.state.style);
