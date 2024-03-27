@@ -95,6 +95,7 @@ export interface PolygonOptions {
 export interface PolygonLayer extends PolygonOptions {
   featureType: string;
   iconImage?: string;
+  iconImageDefaultVisible?: boolean;
 }
 
 export interface Options {

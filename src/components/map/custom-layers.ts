@@ -82,7 +82,20 @@ export class PolygonIconsLayer extends SymbolLayer {
       'icon-allow-overlap': true,
       'icon-ignore-placement': true,
       'icon-keep-upright': true,
-      visibility: false,
+    });
+    this.paint = new PaintPropertiesSymbol({
+      'icon-opacity': [
+        'case',
+        ['boolean', ['feature-state', 'selected'], false],
+        1,
+        ['boolean', ['feature-state', 'hover'], false],
+        1,
+        ['boolean', ['feature-state', 'active'], false],
+        1,
+        ['boolean', ['feature-state', 'disabled'], false],
+        data.iconImageDefaultVisible || data.iconImageDefaultVisible === undefined ? 1 : 0,
+        data.iconImageDefaultVisible || data.iconImageDefaultVisible === undefined ? 1 : 0,
+      ],
     });
   }
 }
