@@ -1739,6 +1739,14 @@ export class Map {
     this.filterOutFeatures();
   }
 
+  private onHideIcons() {
+    this.state.style.hideIconLayers();
+  }
+
+  private onShowIcons() {
+    this.state.style.showIconLayers();
+  }
+
   private onResetFeatureFilters() {
     this.filteredFeatures = [];
     this.hiddenFeatures = [];
@@ -3603,6 +3611,36 @@ export class Map {
    */
   public hidePois() {
     this.onHidePois();
+  }
+
+  /**
+   * With this method you can hide all icons.
+   *  @memberof Map
+   *  @name hideIcons
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.hideIcons();
+   *  });
+   */
+  public hideIcons() {
+    this.onHideIcons();
+  }
+
+  /**
+   * With this method you can show all icons.
+   *  @memberof Map
+   *  @name showIcons
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.showIcons();
+   *  });
+   */
+  public showIcons() {
+    this.onShowIcons();
   }
 
   /**
