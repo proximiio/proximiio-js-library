@@ -1,4 +1,10 @@
 /**
+ * @license
+ * Copyright 2010-2023 Three.js Authors
+ * SPDX-License-Identifier: MIT
+ */
+
+/**
  * tingle.js - A simple modal plugin written in pure JavaScript
  * @version v0.16.0
  * @link https://github.com/robinparisi/tingle#readme

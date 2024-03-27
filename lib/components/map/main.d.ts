@@ -134,6 +134,19 @@ export interface Options {
         value: string;
     };
     featuresMaxBounds?: LngLatBoundsLike;
+    GLTFModels?: {
+        modelUrl: string;
+        features: string[];
+        amenities: string[];
+        altitude?: number;
+        scale?: number;
+        rotateX?: number;
+        rotateY?: number;
+        rotateZ?: number;
+        translateX?: number;
+        translateY?: number;
+        translateZ?: number;
+    }[];
 }
 export interface PaddingOptions {
     bottom: number;
@@ -221,6 +234,8 @@ export declare class Map {
     private onAddPerson;
     private onUpdatePerson;
     private initPersonsMap;
+    private initGLTFModels;
+    private calculateDistanceMercatorToMeters;
     private prepareStyle;
     private onRouteChange;
     private onSourceChange;
