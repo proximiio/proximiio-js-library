@@ -179,7 +179,14 @@ export interface Options {
     modelUrl: string;
     features: string[];
     amenities: string[];
+    altitude?: number;
     scale?: number;
+    rotateX?: number;
+    rotateY?: number;
+    rotateZ?: number;
+    translateX?: number;
+    translateY?: number;
+    translateZ?: number;
   }[];
 }
 
@@ -666,6 +673,10 @@ export class Map {
       }
 
       this.initPersonsMap();
+
+      this.map.on('click', 'proximiio-levelchangers', (ev) => {
+        console.log(ev.features);
+      });
 
       if (!this.defaultOptions.initPolygons) {
         this.map.on('click', 'proximiio-pois-icons', (ev) => {
@@ -2110,7 +2121,7 @@ export class Map {
             loader.load(GLTFModel.modelUrl, (gltf) => {
               const model = gltf.scene;
               const modelOrigin = feature.geometry.coordinates as LngLatLike;
-              const modelAltitude = 0;
+              const modelAltitude = GLTFModel.altitude ? GLTFModel.altitude : 0;
 
               // Getting model x and y (in meters) relative to scene origin.
               const modelMercator = maplibregl.MercatorCoordinate.fromLngLat(modelOrigin, modelAltitude);
@@ -2121,8 +2132,14 @@ export class Map {
 
               model.position.set(modelEast, modelAltitude, modelNorth);
 
-              const scale = GLTFModel.scale ? GLTFModel.scale : 1;
-              model.scale.set(scale, scale, scale);
+              if (GLTFModel.scale) model.scale.set(GLTFModel.scale, GLTFModel.scale, GLTFModel.scale);
+              if (GLTFModel.rotateX) model.rotation.x = THREE.MathUtils.degToRad(GLTFModel.rotateX);
+              if (GLTFModel.rotateY) model.rotation.y = THREE.MathUtils.degToRad(GLTFModel.rotateY);
+              if (GLTFModel.rotateZ) model.rotation.z = THREE.MathUtils.degToRad(GLTFModel.rotateZ);
+              if (GLTFModel.translateX) model.translateX(GLTFModel.translateX);
+              if (GLTFModel.translateY) model.translateY(GLTFModel.translateY);
+              if (GLTFModel.translateZ) model.translateZ(GLTFModel.translateZ);
+              
               scene.add(model);
             });
           }
