@@ -72,12 +72,15 @@ export interface PolygonOptions {
   defaultPolygonColor?: string;
   hoverPolygonColor?: string;
   selectedPolygonColor?: string;
+  disabledPolygonColor?: string;
   defaultLabelColor?: string;
   hoverLabelColor?: string;
   selectedLabelColor?: string;
+  disabledLabelColor?: string;
   defaultPolygonHeight?: number;
   hoverPolygonHeight?: number;
   selectedPolygonHeight?: number;
+  disabledPolygonHeight?: number;
   base?: number;
   opacity?: number;
   removeOriginalPolygonsLayer?: boolean;
@@ -239,12 +242,15 @@ export class Map {
       defaultPolygonColor: '#dbd7e8',
       hoverPolygonColor: '#a58dfa',
       selectedPolygonColor: '#6945ed',
+      disabledPolygonColor: '#ccc',
       defaultLabelColor: '#6945ed',
       hoverLabelColor: '#fff',
       selectedLabelColor: '#fff',
+      disabledLabelColor: '#8e8e8e',
       defaultPolygonHeight: 3,
       hoverPolygonHeight: 3,
       selectedPolygonHeight: 3,
+      disabledPolygonHeight: 3,
       base: 0,
       opacity: 1,
       removeOriginalPolygonsLayer: true,
@@ -1905,8 +1911,11 @@ export class Map {
               f.geometry.type === 'Point',
           )
         : [];
+      const featuresWithPolygon = this.state.allFeatures.features.filter(
+        (f) => f.properties._dynamic?.polygon_id && f.geometry.type === 'Point',
+      );
       if (activeFeatures.length > 0) {
-        for (const f of activeFeatures) {
+        for (const f of featuresWithPolygon) {
           const polygon = this.state.allFeatures.features.find(
             (i) =>
               i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
@@ -1922,13 +1931,26 @@ export class Map {
               },
               {
                 active: false,
+                disabled: false,
               },
             );
+            if (polygon.properties._dynamic.label_id) {
+              this.map.setFeatureState(
+                {
+                  source: 'main',
+                  id: polygon.properties._dynamic.label_id,
+                },
+                {
+                  active: false,
+                  disabled: false,
+                },
+              );
+            }
           }
         }
       }
       if (amenityFeatures.length > 0) {
-        for (const f of amenityFeatures) {
+        for (const f of featuresWithPolygon) {
           const polygon = this.state.allFeatures.features.find(
             (i) =>
               i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
@@ -1937,15 +1959,51 @@ export class Map {
                 .includes(i.properties._dynamic?.type),
           );
           if (polygon) {
-            this.map.setFeatureState(
-              {
-                source: 'main',
-                id: polygon.id,
-              },
-              {
-                active: true,
-              },
-            );
+            if (
+              Array.isArray(amenityId) ? amenityId.includes(f.properties.amenity) : f.properties.amenity === amenityId
+            ) {
+              this.map.setFeatureState(
+                {
+                  source: 'main',
+                  id: polygon.id,
+                },
+                {
+                  active: true,
+                },
+              );
+              if (polygon.properties._dynamic.label_id) {
+                this.map.setFeatureState(
+                  {
+                    source: 'main',
+                    id: polygon.properties._dynamic.label_id,
+                  },
+                  {
+                    active: true,
+                  },
+                );
+              }
+            } else {
+              this.map.setFeatureState(
+                {
+                  source: 'main',
+                  id: polygon.id,
+                },
+                {
+                  disabled: true,
+                },
+              );
+              if (polygon.properties._dynamic.label_id) {
+                this.map.setFeatureState(
+                  {
+                    source: 'main',
+                    id: polygon.properties._dynamic.label_id,
+                  },
+                  {
+                    disabled: true,
+                  },
+                );
+              }
+            }
           }
         }
       }

@@ -28,6 +28,8 @@ export class PolygonsLayer extends FillExtrusionLayer {
         data.hoverPolygonHeight,
         ['boolean', ['feature-state', 'active'], false],
         data.hoverPolygonHeight,
+        ['boolean', ['feature-state', 'disabled'], false],
+        data.disabledPolygonHeight,
         data.defaultPolygonHeight,
       ],
       'fill-extrusion-base': data.base,
@@ -41,7 +43,7 @@ export class PolygonsLayer extends FillExtrusionLayer {
         ['boolean', ['feature-state', 'active'], false],
         data.hoverPolygonColor,
         ['boolean', ['feature-state', 'disabled'], false],
-        '#8a8a8a',
+        data.disabledPolygonColor,
         data.defaultPolygonColor,
       ],
     });
@@ -128,6 +130,10 @@ export class PolygonTitlesLayer extends SymbolLayer {
         data.selectedLabelColor,
         ['boolean', ['feature-state', 'hover'], false],
         data.hoverLabelColor,
+        ['boolean', ['feature-state', 'active'], false],
+        data.hoverLabelColor,
+        ['boolean', ['feature-state', 'disabled'], false],
+        data.disabledLabelColor,
         data.defaultLabelColor,
       ],
     });
