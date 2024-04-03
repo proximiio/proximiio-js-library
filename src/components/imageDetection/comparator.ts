@@ -30,7 +30,7 @@ const containsWordFromTitle = (text: string, title: string) => {
   const lowercaseTitle = title.toLowerCase();
 
   // Split the title into words
-  const titleWords = lowercaseTitle.split(' ').filter(item => item !== '');
+  const titleWords = lowercaseTitle.split(' ').filter((item) => item !== '');
 
   // Check if any word from the title is present in the text
   if (titleWords.some((word) => lowercaseText.includes(word))) {
