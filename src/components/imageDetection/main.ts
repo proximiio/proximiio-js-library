@@ -318,6 +318,8 @@ class ImageDetection {
 
         const data = await response.json();
 
+        console.log('data recognized', data);
+
         let output = [];
 
         if (data.responses[0].textAnnotations?.length > 0) {
@@ -339,6 +341,8 @@ class ImageDetection {
           output = comparationResults.slice(0, options.returnResults ? options.returnResults : 3);
           output = output.filter((i) => i.score > 0);
         }
+
+        console.log('output', output);
 
         showResults(output);
       } catch (e) {

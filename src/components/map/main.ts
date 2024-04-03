@@ -1741,10 +1741,12 @@ export class Map {
 
   private onHideIcons() {
     this.state.style.hideIconLayers();
+    this.state.style.notify('filter-change');
   }
 
   private onShowIcons() {
     this.state.style.showIconLayers();
+    this.state.style.notify('filter-change');
   }
 
   private onResetFeatureFilters() {
