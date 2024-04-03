@@ -318,7 +318,7 @@ class ImageDetection {
 
         const data = await response.json();
 
-        console.log('data recognized', data);
+        // console.log('data recognized', data);
 
         let output = [];
 
@@ -342,7 +342,7 @@ class ImageDetection {
           output = output.filter((i) => i.score > 0);
         }
 
-        console.log('output', output);
+        // console.log('output', output);
 
         showResults(output);
       } catch (e) {
