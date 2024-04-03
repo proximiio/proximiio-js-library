@@ -53,4 +53,6 @@ export default class StyleModel {
     get namespaces(): string[];
     namespaceItems(namespace: string): string[];
     get json(): any;
+    hideIconLayers(): void;
+    showIconLayers(): void;
 }

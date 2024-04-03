@@ -35,12 +35,15 @@ export interface PolygonOptions {
     defaultPolygonColor?: string;
     hoverPolygonColor?: string;
     selectedPolygonColor?: string;
+    disabledPolygonColor?: string;
     defaultLabelColor?: string;
     hoverLabelColor?: string;
     selectedLabelColor?: string;
+    disabledLabelColor?: string;
     defaultPolygonHeight?: number;
     hoverPolygonHeight?: number;
     selectedPolygonHeight?: number;
+    disabledPolygonHeight?: number;
     base?: number;
     opacity?: number;
     removeOriginalPolygonsLayer?: boolean;
@@ -54,6 +57,7 @@ export interface PolygonOptions {
 export interface PolygonLayer extends PolygonOptions {
     featureType: string;
     iconImage?: string;
+    iconImageDefaultVisible?: boolean;
 }
 export interface Options {
     selector?: string;
@@ -208,6 +212,8 @@ export declare class Map {
     private onSetFeatureFilter;
     private onRemoveFeatureFilter;
     private onHidePois;
+    private onHideIcons;
+    private onShowIcons;
     private onResetFeatureFilters;
     private onSetAmenityFilter;
     private onRemoveAmenityFilter;
@@ -773,6 +779,30 @@ export declare class Map {
      *  });
      */
     hidePois(): void;
+    /**
+     * With this method you can hide all icons.
+     *  @memberof Map
+     *  @name hideIcons
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.hideIcons();
+     *  });
+     */
+    hideIcons(): void;
+    /**
+     * With this method you can show all icons.
+     *  @memberof Map
+     *  @name showIcons
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.showIcons();
+     *  });
+     */
+    showIcons(): void;
     /**
      * Method for removing all active feature filters.
      *  @memberof Map
