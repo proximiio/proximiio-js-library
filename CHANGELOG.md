@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.33] - 2024-04-03
+
+### Added
+
+- New property `polygonsOptions.disabledPolygonColor` to set disabled polygon color
+- New property `polygonsOptions.disabledLabelColor` to set disabled polygon label color
+- New property `polygonsOptions.disabledPolygonHeight` to set disabled polygon height
+- New property `polygonLayer.iconImageDefaultVisible` to handle default visibility of polygon icon image
+- New methods `hideIcons` and `showIcons` to hide/show all icon layers
+
+### Changed
+
+- When amenity filter is applied, all polygons with different amenity will go to disabled state
+- Improve word matching algorithm for `imageDetection` component
+
 ## [1.11.32] - 2024-03-14
 
 ### Fixed

@@ -191,6 +191,9 @@ const map = new Proximiio.Map({
       // Optional, default: '#6945ed', selected color of the polygons
       selectedPolygonColor: string,
 
+      // Optional, default: '#ccc', disabled color of the polygons
+      disabkedPolygonColor: string,
+
       // Optional, default: '#6945ed', default color of the polygon labels
       defaultLabelColor: string,
 
@@ -200,6 +203,9 @@ const map = new Proximiio.Map({
       // Optional, default: '#fff', selected color of the polygon labels
       selectedLabelColor: string,
 
+      // Optional, default: '#8e8e8e', disabled color of the polygon labels
+      disabledLabelColor: string,
+
       // Optional, default: 3, default polygon height in meters
       defaultPolygonHeight: number,
 
@@ -208,6 +214,9 @@ const map = new Proximiio.Map({
 
       // Optional, default: 3, selected polygon height in meters
       selectedPolygonHeight: number,
+
+      // Optional, default: 3, disabled polygon height in meters
+      disabledPolygonHeight: number,
 
       // Optional, default: 0, default polygon base in meters
       base: number,
@@ -256,6 +265,9 @@ const map = new Proximiio.Map({
 
       // anchor shop images are loaded within map by feature id
       iconImage: '{id}'
+
+      // handle default image visibility
+      iconImageDefaultVisible : boolean
    }],
 
    // Optional, default: true, if enabled all POIs with visibility property defined as 'hidden'
@@ -955,6 +967,30 @@ const map = new Proximiio.Map();
 map.getMapReadyListener().subscribe((ready) => {
   console.log('map ready', ready);
   map.hidePois();
+});
+```
+
+###### Hiding all icon layers
+
+Method for hiding all icons on map.
+
+```javascript
+const map = new Proximiio.Map();
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.hideIcons();
+});
+```
+
+###### Showing all icon layers
+
+Method for show all icons on map.
+
+```javascript
+const map = new Proximiio.Map();
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  map.showIcons();
 });
 ```
 
