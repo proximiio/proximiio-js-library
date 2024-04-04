@@ -244,6 +244,12 @@ const map = new Proximiio.Map({
       // Optional, default: true, if no label-line is defined in the feature metadata,
       // if enabled it's automatically generated based on the longest polygon border
       autoLabelLines: boolean
+
+      // Optional, default: false, when enabled polygon label opacity will decrease with increasing map pitch
+      adaptiveLabelOpacity: boolean
+
+      // Optional, default: 30, maximum pitch when polygon label will be visible if `adaptiveLabelOpacity` is enabled
+      adaptiveMaxPitch: 30
    },
 
    // Optional, you can define more features to display as polygons and enable
@@ -309,6 +315,9 @@ const map = new Proximiio.Map({
 
       // Optional, default: true, if enabled map center will change to follow animation
       followRoute: true,
+
+      // Optional, default: false, if enabled camera will follow route with angle change
+      followRouteAngle: false
 
       // Optional, default: 30, the higher multiplier is animation should be faster
       durationMultiplier: 30,

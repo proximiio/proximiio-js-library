@@ -92,7 +92,7 @@ export interface PolygonOptions {
   autoLabelLines?: boolean;
   textFont?: string[];
   adaptiveLabelOpacity?: boolean;
-  adaptiveMinPitch?: number;
+  adaptiveMaxPitch?: number;
 }
 
 export interface PolygonLayer extends PolygonOptions {
@@ -300,7 +300,7 @@ export class Map {
       symbolPlacement: 'line-center',
       autoLabelLines: true,
       adaptiveLabelOpacity: false,
-      adaptiveMinPitch: 30,
+      adaptiveMaxPitch: 30,
     },
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
@@ -1266,7 +1266,7 @@ export class Map {
   private updateLayerOpacity() {
     const pitch = this.map.getPitch();
     const maxPitch = 60;
-    const minPitch = this.defaultOptions.polygonsOptions.adaptiveMinPitch;
+    const minPitch = this.defaultOptions.polygonsOptions.adaptiveMaxPitch;
 
     // Calculate opacity based on pitch
     let opacity;

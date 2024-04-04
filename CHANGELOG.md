@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.34] - 2024-04-04
+
+### Added
+- New property `routeAnimation.followRouteAngle` to follow route with angle change
+- New property `polygonsOptions.adaptiveLabelOpacity` when enabled polygon label opacity will decrease with increasing map pitch
+- New property `polygonsOptions.adaptiveMaxPitch` maximum pitch when polygon label will be visible if `adaptiveLabelOpacity` is enabled
+
 ## [1.11.33] - 2024-04-03
 
 ### Added
