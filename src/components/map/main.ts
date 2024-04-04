@@ -91,6 +91,8 @@ export interface PolygonOptions {
   symbolPlacement?: 'point' | 'line' | 'line-center';
   autoLabelLines?: boolean;
   textFont?: string[];
+  adaptiveLabelOpacity?: boolean;
+  adaptiveMinPitch?: number;
 }
 
 export interface PolygonLayer extends PolygonOptions {
@@ -297,6 +299,8 @@ export class Map {
       textFont: ['Quicksand Bold', 'Noto Sans Arabic Bold'],
       symbolPlacement: 'line-center',
       autoLabelLines: true,
+      adaptiveLabelOpacity: false,
+      adaptiveMinPitch: 30,
     },
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
@@ -1249,6 +1253,35 @@ export class Map {
       this.map.on('mouseleave', 'pois-icons', (ev) => {
         this.map.getCanvas().style.cursor = '';
       });
+
+      if (this.defaultOptions.polygonsOptions.adaptiveLabelOpacity) {
+        this.map.on('pitch', () => {
+          this.updateLayerOpacity();
+        });
+        this.updateLayerOpacity();
+      }
+    }
+  }
+
+  private updateLayerOpacity() {
+    const pitch = this.map.getPitch();
+    const maxPitch = 60;
+    const minPitch = this.defaultOptions.polygonsOptions.adaptiveMinPitch;
+
+    // Calculate opacity based on pitch
+    let opacity;
+    if (pitch >= minPitch) {
+      opacity = 0; // Opacity is 0 when pitch is greater than or equal to minPitch
+    } else {
+      opacity = 1 - pitch / maxPitch; // Linear interpolation between 1 and 0 for pitch < minPitch
+    }
+
+    for (const layer of this.defaultOptions.polygonLayers) {
+      if (layer.adaptiveLabelOpacity) {
+        if (this.map.getLayer(`${layer.featureType}-labels`)) {
+          this.map.setPaintProperty(`${layer.featureType}-labels`, 'text-opacity', opacity);
+        }
+      }
     }
   }
 
