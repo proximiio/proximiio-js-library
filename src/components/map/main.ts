@@ -37,6 +37,7 @@ import center from '@turf/center';
 import along from '@turf/along';
 import lineSplit from '@turf/line-split';
 import nearestPoint from '@turf/nearest-point';
+import bearing from '@turf/bearing';
 import { isNumber, lineString, point, feature, featureCollection } from '@turf/helpers';
 import WayfindingLogger from '../logger/wayfinding';
 import { translations } from './i18n';
@@ -130,6 +131,7 @@ export interface Options {
     type?: 'point' | 'dash';
     looping?: boolean;
     followRoute?: boolean;
+    followRouteAngle?: boolean;
     duration?: number;
     durationMultiplier?: number;
     fps?: number;
@@ -308,6 +310,7 @@ export class Map {
       type: 'dash',
       looping: true,
       followRoute: true,
+      followRouteAngle: false,
       durationMultiplier: 30,
       fps: 120,
       pointIconSize: 1,
@@ -2729,27 +2732,37 @@ export class Map {
     if (this.defaultOptions.routeAnimation.followRoute && !animationInProgress) {
       animationInProgress = true;
 
-      /*const prevPoint = counter === 0 ? along(route, 0) : along(route, previousFrameLength);
-      const currentPoint = along(route, frameLength);
+      if (!this.defaultOptions.routeAnimation.followRouteAngle) {
+        setTimeout(() => {
+          this.map.jumpTo({
+            center: pointAlong.geometry.coordinates as [number, number],
+          });
 
-      const currentBearing = this.map.getBearing();
-      const bearing = prevPoint && currentPoint ? bearing(prevPoint, currentPoint) : currentBearing;
-      let newBearing = currentBearing;
+          animationInProgress = false;
+        }, 100); // Adjust this timeout for throttling
+      } else {
+        const prevPoint = counter === 0 ? along(route, 0) : along(route, previousFrameLength);
+        const currentPoint = along(route, frameLength);
 
-      if (Math.abs(currentBearing - bearing) >= 6) {
-        newBearing = bearing;
-      }*/
+        const currentBearing = this.map.getBearing();
+        const nextBearing = prevPoint && currentPoint ? bearing(prevPoint, currentPoint) : currentBearing;
+        let newBearing = currentBearing;
 
-      setTimeout(() => {
-        this.map.jumpTo({
-          center: pointAlong.geometry.coordinates as [number, number],
-          // bearing: newBearing,
-          // duration: 100,
-          // essential: true,
-        });
+        if (Math.abs(currentBearing - nextBearing) >= 6) {
+          newBearing = nextBearing;
+        }
 
-        animationInProgress = false;
-      }, 100); // Adjust this timeout for throttling
+        setTimeout(() => {
+          this.map.flyTo({
+            center: pointAlong.geometry.coordinates as [number, number],
+            bearing: newBearing,
+            duration: 200,
+            essential: true,
+          });
+
+          animationInProgress = false;
+        }, 100); // Adjust this timeout for throttling
+      }
     }
 
     // if (counter === 0) map.getSource('startPoint').setData(pointAlong);

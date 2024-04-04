@@ -91,6 +91,7 @@ export interface Options {
         type?: 'point' | 'dash';
         looping?: boolean;
         followRoute?: boolean;
+        followRouteAngle?: boolean;
         duration?: number;
         durationMultiplier?: number;
         fps?: number;
