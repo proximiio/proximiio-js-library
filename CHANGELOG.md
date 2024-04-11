@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.35] - 2024-04-04
+
+### Added
+- Add function convertToRTL to reverse Arabic strings for RTL support
+
+### Fixed
+- Simplify conditional statements for filtering features based on activePolygonsAmenity and amenityId, now feature does not have to have polygon
+
 ## [1.11.34] - 2024-04-04
 
 ### Added
