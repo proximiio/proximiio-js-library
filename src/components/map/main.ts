@@ -1943,9 +1943,7 @@ export class Map {
             (f) =>
               (Array.isArray(this.activePolygonsAmenity)
                 ? this.activePolygonsAmenity.includes(f.properties.amenity)
-                : f.properties.amenity === this.activePolygonsAmenity) &&
-              f.properties._dynamic?.polygon_id &&
-              f.geometry.type === 'Point',
+                : f.properties.amenity === this.activePolygonsAmenity) && f.geometry.type === 'Point',
           )
         : [];
       const amenityFeatures = amenityId
@@ -1953,9 +1951,7 @@ export class Map {
             (f) =>
               (Array.isArray(amenityId)
                 ? amenityId.includes(f.properties.amenity)
-                : f.properties.amenity === amenityId) &&
-              f.properties._dynamic?.polygon_id &&
-              f.geometry.type === 'Point',
+                : f.properties.amenity === amenityId) && f.geometry.type === 'Point',
           )
         : [];
       const featuresWithPolygon = this.state.allFeatures.features.filter(

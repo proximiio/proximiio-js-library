@@ -1,5 +1,6 @@
 import DataSource from './data_source';
 import Feature, { FeatureCollection } from '../../../models/feature';
+import { convertToRTL } from '../../../common';
 
 export default class GeoJSONSource extends DataSource {
   language = 'en';
@@ -41,6 +42,10 @@ export default class GeoJSONSource extends DataSource {
       feature.properties.title = feature.properties.title_i18n[language]
         ? feature.properties.title_i18n[language]
         : feature.properties.title;
+    }
+
+    if (language === 'ar') {
+      feature.properties.title = convertToRTL(feature.properties.title);
     }
   }
 

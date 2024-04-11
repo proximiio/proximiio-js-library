@@ -143,4 +143,17 @@ const calculateDimensions = (vertices: [{ x: number; y: number }]) => {
   return { width, height, area };
 };
 
-export { calculateDimensions };
+const convertToRTL = (arabicString) => {
+  // Split the string into an array of characters
+  var characters = arabicString.split('');
+
+  // Reverse the order of the characters
+  var reversedCharacters = characters.reverse();
+
+  // Join the characters back into a string
+  var reversedString = reversedCharacters.join('');
+
+  return reversedString;
+};
+
+export { calculateDimensions, convertToRTL };
