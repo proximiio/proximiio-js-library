@@ -145,13 +145,13 @@ const calculateDimensions = (vertices: [{ x: number; y: number }]) => {
 
 const convertToRTL = (arabicString) => {
   // Split the string into an array of characters
-  var characters = arabicString.split('');
+  const characters = arabicString.split('');
 
   // Reverse the order of the characters
-  var reversedCharacters = characters.reverse();
+  const reversedCharacters = characters.reverse();
 
   // Join the characters back into a string
-  var reversedString = reversedCharacters.join('');
+  const reversedString = reversedCharacters.join('');
 
   return reversedString;
 };
