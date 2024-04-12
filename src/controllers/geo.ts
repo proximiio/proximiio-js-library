@@ -155,7 +155,13 @@ export const getFeatures = async ({
                 ? connectedLabelLine.properties._dynamic
                 : {};
 
-              connectedLabelLine.properties._dynamic.id = connectedLabelLine.properties.id?.replace(/\{|\}/g, '');
+              connectedLabelLine.properties.metadata = feature.properties.metadata;
+              connectedLabelLine.properties.icon_only = feature.properties.icon_only;
+              connectedLabelLine.properties.text_only = feature.properties.text_only;
+              connectedLabelLine.properties.metadata = feature.properties.metadata;
+              connectedLabelLine.properties.id = connectedLabelLine.id;
+              connectedLabelLine.properties._dynamic.id = connectedLabelLine.id;
+              connectedLabelLine.properties.type = `${featureType}-label`;
               connectedLabelLine.properties._dynamic.type = `${featureType}-label`;
               connectedLabelLine.properties._dynamic.poi_id = feature.properties.id;
               connectedLabelLine.properties._dynamic.amenity = feature.properties.amenity;

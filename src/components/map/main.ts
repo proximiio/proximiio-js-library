@@ -2990,7 +2990,6 @@ export class Map {
 
   private translateLayers() {
     if (this.defaultOptions.isKiosk && this.defaultOptions.kioskSettings.showLabel && this.kioskPopup) {
-      console.log(this.defaultOptions.kioskSettings);
       this.kioskPopup.setHTML(translations[this.defaultOptions.language].YOU_ARE_HERE);
     }
   }
