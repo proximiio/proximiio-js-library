@@ -1,4 +1,4 @@
-import maplibregl, { SymbolLayerSpecification } from 'maplibre-gl';
+import maplibregl, { FillExtrusionLayerSpecification, SymbolLayerSpecification } from 'maplibre-gl';
 import Auth from '../../controllers/auth';
 import { addFeatures, deleteFeatures, getAmenities, getFeatures } from '../../controllers/geo';
 import { PlaceModel } from '../../models/place';
@@ -29,7 +29,7 @@ import { CustomSubject } from '../../customSubject';
 import * as tingle from 'tingle.js/dist/tingle';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
 import { MapboxOptions } from '../../models/mapbox-options';
-import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer, PolygonTitlesLineLayer } from './custom-layers';
+import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer } from './custom-layers';
 import PersonModel from '../../models/person';
 import bbox from '@turf/bbox';
 import length from '@turf/length';
@@ -38,6 +38,7 @@ import along from '@turf/along';
 import lineSplit from '@turf/line-split';
 import nearestPoint from '@turf/nearest-point';
 import bearing from '@turf/bearing';
+import circle from '@turf/circle';
 import { isNumber, lineString, point, feature, featureCollection } from '@turf/helpers';
 import WayfindingLogger from '../logger/wayfinding';
 import { translations } from './i18n';
@@ -114,8 +115,10 @@ export interface Options {
   kioskSettings?: {
     coordinates: [number, number];
     level: number;
+    showPoint?: boolean;
     showLabel?: boolean;
     pointColor?: string;
+    labelFont?: string;
   };
   initPolygons?: boolean;
   polygonsOptions?: PolygonOptions;
@@ -130,7 +133,7 @@ export interface Options {
   animationLooping?: boolean;
   routeAnimation?: {
     enabled?: boolean;
-    type?: 'point' | 'dash';
+    type?: 'point' | 'dash' | 'puck';
     looping?: boolean;
     followRoute?: boolean;
     followRouteAngle?: boolean;
@@ -141,6 +144,9 @@ export interface Options {
     pointIconSize?: number;
     pointColor?: string;
     pointRadius?: number;
+    puckColor?: string;
+    puckRadius?: number;
+    puckHeight?: number;
     lineColor?: string;
     lineOpacity?: number;
     lineWidth?: number;
@@ -357,6 +363,7 @@ export class Map {
   private hoveredPolygon: any;
   private selectedPolygon: any;
   private currentStep = 0;
+  private kioskPopup: any;
 
   constructor(options: Options) {
     // fix centering in case of kiosk with defined pitch/bearing/etc. in mapbox options
@@ -735,42 +742,142 @@ export class Map {
         this.startPoint = point(this.defaultOptions.kioskSettings.coordinates, {
           level: this.defaultOptions.kioskSettings.level,
         }) as Feature;
-        this.showStartPoint = true;
-        this.state.style.addSource('my-location', {
-          type: 'geojson',
-          data: {
-            type: 'FeatureCollection',
-            features: [this.startPoint as any],
-          },
-        });
-        let kioskLayer: SymbolLayerSpecification = {
-          id: 'my-location-layer',
-          type: 'symbol',
-          source: 'my-location',
-          layout: {
-            'icon-image': 'pulsing-dot',
-          },
-          filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
-        };
+
         if (this.defaultOptions.kioskSettings.showLabel) {
-          kioskLayer = {
-            ...kioskLayer,
-            layout: {
-              ...kioskLayer.layout,
-              'text-field': translations[this.defaultOptions.language].YOU_ARE_HERE,
-              'text-font': ['Quicksand Bold', 'Noto Sans Arabic Bold'],
-              'text-offset': [0, 0.6],
-              'text-anchor': 'top',
-              'text-allow-overlap': true,
-              'text-size': 18,
-            },
-            paint: {
-              'text-halo-width': 1,
-              'text-halo-color': '#ffffff',
-            },
-          };
+          if (this.kioskPopup) {
+            this.kioskPopup.setLngLat(this.defaultOptions.kioskSettings.coordinates);
+          } else {
+            this.kioskPopup = new maplibregl.Popup({
+              closeOnClick: false,
+              className: 'proximiio-kiosk-popup',
+              offset: [0, -15],
+            })
+              .setLngLat(this.defaultOptions.kioskSettings.coordinates)
+              .setHTML(translations[this.defaultOptions.language].YOU_ARE_HERE)
+              .addTo(this.map);
+          }
+
+          const css = `
+            .proximiio-kiosk-popup.hidden {
+              display: none;
+            }
+            .proximiio-kiosk-popup .maplibregl-popup-close-button {
+              display: none;
+            }
+            .proximiio-kiosk-popup .maplibregl-popup-content {
+              font-family: ${
+                this.defaultOptions.kioskSettings.labelFont
+                  ? this.defaultOptions.kioskSettings.labelFont
+                  : 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"'
+              };
+              color: white;
+              font-size: 16px;
+              border-radius: 12px;
+              padding: .6rem .8rem;
+              font-weight: 500;
+              max-width: 100px;
+              text-align: center;
+              box-shadow: none;
+              background-color: ${
+                this.defaultOptions.kioskSettings.pointColor
+                  ? `rgb(${this.defaultOptions.kioskSettings.pointColor})`
+                  : 'rgb(189, 82, 255)'
+              };
+            }
+            .proximiio-kiosk-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+              border-top-color: ${
+                this.defaultOptions.kioskSettings.pointColor
+                  ? `rgb(${this.defaultOptions.kioskSettings.pointColor})`
+                  : 'rgb(189, 82, 255)'
+              };
+              margin-top: -1px;
+            }
+          `;
+
+          if (!document.getElementById('proximiio-kiosk-popup-css')) {
+            this.InjectCSS({ id: 'proximiio-kiosk-popup-css', css });
+          }
         }
-        this.state.style.addLayer(kioskLayer);
+
+        if (this.defaultOptions.kioskSettings.showPoint) {
+          this.showStartPoint = true;
+          this.state.style.addSource('my-location', {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: [this.startPoint as any],
+            },
+          });
+          let kioskLayer: SymbolLayerSpecification = {
+            id: 'my-location-layer',
+            type: 'symbol',
+            source: 'my-location',
+            layout: {
+              'icon-image': 'pulsing-dot',
+            },
+            filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
+          };
+
+          this.state.style.addLayer(kioskLayer);
+        }
+
+        if (this.defaultOptions.routeAnimation.type === 'puck') {
+          const startPointCircle = circle(
+            this.startPoint.geometry.coordinates,
+            this.defaultOptions.routeAnimation.puckRadius ? this.defaultOptions.routeAnimation.puckRadius : 0.002,
+          );
+          const startPointCircleHalo = circle(
+            this.startPoint.geometry.coordinates,
+            this.defaultOptions.routeAnimation.puckRadius
+              ? this.defaultOptions.routeAnimation.puckRadius + 0.001
+              : 0.003,
+          );
+          this.state.style.addSource('start-point', {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: [startPointCircle as any],
+            },
+          });
+          this.state.style.addSource('start-point-halo', {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: [startPointCircleHalo as any],
+            },
+          });
+          let startPointLayer: FillExtrusionLayerSpecification = {
+            id: 'start-point-layer',
+            type: 'fill-extrusion',
+            source: 'start-point',
+            paint: {
+              'fill-extrusion-height': this.defaultOptions.routeAnimation.puckHeight
+                ? this.defaultOptions.routeAnimation.puckHeight
+                : 1.5,
+              'fill-extrusion-color': this.defaultOptions.routeAnimation.puckColor
+                ? this.defaultOptions.routeAnimation.puckColor
+                : 'rgb(189, 82, 255)',
+            },
+            filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
+          };
+          this.state.style.addLayer(startPointLayer, 'proximiio-routing-line-remaining');
+
+          let startPointHaloLayer: FillExtrusionLayerSpecification = {
+            id: 'start-point-halo-layer',
+            type: 'fill-extrusion',
+            source: 'start-point-halo',
+            paint: {
+              'fill-extrusion-height': 0,
+              'fill-extrusion-color': this.defaultOptions.routeAnimation.puckColor
+                ? this.defaultOptions.routeAnimation.puckColor
+                : 'rgb(189, 82, 255)',
+              'fill-extrusion-opacity': 0.5,
+            },
+            filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
+          };
+          this.state.style.addLayer(startPointHaloLayer);
+        }
+
         this.centerOnPoi(this.startPoint);
       }
     }
@@ -783,14 +890,44 @@ export class Map {
         coordinates: [lng, lat],
         level,
       };
+
       this.startPoint = point(this.defaultOptions.kioskSettings.coordinates, {
         level: this.defaultOptions.kioskSettings.level,
       }) as Feature;
-      this.state.style.sources['my-location'].data = {
-        type: 'FeatureCollection',
-        features: [this.startPoint as any],
-      };
-      this.map.setFilter('my-location-layer', ['all', ['==', ['to-number', ['get', 'level']], level]]);
+
+      if (this.defaultOptions.kioskSettings.showPoint) {
+        this.state.style.sources['my-location'].data = {
+          type: 'FeatureCollection',
+          features: [this.startPoint as any],
+        };
+        this.map.setFilter('my-location-layer', ['all', ['==', ['to-number', ['get', 'level']], level]]);
+      }
+
+      if (this.defaultOptions.routeAnimation.type === 'puck') {
+        const startPointCircle = circle(
+          this.startPoint.geometry.coordinates,
+          this.defaultOptions.routeAnimation.puckRadius ? this.defaultOptions.routeAnimation.puckRadius : 0.002,
+        );
+        const startPointCircleHalo = circle(
+          this.startPoint.geometry.coordinates,
+          this.defaultOptions.routeAnimation.puckRadius ? this.defaultOptions.routeAnimation.puckRadius + 0.001 : 0.003,
+        );
+        this.state.style.sources['start-point'].data = {
+          type: 'FeatureCollection',
+          features: [startPointCircle as any],
+        };
+        this.state.style.sources['start-point-halo'].data = {
+          type: 'FeatureCollection',
+          features: [startPointCircleHalo as any],
+        };
+        this.map.setFilter('start-point-layer', ['all', ['==', ['to-number', ['get', 'level']], level]]);
+        this.map.setFilter('start-point-halo-layer', ['all', ['==', ['to-number', ['get', 'level']], level]]);
+      }
+
+      if (this.kioskPopup) {
+        this.kioskPopup.setLngLat(this.startPoint.geometry.coordinates);
+      }
+
       this.map.setStyle(this.state.style);
       this.centerOnPoi(this.startPoint);
     }
@@ -1038,7 +1175,7 @@ export class Map {
 
   private initAnimatedRoute() {
     if (this.map) {
-      if (this.defaultOptions.routeAnimation.type === 'point') {
+      if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
         this.state.style.addSource('lineAlong', {
           type: 'geojson',
           data: {
@@ -2441,10 +2578,32 @@ export class Map {
           this.map.flyTo({ center: center(routePoints).geometry.coordinates });
         }
       }
-      if (this.defaultOptions.isKiosk && map.getLayer('my-location-layer')) {
-        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
-        map.setFilter('my-location-layer', filter as maplibregl.FilterSpecification);
-        this.state.style.getLayer('my-location-layer').filter = filter;
+      if (this.defaultOptions.isKiosk) {
+        if (this.defaultOptions.kioskSettings.showPoint && map.getLayer('my-location-layer')) {
+          const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
+          map.setFilter('my-location-layer', filter as maplibregl.FilterSpecification);
+          this.state.style.getLayer('my-location-layer').filter = filter;
+        }
+
+        if (
+          this.defaultOptions.routeAnimation.type === 'puck' &&
+          map.getLayer('start-point-layer') &&
+          map.getLayer('start-point-halo-layer')
+        ) {
+          const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
+          map.setFilter('start-point-layer', filter as maplibregl.FilterSpecification);
+          this.state.style.getLayer('start-point-layer').filter = filter;
+          map.setFilter('start-point-halo-layer', filter as maplibregl.FilterSpecification);
+          this.state.style.getLayer('start-point-halo-layer').filter = filter;
+        }
+
+        if (this.kioskPopup) {
+          if (floor.level === this.defaultOptions.kioskSettings.level) {
+            this.kioskPopup.removeClassName('hidden');
+          } else {
+            this.kioskPopup.addClassName('hidden');
+          }
+        }
       }
       if (this.defaultOptions.useGpsLocation && this.startPoint) {
         this.startPoint.properties = { ...this.startPoint.properties, level: floor.level };
@@ -2514,7 +2673,7 @@ export class Map {
       if (this.defaultOptions.animatedRoute) {
         console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
       }
-      if (this.defaultOptions.routeAnimation.type === 'point') {
+      if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
         clearInterval(this.animationInterval);
         // @ts-ignore
         this.map.getSource('pointAlong').setData({
@@ -2639,7 +2798,7 @@ export class Map {
               this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
               { level: this.state.floor.level },
             );
-      if (this.defaultOptions.routeAnimation.type === 'point') {
+      if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
         clearInterval(this.animationInterval);
         clearTimeout(this.animationTimeout);
         const lineDistance = length(route) * 1000;
@@ -2753,8 +2912,27 @@ export class Map {
     this.state.style.sources['pointAlong'].data = pointAlong;
     this.map.setStyle(this.state.style);*/
 
-    // @ts-ignore
-    this.map.getSource('pointAlong').setData(pointAlong);
+    if (this.defaultOptions.routeAnimation.type === 'point') {
+      // @ts-ignore
+      this.map.getSource('pointAlong').setData(pointAlong);
+    }
+    if (this.defaultOptions.routeAnimation.type === 'puck') {
+      this.map
+        .getSource('start-point')
+        // @ts-ignore
+        .setData(
+          circle(
+            pointAlong.geometry.coordinates,
+            this.defaultOptions.routeAnimation.puckRadius ? this.defaultOptions.routeAnimation.puckRadius : 0.002,
+            {
+              properties: {
+                level: this.state.floor.level,
+              },
+            },
+          ),
+        );
+    }
+
     // @ts-ignore
     this.map.getSource('lineAlong').setData(lineAlong);
 
@@ -2811,20 +2989,10 @@ export class Map {
   };
 
   private translateLayers() {
-    if (
-      this.defaultOptions.isKiosk &&
-      this.defaultOptions.kioskSettings.showLabel &&
-      this.map.getLayer('my-location-layer')
-    ) {
-      this.map.setLayoutProperty(
-        'my-location-layer',
-        'text-field',
-        translations[this.defaultOptions.language].YOU_ARE_HERE,
-      );
-      const styleLayer = this.state.style.layers.find((layer) => layer.id === 'my-location-layer');
-      styleLayer.layout['text-field'] = translations[this.defaultOptions.language].YOU_ARE_HERE;
+    if (this.defaultOptions.isKiosk && this.defaultOptions.kioskSettings.showLabel && this.kioskPopup) {
+      console.log(this.defaultOptions.kioskSettings);
+      this.kioskPopup.setHTML(translations[this.defaultOptions.language].YOU_ARE_HERE);
     }
-    this.state.style.setSource('main', this.geojsonSource);
   }
 
   public getClosestFeature(amenityId: string, fromFeature?: Feature) {
@@ -2862,6 +3030,16 @@ export class Map {
 
   private handleControllerError = (err) => {
     this.onMapFailedListener.next(true);
+  };
+
+  private InjectCSS = ({ id, css }: { id: string; css: string }) => {
+    // Create the css
+    const style = document.createElement('style');
+    style.id = id;
+    style.innerHTML = css;
+
+    const head = document.getElementsByTagName('head')[0];
+    head.insertBefore(style, head.firstChild);
   };
 
   /**
