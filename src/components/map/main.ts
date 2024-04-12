@@ -808,7 +808,7 @@ export class Map {
               features: [this.startPoint as any],
             },
           });
-          let kioskLayer: SymbolLayerSpecification = {
+          const kioskLayer: SymbolLayerSpecification = {
             id: 'my-location-layer',
             type: 'symbol',
             source: 'my-location',
@@ -846,7 +846,7 @@ export class Map {
               features: [startPointCircleHalo as any],
             },
           });
-          let startPointLayer: FillExtrusionLayerSpecification = {
+          const startPointLayer: FillExtrusionLayerSpecification = {
             id: 'start-point-layer',
             type: 'fill-extrusion',
             source: 'start-point',
@@ -862,7 +862,7 @@ export class Map {
           };
           this.state.style.addLayer(startPointLayer, 'proximiio-routing-line-remaining');
 
-          let startPointHaloLayer: FillExtrusionLayerSpecification = {
+          const startPointHaloLayer: FillExtrusionLayerSpecification = {
             id: 'start-point-halo-layer',
             type: 'fill-extrusion',
             source: 'start-point-halo',
