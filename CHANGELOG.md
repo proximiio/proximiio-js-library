@@ -2,7 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.11.35] - 2024-04-04
+## [1.11.36] - 2024-04-12
+
+### Added
+- New route animation type `puck`
+- New property `kioskSettings.showPoint` to handle visibility of kiosk point
+- New property `kioskSettings.labelFont` to handle font family of kiosk label
+- New property `routeAnimation.puckColor` to handle puck color
+- New property `routeAnimation.puckRadius` to handle puck radius
+- New property `routeAnimation.puckHeight` to handle puck height
+
+### Changed
+- Kiosk label using maplibregl popup
+
+## [1.11.35] - 2024-04-11
 
 ### Added
 - Add function convertToRTL to reverse Arabic strings for RTL support
