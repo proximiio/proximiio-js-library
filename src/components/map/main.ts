@@ -3065,6 +3065,14 @@ export class Map {
 
   private onRestartRouteAnimation(delay: number) {
     if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
+      const route =
+        this.routingSource.route[`path-part-${this.currentStep}`] &&
+        this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === this.state.floor.level
+          ? this.routingSource.route[`path-part-${this.currentStep}`]
+          : lineString(
+              this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
+              { level: this.state.floor.level },
+            );
       clearInterval(this.animationInterval);
       // @ts-ignore
       this.map.getSource('pointAlong').setData({
@@ -3076,6 +3084,10 @@ export class Map {
         type: 'FeatureCollection',
         features: [],
       });
+      this.map.jumpTo({
+        center: route.geometry.coordinates[0] as [number, number],
+      });
+      this.map.setStyle(this.state.style);
     }
     setTimeout(
       () => {
