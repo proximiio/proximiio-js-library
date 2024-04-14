@@ -2,21 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.38] - 2024-04-14
+
+### Added
+
+- Add delay parameter to restartRouteAnimation method to allow specifying a delay before restarting route animation
+
 ## [1.11.37] - 2024-04-14
 
 ### Added
+
 - New property `polygonsOptions.drawRouteUnderPolygons` route layer will be positioned under the polygons
 - New method `restartRouteAnimation` to be able restart route animation manually
 
 ### Changed
+
 - Set all polygons to `disabled` state except the one selected with method `handlePolygonSelection`
 
 ### Fixed
+
 - `adaptiveLabelOpacity` remains the same after map actions
 
 ## [1.11.36] - 2024-04-12
 
 ### Added
+
 - New route animation type `puck`
 - New property `kioskSettings.showPoint` to handle visibility of kiosk point
 - New property `kioskSettings.labelFont` to handle font family of kiosk label
@@ -25,19 +35,23 @@ All notable changes to this project will be documented in this file.
 - New property `routeAnimation.puckHeight` to handle puck height
 
 ### Changed
+
 - Kiosk label using maplibregl popup
 
 ## [1.11.35] - 2024-04-11
 
 ### Added
+
 - Add function convertToRTL to reverse Arabic strings for RTL support
 
 ### Fixed
+
 - Simplify conditional statements for filtering features based on activePolygonsAmenity and amenityId, now feature does not have to have polygon
 
 ## [1.11.34] - 2024-04-04
 
 ### Added
+
 - New property `routeAnimation.followRouteAngle` to follow route with angle change
 - New property `polygonsOptions.adaptiveLabelOpacity` when enabled polygon label opacity will decrease with increasing map pitch
 - New property `polygonsOptions.adaptiveMaxPitch` maximum pitch when polygon label will be visible if `adaptiveLabelOpacity` is enabled
