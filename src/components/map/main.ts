@@ -3063,9 +3063,23 @@ export class Map {
     }
   };
 
-  private onRestartRouteAnimation() {
-    clearInterval(this.animationInterval);
-    this.animateRoute();
+  private onRestartRouteAnimation(delay: number) {
+    if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
+      clearInterval(this.animationInterval);
+      // @ts-ignore
+      this.map.getSource('pointAlong').setData({
+        type: 'FeatureCollection',
+        features: [],
+      });
+      // @ts-ignore
+      this.map.getSource('lineAlong').setData({
+        type: 'FeatureCollection',
+        features: [],
+      });
+    }
+    setTimeout(() => {
+      this.animateRoute();
+    }, delay ? delay : 0)
   }
 
   private translateLayers() {
@@ -4235,6 +4249,7 @@ export class Map {
    * Method for restarting route animation
    *  @memberof Map
    *  @name restartRouteAnimation
+   *  @param delay {number} delay the route start.
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -4242,8 +4257,8 @@ export class Map {
    *    map.restartRouteAnimation();
    *  });
    */
-  public restartRouteAnimation() {
-    this.onRestartRouteAnimation();
+  public restartRouteAnimation(delay: number) {
+    this.onRestartRouteAnimation(delay: number);
   }
 }
 
