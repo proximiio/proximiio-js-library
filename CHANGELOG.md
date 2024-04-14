@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.11.37] - 2024-04-14
+
+### Added
+- New property `polygonsOptions.drawRouteUnderPolygons` route layer will be positioned under the polygons
+- New method `restartRouteAnimation` to be able restart route animation manually
+
+### Changed
+- Set all polygons to `disabled` state except the one selected with method `handlePolygonSelection`
+
+### Fixed
+- `adaptiveLabelOpacity` remains the same after map actions
+
 ## [1.11.36] - 2024-04-12
 
 ### Added
