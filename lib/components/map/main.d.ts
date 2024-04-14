@@ -53,6 +53,9 @@ export interface PolygonOptions {
     symbolPlacement?: 'point' | 'line' | 'line-center';
     autoLabelLines?: boolean;
     textFont?: string[];
+    adaptiveLabelOpacity?: boolean;
+    adaptiveMaxPitch?: number;
+    drawRouteUnderPolygons?: boolean;
 }
 export interface PolygonLayer extends PolygonOptions {
     featureType: string;
@@ -72,8 +75,10 @@ export interface Options {
     kioskSettings?: {
         coordinates: [number, number];
         level: number;
+        showPoint?: boolean;
         showLabel?: boolean;
         pointColor?: string;
+        labelFont?: string | string[];
     };
     initPolygons?: boolean;
     polygonsOptions?: PolygonOptions;
@@ -88,7 +93,7 @@ export interface Options {
     animationLooping?: boolean;
     routeAnimation?: {
         enabled?: boolean;
-        type?: 'point' | 'dash';
+        type?: 'point' | 'dash' | 'puck';
         looping?: boolean;
         followRoute?: boolean;
         followRouteAngle?: boolean;
@@ -99,6 +104,9 @@ export interface Options {
         pointIconSize?: number;
         pointColor?: string;
         pointRadius?: number;
+        puckColor?: string;
+        puckRadius?: number;
+        puckHeight?: number;
         lineColor?: string;
         lineOpacity?: number;
         lineWidth?: number;
@@ -184,6 +192,7 @@ export declare class Map {
     private hoveredPolygon;
     private selectedPolygon;
     private currentStep;
+    private kioskPopup;
     constructor(options: Options);
     private initialize;
     private cancelObservers;
@@ -199,6 +208,7 @@ export declare class Map {
     private initAnimatedRoute;
     private initRasterTiles;
     private initPolygons;
+    private updateLayerOpacity;
     private onShopClick;
     handlePolygonSelection(poi?: Feature): void;
     private onShopMouseEnter;
@@ -251,10 +261,12 @@ export declare class Map {
     private step;
     private animateRoute;
     private updateData;
+    private onRestartRouteAnimation;
     private translateLayers;
     getClosestFeature(amenityId: string, fromFeature?: Feature): false | Feature;
     getFloorName(floor: FloorModel): string;
     private handleControllerError;
+    private InjectCSS;
     /**
      *  @memberof Map
      *  @name getMapboxInstance
@@ -1018,4 +1030,17 @@ export declare class Map {
      *  });
      */
     refetch(): void;
+    /**
+     * Method for restarting route animation
+     *  @memberof Map
+     *  @name restartRouteAnimation
+     *  @param delay {number} delay the route start.
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.restartRouteAnimation();
+     *  });
+     */
+    restartRouteAnimation(delay: number): void;
 }

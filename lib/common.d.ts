@@ -19,4 +19,5 @@ declare const calculateDimensions: (vertices: [{
     height: number;
     area: number;
 };
-export { calculateDimensions };
+declare const convertToRTL: (arabicString: any) => any;
+export { calculateDimensions, convertToRTL };
