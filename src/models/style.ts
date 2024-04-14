@@ -488,7 +488,7 @@ export default class StyleModel {
     if (idx >= 0) {
       const prev = this.layers[idx];
       const change = diff(prev.json, layer.json);
-      console.log('change', change);
+      console.log('change', change, prev.json, layer.json);
       if (change) {
         changes.push(change);
         this.layers.splice(idx, 1, layer);

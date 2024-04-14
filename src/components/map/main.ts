@@ -94,6 +94,7 @@ export interface PolygonOptions {
   textFont?: string[];
   adaptiveLabelOpacity?: boolean;
   adaptiveMaxPitch?: number;
+  drawRouteUnderPolygons?: boolean;
 }
 
 export interface PolygonLayer extends PolygonOptions {
@@ -118,7 +119,7 @@ export interface Options {
     showPoint?: boolean;
     showLabel?: boolean;
     pointColor?: string;
-    labelFont?: string;
+    labelFont?: string | string[];
   };
   initPolygons?: boolean;
   polygonsOptions?: PolygonOptions;
@@ -307,6 +308,7 @@ export class Map {
       autoLabelLines: true,
       adaptiveLabelOpacity: false,
       adaptiveMaxPitch: 30,
+      drawRouteUnderPolygons: false,
     },
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
@@ -1176,6 +1178,11 @@ export class Map {
   private initAnimatedRoute() {
     if (this.map) {
       if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
+        const routingLineLayer = this.state.style.getLayer('proximiio-routing-line-remaining');
+        if (routingLineLayer && this.defaultOptions.polygonsOptions.drawRouteUnderPolygons) {
+          this.state.style.removeLayer('proximiio-routing-line-remaining');
+          this.state.style.addLayer(routingLineLayer, 'proximiio-paths');
+        }
         this.state.style.addSource('lineAlong', {
           type: 'geojson',
           data: {
@@ -1416,6 +1423,8 @@ export class Map {
     for (const layer of this.defaultOptions.polygonLayers) {
       if (layer.adaptiveLabelOpacity) {
         if (this.map.getLayer(`${layer.featureType}-labels`)) {
+          const l = { ...this.state.style.getLayer(`${layer.featureType}-labels`) };
+          l.paint['text-opacity'] = opacity;
           this.map.setPaintProperty(`${layer.featureType}-labels`, 'text-opacity', opacity);
         }
       }
@@ -1462,7 +1471,41 @@ export class Map {
 
   handlePolygonSelection(poi?: Feature) {
     const connectedPolygonId = poi && poi.properties._dynamic ? poi.properties._dynamic.polygon_id : null;
+    const featuresWithPolygon = this.state.allFeatures.features.filter(
+      (f) => f.properties._dynamic?.polygon_id && f.geometry.type === 'Point',
+    );
     if (this.selectedPolygon) {
+      for (const f of featuresWithPolygon) {
+        const polygon = this.state.allFeatures.features.find(
+          (i) =>
+            i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
+            this.defaultOptions.polygonLayers
+              .map((layer) => `${layer.featureType}-custom`)
+              .includes(i.properties._dynamic?.type),
+        );
+        if (polygon) {
+          this.map.setFeatureState(
+            {
+              source: 'main',
+              id: polygon.id,
+            },
+            {
+              disabled: false,
+            },
+          );
+          if (polygon.properties._dynamic.label_id) {
+            this.map.setFeatureState(
+              {
+                source: 'main',
+                id: polygon.properties._dynamic.label_id,
+              },
+              {
+                disabled: false,
+              },
+            );
+          }
+        }
+      }
       this.map.setFeatureState(
         {
           source: 'main',
@@ -1493,6 +1536,37 @@ export class Map {
             .includes(i.properties._dynamic?.type),
       );
       if (this.selectedPolygon) {
+        for (const f of featuresWithPolygon) {
+          const polygon = this.state.allFeatures.features.find(
+            (i) =>
+              i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
+              this.defaultOptions.polygonLayers
+                .map((layer) => `${layer.featureType}-custom`)
+                .includes(i.properties._dynamic?.type),
+          );
+          if (polygon) {
+            this.map.setFeatureState(
+              {
+                source: 'main',
+                id: polygon.id,
+              },
+              {
+                disabled: true,
+              },
+            );
+            if (polygon.properties._dynamic.label_id) {
+              this.map.setFeatureState(
+                {
+                  source: 'main',
+                  id: polygon.properties._dynamic.label_id,
+                },
+                {
+                  disabled: true,
+                },
+              );
+            }
+          }
+        }
         this.map.setFeatureState(
           {
             source: 'main',
@@ -2483,6 +2557,7 @@ export class Map {
         // @ts-ignore
         map.addLayer(layer);
       });
+      this.updateLayerOpacity();
     }
     // @ts-ignore
     this.map.setStyle(this.state.style);
@@ -2987,6 +3062,11 @@ export class Map {
       }
     }
   };
+
+  private onRestartRouteAnimation() {
+    clearInterval(this.animationInterval);
+    this.animateRoute();
+  }
 
   private translateLayers() {
     if (this.defaultOptions.isKiosk && this.defaultOptions.kioskSettings.showLabel && this.kioskPopup) {
@@ -4149,6 +4229,21 @@ export class Map {
    */
   public refetch() {
     this.onRefetch();
+  }
+
+  /**
+   * Method for restarting route animation
+   *  @memberof Map
+   *  @name restartRouteAnimation
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.restartRouteAnimation();
+   *  });
+   */
+  public restartRouteAnimation() {
+    this.onRestartRouteAnimation();
   }
 }
 
