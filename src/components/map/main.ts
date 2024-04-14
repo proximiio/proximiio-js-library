@@ -3077,9 +3077,12 @@ export class Map {
         features: [],
       });
     }
-    setTimeout(() => {
-      this.animateRoute();
-    }, delay ? delay : 0)
+    setTimeout(
+      () => {
+        this.animateRoute();
+      },
+      delay ? delay : 0,
+    );
   }
 
   private translateLayers() {
@@ -4258,7 +4261,7 @@ export class Map {
    *  });
    */
   public restartRouteAnimation(delay: number) {
-    this.onRestartRouteAnimation(delay: number);
+    this.onRestartRouteAnimation(delay);
   }
 }
 
