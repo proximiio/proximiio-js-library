@@ -397,18 +397,11 @@ export class Map {
     }
 
     // @ts-ignore
-    if (
-      maplibregl.getRTLTextPluginStatus() !== 'loaded' &&
-      maplibregl.getRTLTextPluginStatus() !== 'unavailable' &&
-      maplibregl.getRTLTextPluginStatus() !== 'deferred'
-    ) {
-      // @ts-ignore
-      maplibregl.setRTLTextPlugin(
-        'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
-        null,
-        true, // Lazy load the plugin
-      );
-    }
+    maplibregl.setRTLTextPlugin(
+      'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
+      null,
+      true, // Lazy load the plugin
+    );
 
     this.map = new maplibregl.Map({
       ...(this.defaultOptions.mapboxOptions as MapboxOptions | any),
@@ -1190,7 +1183,10 @@ export class Map {
     if (this.map) {
       if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
         const routingLineLayer = this.state.style.getLayer('proximiio-routing-line-remaining');
+        const routingLineSymbolLayer = this.state.style.getLayer('proximiio-routing-line-symbols');
         if (routingLineLayer && this.defaultOptions.polygonsOptions.drawRouteUnderPolygons) {
+          this.state.style.removeLayer('proximiio-routing-line-symbols');
+          this.state.style.addLayer(routingLineSymbolLayer, 'proximiio-paths');
           this.state.style.removeLayer('proximiio-routing-line-remaining');
           this.state.style.addLayer(routingLineLayer, 'proximiio-paths');
         }
@@ -3156,6 +3152,7 @@ export class Map {
     if (this.defaultOptions.isKiosk && this.defaultOptions.kioskSettings.showLabel && this.kioskPopup) {
       this.kioskPopup.setHTML(translations[this.defaultOptions.language].YOU_ARE_HERE);
     }
+    this.state.style.setSource('main', this.geojsonSource);
   }
 
   public getClosestFeature(amenityId: string, fromFeature?: Feature) {

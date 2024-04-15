@@ -43,10 +43,6 @@ export default class GeoJSONSource extends DataSource {
         ? feature.properties.title_i18n[language]
         : feature.properties.title;
     }
-
-    if (language === 'ar') {
-      //feature.properties.title = convertToRTL(feature.properties.title);
-    }
   }
 
   query(query: string, level = 0) {
