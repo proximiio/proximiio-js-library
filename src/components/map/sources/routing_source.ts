@@ -46,7 +46,7 @@ export default class RoutingSource extends DataSource {
     this.routing.setConfig(config);
   }
 
-  async update(start?: Feature, finish?: Feature) {
+  async update(start?: Feature, finish?: Feature, preview?: boolean) {
     this.start = start;
     this.finish = finish;
 
@@ -88,10 +88,12 @@ export default class RoutingSource extends DataSource {
       //   line.properties.amenity = 'chevron_right'
       //   return line
       // })
-      this.data = new FeatureCollection({
-        features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),
-      });
-      this.notify('loading-finished');
+      this.data = preview
+        ? new FeatureCollection({})
+        : new FeatureCollection({
+            features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),
+          });
+      this.notify(preview ? 'preview-finished' : 'loading-finished');
       this.notify('feature-updated');
     }
   }

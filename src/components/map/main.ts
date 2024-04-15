@@ -228,6 +228,7 @@ export class Map {
   private clusterSource: ClusterSource = new ClusterSource();
   private imageSourceManager: ImageSourceManager = new ImageSourceManager();
   private onMapReadyListener = new CustomSubject<boolean>();
+  private onMainSourceLoadedListener = new CustomSubject<boolean>();
   private onMapFailedListener = new CustomSubject<boolean>();
   private onPlaceSelectListener = new CustomSubject<PlaceModel>();
   private onFloorSelectListener = new CustomSubject<FloorModel>();
@@ -366,6 +367,7 @@ export class Map {
   private selectedPolygon: any;
   private currentStep = 0;
   private kioskPopup: any;
+  private mainSourceLoaded = false;
 
   constructor(options: Options) {
     // fix centering in case of kiosk with defined pitch/bearing/etc. in mapbox options
@@ -695,6 +697,15 @@ export class Map {
       }
 
       this.onMapReadyListener.next(true);
+
+      setTimeout(() => {
+        map.on('sourcedata', (e) => {
+          if (e.sourceId === 'main' && e.isSourceLoaded && !this.mainSourceLoaded) {
+            this.mainSourceLoaded = true;
+            this.onMainSourceLoadedListener.next(true);
+          }
+        });
+      }, 500);
 
       if (this.defaultOptions.useGpsLocation) {
         this.initGeoLocation();
@@ -2416,6 +2427,7 @@ export class Map {
           details: this.defaultOptions.routeWithDetails ? this.routingSource.details : null,
           start: this.startPoint,
           end: this.endPoint,
+          preview: false,
         });
 
         if (this.defaultOptions.sendAnalytics) {
@@ -2447,6 +2459,37 @@ export class Map {
           });
           await logger.save();
         }
+      }
+      return;
+    }
+
+    if (event === 'preview-finished') {
+      if (this.routingSource.route) {
+        this.currentStep = 0;
+        const textNavigation = {
+          steps: this.routingSource.steps,
+          destination: this.endPoint,
+          start: this.startPoint,
+        };
+        this.state = { ...this.state, loadingRoute: false, textNavigation };
+
+        if (this.defaultOptions.forceFloorLevel !== null && this.defaultOptions.forceFloorLevel !== undefined) {
+          this.routingSource.data.features = this.routingSource.data.features.map((f) => {
+            if (f.properties.level !== this.defaultOptions.forceFloorLevel) {
+              f.properties.level = this.defaultOptions.forceFloorLevel;
+            }
+            return f;
+          });
+        }
+
+        this.onRouteFoundListener.next({
+          route: this.routingSource.route,
+          TBTNav: this.defaultOptions.enableTBTNavigation ? textNavigation : null,
+          details: this.defaultOptions.routeWithDetails ? this.routingSource.details : null,
+          start: this.startPoint,
+          end: this.endPoint,
+          preview: true,
+        });
       }
       return;
     }
@@ -2731,6 +2774,12 @@ export class Map {
       console.log('catched', e);
     }
     this.state = { ...this.state, style: this.state.style };
+  }
+
+  private onRoutePreview(start?: Feature, finish?: Feature) {
+    this.startPoint = start;
+    this.endPoint = finish;
+    this.routingSource.update(start, finish, true);
   }
 
   private onRouteCancel() {
@@ -3073,7 +3122,9 @@ export class Map {
               this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
               { level: this.state.floor.level },
             );
+
       clearInterval(this.animationInterval);
+
       // @ts-ignore
       this.map.getSource('pointAlong').setData({
         type: 'FeatureCollection',
@@ -3084,9 +3135,13 @@ export class Map {
         type: 'FeatureCollection',
         features: [],
       });
-      this.map.jumpTo({
-        center: route.geometry.coordinates[0] as [number, number],
-      });
+
+      setTimeout(() => {
+        this.map.jumpTo({
+          center: route.geometry.coordinates[0] as [number, number],
+        });
+      }, 100);
+
       this.map.setStyle(this.state.style);
     }
     setTimeout(
@@ -3186,6 +3241,20 @@ export class Map {
    */
   public getMapReadyListener() {
     return this.onMapReadyListener;
+  }
+
+  /**
+   *  @memberof Map
+   *  @name getMainSourceLoadedListener
+   *  @returns returns main source fully loaded listener
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMainSourceLoadedListener().subscribe(loaded => {
+   *    console.log('map loaded', loaded);
+   *  });
+   */
+  public getMainSourceLoadedListener() {
+    return this.onMainSourceLoadedListener;
   }
 
   /**
@@ -3352,6 +3421,7 @@ export class Map {
    *  @param idFrom {string} start feature id, optional for kiosk
    *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
    *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
+   *  @param addToMap {boolean} default true, if set to false route will not be added to map
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -3364,6 +3434,7 @@ export class Map {
     idFrom?: string,
     accessibleRoute?: boolean,
     wayfindingConfig?: WayfindingConfigModel,
+    addToMap?: boolean,
   ) {
     const fromFeature = idFrom
       ? (this.state.allFeatures.features.find((f) => f.id === idFrom || f.properties.id === idFrom) as Feature)
@@ -3373,7 +3444,11 @@ export class Map {
     if (wayfindingConfig) {
       this.routingSource.setConfig(wayfindingConfig);
     }
-    this.onRouteUpdate(fromFeature, toFeature);
+    if (addToMap !== false) {
+      this.onRouteUpdate(fromFeature, toFeature);
+    } else {
+      this.onRoutePreview(fromFeature, toFeature);
+    }
   }
 
   /**
@@ -3384,6 +3459,7 @@ export class Map {
    *  @param titleFrom {string} start feature title, optional for kiosk
    *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
    *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
+   *  @param addToMap {boolean} default true, if set to false route will not be added to map
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -3396,6 +3472,7 @@ export class Map {
     titleFrom?: string,
     accessibleRoute?: boolean,
     wayfindingConfig?: WayfindingConfigModel,
+    addToMap?: boolean,
   ) {
     const fromFeature = titleFrom
       ? (this.state.allFeatures.features.find((f) => f.properties.title === titleFrom) as Feature)
@@ -3405,7 +3482,11 @@ export class Map {
     if (wayfindingConfig) {
       this.routingSource.setConfig(wayfindingConfig);
     }
-    this.onRouteUpdate(fromFeature, toFeature);
+    if (addToMap !== false) {
+      this.onRouteUpdate(fromFeature, toFeature);
+    } else {
+      this.onRoutePreview(fromFeature, toFeature);
+    }
   }
 
   /**
@@ -3420,6 +3501,7 @@ export class Map {
    *  @param levelFrom {number} start level, optional for kiosk
    *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
    *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
+   *  @param addToMap {boolean} default true, if set to false route will not be added to map
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -3436,6 +3518,7 @@ export class Map {
     levelFrom?: number,
     accessibleRoute?: boolean,
     wayfindingConfig?: WayfindingConfigModel,
+    addToMap?: boolean,
   ) {
     const fromFeature =
       latFrom && lngFrom && levelFrom
@@ -3446,7 +3529,11 @@ export class Map {
     if (wayfindingConfig) {
       this.routingSource.setConfig(wayfindingConfig);
     }
-    this.onRouteUpdate(fromFeature, toFeature);
+    if (addToMap !== false) {
+      this.onRouteUpdate(fromFeature, toFeature);
+    } else {
+      this.onRoutePreview(fromFeature, toFeature);
+    }
   }
 
   /**
@@ -3457,6 +3544,7 @@ export class Map {
    *  @param idFrom {string} start feature id, optional for kiosk
    *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
    *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
+   *  @param addToMap {boolean} default true, if set to false route will not be added to map
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -3469,6 +3557,7 @@ export class Map {
     idFrom?: string,
     accessibleRoute?: boolean,
     wayfindingConfig?: WayfindingConfigModel,
+    addToMap?: boolean,
   ) {
     const fromFeature = idFrom
       ? (this.state.allFeatures.features.find((f) => f.id === idFrom || f.properties.id === idFrom) as Feature)
@@ -3479,7 +3568,11 @@ export class Map {
       if (wayfindingConfig) {
         this.routingSource.setConfig(wayfindingConfig);
       }
-      this.onRouteUpdate(fromFeature, toFeature);
+      if (addToMap !== false) {
+        this.onRouteUpdate(fromFeature, toFeature);
+      } else {
+        this.onRoutePreview(fromFeature, toFeature);
+      }
     } else {
       throw new Error(`Feature not found`);
     }
