@@ -692,8 +692,8 @@ export class Map {
       this.onMapReadyListener.next(true);
 
       setTimeout(() => {
-        map.on('sourcedata', (e) => {
-          if (e.sourceId === 'main' && e.isSourceLoaded && !this.mainSourceLoaded) {
+        map.on('sourcedata', (ev) => {
+          if (ev.sourceId === 'main' && ev.isSourceLoaded && !this.mainSourceLoaded) {
             this.mainSourceLoaded = true;
             this.onMainSourceLoadedListener.next(true);
           }
