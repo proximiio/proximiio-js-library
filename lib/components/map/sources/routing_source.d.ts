@@ -31,7 +31,7 @@ export default class RoutingSource extends DataSource {
     constructor();
     toggleAccessible(value: any): void;
     setConfig(config: WayfindingConfigModel): void;
-    update(start?: Feature, finish?: Feature): Promise<void>;
+    update(start?: Feature, finish?: Feature, preview?: boolean): Promise<void>;
     cancel(): void;
 }
 export {};

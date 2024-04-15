@@ -164,6 +164,7 @@ export declare class Map {
     private clusterSource;
     private imageSourceManager;
     private onMapReadyListener;
+    private onMainSourceLoadedListener;
     private onMapFailedListener;
     private onPlaceSelectListener;
     private onFloorSelectListener;
@@ -193,6 +194,7 @@ export declare class Map {
     private selectedPolygon;
     private currentStep;
     private kioskPopup;
+    private mainSourceLoaded;
     constructor(options: Options);
     private initialize;
     private cancelObservers;
@@ -250,6 +252,7 @@ export declare class Map {
     private onPlaceSelect;
     private onFloorSelect;
     private onRouteUpdate;
+    private onRoutePreview;
     private onRouteCancel;
     private centerOnPoi;
     private centerOnRoute;
@@ -296,6 +299,17 @@ export declare class Map {
      *  });
      */
     getMapReadyListener(): CustomSubject<boolean>;
+    /**
+     *  @memberof Map
+     *  @name getMainSourceLoadedListener
+     *  @returns returns main source fully loaded listener
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMainSourceLoadedListener().subscribe(loaded => {
+     *    console.log('map loaded', loaded);
+     *  });
+     */
+    getMainSourceLoadedListener(): CustomSubject<boolean>;
     /**
      *  @memberof Map
      *  @name getMapFailedListener
@@ -408,6 +422,7 @@ export declare class Map {
      *  @param idFrom {string} start feature id, optional for kiosk
      *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
      *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
+     *  @param addToMap {boolean} default true, if set to false route will not be added to map
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -415,7 +430,7 @@ export declare class Map {
      *    map.findRouteByIds('finishId, 'startId');
      *  });
      */
-    findRouteByIds(idTo: string, idFrom?: string, accessibleRoute?: boolean, wayfindingConfig?: WayfindingConfigModel): void;
+    findRouteByIds(idTo: string, idFrom?: string, accessibleRoute?: boolean, wayfindingConfig?: WayfindingConfigModel, addToMap?: boolean): void;
     /**
      * This method will generate route based on selected features by their titles
      *  @memberof Map
@@ -424,6 +439,7 @@ export declare class Map {
      *  @param titleFrom {string} start feature title, optional for kiosk
      *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
      *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
+     *  @param addToMap {boolean} default true, if set to false route will not be added to map
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -431,7 +447,7 @@ export declare class Map {
      *    map.findRouteByTitle('myFeatureTitle', 'anotherFeatureTitle');
      *  });
      */
-    findRouteByTitle(titleTo: string, titleFrom?: string, accessibleRoute?: boolean, wayfindingConfig?: WayfindingConfigModel): void;
+    findRouteByTitle(titleTo: string, titleFrom?: string, accessibleRoute?: boolean, wayfindingConfig?: WayfindingConfigModel, addToMap?: boolean): void;
     /**
      * This method will generate route based on selected features by their titles
      *  @memberof Map
@@ -444,6 +460,7 @@ export declare class Map {
      *  @param levelFrom {number} start level, optional for kiosk
      *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
      *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
+     *  @param addToMap {boolean} default true, if set to false route will not be added to map
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -451,7 +468,7 @@ export declare class Map {
      *    map.findRouteByCoords(48.606703739771774, 17.833092384506614, 0, 48.60684545080579, 17.833450676669543, 0);
      *  });
      */
-    findRouteByCoords(latTo: number, lngTo: number, levelTo: number, latFrom?: number, lngFrom?: number, levelFrom?: number, accessibleRoute?: boolean, wayfindingConfig?: WayfindingConfigModel): void;
+    findRouteByCoords(latTo: number, lngTo: number, levelTo: number, latFrom?: number, lngFrom?: number, levelFrom?: number, accessibleRoute?: boolean, wayfindingConfig?: WayfindingConfigModel, addToMap?: boolean): void;
     /**
      * This method will generate route to nearest amenity feature
      *  @memberof Map
@@ -460,6 +477,7 @@ export declare class Map {
      *  @param idFrom {string} start feature id, optional for kiosk
      *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
      *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
+     *  @param addToMap {boolean} default true, if set to false route will not be added to map
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -467,7 +485,7 @@ export declare class Map {
      *    map.findRouteToNearestFeature('amenityId');
      *  });
      */
-    findRouteToNearestFeature(amenityId: string, idFrom?: string, accessibleRoute?: boolean, wayfindingConfig?: WayfindingConfigModel): void;
+    findRouteToNearestFeature(amenityId: string, idFrom?: string, accessibleRoute?: boolean, wayfindingConfig?: WayfindingConfigModel, addToMap?: boolean): void;
     /**
      * This method will cancel generated route
      *  @memberof Map
