@@ -156,4 +156,14 @@ const convertToRTL = (arabicString) => {
   return reversedString;
 };
 
-export { calculateDimensions, convertToRTL };
+// Function to convert base64 to blob
+const base64toBlob = (base64) => {
+  const binary = atob(base64);
+  const array = [];
+  for (let i = 0; i < binary.length; i++) {
+    array.push(binary.charCodeAt(i));
+  }
+  return new Blob([new Uint8Array(array)], { type: 'image/png' });
+};
+
+export { calculateDimensions, convertToRTL, base64toBlob };
