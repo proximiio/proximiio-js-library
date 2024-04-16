@@ -1,3 +1,4 @@
+import maplibregl from 'maplibre-gl';
 import { PlaceModel } from '../../models/place';
 import { FloorModel } from '../../models/floor';
 import StyleModel from '../../models/style';
@@ -120,6 +121,7 @@ export interface Options {
         beforeLayer?: string;
         attribution?: string;
         useProxy?: boolean;
+        bounds?: [number, number, number, number];
     };
     handleUrlParams?: boolean;
     urlParams?: {
@@ -278,7 +280,7 @@ export declare class Map {
      *  const map = new Proximiio.Map();
      *  map.getMapboxInstance();
      */
-    getMapboxInstance(): import("maplibre-gl").Map;
+    getMapboxInstance(): maplibregl.Map;
     /**
      *  @memberof Map
      *  @name getMapState

@@ -20,4 +20,5 @@ declare const calculateDimensions: (vertices: [{
     area: number;
 };
 declare const convertToRTL: (arabicString: any) => any;
-export { calculateDimensions, convertToRTL };
+declare const base64toBlob: (base64: any) => Blob;
+export { calculateDimensions, convertToRTL, base64toBlob };
