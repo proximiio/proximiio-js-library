@@ -22,6 +22,7 @@ export const getFeatures = async ({
   useTimerangeData,
   filter,
   featuresMaxBounds,
+  localSources,
 }: {
   initPolygons?: boolean;
   polygonFeatureTypes?: string[];
@@ -30,12 +31,24 @@ export const getFeatures = async ({
   useTimerangeData?: boolean;
   filter?: { key: string; value: string };
   featuresMaxBounds?: LngLatBoundsLike;
+  localSources?: {
+    features?: FeatureCollection;
+  };
 }) => {
   let url = '/v5/geo/features';
   if (featuresMaxBounds) {
     url += `/${featuresMaxBounds[0][0]},${featuresMaxBounds[0][1]},${featuresMaxBounds[1][0]},${featuresMaxBounds[1][1]}`;
   }
-  const res = await axios.get(url);
+
+  let res;
+  if (localSources?.features.features.length > 0) {
+    res = {
+      data: localSources.features,
+    };
+  } else {
+    res = await axios.get(url);
+  }
+
   if (initPolygons) {
     const featuresToAdd: any[] = [];
 

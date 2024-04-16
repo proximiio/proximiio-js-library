@@ -189,6 +189,9 @@ export interface Options {
     value: string;
   };
   featuresMaxBounds?: LngLatBoundsLike;
+  localSources?: {
+    features?: FeatureCollection;
+  };
 }
 
 export interface PaddingOptions {
@@ -458,6 +461,7 @@ export class Map {
       useTimerangeData: this.defaultOptions.useTimerangeData,
       filter: this.defaultOptions.defaultFilter,
       featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
+      localSources: this.defaultOptions.localSources
     }).catch((error) => this.handleControllerError(error));
     const amenities = await getAmenities(this.defaultOptions.amenityIdProperty).catch((error) =>
       this.handleControllerError(error),
@@ -723,6 +727,7 @@ export class Map {
         useTimerangeData: this.defaultOptions.useTimerangeData,
         filter: this.defaultOptions.defaultFilter,
         featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
+        localSources: this.defaultOptions.localSources
       }).catch((error) => this.handleControllerError(error));
       if (features) {
         const levelChangers = features.features.filter(
