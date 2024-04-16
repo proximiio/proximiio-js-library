@@ -149,6 +149,9 @@ export interface Options {
         value: string;
     };
     featuresMaxBounds?: LngLatBoundsLike;
+    localSources?: {
+        features?: FeatureCollection;
+    };
 }
 export interface PaddingOptions {
     bottom: number;
