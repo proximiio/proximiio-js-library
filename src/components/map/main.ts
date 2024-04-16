@@ -161,6 +161,7 @@ export interface Options {
     beforeLayer?: string;
     attribution?: string;
     useProxy?: boolean;
+    bounds?: [number, number, number, number];
   };
   handleUrlParams?: boolean;
   urlParams?: {
@@ -399,7 +400,6 @@ export class Map {
     // @ts-ignore
     maplibregl.setRTLTextPlugin(
       'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
-      null,
       true, // Lazy load the plugin
     );
 
@@ -407,8 +407,8 @@ export class Map {
       ...(this.defaultOptions.mapboxOptions as MapboxOptions | any),
       container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map',
     });
-    this.map.on('load', (e) => {
-      this.onMapReady(e);
+    this.map.on('load', async (e) => {
+      await this.onMapReady(e);
     });
     this.map.on('error', (e) => {
       console.log('map error', e);
@@ -643,14 +643,14 @@ export class Map {
           console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
         }
         if (this.defaultOptions.routeAnimation.pointIconUrl) {
-          map.loadImage(this.defaultOptions.routeAnimation.pointIconUrl, (error, image) => {
-            if (error) {
-              console.error(error);
+          try {
+            const response = await map.loadImage(this.defaultOptions.routeAnimation.pointIconUrl);
+            if (response) {
+              map.addImage('pointIcon', response.data);
             }
-            if (image) {
-              map.addImage('pointIcon', image);
-            }
-          });
+          } catch (e) {
+            console.log(e);
+          }
         }
         this.initAnimatedRoute();
       }
@@ -1320,6 +1320,11 @@ export class Map {
           : metadata['proximiio:raster:attribution']
           ? metadata['proximiio:raster:attribution']
           : '',
+        bounds: this.defaultOptions.rasterTilesOptions?.bounds
+          ? this.defaultOptions.rasterTilesOptions.bounds
+          : metadata['proximiio:raster:bounds']
+          ? metadata['proximiio:raster:bounds']
+          : [-180, -90, 180, 90],
       });
       this.state.style.addLayer(
         {
@@ -2859,27 +2864,39 @@ export class Map {
     }
   }
 
-  private updateImages() {
-    this.state.amenities.forEach((amenity) => {
-      this.amenityIds.push(amenity.id);
-      if (amenity.icon) {
-        this.map.loadImage(amenity.icon, (error: any, image: any) => {
-          if (error) throw error;
-          this.map.addImage(amenity.id, image);
-        });
-      }
-    });
-    this.state.features.features
-      .filter((f) => f.properties.metadata && f.properties.metadata['anchor-logo'] && f.properties.type !== 'poi')
-      .forEach((f) => {
-        this.map.loadImage(
-          `${f.properties.metadata['anchor-logo']}?token=${this.state.user.token}`,
-          (error: any, image: any) => {
-            if (error) throw error;
-            this.map.addImage(f.id, image);
-          },
-        );
-      });
+  private async updateImages() {
+    await Promise.all(
+      this.state.amenities.map(async (amenity) => {
+        this.amenityIds.push(amenity.id);
+        if (amenity.icon) {
+          try {
+            const response = await this.map.loadImage(amenity.icon);
+            if (response) {
+              this.map.addImage(amenity.id, response.data);
+            }
+          } catch (e) {
+            console.log(e);
+          }
+        }
+      }),
+    );
+
+    await Promise.all(
+      this.state.features.features
+        .filter((f) => f.properties.metadata && f.properties.metadata['anchor-logo'] && f.properties.type !== 'poi')
+        .map(async (f) => {
+          try {
+            const response = await this.map.loadImage(
+              `${f.properties.metadata['anchor-logo']}?token=${this.state.user.token}`,
+            );
+            if (response) {
+              this.map.addImage(f.id, response.data);
+            }
+          } catch (e) {
+            console.log(e);
+          }
+        }),
+    );
   }
 
   private getUpcomingFloorNumber(way: string) {
@@ -3036,7 +3053,7 @@ export class Map {
       // @ts-ignore
       this.map.getSource('pointAlong').setData(pointAlong);
     }
-    if (this.defaultOptions.routeAnimation.type === 'puck') {
+    /*if (this.defaultOptions.routeAnimation.type === 'puck') {
       this.map
         .getSource('start-point')
         // @ts-ignore
@@ -3051,7 +3068,7 @@ export class Map {
             },
           ),
         );
-    }
+    }*/
 
     // @ts-ignore
     this.map.getSource('lineAlong').setData(lineAlong);
