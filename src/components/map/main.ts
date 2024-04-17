@@ -3058,7 +3058,7 @@ export class Map {
       // @ts-ignore
       this.map.getSource('pointAlong').setData(pointAlong);
     }
-    /*if (this.defaultOptions.routeAnimation.type === 'puck') {
+    if (this.defaultOptions.routeAnimation.type === 'puck') {
       this.map
         .getSource('start-point')
         // @ts-ignore
@@ -3073,7 +3073,7 @@ export class Map {
             },
           ),
         );
-    }*/
+    }
 
     // @ts-ignore
     this.map.getSource('lineAlong').setData(lineAlong);
