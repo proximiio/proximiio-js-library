@@ -1241,7 +1241,7 @@ export class Map {
                 'icon-allow-overlap': true,
               },
             },
-            'lineAlong',
+            'proximiio-polygons-above-paths',
           );
         } else {
           this.state.style.addLayer(
@@ -1256,7 +1256,7 @@ export class Map {
                 'circle-radius': this.defaultOptions.routeAnimation.pointRadius,
               },
             },
-            'lineAlong',
+            'proximiio-polygons-above-paths',
           );
         }
       }
