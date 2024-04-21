@@ -3134,7 +3134,7 @@ export class Map {
     }
   };
 
-  private onRestartRouteAnimation(delay: number) {
+  private onRestartRouteAnimation({ delay, recenter }: { delay: number; recenter: boolean }) {
     if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
       const route =
         this.routingSource.route[`path-part-${this.currentStep}`] &&
@@ -3158,11 +3158,13 @@ export class Map {
         features: [],
       });
 
-      setTimeout(() => {
-        this.map.jumpTo({
-          center: route.geometry.coordinates[0] as [number, number],
-        });
-      }, 100);
+      if (recenter) {
+        setTimeout(() => {
+          this.map.jumpTo({
+            center: route.geometry.coordinates[0] as [number, number],
+          });
+        }, 100);
+      }
 
       this.map.setStyle(this.state.style);
     }
@@ -3172,6 +3174,25 @@ export class Map {
       },
       delay ? delay : 0,
     );
+  }
+
+  private onStopRouteAnimation() {
+    if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
+      clearInterval(this.animationInterval);
+
+      // @ts-ignore
+      this.map.getSource('pointAlong').setData({
+        type: 'FeatureCollection',
+        features: [],
+      });
+      // @ts-ignore
+      this.map.getSource('lineAlong').setData({
+        type: 'FeatureCollection',
+        features: [],
+      });
+
+      this.map.setStyle(this.state.style);
+    }
   }
 
   private translateLayers() {
@@ -4388,8 +4409,23 @@ export class Map {
    *    map.restartRouteAnimation();
    *  });
    */
-  public restartRouteAnimation(delay: number) {
-    this.onRestartRouteAnimation(delay);
+  public restartRouteAnimation({ delay, recenter }: { delay: number; recenter: boolean }) {
+    this.onRestartRouteAnimation({ delay, recenter });
+  }
+
+  /**
+   * Method for stopping route animation
+   *  @memberof Map
+   *  @name stopRouteAnimation
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.stopRouteAnimation();
+   *  });
+   */
+  public stopRouteAnimation() {
+    this.onStopRouteAnimation();
   }
 }
 
