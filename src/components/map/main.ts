@@ -151,6 +151,8 @@ export interface Options {
     lineColor?: string;
     lineOpacity?: number;
     lineWidth?: number;
+    minzoom?: number;
+    maxzoom?: number;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -336,6 +338,8 @@ export class Map {
       lineColor: '#6945ed',
       lineWidth: 5,
       lineOpacity: 0.6,
+      minzoom: 17,
+      maxzoom: 24,
     },
     useRasterTiles: false,
     handleUrlParams: false,
@@ -1208,8 +1212,8 @@ export class Map {
             id: 'lineAlong',
             type: 'line',
             source: 'lineAlong',
-            minzoom: 17,
-            maxzoom: 24,
+            minzoom: this.defaultOptions.routeAnimation.minzoom,
+            maxzoom: this.defaultOptions.routeAnimation.maxzoom,
             paint: {
               'line-width': this.defaultOptions.routeAnimation.lineWidth,
               'line-color': this.defaultOptions.routeAnimation.lineColor,
@@ -1233,8 +1237,8 @@ export class Map {
               id: 'pointAlong',
               type: 'symbol',
               source: 'pointAlong',
-              minzoom: 17,
-              maxzoom: 24,
+              minzoom: this.defaultOptions.routeAnimation.minzoom,
+              maxzoom: this.defaultOptions.routeAnimation.maxzoom,
               layout: {
                 'icon-image': 'pointIcon',
                 'icon-size': this.defaultOptions.routeAnimation.pointIconSize,
@@ -1249,8 +1253,8 @@ export class Map {
               id: 'pointAlong',
               type: 'circle',
               source: 'pointAlong',
-              minzoom: 17,
-              maxzoom: 24,
+              minzoom: this.defaultOptions.routeAnimation.minzoom,
+              maxzoom: this.defaultOptions.routeAnimation.maxzoom,
               paint: {
                 'circle-color': this.defaultOptions.routeAnimation.pointColor,
                 'circle-radius': this.defaultOptions.routeAnimation.pointRadius,
