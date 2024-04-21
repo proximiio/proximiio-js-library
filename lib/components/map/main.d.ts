@@ -111,6 +111,8 @@ export interface Options {
         lineColor?: string;
         lineOpacity?: number;
         lineWidth?: number;
+        minzoom?: number;
+        maxzoom?: number;
     };
     useRasterTiles?: boolean;
     rasterTilesOptions?: {
@@ -270,6 +272,7 @@ export declare class Map {
     private animateRoute;
     private updateData;
     private onRestartRouteAnimation;
+    private onStopRouteAnimation;
     private translateLayers;
     getClosestFeature(amenityId: string, fromFeature?: Feature): false | Feature;
     getFloorName(floor: FloorModel): string;
@@ -1065,5 +1068,20 @@ export declare class Map {
      *    map.restartRouteAnimation();
      *  });
      */
-    restartRouteAnimation(delay: number): void;
+    restartRouteAnimation({ delay, recenter }: {
+        delay: number;
+        recenter: boolean;
+    }): void;
+    /**
+     * Method for stopping route animation
+     *  @memberof Map
+     *  @name stopRouteAnimation
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.stopRouteAnimation();
+     *  });
+     */
+    stopRouteAnimation(): void;
 }

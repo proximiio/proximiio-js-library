@@ -3134,7 +3134,7 @@ export class Map {
     }
   };
 
-  private onRestartRouteAnimation({ delay, recenter }: { delay: number; recenter: boolean }) {
+  private onRestartRouteAnimation({ delay, recenter }: { delay: number; recenter?: boolean }) {
     if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
       const route =
         this.routingSource.route[`path-part-${this.currentStep}`] &&
@@ -4409,7 +4409,7 @@ export class Map {
    *    map.restartRouteAnimation();
    *  });
    */
-  public restartRouteAnimation({ delay, recenter }: { delay: number; recenter: boolean }) {
+  public restartRouteAnimation({ delay, recenter }: { delay: number; recenter?: boolean }) {
     this.onRestartRouteAnimation({ delay, recenter });
   }
 

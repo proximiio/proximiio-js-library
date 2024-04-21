@@ -5,11 +5,11 @@ export interface SortedPoiItemModel {
     id: string;
     geometry: Geometry;
     properties: Record<string, any>;
-    icon: string;
-    category: string;
+    icon?: string;
+    category?: string;
     search_query: string;
     coordinates: number[];
-    isInside: boolean;
+    isInside?: boolean;
     score: number;
     foundInDescription: boolean;
     floor: FloorModel | undefined;
