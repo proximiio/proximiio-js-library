@@ -49,7 +49,7 @@ export const popupImage =
 
 const size = 120;
 
-export const pulsingDot = (rgbValues?: string) => {
+export const pulsingDot = ({ rgbValues, outline }: { rgbValues?: string; outline?: boolean }) => {
   return {
     width: size,
     height: size,
@@ -85,10 +85,12 @@ export const pulsingDot = (rgbValues?: string) => {
       context.beginPath();
       context.arc(this.width / 2, this.height / 2, radius, 0, Math.PI * 2);
       context.fillStyle = `rgb(${rgbValues ? rgbValues : '189,82,255'})`;
-      context.strokeStyle = 'white';
       context.lineWidth = 2 + 4 * (1 - t);
       context.fill();
-      context.stroke();
+      if (outline) {
+        context.strokeStyle = 'white';
+        context.stroke();
+      }
 
       // update this image's data with data from the canvas
       this.data = context.getImageData(0, 0, this.width, this.height).data;
