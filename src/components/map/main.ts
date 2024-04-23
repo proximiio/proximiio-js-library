@@ -1,4 +1,4 @@
-import maplibregl, { FillExtrusionLayerSpecification, SymbolLayerSpecification } from 'maplibre-gl';
+import maplibregl, { FillExtrusionLayerSpecification, LngLatLike, SymbolLayerSpecification } from 'maplibre-gl';
 import Auth from '../../controllers/auth';
 import { addFeatures, deleteFeatures, getAmenities, getFeatures } from '../../controllers/geo';
 import { PlaceModel } from '../../models/place';
@@ -2703,7 +2703,10 @@ export class Map {
           });
         } else {
           // @ts-ignore
-          this.map.flyTo({ center: center(routePoints).geometry.coordinates });
+          this.map.flyTo({
+            center: center(routePoints).geometry.coordinates as LngLatLike,
+            zoom: this.defaultOptions.minFitBoundsDistance < 10 ? 22 : this.map.getZoom(),
+          });
         }
       }
       if (this.defaultOptions.isKiosk) {
@@ -2861,7 +2864,10 @@ export class Map {
           });
         } else {
           // @ts-ignore
-          this.map.flyTo({ center: center(routePoints).geometry.coordinates });
+          this.map.flyTo({
+            center: center(routePoints).geometry.coordinates as LngLatLike,
+            zoom: this.defaultOptions.minFitBoundsDistance < 10 ? 22 : this.map.getZoom(),
+          });
         }
       }
     }

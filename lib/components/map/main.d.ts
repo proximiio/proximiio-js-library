@@ -1070,7 +1070,7 @@ export declare class Map {
      */
     restartRouteAnimation({ delay, recenter }: {
         delay: number;
-        recenter: boolean;
+        recenter?: boolean;
     }): void;
     /**
      * Method for stopping route animation
