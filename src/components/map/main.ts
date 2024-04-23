@@ -608,7 +608,7 @@ export class Map {
       map.addImage(
         'pulsing-dot',
         pulsingDot({
-          pointColor: this.defaultOptions.kioskSettings.pointColor,
+          rgbValues: this.defaultOptions.kioskSettings.pointColor,
           pointOutline: this.defaultOptions.kioskSettings.pointOutline,
         }),
         { pixelRatio: 2 },

@@ -79,6 +79,7 @@ export interface Options {
         showPoint?: boolean;
         showLabel?: boolean;
         pointColor?: string;
+        pointOutline?: boolean;
         labelFont?: string | string[];
     };
     initPolygons?: boolean;

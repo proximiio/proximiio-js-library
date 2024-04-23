@@ -49,7 +49,7 @@ export const popupImage =
 
 const size = 120;
 
-export const pulsingDot = ({ rgbValues, outline }: { rgbValues?: string; outline?: boolean }) => {
+export const pulsingDot = ({ rgbValues, pointOutline }: { rgbValues?: string; pointOutline?: boolean }) => {
   return {
     width: size,
     height: size,
@@ -87,7 +87,7 @@ export const pulsingDot = ({ rgbValues, outline }: { rgbValues?: string; outline
       context.fillStyle = `rgb(${rgbValues ? rgbValues : '189,82,255'})`;
       context.lineWidth = 2 + 4 * (1 - t);
       context.fill();
-      if (outline) {
+      if (pointOutline) {
         context.strokeStyle = 'white';
         context.stroke();
       }
