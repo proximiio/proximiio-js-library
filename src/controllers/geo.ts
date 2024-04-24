@@ -114,9 +114,13 @@ export const getFeatures = async ({
     }
 
     res = {
-      data: items,
+      data: {
+        features: items,
+      },
     };
   }
+
+  console.log('response', res);
 
   if (initPolygons) {
     const featuresToAdd: any[] = [];
