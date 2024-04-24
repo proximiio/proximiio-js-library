@@ -59,7 +59,7 @@ export const getFeatures = async ({
   };
 }) => {
   let res;
-  if (localSources?.features.features.length > 0) {
+  if (localSources?.features?.features?.length > 0) {
     res = {
       data: localSources.features,
     };
@@ -119,8 +119,6 @@ export const getFeatures = async ({
       },
     };
   }
-
-  console.log('response', res);
 
   if (initPolygons) {
     const featuresToAdd: any[] = [];
@@ -381,7 +379,7 @@ export const getAmenities = async ({
   };
 }) => {
   let res;
-  if (localSources?.amenities.length > 0) {
+  if (localSources?.amenities?.length > 0) {
     res = {
       data: localSources.amenities,
     };
