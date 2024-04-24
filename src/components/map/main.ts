@@ -130,6 +130,8 @@ export interface Options {
   fitBoundsPadding?: number | PaddingOptions;
   minFitBoundsDistance?: number;
   showLevelDirectionIcon?: boolean;
+  levelDirectionPopupImage?: string;
+  levelDirectionOutlineColor?: string;
   showRasterFloorplans?: boolean;
   animatedRoute?: boolean;
   animationLooping?: boolean;
@@ -323,6 +325,8 @@ export class Map {
     fitBoundsPadding: 250,
     minFitBoundsDistance: 15,
     showLevelDirectionIcon: false,
+    levelDirectionPopupImage: popupImage,
+    levelDirectionOutlineColor: '#000',
     showRasterFloorplans: false,
     animatedRoute: false,
     animationLooping: true,
@@ -605,7 +609,7 @@ export class Map {
       const decodedPersonIcon = await getImageFromBase64(personIcon);
       const decodedFloorchangeUpImage = await getImageFromBase64(floorchangeUpImage);
       const decodedFloorchangeDownImage = await getImageFromBase64(floorchangeDownImage);
-      const decodedPopupImage = await getImageFromBase64(popupImage);
+      const decodedPopupImage = await getImageFromBase64(this.defaultOptions.levelDirectionPopupImage);
       map.addImage('chevron_right', decodedChevron as any);
       map.addImage(
         'pulsing-dot',
@@ -1033,7 +1037,7 @@ export class Map {
                     levelChangersLayerImageSize[6] * (radius ? radius : 50),
                   ]
                 : radius,
-            'circle-color': '#000',
+            'circle-color': this.defaultOptions.levelDirectionOutlineColor,
           },
           filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
         },
@@ -1467,7 +1471,7 @@ export class Map {
   ) {
     if (
       !this.defaultOptions.blockFeatureClickWhileRouting ||
-      (this.defaultOptions.blockFeatureClickWhileRouting && !this.routingSource.route)
+      (this.defaultOptions.blockFeatureClickWhileRouting && (!this.routingSource.route || this.routingSource.preview))
     ) {
       if (e.features && e.features[0] && e.features[0].properties) {
         e.features[0].properties._dynamic = e.features[0].properties._dynamic

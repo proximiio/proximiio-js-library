@@ -31,6 +31,7 @@ export default class RoutingSource extends DataSource {
     };
   };
   steps: GuidanceStep[];
+  preview?: boolean;
 
   constructor() {
     super('route');
@@ -49,6 +50,7 @@ export default class RoutingSource extends DataSource {
   async update(start?: Feature, finish?: Feature, preview?: boolean) {
     this.start = start;
     this.finish = finish;
+    this.preview = preview;
 
     this.data = new FeatureCollection({
       features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),

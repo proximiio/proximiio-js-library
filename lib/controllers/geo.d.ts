@@ -1,4 +1,5 @@
 import Feature, { FeatureCollection } from '../models/feature';
+import { AmenityModel } from '../models/amenity';
 import { FeatureCollection as FCModel, Feature as FModel } from '@turf/helpers';
 import { LngLatBoundsLike } from 'maplibre-gl';
 export declare const getFeatures: ({ initPolygons, polygonFeatureTypes, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, }: {
@@ -16,7 +17,12 @@ export declare const getFeatures: ({ initPolygons, polygonFeatureTypes, autoLabe
         features?: FeatureCollection;
     };
 }) => Promise<FeatureCollection>;
-export declare const getAmenities: (amenityIdProperty?: string) => Promise<any>;
+export declare const getAmenities: ({ amenityIdProperty, localSources, }: {
+    amenityIdProperty?: string;
+    localSources?: {
+        amenities?: AmenityModel[];
+    };
+}) => Promise<any>;
 export declare const getPois: () => Promise<Feature[]>;
 export declare const addFeatures: (featureCollection: FCModel) => Promise<void>;
 export declare const updateFeature: (featureData: FModel, featureId: string) => Promise<void>;
@@ -46,7 +52,12 @@ declare const _default: {
     deleteFeatures: (featureCollection: FCModel<import("@turf/helpers").Geometry | import("@turf/helpers").GeometryCollection, {
         [name: string]: any;
     }>) => Promise<void>;
-    getAmenities: (amenityIdProperty?: string) => Promise<any>;
+    getAmenities: ({ amenityIdProperty, localSources, }: {
+        amenityIdProperty?: string;
+        localSources?: {
+            amenities?: AmenityModel[];
+        };
+    }) => Promise<any>;
     getPois: () => Promise<Feature[]>;
 };
 export default _default;

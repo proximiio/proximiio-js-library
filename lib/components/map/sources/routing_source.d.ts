@@ -28,6 +28,7 @@ export default class RoutingSource extends DataSource {
         };
     };
     steps: GuidanceStep[];
+    preview?: boolean;
     constructor();
     toggleAccessible(value: any): void;
     setConfig(config: WayfindingConfigModel): void;

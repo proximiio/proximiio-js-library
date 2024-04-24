@@ -90,6 +90,8 @@ export interface Options {
     fitBoundsPadding?: number | PaddingOptions;
     minFitBoundsDistance?: number;
     showLevelDirectionIcon?: boolean;
+    levelDirectionPopupImage?: string;
+    levelDirectionOutlineColor?: string;
     showRasterFloorplans?: boolean;
     animatedRoute?: boolean;
     animationLooping?: boolean;
@@ -154,6 +156,7 @@ export interface Options {
     featuresMaxBounds?: LngLatBoundsLike;
     localSources?: {
         features?: FeatureCollection;
+        amenities?: AmenityModel[];
     };
 }
 export interface PaddingOptions {
