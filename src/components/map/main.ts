@@ -46,6 +46,7 @@ import { WayfindingConfigModel } from '../../models/wayfinding';
 import { KioskModel } from '../../models/kiosk';
 import { getStyle, getStyles } from '../../controllers/style';
 import { getKiosks } from '../../controllers/kiosks';
+import { Protocol } from 'pmtiles';
 
 export interface State {
   readonly initializing: boolean;
@@ -415,6 +416,9 @@ export class Map {
       'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
       true, // Lazy load the plugin
     );
+
+    const protocol = new Protocol();
+    maplibregl.addProtocol("pmtiles",protocol.tile);
 
     this.map = new maplibregl.Map({
       ...(this.defaultOptions.mapboxOptions as MapboxOptions | any),
