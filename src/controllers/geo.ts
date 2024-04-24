@@ -58,13 +58,18 @@ export const getFeatures = async ({
     features?: FeatureCollection;
   };
 }) => {
+  let url = '/v5/geo/features';
+  if (featuresMaxBounds) {
+    url += `/${featuresMaxBounds[0][0]},${featuresMaxBounds[0][1]},${featuresMaxBounds[1][0]},${featuresMaxBounds[1][1]}`;
+  }
   let res;
   if (localSources?.features?.features?.length > 0) {
     res = {
       data: localSources.features,
     };
   } else {
-    const items = [] as Feature[];
+    res = await axios.get(url);
+    /*const items = [] as Feature[];
     let from = 0;
     let size = 250;
     let totalRecords = 0;
@@ -117,7 +122,7 @@ export const getFeatures = async ({
       data: {
         features: items,
       },
-    };
+    };*/
   }
 
   if (initPolygons) {
