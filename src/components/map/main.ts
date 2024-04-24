@@ -418,7 +418,7 @@ export class Map {
     );
 
     const protocol = new Protocol();
-    maplibregl.addProtocol("pmtiles",protocol.tile);
+    maplibregl.addProtocol('pmtiles', protocol.tile);
 
     this.map = new maplibregl.Map({
       ...(this.defaultOptions.mapboxOptions as MapboxOptions | any),
