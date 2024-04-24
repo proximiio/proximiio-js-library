@@ -14,6 +14,29 @@ import { lineString } from '@turf/helpers';
 import { LngLatBoundsLike } from 'maplibre-gl';
 import center from '@turf/center';
 
+async function fetchFeatures({
+  from,
+  size,
+  featuresMaxBounds,
+}: {
+  from: number;
+  size: number;
+  featuresMaxBounds?: LngLatBoundsLike;
+}) {
+  let url = `/v7/geo/features`;
+  if (featuresMaxBounds) {
+    url += `/${featuresMaxBounds[0][0]},${featuresMaxBounds[0][1]},${featuresMaxBounds[1][0]},${featuresMaxBounds[1][1]}`;
+  }
+  url += `?from=${from}&size=${size}`;
+  try {
+    const { data, headers } = await axios.get(url);
+    return { data, total: parseInt(headers['record-total'], 10) };
+  } catch (error) {
+    console.error('Error fetching features:', error);
+    throw error;
+  }
+}
+
 export const getFeatures = async ({
   initPolygons,
   polygonFeatureTypes,
@@ -35,18 +58,64 @@ export const getFeatures = async ({
     features?: FeatureCollection;
   };
 }) => {
-  let url = '/v5/geo/features';
-  if (featuresMaxBounds) {
-    url += `/${featuresMaxBounds[0][0]},${featuresMaxBounds[0][1]},${featuresMaxBounds[1][0]},${featuresMaxBounds[1][1]}`;
-  }
-
   let res;
   if (localSources?.features.features.length > 0) {
     res = {
       data: localSources.features,
     };
   } else {
-    res = await axios.get(url);
+    const items = [] as Feature[];
+    let from = 0;
+    let size = 250;
+    let totalRecords = 0;
+    let recordsFetched = 0;
+
+    // Fetch the total number of records for the first time
+    const firstResponse = await fetchFeatures({ from, size, featuresMaxBounds });
+    totalRecords = firstResponse.total;
+    recordsFetched += firstResponse.data.features.length;
+    items.push(...firstResponse.data.features);
+
+    // Calculate the number of parallel requests to make
+    const numParallelRequests = Math.ceil(totalRecords / size);
+
+    // Define the number of queues
+    const numQueues = 8;
+
+    // Calculate the number of requests per queue
+    const requestsPerQueue = Math.ceil(numParallelRequests / numQueues);
+
+    // Create an array to hold all queues
+    const queues = [];
+
+    // Create and populate the queues with requests
+    for (let i = 0; i < numQueues; i++) {
+      const queueRequests = [];
+      for (let j = 0; j < requestsPerQueue; j++) {
+        const pageIndex = i * requestsPerQueue + j;
+        if (pageIndex < numParallelRequests) {
+          const newFrom = from + pageIndex * size;
+          if (pageIndex !== 0) {
+            // Skip the first request
+            queueRequests.push(fetchFeatures({ from: newFrom, size, featuresMaxBounds }));
+          }
+        }
+      }
+      queues.push(queueRequests);
+    }
+
+    // Execute all queues with limited concurrency
+    for (const queue of queues) {
+      const results = await Promise.all(queue);
+      results.forEach((result) => {
+        recordsFetched += result.data.features.length;
+        items.push(...result.data.features);
+      });
+    }
+
+    res = {
+      data: items,
+    };
   }
 
   if (initPolygons) {
@@ -298,9 +367,24 @@ export const getFeatures = async ({
   return new FeatureCollection(res.data);
 };
 
-export const getAmenities = async (amenityIdProperty?: string) => {
-  const url = '/v5/geo/amenities';
-  const res = await axios.get(url);
+export const getAmenities = async ({
+  amenityIdProperty,
+  localSources,
+}: {
+  amenityIdProperty?: string;
+  localSources?: {
+    amenities?: AmenityModel[];
+  };
+}) => {
+  let res;
+  if (localSources?.amenities.length > 0) {
+    res = {
+      data: localSources.amenities,
+    };
+  } else {
+    const url = '/v5/geo/amenities';
+    res = await axios.get(url);
+  }
   return res.data.map((item: any) => {
     if (amenityIdProperty && item[amenityIdProperty] && item.category !== 'default') {
       item.id = item[amenityIdProperty].toLowerCase();
