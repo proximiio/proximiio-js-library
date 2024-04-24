@@ -61,7 +61,7 @@ export const getPackage = async ({
       featuresMaxBounds,
     }).then((features) => (result.features = features));
 
-    const amenitiesPromise = getAmenities(amenityIdProperty).then((amenities) => (result.amenities = amenities));
+    const amenitiesPromise = getAmenities({amenityIdProperty}).then((amenities) => (result.amenities = amenities));
 
     await Promise.all([
       placesPromise,

@@ -194,6 +194,7 @@ export interface Options {
   featuresMaxBounds?: LngLatBoundsLike;
   localSources?: {
     features?: FeatureCollection;
+    amenities?: AmenityModel[];
   };
 }
 
@@ -468,9 +469,10 @@ export class Map {
       featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
       localSources: this.defaultOptions.localSources,
     }).catch((error) => this.handleControllerError(error));
-    const amenities = await getAmenities(this.defaultOptions.amenityIdProperty).catch((error) =>
-      this.handleControllerError(error),
-    );
+    const amenities = await getAmenities({
+      amenityIdProperty: this.defaultOptions.amenityIdProperty,
+      localSources: this.defaultOptions.localSources,
+    }).catch((error) => this.handleControllerError(error));
     const floors = await getFloors().catch((error) => this.handleControllerError(error));
     const kiosks = await getKiosks().catch((error) => this.handleControllerError(error));
 
