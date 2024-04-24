@@ -60,7 +60,7 @@ export const pulsingDot = ({ rgbValues, pointOutline }: { rgbValues?: string; po
       const canvas = document.createElement('canvas');
       canvas.width = this.width;
       canvas.height = this.height;
-      this.context = canvas.getContext('2d');
+      this.context = canvas.getContext('2d', { willReadFrequently: true });
       this.map = map;
     },
 
