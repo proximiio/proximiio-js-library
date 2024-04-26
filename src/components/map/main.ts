@@ -428,7 +428,6 @@ export class Map {
       await this.onMapReady(e);
     });
     this.map.on('error', (e) => {
-      console.log('map error', e);
       this.onMapFailedListener.next(true);
     });
 
@@ -1929,10 +1928,14 @@ export class Map {
         features: [featureVar.json],
       });
     } else {
+      const featureIndex = this.state.features.features.findIndex(
+        (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
+      );
       const dynamicIndex = this.state.dynamicFeatures.features.findIndex(
         (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
       );
-      this.state.dynamicFeatures.features[dynamicIndex] = featureVar;
+      if (featureIndex) this.state.features.features[featureIndex] = featureVar;
+      if (dynamicIndex) this.state.dynamicFeatures.features[dynamicIndex] = featureVar;
     }
 
     // this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features]; // this is not probably updated with non dynamic feature update TODO
