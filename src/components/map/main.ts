@@ -1980,6 +1980,7 @@ export class Map {
     this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features];
     this.geojsonSource.language = this.defaultOptions.language;
     this.geojsonSource.fetch(this.state.features);
+    this.state.style.setSource('main', this.geojsonSource);
     this.onSourceChange();
     this.routingSource.routing.setData(this.state.allFeatures);
     this.updateMapSource(this.routingSource);
