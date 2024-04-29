@@ -71,7 +71,7 @@ export default class GuidanceStepsGenerator {
         bearingFromLastStep: this.getBearingFromLastStep(data),
         coordinates: [point.geometry.coordinates[0], point.geometry.coordinates[1]],
         direction,
-        distanceFromLastStep: distanceFromLastStep,
+        distanceFromLastStep,
         level: point.properties.level,
         levelChangerId: currentPoint.isLevelChanger ? currentPoint.id : null,
         levelChangerType: currentPoint.isLevelChanger ? currentPoint.properties.type : null,
