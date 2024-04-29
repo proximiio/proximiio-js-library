@@ -5,6 +5,7 @@ export default class GuidanceStepsGenerator {
     steps: GuidanceStep[];
     constructor(points: Feature[]);
     private generateStepsFromPoints;
+    private generateInstruction;
     private getBearingFromLastStep;
     private getStepDirection;
     private getDistanceFromLastStep;
