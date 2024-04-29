@@ -7,7 +7,19 @@ import { lineString } from '@turf/helpers';
 enum Direction {
   Start = 'START',
   Finish = 'FINISH',
+  UpStaircase = 'UP_STAIRS',
+  UpEscalator = 'UP_ESCALATOR',
+  UpElevator = 'UP_ELEVATOR',
+  UpRamp = 'UP_RAMP',
+  DownStaircase = 'DOWN_STAIRS',
+  DownEscalator = 'DOWN_ESCALATOR',
+  DownElevator = 'DOWN_ELEVATOR',
+  DownRamp = 'DOWN_RAMP',
   Exit = 'EXIT',
+  ExitStaircase = 'EXIT_STAIRS',
+  ExitEscalator = 'EXIT_ESCALATOR',
+  ExitElevator = 'EXIT_ELEVATOR',
+  ExitRamp = 'EXIT_RAMP',
   Up = 'UP',
   Down = 'DOWN',
   Left = 'LEFT',
@@ -50,11 +62,16 @@ export default class GuidanceStepsGenerator {
         nextPoint,
       };
 
+      const direction: Direction | string = this.getStepDirection(data);
+      const distanceFromLastStep = this.getDistanceFromLastStep(data);
+
+      const extendedData = { ...data, direction, distanceFromLastStep };
+
       return {
         bearingFromLastStep: this.getBearingFromLastStep(data),
         coordinates: [point.geometry.coordinates[0], point.geometry.coordinates[1]],
-        direction: this.getStepDirection(data),
-        distanceFromLastStep: this.getDistanceFromLastStep(data),
+        direction,
+        distanceFromLastStep: distanceFromLastStep,
         level: point.properties.level,
         levelChangerId: currentPoint.isLevelChanger ? currentPoint.id : null,
         levelChangerType: currentPoint.isLevelChanger ? currentPoint.properties.type : null,
@@ -64,8 +81,102 @@ export default class GuidanceStepsGenerator {
             ? nextPoint.properties.level
             : null,
         lineStringFeatureFromLastStep: this.getLineStringFeatureFromLastStep(data),
+        instruction: this.generateInstruction(extendedData), // New attribute
       };
     });
+  }
+
+  private generateInstruction({
+    previousPoint,
+    currentPoint,
+    nextPoint,
+    direction,
+    distanceFromLastStep,
+  }: {
+    previousPoint: Feature;
+    currentPoint: Feature;
+    nextPoint: Feature;
+    direction: Direction | string;
+    distanceFromLastStep: number;
+  }) {
+    let instruction = '';
+    if (distanceFromLastStep > 0) {
+      instruction += `In ${distanceFromLastStep.toFixed(0)} meters `;
+    }
+
+    switch (direction) {
+      case Direction.Start:
+        instruction += 'Beginning of your journey.';
+        break;
+      case Direction.Finish:
+        instruction += `you'll arrive to your destination.`;
+        break;
+      case Direction.Straight:
+        instruction += 'continue straight.';
+        break;
+      case Direction.TurnAround:
+        instruction += 'turn around.';
+        break;
+      case Direction.HardLeft:
+        instruction += 'turn hard left.';
+        break;
+      case Direction.SlightLeft:
+        instruction += 'turn slight left.';
+        break;
+      case Direction.Left:
+        instruction += 'turn left.';
+        break;
+      case Direction.HardRight:
+        instruction += 'turn hard right.';
+        break;
+      case Direction.SlightRight:
+        instruction += 'turn slight right.';
+        break;
+      case Direction.Right:
+        instruction += 'turn right.';
+        break;
+      case Direction.UpStaircase:
+        instruction += 'go upstairs via staircase.';
+        break;
+      case Direction.UpEscalator:
+        instruction += 'go upstairs via escalator.';
+        break;
+      case Direction.UpElevator:
+        instruction += 'go upstairs via elevator.';
+        break;
+      case Direction.UpRamp:
+        instruction += 'go upstairs via ramp.';
+        break;
+      case Direction.DownStaircase:
+        instruction += 'go downstairs via staircase.';
+        break;
+      case Direction.DownEscalator:
+        instruction += 'go downstairs via escalator.';
+        break;
+      case Direction.DownElevator:
+        instruction += 'go downstairs via elevator.';
+        break;
+      case Direction.DownRamp:
+        instruction += 'go downstairs via ramp.';
+        break;
+      case Direction.ExitStaircase:
+        instruction += 'exit via staircase.';
+        break;
+      case Direction.ExitEscalator:
+        instruction += 'exit via escalator.';
+        break;
+      case Direction.ExitElevator:
+        instruction += 'exit via elevator.';
+        break;
+      case Direction.ExitRamp:
+        instruction += 'exit via ramp.';
+        break;
+      default:
+        instruction += 'continue.';
+        break;
+    }
+
+    return instruction;
   }
 
   private getBearingFromLastStep({
@@ -92,7 +203,7 @@ export default class GuidanceStepsGenerator {
     previousPoint: Feature;
     currentPoint: Feature;
     nextPoint: Feature;
-  }) {
+  }): Direction | string {
     if (!previousPoint) {
       return Direction.Start;
     }
