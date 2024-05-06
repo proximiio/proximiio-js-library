@@ -36,7 +36,7 @@ const defaultConstraints = {
 class ImageDetection {
   static init(options: Options, onSelect: (item: SortedPoiItemModel) => void) {
     let output = [];
-    let selectedOutput: SortedPoiItemModel = undefined;
+    let selectedOutput: SortedPoiItemModel;
     let streamStarted = false;
     let stream: MediaStream;
 
@@ -382,7 +382,7 @@ class ImageDetection {
     closeButton.onclick = endSession;
     container.appendChild(closeButton);
 
-    const showResults = (output: SortedPoiItemModel[]) => {
+    const showResults = () => {
       results.appendChild(resultsOverlay);
       results.appendChild(screenshot);
 
@@ -518,7 +518,7 @@ class ImageDetection {
 
         // console.log('output', output);
 
-        showResults(output);
+        showResults();
       } catch (e) {
         console.error('Error analyzing screenshot:', e);
       }
