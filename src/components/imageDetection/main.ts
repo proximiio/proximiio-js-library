@@ -5,11 +5,16 @@ import { compareResults } from './comparator';
 interface Options {
   gVisionApiKey: string;
   pois: SortedPoiItemModel[];
+  cameraText?: string;
   captureButtonText?: string;
   closeButtonText?: string;
+  tryAgainButtonText?: string;
+  confirmButtonText?: string;
   noResultsText?: string;
   resultsHeadingText?: string;
   returnResults?: number;
+  brandColor?: string; // hsl values
+  dir?: string;
 }
 
 const defaultConstraints = {
@@ -28,239 +33,383 @@ const defaultConstraints = {
   },
 };
 
-const css = `
-	#gvision-container {
-		position: fixed;
-		left: 0;
-		right: 0;
-		top: 0;
-		bottom: 0;
-		width: 100%;
-		height: 100%;
-		display: block;
-		overflow: hidden;
-		z-index: 998;
-
-    > video,
-    > canvas {
-      position: fixed;
-      display: block;
-      user-select: none;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      animation: fadeIn 1.2s;
-      z-index: 998;
-      object-fit: cover;
-      object-position: 50% 50%;
-    }
-
-    > canvas {
-      display: none;
-    }
-
-    #capture-button {
-      position: fixed;
-      z-index: 999;
-      width: 180px;
-      bottom: 20px;
-      left: calc(50% - 90px);
-      background-color: rgb(206, 26, 26);
-      border: 0;
-      color: white;
-      padding: 1rem 2rem;
-      border-radius: 6px;
-      font-size: 14px;
-      text-transform: uppercase;
-      font-weight: 500;
-    }
-
-    #spinner {
-      width: 64px;
-      height: 64px;
-      border: 8px solid;
-      border-color: #3d5af1 transparent #3d5af1 transparent;
-      border-radius: 50%;
-      animation: spinner 1.2s infinite linear;
-      display: none;
-      z-index: 999;
-      position: absolute;
-      left: calc(50% - 32px);
-      top: calc(50% - 32px);
-    }
-	}
-
-  #gvision-results-container {
-    display: none;
-    position: fixed;
-		left: 0;
-		right: 0;
-		top: 0;
-		bottom: 0;
-		width: 100%;
-		height: 100%;
-		overflow: hidden;
-		z-index: 999;
-    text-align: center;
-
-    #close-button {
-      position: fixed;
-      z-index: 999;
-      width: 180px;
-      bottom: 20px;
-      left: calc(50% - 90px);
-      background-color: rgb(206, 26, 26);
-      border: 0;
-      color: white;
-      padding: 1rem 2rem;
-      border-radius: 6px;
-      font-size: 14px;
-      text-transform: uppercase;
-      font-weight: 500;
-    }
-
-    h3 {
-      color: white;
-      color: white;
-      font-size: 26px;
-      margin-top: 25px;
-      font-weight: 500;
-    }
-
-    >p {
-      position: relative;
-      color: rgba(255, 255, 255, .8);
-      top: 30%;
-      font-size: 20px;
-    }
-
-    ul {
-      position: relative;
-      color: rgba(255, 255, 255, .8);
-      top: 10px;
-      padding: 1rem 2rem;
-
-      li {
-        background-color: rgba(0, 0, 0, .5);
-        text-align: left;
-        padding: 1rem;
-        margin-bottom: 8px;
-        border-radius: 6px;
-        cursor: pointer;
-        display: flex;
-
-        p {
-          flex: 1;
-        }
-
-        span {
-          color: rgba(255, 255, 255, .5);
-        }
-
-        &:hover {
-          background-color: rgba(0, 0, 0, .8);
-        }
-      }
-    }
-  }
-
-  #gvision-results-overlay {
-    display: none;
-    position: fixed;
-		left: 0;
-		right: 0;
-		top: 0;
-		bottom: 0;
-		width: 100%;
-		height: 100%;
-		overflow: hidden;
-		line-height: 0;
-		z-index: 998;
-    background-color: rgba(0, 0, 0, 0.75);
-  }
-
-  @keyframes spinner {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-`;
-
 class ImageDetection {
   static init(options: Options, onSelect: (item: SortedPoiItemModel) => void) {
+    let output = [];
+    let selectedOutput: SortedPoiItemModel = undefined;
     let streamStarted = false;
     let stream: MediaStream;
+
+    const css = `
+      :root {
+        --main-color: ${options.brandColor ? options.brandColor : 'var(--primary)'}
+      }    
+      #gvision-container {
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        overflow: hidden;
+        z-index: 998;
+        background-color: #000;
+
+        #close-button {
+          position: absolute;
+          z-index: 1000;
+          top: 20px;
+          background-color: hsl(var(--main-color));
+          border: 0;
+          color: white;
+          padding: 0.5rem;
+          border-radius: 10px;
+          font-size: 14px;
+          text-transform: uppercase;
+          font-weight: 500;
+
+          &:dir(ltr) {
+            right: 20px;
+          }
+          &:dir(rtl) {
+            left: 20px;
+          }
+        }
+
+        #gvision-capture-container {
+          &.hidden {
+            display: none;
+          }
+          > video,
+          > canvas {
+            position: fixed;
+            display: block;
+            user-select: none;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            animation: fadeIn 1.2s;
+            z-index: 998;
+            object-fit: cover;
+            object-position: 50% 50%;
+          }
+      
+          > canvas {
+            display: none;
+          }
+      
+          #capture-button {
+            position: fixed;
+            z-index: 1000;
+            bottom: 50px;
+            left: calc(50% - 28px);
+            background-color: hsl(var(--main-color));
+            border: 0;
+            color: white;
+            padding: 1rem;
+            border-radius: 100px;
+            font-size: 14px;
+            text-transform: uppercase;
+            font-weight: 500;
+          }
+      
+          #spinner {
+            width: 64px;
+            height: 64px;
+            border: 8px solid;
+            border-color: hsl(var(--main-color)) transparent hsl(var(--main-color)) transparent;
+            border-radius: 50%;
+            animation: spinner 1.2s infinite linear;
+            display: none;
+            z-index: 999;
+            position: absolute;
+            left: calc(50% - 32px);
+            top: calc(50% - 32px);
+          }
+
+          #gvision-camera-overlay {
+            position: fixed;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            line-height: 0;
+            z-index: 998;
+            background-color: rgba(0, 0, 0, 0.45);
+            clip-path: polygon(0% 0%, 0% 100%, 5% 100%, 5% 25%, 95% 25%, 95% 95%, 5% 95%, 5% 100%, 100% 100%, 100% 0%);
+          }
+
+          >p {
+            z-index: 999;
+            position: relative;
+            color: rgba(255, 255, 255, .8);
+            font-size: 20px;
+            text-align: center;
+            padding: 4rem;
+          }
+        }
+      
+        #gvision-results-container {
+          display: flex;
+          position: fixed;
+          left: 0;
+          right: 0;
+          top: 0;
+          bottom: 0;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          z-index: 999;
+          text-align: center;
+          align-items: center;
+          flex-direction: column;
+          justify-content: center;
+
+          &.hidden {
+            display: none;
+          }
+      
+          h3 {
+            position: relative;
+            z-index: 999;
+            color: white;
+            font-size: 20px;
+            font-weight: 500;
+          }
+
+          .icon {
+            position: absolute;
+            top: 0;
+            z-index: 999;
+            margin: 2rem auto 1rem;
+          }
+      
+          >p {
+            position: absolute;
+            top: 95px;
+            color: rgba(255, 255, 255, .8);
+            font-size: 20px;
+            z-index: 999;
+            padding: 0rem 2rem;
+          }
+      
+          ul {
+            position: relative;
+            z-index: 999;
+            color: rgba(255, 255, 255, .8);
+            padding: 1rem 2rem;
+            width: 100%;
+      
+            li {
+              background-color: white;
+              text-align: left;
+              padding: .75rem 1.5rem;
+              margin-bottom: 8px;
+              border-radius: 60px;
+              cursor: pointer;
+              display: flex;
+              color: #1E1E1E;
+              font-size: 18px;
+
+              &.active { 
+                background-color: hsl(var(--main-color));
+                color: white;
+              }
+      
+              p {
+                flex: 1;
+              }
+
+              span {
+                font-weight: 600;
+              }
+            }
+          }
+
+          #buttons-container {
+            z-index: 999;
+            display: flex;
+            gap: 1rem;
+
+            button {
+              border-radius: 50px;
+              padding: .5rem 2rem;
+              background-color: white;
+              border: 2px solid hsl(var(--main-color));
+              font-weight: 600;
+            }
+            #try-again-btn {
+              color: hsl(var(--main-color));
+            }
+            #confirm-btn {
+              background-color: hsl(var(--main-color));
+              color: white;
+            }
+          }
+
+          #screenshot {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+          }
+
+          #gvision-results-overlay {
+            display: none;
+            position: fixed;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            line-height: 0;
+            z-index: 998;
+            background-color: rgba(0, 0, 0, 0.75);
+            &.clipped {
+              background-color: rgba(0, 0, 0, 0.45);
+              clip-path: polygon(0% 0%, 0% 100%, 5% 100%, 5% 30%, 95% 30%, 95% 95%, 5% 95%, 5% 100%, 100% 100%, 100% 0%);
+            }
+          }
+        }
+      }
+
+      @keyframes spinner {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    `;
 
     if (!document.getElementById('gvision-css')) {
       InjectCSS({ id: 'gvision-css', css });
     }
 
-    const container = document.createElement('div');
-    container.id = 'gvision-container';
-    document.body.appendChild(container);
-
-    const video = document.createElement('video');
-    video.autoplay = true;
-    container.appendChild(video);
-
-    const canvas = document.createElement('canvas');
-    document.body.appendChild(container);
-
-    const captureButton = document.createElement('button');
-    captureButton.id = 'capture-button';
-    captureButton.innerText = options.captureButtonText ? options.captureButtonText : 'Capture';
-
-    const spinner = document.createElement('div');
-    spinner.id = 'spinner';
-    container.appendChild(spinner);
-
-    const results = document.createElement('div');
-    results.id = 'gvision-results-container';
-    document.body.appendChild(results);
-
-    const resultsOverlay = document.createElement('div');
-    resultsOverlay.id = 'gvision-results-overlay';
-    document.body.appendChild(resultsOverlay);
-
-    const selectItem = (item: SortedPoiItemModel) => {
-      onSelect(item);
-      endSession();
-    };
-
     const endSession = () => {
-      results.remove();
-      resultsOverlay.remove();
+      stopStream();
+      container.remove();
       document.getElementById('gvision-css').remove();
     };
 
+    const tryAgain = () => {
+      videoContainer.classList.remove('hidden');
+      results.classList.add('hidden');
+      results.innerHTML = '';
+      const updatedConstraints = {
+        ...defaultConstraints,
+      };
+      startStream(updatedConstraints);
+    };
+
+    const confirmLocation = () => {
+      onSelect(selectedOutput ? selectedOutput : output[0]);
+      endSession();
+    };
+
+    const container = document.createElement('div');
+    container.id = 'gvision-container';
+    container.dir = options.dir ? options.dir : 'ltr';
+    document.body.appendChild(container);
+
+    const videoContainer = document.createElement('div');
+    videoContainer.id = 'gvision-capture-container';
+    container.appendChild(videoContainer);
+
+    const video = document.createElement('video');
+    video.autoplay = true;
+    videoContainer.appendChild(video);
+
+    const canvas = document.createElement('canvas');
+    container.appendChild(videoContainer);
+
+    const captureButton = document.createElement('button');
+    captureButton.id = 'capture-button';
+    if (options.captureButtonText) {
+      captureButton.innerText = options.captureButtonText;
+    } else {
+      const captureIconImg = document.createElement('img');
+      captureIconImg.src = 'https://img.icons8.com/material-rounded/24/ffffff/camera--v2.png';
+      captureIconImg.width = 24;
+      captureIconImg.height = 24;
+      captureButton.appendChild(captureIconImg);
+    }
+    videoContainer.appendChild(captureButton);
+
+    const spinner = document.createElement('div');
+    spinner.id = 'spinner';
+    videoContainer.appendChild(spinner);
+
+    const cameraText = document.createElement('p');
+    cameraText.id = 'camera-text';
+    cameraText.innerText = options.cameraText ? options.cameraText : 'Point your camera towards a shop front';
+    videoContainer.appendChild(cameraText);
+
+    const cameraOverlay = document.createElement('div');
+    cameraOverlay.id = 'gvision-camera-overlay';
+    videoContainer.appendChild(cameraOverlay);
+
+    const results = document.createElement('div');
+    results.id = 'gvision-results-container';
+    results.classList.add('hidden');
+    container.appendChild(results);
+
+    const resultsOverlay = document.createElement('div');
+    resultsOverlay.id = 'gvision-results-overlay';
+
+    const screenshot = document.createElement('img');
+    screenshot.id = 'screenshot';
+
+    const closeButton = document.createElement('button');
+    closeButton.id = 'close-button';
+    if (options.closeButtonText) {
+      closeButton.innerText = options.closeButtonText;
+    } else {
+      const closeIconImg = document.createElement('img');
+      closeIconImg.src = 'https://img.icons8.com/material-outlined/24/ffffff/delete-sign.png';
+      closeIconImg.width = 18;
+      closeIconImg.height = 18;
+      closeButton.appendChild(closeIconImg);
+    }
+    closeButton.onclick = endSession;
+    container.appendChild(closeButton);
+
     const showResults = (output: SortedPoiItemModel[]) => {
-      results.style.display = 'block';
+      results.appendChild(resultsOverlay);
+      results.appendChild(screenshot);
+
+      results.classList.remove('hidden');
       resultsOverlay.style.display = 'block';
 
-      const closeButton = document.createElement('button');
-      closeButton.id = 'close-button';
-      closeButton.innerText = options.closeButtonText ? options.closeButtonText : 'Close';
-
-      results.appendChild(closeButton);
-
-      closeButton.onclick = endSession;
-
       if (output.length === 0) {
+        const warningIconImg = document.createElement('img');
+        warningIconImg.src = 'https://img.icons8.com/sf-regular-filled/96/ffffff/error.png';
+        warningIconImg.width = 48;
+        warningIconImg.height = 48;
+        warningIconImg.classList.add('icon');
+        results.appendChild(warningIconImg);
+
         const noResults = document.createElement('p');
         noResults.innerText = options.noResultsText
           ? options.noResultsText
-          : `Sorry we didn't found any results. You can close this window and try again.`;
+          : `We couldn't quite figure out your location, try getting closer to the logo and capturing at a more direct angle`;
         results.appendChild(noResults);
+        resultsOverlay.classList.add('clipped');
       }
 
       if (output.length > 0) {
         const resultsHeading = document.createElement('h3');
-        resultsHeading.innerText = options.resultsHeadingText ? options.resultsHeadingText : 'You are at: ';
+        resultsHeading.innerText = options.resultsHeadingText ? options.resultsHeadingText : 'Is this where you are?';
         results.appendChild(resultsHeading);
+        resultsOverlay.classList.remove('clipped');
 
         const resultsList = document.createElement('ul');
         results.appendChild(resultsList);
@@ -269,10 +418,36 @@ class ImageDetection {
           const listItem = document.createElement('li');
           listItem.innerHTML = `<p>${i.properties.title}</p><span>${i.floorName}</span>`;
           listItem.onclick = () => {
-            selectItem(i);
+            // Remove 'active' class from all list items
+            const listItems = document.querySelectorAll('li');
+            listItems.forEach((item) => {
+              item.classList.remove('active');
+            });
+
+            // Add 'active' class to the clicked item
+            listItem.classList.add('active');
+
+            // Call selectItem function with the clicked item
+            selectedOutput = i;
           };
           resultsList.appendChild(listItem);
         });
+
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.id = 'buttons-container';
+        results.appendChild(buttonsContainer);
+
+        const tryAgainBtn = document.createElement('button');
+        tryAgainBtn.id = 'try-again-btn';
+        tryAgainBtn.innerText = options.tryAgainButtonText ? options.tryAgainButtonText : 'Try again';
+        tryAgainBtn.onclick = tryAgain;
+        buttonsContainer.appendChild(tryAgainBtn);
+
+        const confirmBtn = document.createElement('button');
+        confirmBtn.id = 'confirm-btn';
+        confirmBtn.innerText = options.confirmButtonText ? options.confirmButtonText : 'Confirm';
+        confirmBtn.onclick = confirmLocation;
+        buttonsContainer.appendChild(confirmBtn);
       }
     };
 
@@ -285,6 +460,7 @@ class ImageDetection {
     };
 
     const analyzeScreenshot = async (imageSrc: string) => {
+      output = [];
       try {
         const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${options.gVisionApiKey}`, {
           method: 'POST',
@@ -320,8 +496,6 @@ class ImageDetection {
 
         // console.log('data recognized', data);
 
-        let output = [];
-
         if (data.responses[0].textAnnotations?.length > 0) {
           data.responses[0].textAnnotations.forEach((result) => {
             result.dimension = calculateDimensions(result.boundingPoly.vertices);
@@ -356,7 +530,8 @@ class ImageDetection {
         streamStarted = false;
         window.removeEventListener('touchstart', touchHandler);
       }
-      container.remove();
+      videoContainer.classList.add('hidden');
+      hideLoading();
     };
 
     const doScreenshot = async () => {
@@ -366,6 +541,7 @@ class ImageDetection {
       const imageSrc = canvas.toDataURL('image/jpeg');
       displayLoading();
       await analyzeScreenshot(imageSrc);
+      screenshot.src = imageSrc;
       stopStream();
     };
 
@@ -374,7 +550,6 @@ class ImageDetection {
     const handleStream = () => {
       video.srcObject = stream;
       streamStarted = true;
-      container.appendChild(captureButton);
     };
 
     const startStream = async (constraints: MediaStreamConstraints) => {
