@@ -379,7 +379,7 @@ export class Map {
   private hiddenAmenities: string[] = [];
   private amenityCategories: any = {};
   private hoveredPolygon: any;
-  private selectedPolygon: any;
+  private selectedPolygons: Feature[] = [];
   private currentStep = 0;
   private kioskPopup: any;
   private mainSourceLoaded = false;
@@ -1507,12 +1507,44 @@ export class Map {
     }
   }
 
-  handlePolygonSelection(poi?: Feature) {
-    const connectedPolygonId = poi && poi.properties._dynamic ? poi.properties._dynamic.polygon_id : null;
+  handlePolygonSelection(poi?: Feature | Feature[]) {
+    let features: Feature[] = [];
+    if (Array.isArray(poi)) {
+      features = poi;
+    } else {
+      features = poi?.id ? [poi] : [];
+    }
+    const featuresIds = features.length === 0 ? [] : features.map((i) => i.id);
     const featuresWithPolygon = this.state.allFeatures.features.filter(
-      (f) => f.properties._dynamic?.polygon_id && f.geometry.type === 'Point',
+      (f) => f.properties._dynamic?.polygon_id && f.geometry.type === 'Point' && !featuresIds.includes(f.id),
     );
-    if (this.selectedPolygon) {
+
+    if (this.selectedPolygons.length > 0) {
+      for (const polygon of this.selectedPolygons) {
+        this.map.setFeatureState(
+          {
+            source: 'main',
+            id: polygon.id,
+          },
+          {
+            selected: false,
+          },
+        );
+        if (polygon.properties._dynamic.label_id) {
+          this.map.setFeatureState(
+            {
+              source: 'main',
+              id: polygon.properties._dynamic.label_id,
+            },
+            {
+              selected: false,
+            },
+          );
+        }
+      }
+    }
+
+    if (features.length === 0) {
       for (const f of featuresWithPolygon) {
         const polygon = this.state.allFeatures.features.find(
           (i) =>
@@ -1544,89 +1576,78 @@ export class Map {
           }
         }
       }
-      this.map.setFeatureState(
-        {
-          source: 'main',
-          id: this.selectedPolygon.id,
-        },
-        {
-          selected: false,
-        },
-      );
-      if (this.selectedPolygon.properties._dynamic.label_id) {
-        this.map.setFeatureState(
-          {
-            source: 'main',
-            id: this.selectedPolygon.properties._dynamic.label_id,
-          },
-          {
-            selected: false,
-          },
-        );
-      }
+      return;
     }
-    if (connectedPolygonId) {
-      this.selectedPolygon = this.state.allFeatures.features.find(
-        (i) =>
-          i.properties._dynamic?.id === connectedPolygonId &&
-          this.defaultOptions.polygonLayers
-            .map((layer) => `${layer.featureType}-custom`)
-            .includes(i.properties._dynamic?.type),
-      );
-      if (this.selectedPolygon) {
-        for (const f of featuresWithPolygon) {
-          const polygon = this.state.allFeatures.features.find(
-            (i) =>
-              i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
-              this.defaultOptions.polygonLayers
-                .map((layer) => `${layer.featureType}-custom`)
-                .includes(i.properties._dynamic?.type),
-          );
-          if (polygon) {
-            this.map.setFeatureState(
-              {
-                source: 'main',
-                id: polygon.id,
-              },
-              {
-                disabled: true,
-              },
+
+    this.selectedPolygons = [];
+
+    // If poi is defined, handle it as before
+    features.forEach((feat) => {
+      const connectedPolygonId = feat && feat.properties._dynamic ? feat.properties._dynamic.polygon_id : null;
+      if (connectedPolygonId) {
+        const selectedPolygon = this.state.allFeatures.features.find(
+          (i) =>
+            i.properties._dynamic?.id === connectedPolygonId &&
+            this.defaultOptions.polygonLayers
+              .map((layer) => `${layer.featureType}-custom`)
+              .includes(i.properties._dynamic?.type),
+        );
+        if (selectedPolygon) {
+          for (const f of featuresWithPolygon) {
+            const polygon = this.state.allFeatures.features.find(
+              (i) =>
+                i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
+                this.defaultOptions.polygonLayers
+                  .map((layer) => `${layer.featureType}-custom`)
+                  .includes(i.properties._dynamic?.type),
             );
-            if (polygon.properties._dynamic.label_id) {
+            if (polygon) {
               this.map.setFeatureState(
                 {
                   source: 'main',
-                  id: polygon.properties._dynamic.label_id,
+                  id: polygon.id,
                 },
                 {
                   disabled: true,
                 },
               );
+              if (polygon.properties._dynamic.label_id) {
+                this.map.setFeatureState(
+                  {
+                    source: 'main',
+                    id: polygon.properties._dynamic.label_id,
+                  },
+                  {
+                    disabled: true,
+                  },
+                );
+              }
             }
           }
-        }
-        this.map.setFeatureState(
-          {
-            source: 'main',
-            id: this.selectedPolygon.id,
-          },
-          {
-            selected: true,
-          },
-        );
-        if (this.selectedPolygon.properties._dynamic.label_id) {
           this.map.setFeatureState(
             {
               source: 'main',
-              id: this.selectedPolygon.properties._dynamic.label_id,
+              id: selectedPolygon.id,
             },
             {
               selected: true,
             },
           );
+          if (selectedPolygon.properties._dynamic.label_id) {
+            this.map.setFeatureState(
+              {
+                source: 'main',
+                id: selectedPolygon.properties._dynamic.label_id,
+              },
+              {
+                selected: true,
+              },
+            );
+          }
+          this.selectedPolygons.push(selectedPolygon);
         }
       }
-    }
+    });
   }
 
   private onShopMouseEnter() {
