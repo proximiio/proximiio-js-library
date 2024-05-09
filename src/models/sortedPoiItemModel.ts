@@ -15,5 +15,5 @@ export interface SortedPoiItemModel {
   score: number;
   foundInDescription: boolean;
   floor: FloorModel | undefined;
-  floorName: string;
+  floorName?: string;
 }
