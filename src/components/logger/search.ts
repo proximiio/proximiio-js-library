@@ -5,6 +5,8 @@ export default class SearchLogger {
   success: boolean;
   resultId?: string;
   resultTitle?: string;
+  resultAmenity?: string;
+  resultAmenityCategory?: string;
   kioskId?: string;
   metadata?: Record<string, string>;
   language?: string;
@@ -15,6 +17,8 @@ export default class SearchLogger {
     success: boolean;
     resultId?: string;
     resultTitle?: string;
+    resultAmenity?: string;
+    resultAmenityCategory?: string;
     kioskId?: string;
     metadata?: Record<string, string>;
     language?: string;
@@ -24,6 +28,8 @@ export default class SearchLogger {
     this.success = data.success;
     this.resultId = data.resultId;
     this.resultTitle = data.resultTitle;
+    this.resultAmenity = data.resultAmenity;
+    this.resultAmenityCategory = data.resultAmenityCategory;
     this.kioskId = data.kioskId;
     this.metadata = data.metadata;
     this.language = data.language;
