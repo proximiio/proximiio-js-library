@@ -52,6 +52,8 @@ export interface PolygonOptions {
     maxZoom?: number;
     labelMinZoom?: number;
     labelMaxZoom?: number;
+    iconMinZoom?: number;
+    iconMaxZoom?: number;
     labelFontSize?: (string | number | string[])[] | number | any;
     symbolPlacement?: 'point' | 'line' | 'line-center';
     autoLabelLines?: boolean;
