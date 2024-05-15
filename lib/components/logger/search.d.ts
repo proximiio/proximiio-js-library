@@ -3,6 +3,8 @@ export default class SearchLogger {
     success: boolean;
     resultId?: string;
     resultTitle?: string;
+    resultAmenity?: string;
+    resultAmenityCategory?: string;
     kioskId?: string;
     metadata?: Record<string, string>;
     language?: string;
@@ -12,6 +14,8 @@ export default class SearchLogger {
         success: boolean;
         resultId?: string;
         resultTitle?: string;
+        resultAmenity?: string;
+        resultAmenityCategory?: string;
         kioskId?: string;
         metadata?: Record<string, string>;
         language?: string;

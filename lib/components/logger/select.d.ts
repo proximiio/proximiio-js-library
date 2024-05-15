@@ -2,6 +2,8 @@ export default class SelectLogger {
     clickedElementId: string;
     clickedElementTitle: string;
     clickedElementType: 'amenity' | 'feature' | 'amenity_category';
+    clickedElementAmenity?: string;
+    clickedElementAmenityCategory?: string;
     source: 'manual' | 'urlParam' | 'qr';
     kioskId?: string;
     metadata?: Record<string, string>;
@@ -11,6 +13,8 @@ export default class SelectLogger {
         clickedElementId: string;
         clickedElementTitle: string;
         clickedElementType: 'amenity' | 'feature' | 'amenity_category';
+        clickedElementAmenity?: string;
+        clickedElementAmenityCategory?: string;
         source: 'manual' | 'urlParam' | 'qr';
         kioskId?: string;
         metadata?: Record<string, string>;

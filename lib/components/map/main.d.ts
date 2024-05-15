@@ -50,6 +50,8 @@ export interface PolygonOptions {
     removeOriginalPolygonsLayer?: boolean;
     minZoom?: number;
     maxZoom?: number;
+    labelMinZoom?: number;
+    labelMaxZoom?: number;
     labelFontSize?: (string | number | string[])[] | number | any;
     symbolPlacement?: 'point' | 'line' | 'line-center';
     autoLabelLines?: boolean;
@@ -202,7 +204,7 @@ export declare class Map {
     private hiddenAmenities;
     private amenityCategories;
     private hoveredPolygon;
-    private selectedPolygon;
+    private selectedPolygons;
     private currentStep;
     private kioskPopup;
     private mainSourceLoaded;
@@ -223,7 +225,7 @@ export declare class Map {
     private initPolygons;
     private updateLayerOpacity;
     private onShopClick;
-    handlePolygonSelection(poi?: Feature): void;
+    handlePolygonSelection(poi?: Feature | Feature[]): void;
     private onShopMouseEnter;
     private onShopMouseMove;
     private onShopMouseLeave;
