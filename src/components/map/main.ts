@@ -91,6 +91,8 @@ export interface PolygonOptions {
   maxZoom?: number;
   labelMinZoom?: number;
   labelMaxZoom?: number;
+  iconMinZoom?: number;
+  iconMaxZoom?: number;
   labelFontSize?: (string | number | string[])[] | number | any;
   symbolPlacement?: 'point' | 'line' | 'line-center';
   autoLabelLines?: boolean;
@@ -284,6 +286,8 @@ export class Map {
       maxZoom: 24,
       labelMinZoom: 17,
       labelMaxZoom: 24,
+      iconMinZoom: 17,
+      iconMaxZoom: 24,
       labelFontSize: [
         'interpolate',
         ['exponential', 1.75],
