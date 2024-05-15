@@ -55,8 +55,8 @@ export class PolygonIconsLayer extends SymbolLayer {
     super(data);
     this.id = `${data.featureType}-icons`;
     this.type = 'symbol';
-    this.minzoom = data.minZoom;
-    this.maxzoom = data.maxZoom;
+    this.minzoom = data.labelMinZoom;
+    this.maxzoom = data.labelMaxZoom;
     this.source = 'main';
     this.filter = [
       'all',
@@ -105,8 +105,8 @@ export class PolygonTitlesLayer extends SymbolLayer {
     super(data);
     this.id = `${data.featureType}-labels`;
     this.type = 'symbol';
-    this.minzoom = data.minZoom;
-    this.maxzoom = data.maxZoom;
+    this.minzoom = data.labelMinZoom;
+    this.maxzoom = data.labelMaxZoom;
     this.source = 'main';
     this.filter = [
       'all',

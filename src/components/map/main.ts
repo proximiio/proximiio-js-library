@@ -89,6 +89,8 @@ export interface PolygonOptions {
   removeOriginalPolygonsLayer?: boolean;
   minZoom?: number;
   maxZoom?: number;
+  labelMinZoom?: number;
+  labelMaxZoom?: number;
   labelFontSize?: (string | number | string[])[] | number | any;
   symbolPlacement?: 'point' | 'line' | 'line-center';
   autoLabelLines?: boolean;
@@ -280,6 +282,8 @@ export class Map {
       removeOriginalPolygonsLayer: true,
       minZoom: 17,
       maxZoom: 24,
+      labelMinZoom: 17,
+      labelMaxZoom: 24,
       labelFontSize: [
         'interpolate',
         ['exponential', 1.75],
