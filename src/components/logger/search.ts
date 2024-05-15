@@ -7,6 +7,8 @@ export default class SearchLogger {
   resultTitle?: string;
   resultAmenity?: string;
   resultAmenityCategory?: string;
+  foundWithFuziness?: boolean;
+  fuzinessResult?: string;
   kioskId?: string;
   metadata?: Record<string, string>;
   language?: string;
@@ -19,6 +21,8 @@ export default class SearchLogger {
     resultTitle?: string;
     resultAmenity?: string;
     resultAmenityCategory?: string;
+    foundWithFuziness?: boolean;
+    fuzinessResult?: string;
     kioskId?: string;
     metadata?: Record<string, string>;
     language?: string;
@@ -30,6 +34,8 @@ export default class SearchLogger {
     this.resultTitle = data.resultTitle;
     this.resultAmenity = data.resultAmenity;
     this.resultAmenityCategory = data.resultAmenityCategory;
+    this.foundWithFuziness = data.foundWithFuziness;
+    this.fuzinessResult = data.fuzinessResult;
     this.kioskId = data.kioskId;
     this.metadata = data.metadata;
     this.language = data.language;
