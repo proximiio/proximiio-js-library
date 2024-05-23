@@ -32,6 +32,7 @@ export default class RoutingSource extends DataSource {
   };
   steps: GuidanceStep[];
   preview?: boolean;
+  language: string;
 
   constructor() {
     super('route');
@@ -47,10 +48,21 @@ export default class RoutingSource extends DataSource {
     this.routing.setConfig(config);
   }
 
-  async update(start?: Feature, finish?: Feature, preview?: boolean) {
+  async update({
+    start,
+    finish,
+    preview,
+    language,
+  }: {
+    start?: Feature;
+    finish?: Feature;
+    preview?: boolean;
+    language: string;
+  }) {
     this.start = start;
     this.finish = finish;
     this.preview = preview;
+    this.language = language;
 
     this.data = new FeatureCollection({
       features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),
@@ -69,7 +81,7 @@ export default class RoutingSource extends DataSource {
       this.levelPaths = route?.levelPaths;
       this.levelPoints = route?.levelPoints;
       this.details = route?.details;
-      const guidanceStepsGenerator = new GuidanceStepsGenerator(route?.points);
+      const guidanceStepsGenerator = new GuidanceStepsGenerator(route?.points, this.language);
       this.steps = guidanceStepsGenerator.steps;
 
       if (paths) {

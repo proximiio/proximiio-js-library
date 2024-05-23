@@ -3,6 +3,7 @@ import { GuidanceStep } from '../../models/wayfinding';
 import bearing from '@turf/bearing';
 import distance from '@turf/distance';
 import { lineString } from '@turf/helpers';
+import { translations } from './i18n';
 
 enum Direction {
   Start = 'START',
@@ -42,9 +43,11 @@ enum LevelChangerTypes {
 export default class GuidanceStepsGenerator {
   points: Feature[];
   steps: GuidanceStep[];
+  language: string;
 
-  constructor(points: Feature[]) {
+  constructor(points: Feature[], language: string) {
     this.points = points;
+    this.language = language;
     if (this.points && this.points.length > 0) {
       this.generateStepsFromPoints();
     }
@@ -101,78 +104,80 @@ export default class GuidanceStepsGenerator {
   }) {
     let instruction = '';
     if (distanceFromLastStep > 0) {
-      instruction += `In ${distanceFromLastStep.toFixed(0)} meters `;
+      instruction += `${translations[this.language].IN} ${distanceFromLastStep.toFixed(0)} ${
+        translations[this.language].METERS
+      } `;
     }
 
     switch (direction) {
       case Direction.Start:
-        instruction += 'Beginning of your journey.';
+        instruction += translations[this.language].START;
         break;
       case Direction.Finish:
-        instruction += `you'll arrive to your destination.`;
+        instruction += translations[this.language].DESTINATION;
         break;
       case Direction.Straight:
-        instruction += 'continue straight.';
+        instruction += translations[this.language].STRAIGHT;
         break;
       case Direction.TurnAround:
-        instruction += 'turn around.';
+        instruction += translations[this.language].TURN_AROUND;
         break;
       case Direction.HardLeft:
-        instruction += 'turn hard left.';
+        instruction += translations[this.language].HARD_LEFT;
         break;
       case Direction.SlightLeft:
-        instruction += 'turn slight left.';
+        instruction += translations[this.language].SLIGHT_LEFT;
         break;
       case Direction.Left:
-        instruction += 'turn left.';
+        instruction += translations[this.language].LEFT;
         break;
       case Direction.HardRight:
-        instruction += 'turn hard right.';
+        instruction += translations[this.language].HARD_RIGHT;
         break;
       case Direction.SlightRight:
-        instruction += 'turn slight right.';
+        instruction += translations[this.language].SLIGHT_RIGHT;
         break;
       case Direction.Right:
-        instruction += 'turn right.';
+        instruction += translations[this.language].RIGHT;
         break;
       case Direction.UpStaircase:
-        instruction += 'go upstairs via staircase.';
+        instruction += translations[this.language].UP_STAIRCASE;
         break;
       case Direction.UpEscalator:
-        instruction += 'go upstairs via escalator.';
+        instruction += translations[this.language].UP_ESCALATOR;
         break;
       case Direction.UpElevator:
-        instruction += 'go upstairs via elevator.';
+        instruction += translations[this.language].UP_ELEVATOR;
         break;
       case Direction.UpRamp:
-        instruction += 'go upstairs via ramp.';
+        instruction += translations[this.language].UP_RAMP;
         break;
       case Direction.DownStaircase:
-        instruction += 'go downstairs via staircase.';
+        instruction += translations[this.language].DOWN_STAIRCASE;
         break;
       case Direction.DownEscalator:
-        instruction += 'go downstairs via escalator.';
+        instruction += translations[this.language].DOWN_ESCALATOR;
         break;
       case Direction.DownElevator:
-        instruction += 'go downstairs via elevator.';
+        instruction += translations[this.language].DOWN_ELEVATOR;
         break;
       case Direction.DownRamp:
-        instruction += 'go downstairs via ramp.';
+        instruction += translations[this.language].DOWN_RAMP;
         break;
       case Direction.ExitStaircase:
-        instruction += 'exit via staircase.';
+        instruction += translations[this.language].EXIT_STAIRCASE;
         break;
       case Direction.ExitEscalator:
-        instruction += 'exit via escalator.';
+        instruction += translations[this.language].EXIT_ESCALATOR;
         break;
       case Direction.ExitElevator:
-        instruction += 'exit via elevator.';
+        instruction += translations[this.language].EXIT_ELEVATOR;
         break;
       case Direction.ExitRamp:
-        instruction += 'exit via ramp.';
+        instruction += translations[this.language].EXIT_RAMP;
         break;
       default:
-        instruction += 'continue.';
+        instruction += translations[this.language].CONTINUE;
         break;
     }
 

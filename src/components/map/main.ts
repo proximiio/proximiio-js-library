@@ -203,6 +203,7 @@ export interface Options {
     features?: FeatureCollection;
     amenities?: AmenityModel[];
   };
+  autoLevelChange?: boolean;
 }
 
 export interface PaddingOptions {
@@ -374,6 +375,7 @@ export class Map {
     blockFeatureClickWhileRouting: false,
     useTimerangeData: false,
     sendAnalytics: true,
+    autoLevelChange: false,
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -2839,9 +2841,9 @@ export class Map {
         if (this.defaultOptions.animatedRoute) {
           console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
         }
-        clearInterval(this.animationInterval);
+        cancelAnimationFrame(this.animationFrame);
       }
-      this.routingSource.update(start, finish);
+      this.routingSource.update({ start, finish, language: this.defaultOptions.language });
     } catch (e) {
       console.log('catched', e);
     }
@@ -2851,7 +2853,7 @@ export class Map {
   private onRoutePreview(start?: Feature, finish?: Feature) {
     this.startPoint = start;
     this.endPoint = finish;
-    this.routingSource.update(start, finish, true);
+    this.routingSource.update({ start, finish, preview: true, language: this.defaultOptions.language });
   }
 
   private onRouteCancel() {
@@ -2870,7 +2872,7 @@ export class Map {
         console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
       }
       if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
-        clearInterval(this.animationInterval);
+        cancelAnimationFrame(this.animationFrame);
         // @ts-ignore
         this.map.getSource('pointAlong').setData({
           type: 'FeatureCollection',
@@ -2996,10 +2998,13 @@ export class Map {
     }
   }
 
-  private animationInterval;
+  private animationFrame;
   private animationTimeout;
-  private step = 0;
-  private animateRoute = () => {
+  private step;
+  private lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+  private animateRoute() {
     if (this.routingSource && this.routingSource.route && this.routingSource.route[`path-part-${this.currentStep}`]) {
       const route =
         this.routingSource.route[`path-part-${this.currentStep}`] &&
@@ -3010,58 +3015,127 @@ export class Map {
               { level: this.state.floor.level },
             );
       if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
-        clearInterval(this.animationInterval);
+        cancelAnimationFrame(this.animationFrame);
         clearTimeout(this.animationTimeout);
-        const lineDistance = length(route) * 1000;
-        const walkingSpeed = 1.4;
-        const walkingDuration = lineDistance / walkingSpeed;
-        const multiplier = this.defaultOptions.routeAnimation.durationMultiplier;
-        const vizDuration = this.defaultOptions.routeAnimation.duration
-          ? this.defaultOptions.routeAnimation.duration
-          : walkingDuration * (1 / multiplier);
-        const fps = this.defaultOptions.routeAnimation.fps;
+        const totalDistance = length(route);
+        const baseSpeed = 1000 * 30 * this.defaultOptions.routeAnimation.durationMultiplier; // Animation time in milliseconds per meter
+        const totalDuration = totalDistance * baseSpeed; // Total animation duration based on route length
+        let startTime;
 
-        const frames = Math.round(fps * vizDuration);
+        const animate = (currentTime) => {
+          if (!startTime) startTime = currentTime;
+          const elapsedTime = currentTime - startTime;
 
-        // console.log(`Route Duration is ${walkingDuration} seconds`);
-        // console.log(`Vizualization Duration is ${vizDuration} seconds`);
-        // console.log(`Total Frames at ${fps}fps is ${frames}`);
+          const t = elapsedTime / totalDuration;
 
-        // divide length and duration by number of frames
-        const routeLength = length(route);
-        const incrementLength = routeLength / frames;
-        const interval = (vizDuration / frames) * 1000;
-
-        // updateData at the calculated interval
-        let counter = 0;
-        // let start;
-
-        /*const animate = (timestamp) => {
-        if (!start) start = timestamp;
-        const progress = timestamp - start;
-
-        if (progress <= vizDuration * 1000) {
-          const frameProgress = progress / (vizDuration * 1000);
-          counter = Math.round(frameProgress * frames);
-
-          this.updateData(route, incrementLength, counter, frames);
-
-          requestAnimationFrame(animate);
-        } else {
-          // Animation completed
-          // Additional logic can be added here if needed
-        }
-      };*/
-
-        // requestAnimationFrame(animate);
-        this.animationInterval = setInterval(() => {
-          this.updateData(route, incrementLength, counter, frames);
-          if (counter === frames + 1) {
-            clearInterval(this.animationInterval);
-          } else {
-            counter += 1;
+          if (t >= 1) {
+            // Stop the animation if we reached the end
+            if (this.defaultOptions.routeAnimation.looping) {
+              this.animationTimeout = setTimeout(() => {
+                this.restartRouteAnimation({ delay: 0, recenter: true });
+              }, 2000);
+            }
+            if (this.defaultOptions.autoLevelChange) {
+              setTimeout(() => {
+                if (this.routingSource.route && Object.keys(this.routingSource.route).length - 1 === this.currentStep) {
+                  return;
+                }
+                this.setNavStep('next');
+                this.restartRouteAnimation({ delay: 0, recenter: true });
+              }, 2000);
+            }
+            console.log('animation should end now');
+            return;
           }
-        }, interval);
+
+          // Calculate the current distance along the route
+          const currentDistance = t * totalDistance;
+
+          // Interpolate the current point along the route
+          const currentPoint = along(route, currentDistance);
+
+          // cut the line at the point
+          const lineAlong = lineSplit(route, currentPoint).features[0];
+
+          // Update the point position
+          // @ts-ignore
+          const pointData = this.map.getSource('pointAlong')._data;
+          const currentCoords = pointData.features[0]
+            ? pointData.features[0].geometry.coordinates
+            : currentPoint.geometry.coordinates;
+          const newCoords = currentPoint.geometry.coordinates;
+          pointData.features[0] = point([
+            this.lerp(currentCoords[0], newCoords[0], 0.1),
+            this.lerp(currentCoords[1], newCoords[1], 0.1),
+          ]);
+
+          if (this.defaultOptions.routeAnimation.type === 'point') {
+            // @ts-ignore
+            this.map.getSource('pointAlong').setData(pointData);
+          }
+
+          if (this.defaultOptions.routeAnimation.type === 'puck') {
+            this.map
+              .getSource('start-point')
+              // @ts-ignore
+              .setData(
+                circle(
+                  pointData.geometry.coordinates,
+                  this.defaultOptions.routeAnimation.puckRadius ? this.defaultOptions.routeAnimation.puckRadius : 0.002,
+                  {
+                    properties: {
+                      level: this.state.floor.level,
+                    },
+                  },
+                ),
+              );
+          }
+
+          // @ts-ignore
+          this.map.getSource('lineAlong').setData(lineAlong);
+
+          if (this.defaultOptions.routeAnimation.followRoute) {
+            // Smoothly update the camera position using lerp
+            const cameraCoords = this.map.getCenter().toArray();
+            const targetCoords = currentPoint.geometry.coordinates;
+            const interpolatedCoords = [
+              this.lerp(cameraCoords[0], targetCoords[0], 0.1),
+              this.lerp(cameraCoords[1], targetCoords[1], 0.1),
+            ];
+            if (!this.defaultOptions.routeAnimation.followRouteAngle) {
+              this.map.easeTo({
+                center: interpolatedCoords as [number, number],
+                duration: 50,
+                easing: (t) => t,
+              });
+            } else {
+              const prevPoint = point(currentCoords);
+              const currentPoint = point(newCoords);
+
+              const currentBearing = this.map.getBearing();
+              const nextBearing = prevPoint && currentPoint ? bearing(prevPoint, currentPoint) : currentBearing;
+              let newBearing = currentBearing;
+
+              if (Math.abs(currentBearing - nextBearing) >= 6) {
+                newBearing = nextBearing;
+              }
+
+              setTimeout(() => {
+                this.map.flyTo({
+                  center: interpolatedCoords as [number, number],
+                  bearing: newBearing,
+                  duration: 200,
+                  essential: true,
+                });
+              }, 100); // Adjust this timeout for throttling
+            }
+          }
+
+          // Continue the animation
+          this.animationFrame = requestAnimationFrame(animate);
+        };
+
+        this.animationFrame = requestAnimationFrame(animate);
       }
       if (this.defaultOptions.routeAnimation.type === 'dash') {
         const dashArraySequence = [
@@ -3103,101 +3177,7 @@ export class Map {
         requestAnimationFrame(animateDashArray);
       }
     }
-  };
-
-  // Cache the initial and final points along the route
-  private updateData = (route: Feature | any, incrementLength: number, counter: number, frames: number) => {
-    let animationInProgress = false;
-    // console.log(counter, frames);
-    // length to visualize for this frame
-    const frameLength = incrementLength * counter;
-    const previousFrameLength = incrementLength * (counter - 1);
-
-    // calculate where to place the marker
-    const pointAlong = along(route, frameLength);
-
-    // cut the line at the point
-    const lineAlong = lineSplit(route, pointAlong).features[0];
-
-    /*this.state.style.sources['lineAlong'].data = lineAlong;
-    this.state.style.sources['pointAlong'].data = pointAlong;
-    this.map.setStyle(this.state.style);*/
-
-    if (this.defaultOptions.routeAnimation.type === 'point') {
-      // @ts-ignore
-      this.map.getSource('pointAlong').setData(pointAlong);
-    }
-    if (this.defaultOptions.routeAnimation.type === 'puck') {
-      this.map
-        .getSource('start-point')
-        // @ts-ignore
-        .setData(
-          circle(
-            pointAlong.geometry.coordinates,
-            this.defaultOptions.routeAnimation.puckRadius ? this.defaultOptions.routeAnimation.puckRadius : 0.002,
-            {
-              properties: {
-                level: this.state.floor.level,
-              },
-            },
-          ),
-        );
-    }
-
-    // @ts-ignore
-    this.map.getSource('lineAlong').setData(lineAlong);
-
-    if (this.defaultOptions.routeAnimation.followRoute && !animationInProgress) {
-      animationInProgress = true;
-
-      if (!this.defaultOptions.routeAnimation.followRouteAngle) {
-        setTimeout(() => {
-          this.map.jumpTo({
-            center: pointAlong.geometry.coordinates as [number, number],
-          });
-
-          animationInProgress = false;
-        }, 100); // Adjust this timeout for throttling
-      } else {
-        const prevPoint = counter === 0 ? along(route, 0) : along(route, previousFrameLength);
-        const currentPoint = along(route, frameLength);
-
-        const currentBearing = this.map.getBearing();
-        const nextBearing = prevPoint && currentPoint ? bearing(prevPoint, currentPoint) : currentBearing;
-        let newBearing = currentBearing;
-
-        if (Math.abs(currentBearing - nextBearing) >= 6) {
-          newBearing = nextBearing;
-        }
-
-        setTimeout(() => {
-          this.map.flyTo({
-            center: pointAlong.geometry.coordinates as [number, number],
-            bearing: newBearing,
-            duration: 200,
-            essential: true,
-          });
-
-          animationInProgress = false;
-        }, 100); // Adjust this timeout for throttling
-      }
-    }
-
-    // if (counter === 0) map.getSource('startPoint').setData(pointAlong);
-    if (counter === frames) {
-      // map.getSource('endPoint').setData(pointAlong);
-      // @ts-ignore
-      /*this.map.getSource('pointAlong').setData({
-        type: 'FeatureCollection',
-        features: [],
-      });*/
-      if (this.defaultOptions.routeAnimation.looping) {
-        this.animationTimeout = setTimeout(() => {
-          this.animateRoute();
-        }, 2000);
-      }
-    }
-  };
+  }
 
   private onRestartRouteAnimation({ delay, recenter }: { delay: number; recenter?: boolean }) {
     if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
@@ -3210,7 +3190,7 @@ export class Map {
               { level: this.state.floor.level },
             );
 
-      clearInterval(this.animationInterval);
+      cancelAnimationFrame(this.animationFrame);
 
       // @ts-ignore
       this.map.getSource('pointAlong').setData({
@@ -3243,7 +3223,7 @@ export class Map {
 
   private onStopRouteAnimation() {
     if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
-      clearInterval(this.animationInterval);
+      cancelAnimationFrame(this.animationFrame);
 
       // @ts-ignore
       this.map.getSource('pointAlong').setData({
@@ -3723,7 +3703,11 @@ export class Map {
     if (step === 'next') {
       newStep = this.currentStep + 1;
     }
-    if (step === 'next' && Object.keys(this.routingSource.route).length - 1 === this.currentStep) {
+    if (
+      step === 'next' &&
+      this.routingSource.route &&
+      Object.keys(this.routingSource.route).length - 1 === this.currentStep
+    ) {
       newStep = 0;
     }
     if (step === 'previous' && this.currentStep > 0) {
