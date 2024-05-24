@@ -346,7 +346,7 @@ export class Map {
       looping: true,
       followRoute: true,
       followRouteAngle: false,
-      durationMultiplier: 30,
+      durationMultiplier: 1,
       fps: 120,
       pointIconSize: 1,
       pointColor: '#1d8a9f',
