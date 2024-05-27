@@ -3148,14 +3148,16 @@ export class Map {
               this.map.easeTo({
                 center: interpolatedCoords as [number, number],
                 duration: 50,
-                easing: (t) => t,
+                easing: (t) => {
+                  return t;
+                },
               });
             } else {
               const prevPoint = point(currentCoords);
-              const currentPoint = point(newCoords);
+              const currentP = point(newCoords);
 
               const currentBearing = this.map.getBearing();
-              const nextBearing = prevPoint && currentPoint ? bearing(prevPoint, currentPoint) : currentBearing;
+              const nextBearing = prevPoint && currentP ? bearing(prevPoint, currentP) : currentBearing;
               let newBearing = currentBearing;
 
               if (Math.abs(currentBearing - nextBearing) >= 6) {
