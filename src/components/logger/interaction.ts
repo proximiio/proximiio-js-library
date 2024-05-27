@@ -1,11 +1,10 @@
 import { axios } from '../../common';
 
 export default class InteractionLogger {
-  interactionType: 'mapclick' | 'search' | 'select';
-  source: 'manual' | 'urlParam' | 'qr';
-  targetElementType: 'amenity' | 'feature' | 'amenity_category';
-  targetElementId: string;
-  targetElementTitle: string;
+  interactionType: 'mapclick' | 'search' | 'select' | 'qr';
+  targetElementType?: 'amenity' | 'feature' | 'amenity_category';
+  targetElementId?: string;
+  targetElementTitle?: string;
   targetElementAmenity?: string;
   targetElementAmenityCategory?: string;
   searchValue?: string;
@@ -19,11 +18,10 @@ export default class InteractionLogger {
   session?: string;
 
   constructor(data: {
-    interactionType: 'mapclick' | 'search' | 'select';
-    source: 'manual' | 'urlParam' | 'qr';
-    targetElementType: 'amenity' | 'feature' | 'amenity_category';
-    targetElementId: string;
-    targetElementTitle: string;
+    interactionType: 'mapclick' | 'search' | 'select' | 'qr';
+    targetElementType?: 'amenity' | 'feature' | 'amenity_category';
+    targetElementId?: string;
+    targetElementTitle?: string;
     targetElementAmenity?: string;
     targetElementAmenityCategory?: string;
     searchValue?: string;
@@ -37,7 +35,6 @@ export default class InteractionLogger {
     session?: string;
   }) {
     this.interactionType = data.interactionType;
-    this.source = data.source;
     this.targetElementType = data.targetElementType;
     this.targetElementId = data.targetElementId;
     this.targetElementTitle = data.targetElementTitle;

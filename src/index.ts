@@ -8,6 +8,7 @@ import { Select } from './components/select/main';
 import SelectLogger from './components/logger/select';
 import SearchLogger from './components/logger/search';
 import { ImageDetection } from './components/imageDetection/main';
+import InteractionLogger from './components/logger/interaction';
 
 export default {
   Auth,
@@ -19,6 +20,7 @@ export default {
   Select,
   SelectLogger,
   SearchLogger,
+  InteractionLogger,
 };
 
 export { ImageDetection };
