@@ -29,10 +29,16 @@ export default class RoutingSource extends DataSource {
     };
     steps: GuidanceStep[];
     preview?: boolean;
+    language: string;
     constructor();
     toggleAccessible(value: any): void;
     setConfig(config: WayfindingConfigModel): void;
-    update(start?: Feature, finish?: Feature, preview?: boolean): Promise<void>;
+    update({ start, finish, preview, language, }: {
+        start?: Feature;
+        finish?: Feature;
+        preview?: boolean;
+        language: string;
+    }): Promise<void>;
     cancel(): void;
 }
 export {};

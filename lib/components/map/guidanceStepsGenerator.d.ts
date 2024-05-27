@@ -3,7 +3,8 @@ import { GuidanceStep } from '../../models/wayfinding';
 export default class GuidanceStepsGenerator {
     points: Feature[];
     steps: GuidanceStep[];
-    constructor(points: Feature[]);
+    language: string;
+    constructor(points: Feature[], language: string);
     private generateStepsFromPoints;
     private generateInstruction;
     private getBearingFromLastStep;

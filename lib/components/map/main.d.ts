@@ -162,6 +162,7 @@ export interface Options {
         features?: FeatureCollection;
         amenities?: AmenityModel[];
     };
+    autoLevelChange?: boolean;
 }
 export interface PaddingOptions {
     bottom: number;
@@ -218,6 +219,7 @@ export declare class Map {
     private onRefetch;
     private initKiosk;
     private onSetKiosk;
+    private onStopKiosk;
     private initGeoLocation;
     private initDirectionIcon;
     private addDirectionFeatures;
@@ -274,11 +276,11 @@ export declare class Map {
     private centerOnCoords;
     private updateImages;
     private getUpcomingFloorNumber;
-    private animationInterval;
+    private animationFrame;
     private animationTimeout;
     private step;
+    private lerp;
     private animateRoute;
-    private updateData;
     private onRestartRouteAnimation;
     private onStopRouteAnimation;
     private translateLayers;
@@ -755,6 +757,24 @@ export declare class Map {
      *  });
      */
     setKiosk(lat: number, lng: number, level: number): void;
+    /**
+     * This method will stop kiosk behaviour.
+     *  @memberof Map
+     *  @name stopKiosk
+     *  @example
+     *  const map = new Proximiio.Map({
+     *    isKiosk: true,
+     *    kioskSettings: {
+     *       coordinates: [17.833135351538658, 48.60678469647394],
+     *       level: 0
+     *     }
+     *  });
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.stopKiosk();
+     *  });
+     */
+    stopKiosk(): void;
     /**
      * This method will set padding for zooming into bounding box of found route
      *  @memberof Map

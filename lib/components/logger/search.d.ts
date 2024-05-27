@@ -5,6 +5,8 @@ export default class SearchLogger {
     resultTitle?: string;
     resultAmenity?: string;
     resultAmenityCategory?: string;
+    foundWithFuziness?: boolean;
+    fuzinessResult?: string;
     kioskId?: string;
     metadata?: Record<string, string>;
     language?: string;
@@ -16,6 +18,8 @@ export default class SearchLogger {
         resultTitle?: string;
         resultAmenity?: string;
         resultAmenityCategory?: string;
+        foundWithFuziness?: boolean;
+        fuzinessResult?: string;
         kioskId?: string;
         metadata?: Record<string, string>;
         language?: string;
