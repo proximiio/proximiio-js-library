@@ -3148,9 +3148,7 @@ export class Map {
               this.map.easeTo({
                 center: interpolatedCoords as [number, number],
                 duration: 50,
-                easing: (t) => {
-                  return t;
-                },
+                easing: (x) => x,
               });
             } else {
               const prevPoint = point(currentCoords);
