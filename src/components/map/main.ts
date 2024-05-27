@@ -975,6 +975,48 @@ export class Map {
     }
   }
 
+  private onStopKiosk() {
+    if (this.map && this.defaultOptions.isKiosk) {
+      this.defaultOptions.isKiosk = false;
+
+      this.startPoint = undefined;
+
+      if (this.kioskPopup) {
+        this.kioskPopup.remove();
+      }
+
+      if (document.getElementById('proximiio-kiosk-popup-css')) {
+        document.getElementById('proximiio-kiosk-popup-css').remove();
+      }
+
+      if (this.state.style.sources['my-location']) {
+        this.state.style.removeSource('my-location');
+      }
+
+      if (this.state.style.getLayer('my-location-layer')) {
+        this.state.style.removeLayer('my-location-layer');
+      }
+
+      if (this.state.style.sources['start-point']) {
+        this.state.style.removeSource('start-point');
+      }
+
+      if (this.state.style.getLayer('start-point-layer')) {
+        this.state.style.removeLayer('start-point-layer');
+      }
+
+      if (this.state.style.sources['start-point-halo']) {
+        this.state.style.removeSource('start-point-halo');
+      }
+
+      if (this.state.style.getLayer('start-point-halo-layer')) {
+        this.state.style.removeLayer('start-point-halo-layer');
+      }
+
+      this.map.setStyle(this.state.style);
+    }
+  }
+
   private initGeoLocation() {
     if (this.map && this.defaultOptions.useGpsLocation) {
       const geolocate = new maplibregl.GeolocateControl({
@@ -2176,7 +2218,7 @@ export class Map {
 
     const layers = ['proximiio-pois-icons', 'proximiio-pois-labels', 'pois-icons', 'pois-labels'];
     if (this.defaultOptions.initPolygons) {
-      layers.push('poi-custom-icons', 'shop-labels');
+      layers.push('poi-custom-icons');
     }
     layers.forEach((layer) => {
       if (this.map.getLayer(layer)) {
@@ -2351,7 +2393,7 @@ export class Map {
     // proximiio-pois-icons, proximiio-pois-labels, 'pois-icons', 'pois-labels'
     const layers = ['proximiio-pois-icons', 'proximiio-pois-labels', 'pois-icons', 'pois-labels'];
     if (this.defaultOptions.initPolygons) {
-      layers.push('poi-custom-icons', 'shop-labels');
+      layers.push('poi-custom-icons');
     }
     layers.forEach((layer) => {
       if (this.map.getLayer(layer)) {
@@ -4036,6 +4078,31 @@ export class Map {
   public setKiosk(lat: number, lng: number, level: number) {
     if (this.defaultOptions.isKiosk) {
       this.onSetKiosk(lat, lng, level);
+    } else {
+      throw new Error(`Map is not initiated as kiosk`);
+    }
+  }
+
+  /**
+   * This method will stop kiosk behaviour.
+   *  @memberof Map
+   *  @name stopKiosk
+   *  @example
+   *  const map = new Proximiio.Map({
+   *    isKiosk: true,
+   *    kioskSettings: {
+   *       coordinates: [17.833135351538658, 48.60678469647394],
+   *       level: 0
+   *     }
+   *  });
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.stopKiosk();
+   *  });
+   */
+  public stopKiosk() {
+    if (this.defaultOptions.isKiosk) {
+      this.onStopKiosk();
     } else {
       throw new Error(`Map is not initiated as kiosk`);
     }
