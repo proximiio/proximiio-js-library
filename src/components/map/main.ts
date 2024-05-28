@@ -1503,12 +1503,12 @@ export class Map {
     const minPitch = this.defaultOptions.polygonsOptions.adaptiveMaxPitch;
 
     // Calculate opacity based on pitch
-    let opacity;
-    if (pitch >= minPitch) {
+    const opacity = pitch >= minPitch ? 0 : 1;
+    /*if (pitch >= minPitch) {
       opacity = 0; // Opacity is 0 when pitch is greater than or equal to minPitch
     } else {
       opacity = 1 - pitch / maxPitch; // Linear interpolation between 1 and 0 for pitch < minPitch
-    }
+    }*/
 
     for (const layer of this.defaultOptions.polygonLayers) {
       if (layer.adaptiveLabelOpacity) {
