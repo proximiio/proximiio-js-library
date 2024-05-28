@@ -3047,7 +3047,12 @@ export class Map {
     return a + (b - a) * t;
   }
   private animateRoute() {
-    if (this.routingSource && this.routingSource.route && this.routingSource.route[`path-part-${this.currentStep}`]) {
+    if (
+      this.routingSource &&
+      this.routingSource.route &&
+      this.routingSource.route[`path-part-${this.currentStep}`] &&
+      !this.routingSource.preview
+    ) {
       const route =
         this.routingSource.route[`path-part-${this.currentStep}`] &&
         this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === this.state.floor.level
