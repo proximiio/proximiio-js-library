@@ -1,6 +1,13 @@
 import maplibregl, { FillExtrusionLayerSpecification, LngLatLike, SymbolLayerSpecification } from 'maplibre-gl';
 import Auth from '../../controllers/auth';
-import { addFeatures, deleteFeatures, getAmenities, getFeatures } from '../../controllers/geo';
+import {
+  addFeatures,
+  deleteFeatures,
+  getAmenities,
+  getAmenitiesBundle,
+  getFeatures,
+  getFeaturesBundle,
+} from '../../controllers/geo';
 import { PlaceModel } from '../../models/place';
 import { FloorModel } from '../../models/floor';
 import StyleModel from '../../models/style';
@@ -22,8 +29,8 @@ import {
   popupImage,
 } from './icons';
 import { LngLatBoundsLike, MapLibreEvent } from 'maplibre-gl';
-import { getFloors, getPlaceFloors } from '../../controllers/floors';
-import { getPlaceById, getPlaces } from '../../controllers/places';
+import { getFloors, getFloorsBundle, getPlaceFloors, getPlaceFloorsBundle } from '../../controllers/floors';
+import { getPlaceById, getPlaceByIdBundle, getPlaces, getPlacesBundle } from '../../controllers/places';
 import { CustomSubject } from '../../customSubject';
 // @ts-ignore
 import * as tingle from 'tingle.js/dist/tingle';
@@ -44,8 +51,8 @@ import WayfindingLogger from '../logger/wayfinding';
 import { translations } from './i18n';
 import { WayfindingConfigModel } from '../../models/wayfinding';
 import { KioskModel } from '../../models/kiosk';
-import { getStyle, getStyles } from '../../controllers/style';
-import { getKiosks } from '../../controllers/kiosks';
+import { getStyle, getStyleBundle, getStyles, getStylesBundle } from '../../controllers/style';
+import { getKiosks, getKiosksBundle } from '../../controllers/kiosks';
 import { Protocol } from 'pmtiles';
 
 export interface State {
@@ -109,6 +116,7 @@ export interface PolygonLayer extends PolygonOptions {
 }
 
 export interface Options {
+  bundleUrl?: string;
   selector?: string;
   allowNewFeatureModal?: boolean;
   newFeatureModalEvent?: string;
@@ -467,31 +475,67 @@ export class Map {
 
   private async fetch() {
     let placeParam = null;
+    const useBundle = !!this.defaultOptions.bundleUrl;
 
     if (this.defaultOptions.handleUrlParams) {
       const urlParams = new URLSearchParams(window.location.search);
       placeParam = urlParams.get(this.defaultOptions.urlParams.defaultPlace);
     }
 
-    const places = await getPlaces().catch((error) => this.handleControllerError(error));
-    const style = await getStyle().catch((error) => this.handleControllerError(error));
-    const styles = await getStyles().catch((error) => this.handleControllerError(error));
-    const features = await getFeatures({
-      initPolygons: this.defaultOptions.initPolygons,
-      polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => item.featureType),
-      autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
-      hiddenAmenities: this.defaultOptions.hiddenAmenities,
-      useTimerangeData: this.defaultOptions.useTimerangeData,
-      filter: this.defaultOptions.defaultFilter,
-      featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
-      localSources: this.defaultOptions.localSources,
-    }).catch((error) => this.handleControllerError(error));
-    const amenities = await getAmenities({
-      amenityIdProperty: this.defaultOptions.amenityIdProperty,
-      localSources: this.defaultOptions.localSources,
-    }).catch((error) => this.handleControllerError(error));
-    const floors = await getFloors().catch((error) => this.handleControllerError(error));
-    const kiosks = await getKiosks().catch((error) => this.handleControllerError(error));
+    const places = useBundle
+      ? await getPlacesBundle({ bundleUrl: this.defaultOptions.bundleUrl }).catch((error) =>
+          this.handleControllerError(error),
+        )
+      : await getPlaces().catch((error) => this.handleControllerError(error));
+    const style = useBundle
+      ? await getStyleBundle({ bundleUrl: this.defaultOptions.bundleUrl }).catch((error) =>
+          this.handleControllerError(error),
+        )
+      : await getStyle().catch((error) => this.handleControllerError(error));
+    const styles = useBundle
+      ? await getStylesBundle({ bundleUrl: this.defaultOptions.bundleUrl }).catch((error) =>
+          this.handleControllerError(error),
+        )
+      : await getStyles().catch((error) => this.handleControllerError(error));
+    const features = useBundle
+      ? await getFeaturesBundle({
+          initPolygons: this.defaultOptions.initPolygons,
+          polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => item.featureType),
+          autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
+          hiddenAmenities: this.defaultOptions.hiddenAmenities,
+          useTimerangeData: this.defaultOptions.useTimerangeData,
+          filter: this.defaultOptions.defaultFilter,
+          bundleUrl: this.defaultOptions.bundleUrl,
+        }).catch((error) => this.handleControllerError(error))
+      : await getFeatures({
+          initPolygons: this.defaultOptions.initPolygons,
+          polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => item.featureType),
+          autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
+          hiddenAmenities: this.defaultOptions.hiddenAmenities,
+          useTimerangeData: this.defaultOptions.useTimerangeData,
+          filter: this.defaultOptions.defaultFilter,
+          featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
+          localSources: this.defaultOptions.localSources,
+        }).catch((error) => this.handleControllerError(error));
+    const amenities = useBundle
+      ? await getAmenitiesBundle({
+          bundleUrl: this.defaultOptions.bundleUrl,
+          amenityIdProperty: this.defaultOptions.amenityIdProperty,
+        }).catch((error) => this.handleControllerError(error))
+      : await getAmenities({
+          amenityIdProperty: this.defaultOptions.amenityIdProperty,
+          localSources: this.defaultOptions.localSources,
+        }).catch((error) => this.handleControllerError(error));
+    const floors = useBundle
+      ? await getFloorsBundle({ bundleUrl: this.defaultOptions.bundleUrl }).catch((error) =>
+          this.handleControllerError(error),
+        )
+      : await getFloors().catch((error) => this.handleControllerError(error));
+    const kiosks = useBundle
+      ? await getKiosksBundle({ bundleUrl: this.defaultOptions.bundleUrl }).catch((error) =>
+          this.handleControllerError(error),
+        )
+      : await getKiosks().catch((error) => this.handleControllerError(error));
 
     if (places && features && floors && style && kiosks) {
       const levelChangers = features.features.filter(
@@ -750,16 +794,27 @@ export class Map {
   private async onRefetch() {
     if (this.map) {
       console.log('data should be refetched');
-      const features = await getFeatures({
-        initPolygons: this.defaultOptions.initPolygons,
-        polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => item.featureType),
-        autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
-        hiddenAmenities: this.defaultOptions.hiddenAmenities,
-        useTimerangeData: this.defaultOptions.useTimerangeData,
-        filter: this.defaultOptions.defaultFilter,
-        featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
-        localSources: this.defaultOptions.localSources,
-      }).catch((error) => this.handleControllerError(error));
+      const useBundle = !!this.defaultOptions.bundleUrl;
+      const features = useBundle
+        ? await getFeaturesBundle({
+            initPolygons: this.defaultOptions.initPolygons,
+            polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => item.featureType),
+            autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
+            hiddenAmenities: this.defaultOptions.hiddenAmenities,
+            useTimerangeData: this.defaultOptions.useTimerangeData,
+            filter: this.defaultOptions.defaultFilter,
+            bundleUrl: this.defaultOptions.bundleUrl,
+          })
+        : await getFeatures({
+            initPolygons: this.defaultOptions.initPolygons,
+            polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => item.featureType),
+            autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
+            hiddenAmenities: this.defaultOptions.hiddenAmenities,
+            useTimerangeData: this.defaultOptions.useTimerangeData,
+            filter: this.defaultOptions.defaultFilter,
+            featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
+            localSources: this.defaultOptions.localSources,
+          }).catch((error) => this.handleControllerError(error));
       if (features) {
         const levelChangers = features.features.filter(
           (f) =>
@@ -2746,7 +2801,11 @@ export class Map {
 
   private async onPlaceSelect(place: PlaceModel, zoomIntoPlace: boolean | undefined, floorLevel?: number) {
     this.state = { ...this.state, place };
-    const floors = await getPlaceFloors(place.id).catch(this.handleControllerError);
+    const floors = this.defaultOptions.bundleUrl
+      ? await getPlaceFloorsBundle({ placeId: place.id, bundleUrl: this.defaultOptions.bundleUrl }).catch(
+          this.handleControllerError,
+        )
+      : await getPlaceFloors(place.id).catch(this.handleControllerError);
     if (floors) {
       const state: any = { floors: floors.sort((a, b) => a.level - b.level) };
 
@@ -2988,7 +3047,9 @@ export class Map {
         this.amenityIds.push(amenity.id);
         if (amenity.icon) {
           try {
-            const response = await this.map.loadImage(amenity.icon);
+            const response = await this.map.loadImage(
+              this.defaultOptions.bundleUrl ? `${this.defaultOptions.bundleUrl}/amenities/${amenity.id}` : amenity.icon,
+            );
             if (response) {
               this.map.addImage(amenity.id, response.data);
             }
@@ -3441,7 +3502,9 @@ export class Map {
    *  });
    */
   public async setPlace(placeId: string, zoomIntoPlace?: boolean, floorLevel?: number) {
-    const place = await getPlaceById(placeId);
+    const place = this.defaultOptions.bundleUrl
+      ? await getPlaceByIdBundle({ placeId, bundleUrl: this.defaultOptions.bundleUrl })
+      : await getPlaceById(placeId);
     const shouldZoom = typeof zoomIntoPlace !== 'undefined' ? zoomIntoPlace : true;
     await this.onPlaceSelect(place, shouldZoom, floorLevel);
     return place;

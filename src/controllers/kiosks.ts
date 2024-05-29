@@ -43,6 +43,23 @@ export const getKiosks = async (
   }
 };
 
+export const getKiosksBundle = async ({
+  bundleUrl,
+}: {
+  bundleUrl: string;
+}): Promise<{ data: KioskModel[]; total: number }> => {
+  try {
+    const res = await fetch(`${bundleUrl}/kiosks.json`);
+    const data = await res.json();
+    return {
+      data: data.map((item: any) => new KioskModel(item)) as KioskModel[],
+      total: +data.length,
+    };
+  } catch (e) {
+    throw new Error(`Retrieving floors failed, ${e.message}`);
+  }
+};
+
 export const getKioskById = async (kioskId: string): Promise<KioskModel> => {
   try {
     const res = await axios.get(`core/kiosks/${kioskId}`);

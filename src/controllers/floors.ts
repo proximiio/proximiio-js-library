@@ -39,10 +39,45 @@ export const getFloors = async (
   }
 };
 
+export const getFloorsBundle = async ({
+  bundleUrl,
+}: {
+  bundleUrl: string;
+}): Promise<{ data: FloorModel[]; total: number }> => {
+  try {
+    const res = await fetch(`${bundleUrl}/floors.json`);
+    const data = await res.json();
+    return {
+      data: data.map((item: any) => new FloorModel(item)) as FloorModel[],
+      total: +data.length,
+    };
+  } catch (e) {
+    throw new Error(`Retrieving floors failed, ${e.message}`);
+  }
+};
+
 export const getPlaceFloors = async (placeId: string): Promise<FloorModel[]> => {
   try {
     const res = await axios.get(`core/floors?skip=0&limit=1000&filter=place_id:${placeId}`);
     return res.data.map((item: any) => new FloorModel(item)) as FloorModel[];
+  } catch (e) {
+    throw new Error(`Retrieving floors for place '${placeId}' failed, ${e.message}`);
+  }
+};
+
+export const getPlaceFloorsBundle = async ({
+  bundleUrl,
+  placeId,
+}: {
+  bundleUrl: string;
+  placeId: string;
+}): Promise<FloorModel[]> => {
+  try {
+    const res = await fetch(`${bundleUrl}/floors.json`);
+    const data = await res.json();
+    return data
+      .filter((item: any) => item.place_id === placeId)
+      .map((item: any) => new FloorModel(item)) as FloorModel[];
   } catch (e) {
     throw new Error(`Retrieving floors for place '${placeId}' failed, ${e.message}`);
   }
