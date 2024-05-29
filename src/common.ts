@@ -166,4 +166,16 @@ const base64toBlob = (base64) => {
   return new Blob([new Uint8Array(array)], { type: 'image/png' });
 };
 
-export { calculateDimensions, convertToRTL, base64toBlob };
+function throttle<T extends (...args: any[]) => any>(func: T, delay: number): (...args: Parameters<T>) => void {
+  let lastCall = 0;
+  return function (...args: Parameters<T>) {
+    const now = new Date().getTime();
+    if (now - lastCall < delay) {
+      return;
+    }
+    lastCall = now;
+    return func(...args);
+  };
+}
+
+export { calculateDimensions, convertToRTL, base64toBlob, throttle };

@@ -19,7 +19,7 @@ import RoutingSource from './sources/routing_source';
 import ClusterSource from './sources/cluster_source';
 import ImageSourceManager from './sources/image_source_manager';
 import { AmenityModel } from '../../models/amenity';
-import { getBase64FromImage, getImageFromBase64, uuidv4 } from '../../common';
+import { getBase64FromImage, getImageFromBase64, throttle, uuidv4 } from '../../common';
 import {
   chevron,
   pulsingDot,
@@ -36,7 +36,7 @@ import { CustomSubject } from '../../customSubject';
 import * as tingle from 'tingle.js/dist/tingle';
 import { EDIT_FEATURE_DIALOG, NEW_FEATURE_DIALOG } from './constants';
 import { MapboxOptions } from '../../models/mapbox-options';
-import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer } from './custom-layers';
+import { PolygonsLayer, PolygonIconsLayer, PolygonTitlesLayer, PolygonTitlesLineLayer } from './custom-layers';
 import PersonModel from '../../models/person';
 import bbox from '@turf/bbox';
 import length from '@turf/length';
@@ -1519,7 +1519,7 @@ export class Map {
         });
       }
 
-      // const polygonTitlesLineLayer = new PolygonTitlesLineLayer({ featureType: 'shop' });
+      //const polygonTitlesLineLayer = new PolygonTitlesLineLayer({ featureType: 'shop' });
       // polygonTitlesLineLayer.setFilterLevel(this.state.floor.level);
       // this.state.style.addLayer(polygonTitlesLineLayer.json, 'proximiio-polygons-above-paths');
 
@@ -2711,6 +2711,22 @@ export class Map {
     this.state = { ...this.state, style };
   }
 
+  private handleFilterChange = () => {
+    // tslint:disable-next-line:no-shadowed-variable
+    const map = this.map;
+    this.state.style.getLayers('main').forEach((layer) => {
+      if (map.getLayer(layer.id)) {
+        map.removeLayer(layer.id);
+      }
+      // @ts-ignore
+      map.addLayer(layer);
+    });
+    this.updateLayerOpacity();
+  };
+
+  // Throttle the event listener
+  private throttledHandleFilterChange = throttle(this.handleFilterChange, 5000); // Adjust the delay as needed
+
   private onStyleChange(event?: string, data?: any) {
     const map = this.map;
     if (map) {
@@ -2759,16 +2775,7 @@ export class Map {
     }
 
     if (event === 'filter-change') {
-      // tslint:disable-next-line:no-shadowed-variable
-      const map = this.map;
-      this.state.style.getLayers('main').forEach((layer) => {
-        if (map.getLayer(layer.id)) {
-          map.removeLayer(layer.id);
-        }
-        // @ts-ignore
-        map.addLayer(layer);
-      });
-      this.updateLayerOpacity();
+      this.handleFilterChange();
     }
     // @ts-ignore
     this.map.setStyle(this.state.style);
