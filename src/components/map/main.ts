@@ -437,21 +437,6 @@ export class Map {
       true, // Lazy load the plugin
     );
 
-    const protocol = new Protocol();
-    maplibregl.addProtocol('pmtiles', protocol.tile);
-
-    this.map = new maplibregl.Map({
-      ...(this.defaultOptions.mapboxOptions as MapboxOptions | any),
-      container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map',
-    });
-
-    this.map.on('load', async (e) => {
-      await this.onMapReady(e);
-    });
-    this.map.on('error', (e) => {
-      this.onMapFailedListener.next(true);
-    });
-
     this.onSourceChange = this.onSourceChange.bind(this);
     this.onSyntheticChange = this.onSyntheticChange.bind(this);
     this.onStyleChange = this.onStyleChange.bind(this);
@@ -618,8 +603,30 @@ export class Map {
         user,
       };
       style.on(this.onStyleChange);
-      this.map.setStyle(this.state.style);
-      this.map.setCenter(centerVar);
+
+      if (this.defaultOptions.pmTilesUrl) {
+        const protocol = new Protocol();
+        maplibregl.addProtocol('pmtiles', protocol.tile);
+
+        this.pmTilesInstance = new PMTiles(this.defaultOptions.pmTilesUrl);
+        protocol.add(this.pmTilesInstance);
+      }
+
+      this.map = new maplibregl.Map({
+        ...(this.defaultOptions.mapboxOptions as MapboxOptions | any),
+        container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map',
+        style: this.state.style,
+      });
+
+      this.map.on('load', async (e) => {
+        this.map.setCenter(centerVar);
+        await this.onMapReady(e);
+      });
+
+      this.map.on('error', (e) => {
+        this.onMapFailedListener.next(true);
+      });
+
       if (this.defaultOptions.allowNewFeatureModal) {
         this.map.on(
           this.defaultOptions.newFeatureModalEvent ? this.defaultOptions.newFeatureModalEvent : 'dblclick',
