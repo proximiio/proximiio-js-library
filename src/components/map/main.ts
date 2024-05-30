@@ -53,7 +53,7 @@ import { WayfindingConfigModel } from '../../models/wayfinding';
 import { KioskModel } from '../../models/kiosk';
 import { getStyle, getStyleBundle, getStyles, getStylesBundle } from '../../controllers/style';
 import { getKiosks, getKiosksBundle } from '../../controllers/kiosks';
-import { Protocol } from 'pmtiles';
+import { Protocol, PMTiles } from 'pmtiles';
 
 export interface State {
   readonly initializing: boolean;
@@ -212,6 +212,7 @@ export interface Options {
     amenities?: AmenityModel[];
   };
   autoLevelChange?: boolean;
+  pmTilesUrl?: string;
 }
 
 export interface PaddingOptions {
@@ -401,6 +402,7 @@ export class Map {
   private currentStep = 0;
   private kioskPopup: any;
   private mainSourceLoaded = false;
+  private pmTilesInstance;
 
   constructor(options: Options) {
     // fix centering in case of kiosk with defined pitch/bearing/etc. in mapbox options
@@ -442,6 +444,7 @@ export class Map {
       ...(this.defaultOptions.mapboxOptions as MapboxOptions | any),
       container: this.defaultOptions.selector ? this.defaultOptions.selector : 'map',
     });
+
     this.map.on('load', async (e) => {
       await this.onMapReady(e);
     });
