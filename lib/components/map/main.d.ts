@@ -68,6 +68,7 @@ export interface PolygonLayer extends PolygonOptions {
     iconImageDefaultVisible?: boolean;
 }
 export interface Options {
+    bundleUrl?: string;
     selector?: string;
     allowNewFeatureModal?: boolean;
     newFeatureModalEvent?: string;
@@ -263,6 +264,8 @@ export declare class Map {
     private onSyntheticChange;
     private updateMapSource;
     private onStyleSelect;
+    private handleFilterChange;
+    private throttledHandleFilterChange;
     private onStyleChange;
     private onToggleRasterFloorplans;
     private updateCluster;

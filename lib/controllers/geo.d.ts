@@ -17,11 +17,27 @@ export declare const getFeatures: ({ initPolygons, polygonFeatureTypes, autoLabe
         features?: FeatureCollection;
     };
 }) => Promise<FeatureCollection>;
+export declare const getFeaturesBundle: ({ initPolygons, polygonFeatureTypes, autoLabelLines, hiddenAmenities, useTimerangeData, filter, bundleUrl, }: {
+    initPolygons?: boolean;
+    polygonFeatureTypes?: string[];
+    autoLabelLines?: boolean;
+    hiddenAmenities?: string[];
+    useTimerangeData?: boolean;
+    filter?: {
+        key: string;
+        value: string;
+    };
+    bundleUrl: string;
+}) => Promise<FeatureCollection>;
 export declare const getAmenities: ({ amenityIdProperty, localSources, }: {
     amenityIdProperty?: string;
     localSources?: {
         amenities?: AmenityModel[];
     };
+}) => Promise<any>;
+export declare const getAmenitiesBundle: ({ amenityIdProperty, bundleUrl, }: {
+    amenityIdProperty?: string;
+    bundleUrl: string;
 }) => Promise<any>;
 export declare const getPois: () => Promise<Feature[]>;
 export declare const addFeatures: (featureCollection: FCModel) => Promise<void>;
