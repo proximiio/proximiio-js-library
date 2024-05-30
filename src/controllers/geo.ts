@@ -486,7 +486,7 @@ export const getFeaturesBundle = async ({
           connectedPolygon.id = removeNonNumeric(connectedPolygon.id);
 
           // check if feature is inside a polygon
-          let connectedLabelLine = labelLineFeatures.find((line) => {
+          const connectedLabelLine = labelLineFeatures.find((line) => {
             if (
               connectedPolygon.properties?.level === line.properties?.level &&
               booleanPointInPolygon(pointOnFeature(line), connectedPolygon)
