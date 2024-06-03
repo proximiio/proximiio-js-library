@@ -3062,7 +3062,7 @@ export class Map {
     await Promise.all(
       this.state.amenities.map(async (amenity) => {
         this.amenityIds.push(amenity.id);
-        if (amenity.icon) {
+        if (amenity.icon || amenity.id) {
           try {
             const response = await this.map.loadImage(
               this.defaultOptions.bundleUrl
