@@ -3065,7 +3065,9 @@ export class Map {
         if (amenity.icon) {
           try {
             const response = await this.map.loadImage(
-              this.defaultOptions.bundleUrl ? `${this.defaultOptions.bundleUrl}/amenities/${amenity.id}` : amenity.icon,
+              this.defaultOptions.bundleUrl
+                ? `${this.defaultOptions.bundleUrl}/amenities/${amenity.id}.png`
+                : amenity.icon,
             );
             if (response) {
               this.map.addImage(amenity.id, response.data);
