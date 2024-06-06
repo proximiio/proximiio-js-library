@@ -164,6 +164,7 @@ export interface Options {
         amenities?: AmenityModel[];
     };
     autoLevelChange?: boolean;
+    pmTilesUrl?: string;
 }
 export interface PaddingOptions {
     bottom: number;
@@ -212,6 +213,7 @@ export declare class Map {
     private currentStep;
     private kioskPopup;
     private mainSourceLoaded;
+    private pmTilesInstance;
     constructor(options: Options);
     private initialize;
     private cancelObservers;
