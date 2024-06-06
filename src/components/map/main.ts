@@ -1379,7 +1379,7 @@ export class Map {
                 'icon-allow-overlap': true,
               },
             },
-            'proximiio-polygons-above-paths',
+            this.defaultOptions.showLevelDirectionIcon ? 'direction-popup-layer' : 'proximiio-polygons-above-paths',
           );
         } else {
           this.state.style.addLayer(
@@ -1394,7 +1394,7 @@ export class Map {
                 'circle-radius': this.defaultOptions.routeAnimation.pointRadius,
               },
             },
-            'proximiio-polygons-above-paths',
+            this.defaultOptions.showLevelDirectionIcon ? 'direction-popup-layer' : 'proximiio-polygons-above-paths',
           );
         }
       }
@@ -3171,7 +3171,6 @@ export class Map {
                 this.restartRouteAnimation({ delay: 0, recenter: true });
               }, 2000);
             }
-            console.log('animation should end now');
             return;
           }
 
