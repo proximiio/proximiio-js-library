@@ -213,6 +213,7 @@ export interface Options {
   };
   autoLevelChange?: boolean;
   pmTilesUrl?: string;
+  autoRestartAnimationAfterFloorChange?: boolean;
 }
 
 export interface PaddingOptions {
@@ -385,6 +386,7 @@ export class Map {
     useTimerangeData: false,
     sendAnalytics: true,
     autoLevelChange: false,
+    autoRestartAnimationAfterFloorChange: false,
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -3168,7 +3170,9 @@ export class Map {
                   return;
                 }
                 this.setNavStep('next');
-                this.restartRouteAnimation({ delay: 0, recenter: true });
+                if (this.defaultOptions.autoRestartAnimationAfterFloorChange) {
+                  this.restartRouteAnimation({ delay: 0, recenter: true });
+                }
               }, 2000);
             }
             return;
