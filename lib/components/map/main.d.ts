@@ -121,6 +121,8 @@ export interface Options {
         lineWidth?: number;
         minzoom?: number;
         maxzoom?: number;
+        useLerp?: boolean;
+        lerpTolerance?: number;
     };
     useRasterTiles?: boolean;
     rasterTilesOptions?: {
@@ -165,6 +167,7 @@ export interface Options {
     };
     autoLevelChange?: boolean;
     pmTilesUrl?: string;
+    autoRestartAnimationAfterFloorChange?: boolean;
 }
 export interface PaddingOptions {
     bottom: number;
