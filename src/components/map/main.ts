@@ -169,6 +169,8 @@ export interface Options {
     lineWidth?: number;
     minzoom?: number;
     maxzoom?: number;
+    useLerp?: boolean;
+    lerpTolerance?: number;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -366,6 +368,8 @@ export class Map {
       lineOpacity: 0.6,
       minzoom: 17,
       maxzoom: 24,
+      useLerp: false,
+      lerpTolerance: 0.1,
     },
     useRasterTiles: false,
     handleUrlParams: false,
@@ -2875,19 +2879,21 @@ export class Map {
             : lineString(this.routingSource.levelPoints[floor.level].map((i: any) => i.geometry.coordinates));
         const lengthInMeters = length(routePoints, { units: 'kilometers' }) * 1000;
         const boundingBox = bbox(routePoints);
-        if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
-          // @ts-ignore;
-          map.fitBounds(boundingBox, {
-            padding: this.defaultOptions.fitBoundsPadding,
-            bearing: this.map.getBearing(),
-            pitch: this.map.getPitch(),
-          });
-        } else {
-          // @ts-ignore
-          this.map.flyTo({
-            center: center(routePoints).geometry.coordinates as LngLatLike,
-            zoom: this.defaultOptions.minFitBoundsDistance < 10 ? 22 : this.map.getZoom(),
-          });
+        if (!this.defaultOptions.routeAnimation.followRoute) {
+          if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
+            // @ts-ignore;
+            map.fitBounds(boundingBox, {
+              padding: this.defaultOptions.fitBoundsPadding,
+              bearing: this.map.getBearing(),
+              pitch: this.map.getPitch(),
+            });
+          } else {
+            // @ts-ignore
+            this.map.flyTo({
+              center: center(routePoints).geometry.coordinates as LngLatLike,
+              zoom: this.defaultOptions.minFitBoundsDistance < 10 ? 22 : this.map.getZoom(),
+            });
+          }
         }
       }
       if (this.defaultOptions.isKiosk) {
@@ -3036,19 +3042,21 @@ export class Map {
               );
         const lengthInMeters = length(routePoints, { units: 'kilometers' }) * 1000;
         const boundingBox = bbox(routePoints);
-        if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
-          // @ts-ignore;
-          this.map.fitBounds(boundingBox, {
-            padding: this.defaultOptions.fitBoundsPadding,
-            bearing: this.map.getBearing(),
-            pitch: this.map.getPitch(),
-          });
-        } else {
-          // @ts-ignore
-          this.map.flyTo({
-            center: center(routePoints).geometry.coordinates as LngLatLike,
-            zoom: this.defaultOptions.minFitBoundsDistance < 10 ? 22 : this.map.getZoom(),
-          });
+        if (!this.defaultOptions.routeAnimation.followRoute) {
+          if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
+            // @ts-ignore;
+            this.map.fitBounds(boundingBox, {
+              padding: this.defaultOptions.fitBoundsPadding,
+              bearing: this.map.getBearing(),
+              pitch: this.map.getPitch(),
+            });
+          } else {
+            // @ts-ignore
+            this.map.flyTo({
+              center: center(routePoints).geometry.coordinates as LngLatLike,
+              zoom: this.defaultOptions.minFitBoundsDistance < 10 ? 22 : this.map.getZoom(),
+            });
+          }
         }
       }
     }
@@ -3151,6 +3159,8 @@ export class Map {
         const totalDuration = totalDistance * baseSpeed; // Total animation duration based on route length
         let startTime;
 
+        this.map.setCenter(route.geometry.coordinates[0] as LngLatLike);
+
         const animate = (currentTime) => {
           if (!startTime) startTime = currentTime;
           const elapsedTime = currentTime - startTime;
@@ -3194,10 +3204,14 @@ export class Map {
             ? pointData.features[0].geometry.coordinates
             : currentPoint.geometry.coordinates;
           const newCoords = currentPoint.geometry.coordinates;
-          pointData.features[0] = point([
-            this.lerp(currentCoords[0], newCoords[0], 0.1),
-            this.lerp(currentCoords[1], newCoords[1], 0.1),
-          ]);
+          pointData.features[0] = point(
+            this.defaultOptions.routeAnimation.useLerp
+              ? [
+                  this.lerp(currentCoords[0], newCoords[0], this.defaultOptions.routeAnimation.lerpTolerance),
+                  this.lerp(currentCoords[1], newCoords[1], this.defaultOptions.routeAnimation.lerpTolerance),
+                ]
+              : newCoords,
+          );
 
           if (this.defaultOptions.routeAnimation.type === 'point') {
             // @ts-ignore
@@ -3229,12 +3243,14 @@ export class Map {
             const cameraCoords = this.map.getCenter().toArray();
             const targetCoords = currentPoint.geometry.coordinates;
             const interpolatedCoords = [
-              this.lerp(cameraCoords[0], targetCoords[0], 0.1),
-              this.lerp(cameraCoords[1], targetCoords[1], 0.1),
+              this.lerp(cameraCoords[0], targetCoords[0], this.defaultOptions.routeAnimation.lerpTolerance),
+              this.lerp(cameraCoords[1], targetCoords[1], this.defaultOptions.routeAnimation.lerpTolerance),
             ];
             if (!this.defaultOptions.routeAnimation.followRouteAngle) {
               this.map.easeTo({
-                center: interpolatedCoords as [number, number],
+                center: this.defaultOptions.routeAnimation.useLerp
+                  ? (interpolatedCoords as [number, number])
+                  : (targetCoords as [number, number]),
                 duration: 50,
                 easing: (x) => x,
               });
@@ -3252,7 +3268,9 @@ export class Map {
 
               setTimeout(() => {
                 this.map.flyTo({
-                  center: interpolatedCoords as [number, number],
+                  center: this.defaultOptions.routeAnimation.useLerp
+                    ? (interpolatedCoords as [number, number])
+                    : (targetCoords as [number, number]),
                   bearing: newBearing,
                   duration: 200,
                   essential: true,
