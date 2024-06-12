@@ -1072,6 +1072,7 @@ export declare class Map {
      *  @param color {string} highlight color, optional.
      *  @param radius {number} highlight circle radius, optional.
      *  @param blur {number} blur of the highlight circle, optional.
+     *  @param enlargeIcon {boolean} enlarge original icon, optional.
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -1079,7 +1080,7 @@ export declare class Map {
      *    map.setFeaturesHighlight(['featureid']);
      *  });
      */
-    setFeaturesHighlight(features: string[], color?: string, radius?: number, blur?: number): void;
+    setFeaturesHighlight(features: string[], color?: string, radius?: number, blur?: number, enlargeIcon?: boolean): void;
     /**
      * Method for refetching features data
      *  @memberof Map
