@@ -1277,14 +1277,54 @@ export class Map {
     this.map.setStyle(this.state.style);
   }
 
-  private onSetFeaturesHighlight(features: string[], color?: string, radius?: number, blur?: number) {
+  private onSetFeaturesHighlight(
+    features: string[],
+    color?: string,
+    radius?: number,
+    blur?: number,
+    enlargeIcon?: boolean,
+  ) {
     const map = this.map;
     const featuresToHiglight = this.state.allFeatures.features.filter((f) => {
       return features.includes(f.id || f.properties.id);
     });
     const poisIconsLayer = this.map.getLayer('proximiio-pois-icons');
-    const poisIconsImageSize = this.map.getLayoutProperty('proximiio-pois-icons', 'icon-size');
+    let poisIconsImageSize = this.map.getLayoutProperty('proximiio-pois-icons', 'icon-size');
     if (map) {
+      if (enlargeIcon) {
+        if (poisIconsImageSize[0] === 'interpolate') {
+          poisIconsImageSize[4] += 0.15;
+          poisIconsImageSize[6] += 0.15;
+        } else {
+          poisIconsImageSize += 0.15;
+        }
+
+        if (!map.getLayer('enlargened-icon-layer')) {
+          this.map.setLayoutProperty('proximiio-pois-icons', 'icon-ignore-placement', true);
+          this.state.style.addLayer(
+            {
+              id: 'enlargened-icon-layer',
+              type: 'symbol',
+              source: 'highlight-icon-source',
+              minzoom: poisIconsLayer.minzoom,
+              maxzoom: poisIconsLayer.maxzoom,
+              layout: {
+                'icon-image': {
+                  type: 'identity',
+                  property: 'amenity',
+                },
+                'icon-size': poisIconsImageSize,
+                'symbol-placement': 'point',
+                'icon-pitch-alignment': 'viewport',
+                'icon-allow-overlap': true,
+                'icon-ignore-placement': true,
+              },
+              filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
+            },
+            'proximiio-pois-icons',
+          );
+        }
+      }
       if (!map.getLayer('highlight-icon-layer')) {
         this.state.style.addLayer(
           {
@@ -1311,7 +1351,7 @@ export class Map {
             },
             filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
           },
-          this.defaultOptions.initPolygons ? 'shop-custom' : 'proximiio-shop',
+          enlargeIcon ? 'proximiio-pois-icons' : this.defaultOptions.initPolygons ? 'shop-custom' : 'proximiio-shop',
         );
       }
       if (!map.getSource('highlight-icon-source')) {
@@ -2939,6 +2979,11 @@ export class Map {
         map.setFilter('direction-popup-layer', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('direction-popup-layer').filter = filter;
       }
+      if (map.getLayer('enlargened-icon-layer')) {
+        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
+        map.setFilter('enlargened-icon-layer', filter as maplibregl.FilterSpecification);
+        this.state.style.getLayer('enlargened-icon-layer').filter = filter;
+      }
       if (map.getLayer('highlight-icon-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
         map.setFilter('highlight-icon-layer', filter as maplibregl.FilterSpecification);
@@ -3175,10 +3220,10 @@ export class Map {
               }, 2000);
             }
             if (this.defaultOptions.autoLevelChange) {
+              if (this.routingSource.route && Object.keys(this.routingSource.route).length - 1 === this.currentStep) {
+                return;
+              }
               setTimeout(() => {
-                if (this.routingSource.route && Object.keys(this.routingSource.route).length - 1 === this.currentStep) {
-                  return;
-                }
                 this.setNavStep('next');
                 if (this.defaultOptions.autoRestartAnimationAfterFloorChange) {
                   this.restartRouteAnimation({ delay: 0, recenter: true });
@@ -3239,18 +3284,10 @@ export class Map {
           this.map.getSource('lineAlong').setData(lineAlong);
 
           if (this.defaultOptions.routeAnimation.followRoute) {
-            // Smoothly update the camera position using lerp
-            const cameraCoords = this.map.getCenter().toArray();
             const targetCoords = currentPoint.geometry.coordinates;
-            const interpolatedCoords = [
-              this.lerp(cameraCoords[0], targetCoords[0], this.defaultOptions.routeAnimation.lerpTolerance),
-              this.lerp(cameraCoords[1], targetCoords[1], this.defaultOptions.routeAnimation.lerpTolerance),
-            ];
             if (!this.defaultOptions.routeAnimation.followRouteAngle) {
               this.map.easeTo({
-                center: this.defaultOptions.routeAnimation.useLerp
-                  ? (interpolatedCoords as [number, number])
-                  : (targetCoords as [number, number]),
+                center: targetCoords as [number, number],
                 duration: 50,
                 easing: (x) => x,
               });
@@ -3268,9 +3305,7 @@ export class Map {
 
               setTimeout(() => {
                 this.map.flyTo({
-                  center: this.defaultOptions.routeAnimation.useLerp
-                    ? (interpolatedCoords as [number, number])
-                    : (targetCoords as [number, number]),
+                  center: targetCoords as [number, number],
                   bearing: newBearing,
                   duration: 200,
                   essential: true,
@@ -4595,6 +4630,7 @@ export class Map {
    *  @param color {string} highlight color, optional.
    *  @param radius {number} highlight circle radius, optional.
    *  @param blur {number} blur of the highlight circle, optional.
+   *  @param enlargeIcon {boolean} enlarge original icon, optional.
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -4602,8 +4638,14 @@ export class Map {
    *    map.setFeaturesHighlight(['featureid']);
    *  });
    */
-  public setFeaturesHighlight(features: string[], color?: string, radius?: number, blur?: number) {
-    this.onSetFeaturesHighlight(features, color, radius, blur);
+  public setFeaturesHighlight(
+    features: string[],
+    color?: string,
+    radius?: number,
+    blur?: number,
+    enlargeIcon?: boolean,
+  ) {
+    this.onSetFeaturesHighlight(features, color, radius, blur, enlargeIcon);
   }
 
   /**
