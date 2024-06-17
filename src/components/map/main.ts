@@ -1319,7 +1319,15 @@ export class Map {
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
               },
-              filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
+              filter: [
+                'all',
+                ['==', ['to-number', ['get', 'level']], this.state.floor.level],
+                [
+                  'any',
+                  ['!', ['has', '_dynamic']],
+                  ['all', ['has', '_dynamic'], ['!', ['has', 'polygon_id', ['get', '_dynamic']]]],
+                ],
+              ],
             },
             'proximiio-pois-icons',
           );
@@ -1349,7 +1357,15 @@ export class Map {
               'circle-color': color ? color : '#000',
               'circle-blur': blur !== null && blur !== undefined ? blur : 0.8,
             },
-            filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
+            filter: [
+              'all',
+              ['==', ['to-number', ['get', 'level']], this.state.floor.level],
+              [
+                'any',
+                ['!', ['has', '_dynamic']],
+                ['all', ['has', '_dynamic'], ['!', ['has', 'polygon_id', ['get', '_dynamic']]]],
+              ],
+            ],
           },
           enlargeIcon ? 'proximiio-pois-icons' : this.defaultOptions.initPolygons ? 'shop-custom' : 'proximiio-shop',
         );
@@ -2980,12 +2996,28 @@ export class Map {
         this.state.style.getLayer('direction-popup-layer').filter = filter;
       }
       if (map.getLayer('enlargened-icon-layer')) {
-        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
+        const filter = [
+          'all',
+          ['==', ['to-number', ['get', 'level']], floor.level],
+          [
+            'any',
+            ['!', ['has', '_dynamic']],
+            ['all', ['has', '_dynamic'], ['!', ['has', 'polygon_id', ['get', '_dynamic']]]],
+          ],
+        ];
         map.setFilter('enlargened-icon-layer', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('enlargened-icon-layer').filter = filter;
       }
       if (map.getLayer('highlight-icon-layer')) {
-        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
+        const filter = [
+          'all',
+          ['==', ['to-number', ['get', 'level']], floor.level],
+          [
+            'any',
+            ['!', ['has', '_dynamic']],
+            ['all', ['has', '_dynamic'], ['!', ['has', 'polygon_id', ['get', '_dynamic']]]],
+          ],
+        ];
         map.setFilter('highlight-icon-layer', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('highlight-icon-layer').filter = filter;
       }
