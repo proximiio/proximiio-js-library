@@ -1,4 +1,4 @@
-import maplibregl, { FillExtrusionLayerSpecification, LngLatLike, SymbolLayerSpecification } from 'maplibre-gl';
+import maplibregl, { FillExtrusionLayerSpecification, LngLatLike, Marker, SymbolLayerSpecification } from 'maplibre-gl';
 import Auth from '../../controllers/auth';
 import {
   addFeatures,
@@ -159,6 +159,8 @@ export interface Options {
     fps?: number;
     pointIconUrl?: string;
     pointIconSize?: number;
+    pointIconAsMarker?: boolean;
+    pointIconMarkerSize?: number;
     pointColor?: string;
     pointRadius?: number;
     puckColor?: string;
@@ -169,8 +171,10 @@ export interface Options {
     lineWidth?: number;
     minzoom?: number;
     maxzoom?: number;
-    useLerp?: boolean;
-    lerpTolerance?: number;
+    iconUseLerp?: boolean;
+    iconLerpTolerance?: number;
+    cameraUseLerp?: boolean;
+    cameraLerpTolerance?: number;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -361,6 +365,7 @@ export class Map {
       durationMultiplier: 1,
       fps: 120,
       pointIconSize: 1,
+      pointIconMarkerSize: 40,
       pointColor: '#1d8a9f',
       pointRadius: 8,
       lineColor: '#6945ed',
@@ -368,8 +373,10 @@ export class Map {
       lineOpacity: 0.6,
       minzoom: 17,
       maxzoom: 24,
-      useLerp: false,
-      lerpTolerance: 0.1,
+      iconUseLerp: false,
+      iconLerpTolerance: 0.1,
+      cameraUseLerp: false,
+      cameraLerpTolerance: 0.05,
     },
     useRasterTiles: false,
     handleUrlParams: false,
@@ -409,6 +416,7 @@ export class Map {
   private kioskPopup: any;
   private mainSourceLoaded = false;
   private pmTilesInstance;
+  private pointIconMarker = {} as Marker;
 
   constructor(options: Options) {
     // fix centering in case of kiosk with defined pitch/bearing/etc. in mapbox options
@@ -1258,9 +1266,9 @@ export class Map {
             popupImage: 'popup',
             description: `${translations[this.defaultOptions.language][levelChangerType]} \n ${
               translations[this.defaultOptions.language][direction]
-            } ${translations[this.defaultOptions.language]['TO_FLOOR']} ${
+            } ${translations[this.defaultOptions.language]['TO']} ${
               destinationFloor.name ? this.getFloorName(destinationFloor) : levelChanger.destinationLevel
-            }`,
+            } ${translations[this.defaultOptions.language]['FLOOR']}`,
             level: levelChanger.level,
             destinationLevel: levelChanger.destinationLevel,
             levelChangerId: levelChangerFeature.properties.id,
@@ -1324,6 +1332,7 @@ export class Map {
                 ['==', ['to-number', ['get', 'level']], this.state.floor.level],
                 [
                   'any',
+                  ['all', ['has', 'metadata'], ['has', 'bays', ['get', 'metadata']]],
                   ['!', ['has', '_dynamic']],
                   ['all', ['has', '_dynamic'], ['!', ['has', 'polygon_id', ['get', '_dynamic']]]],
                 ],
@@ -1362,6 +1371,7 @@ export class Map {
               ['==', ['to-number', ['get', 'level']], this.state.floor.level],
               [
                 'any',
+                ['all', ['has', 'metadata'], ['has', 'bays', ['get', 'metadata']]],
                 ['!', ['has', '_dynamic']],
                 ['all', ['has', '_dynamic'], ['!', ['has', 'polygon_id', ['get', '_dynamic']]]],
               ],
@@ -1428,21 +1438,30 @@ export class Map {
         });
 
         if (this.defaultOptions.routeAnimation.pointIconUrl) {
-          this.state.style.addLayer(
-            {
-              id: 'pointAlong',
-              type: 'symbol',
-              source: 'pointAlong',
-              minzoom: this.defaultOptions.routeAnimation.minzoom,
-              maxzoom: this.defaultOptions.routeAnimation.maxzoom,
-              layout: {
-                'icon-image': 'pointIcon',
-                'icon-size': this.defaultOptions.routeAnimation.pointIconSize,
-                'icon-allow-overlap': true,
+          if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
+            const el = document.createElement('div');
+            el.style.backgroundImage = `url(${this.defaultOptions.routeAnimation.pointIconUrl})`;
+            el.style.backgroundSize = 'cover';
+            el.style.width = `${this.defaultOptions.routeAnimation.pointIconMarkerSize}px`;
+            el.style.height = `${this.defaultOptions.routeAnimation.pointIconMarkerSize}px`;
+            this.pointIconMarker = new maplibregl.Marker({ element: el });
+          } else {
+            this.state.style.addLayer(
+              {
+                id: 'pointAlong',
+                type: 'symbol',
+                source: 'pointAlong',
+                minzoom: this.defaultOptions.routeAnimation.minzoom,
+                maxzoom: this.defaultOptions.routeAnimation.maxzoom,
+                layout: {
+                  'icon-image': 'pointIcon',
+                  'icon-size': this.defaultOptions.routeAnimation.pointIconSize,
+                  'icon-allow-overlap': true,
+                },
               },
-            },
-            this.defaultOptions.showLevelDirectionIcon ? 'direction-popup-layer' : 'proximiio-polygons-above-paths',
-          );
+              this.defaultOptions.showLevelDirectionIcon ? 'direction-popup-layer' : 'proximiio-polygons-above-paths',
+            );
+          }
         } else {
           this.state.style.addLayer(
             {
@@ -3001,6 +3020,7 @@ export class Map {
           ['==', ['to-number', ['get', 'level']], floor.level],
           [
             'any',
+            ['all', ['has', 'metadata'], ['has', 'bays', ['get', 'metadata']]],
             ['!', ['has', '_dynamic']],
             ['all', ['has', '_dynamic'], ['!', ['has', 'polygon_id', ['get', '_dynamic']]]],
           ],
@@ -3014,6 +3034,7 @@ export class Map {
           ['==', ['to-number', ['get', 'level']], floor.level],
           [
             'any',
+            ['all', ['has', 'metadata'], ['has', 'bays', ['get', 'metadata']]],
             ['!', ['has', '_dynamic']],
             ['all', ['has', '_dynamic'], ['!', ['has', 'polygon_id', ['get', '_dynamic']]]],
           ],
@@ -3086,6 +3107,10 @@ export class Map {
           type: 'FeatureCollection',
           features: [],
         });
+
+        if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
+          this.pointIconMarker.remove();
+        }
       }
     }
     this.map.setStyle(this.state.style);
@@ -3282,17 +3307,22 @@ export class Map {
             : currentPoint.geometry.coordinates;
           const newCoords = currentPoint.geometry.coordinates;
           pointData.features[0] = point(
-            this.defaultOptions.routeAnimation.useLerp
+            this.defaultOptions.routeAnimation.iconUseLerp
               ? [
-                  this.lerp(currentCoords[0], newCoords[0], this.defaultOptions.routeAnimation.lerpTolerance),
-                  this.lerp(currentCoords[1], newCoords[1], this.defaultOptions.routeAnimation.lerpTolerance),
+                  this.lerp(currentCoords[0], newCoords[0], this.defaultOptions.routeAnimation.iconLerpTolerance),
+                  this.lerp(currentCoords[1], newCoords[1], this.defaultOptions.routeAnimation.iconLerpTolerance),
                 ]
               : newCoords,
           );
 
           if (this.defaultOptions.routeAnimation.type === 'point') {
-            // @ts-ignore
-            this.map.getSource('pointAlong').setData(pointData);
+            if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
+              this.pointIconMarker.setLngLat(newCoords as [number, number]);
+              this.pointIconMarker.addTo(this.map);
+            } else {
+              // @ts-ignore
+              this.map.getSource('pointAlong').setData(pointData);
+            }
           }
 
           if (this.defaultOptions.routeAnimation.type === 'puck') {
@@ -3316,10 +3346,17 @@ export class Map {
           this.map.getSource('lineAlong').setData(lineAlong);
 
           if (this.defaultOptions.routeAnimation.followRoute) {
+            const cameraCoords = this.map.getCenter().toArray();
             const targetCoords = currentPoint.geometry.coordinates;
+            const interpolatedCoords = [
+              this.lerp(cameraCoords[0], targetCoords[0], this.defaultOptions.routeAnimation.cameraLerpTolerance),
+              this.lerp(cameraCoords[1], targetCoords[1], this.defaultOptions.routeAnimation.cameraLerpTolerance),
+            ];
             if (!this.defaultOptions.routeAnimation.followRouteAngle) {
               this.map.easeTo({
-                center: targetCoords as [number, number],
+                center: this.defaultOptions.routeAnimation.cameraUseLerp
+                  ? (interpolatedCoords as [number, number])
+                  : (targetCoords as [number, number]),
                 duration: 50,
                 easing: (x) => x,
               });
@@ -3418,6 +3455,10 @@ export class Map {
         features: [],
       });
 
+      if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
+        this.pointIconMarker.remove();
+      }
+
       if (recenter) {
         setTimeout(() => {
           this.map.jumpTo({
@@ -3450,6 +3491,10 @@ export class Map {
         type: 'FeatureCollection',
         features: [],
       });
+
+      if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
+        this.pointIconMarker.remove();
+      }
 
       this.map.setStyle(this.state.style);
     }

@@ -33,6 +33,8 @@ export const translations = {
     EXIT_ELEVATOR: 'Exit via elevator.',
     EXIT_RAMP: 'Exit via ramp.',
     CONTINUE: 'continue.',
+    TO: 'to',
+    FLOOR: 'floor',
   },
   fi: {
     ELEVATOR: 'Hissi',
@@ -68,6 +70,8 @@ export const translations = {
     EXIT_ELEVATOR: 'Poistu hissillä.',
     EXIT_RAMP: 'Poistu luiskalla.',
     CONTINUE: 'jatka.',
+    TO: 'osoitteeseen',
+    FLOOR: 'lattia',
   },
   ar: {
     ELEVATOR: 'المصعد',
@@ -103,6 +107,8 @@ export const translations = {
     EXIT_ELEVATOR: 'اخرج بالمصعد.',
     EXIT_RAMP: 'اخرج عبر المنحدر.',
     CONTINUE: 'تابع.',
+    TO: 'إلى',
+    FLOOR: 'الطابق',
   },
   it: {
     ELEVATOR: 'Ascensore',
@@ -138,6 +144,8 @@ export const translations = {
     EXIT_ELEVATOR: 'Esci con l’ascensore.',
     EXIT_RAMP: 'Esci con la rampa.',
     CONTINUE: 'continua.',
+    TO: 'al',
+    FLOOR: 'piano',
   },
   id: {
     ELEVATOR: 'Lift',
@@ -173,5 +181,7 @@ export const translations = {
     EXIT_ELEVATOR: 'Keluar melalui lift.',
     EXIT_RAMP: 'Keluar melalui jalur landai.',
     CONTINUE: 'lanjutkan.',
+    TO: 'ke',
+    FLOOR: 'lantai',
   },
 };
