@@ -111,6 +111,8 @@ export interface Options {
         fps?: number;
         pointIconUrl?: string;
         pointIconSize?: number;
+        pointIconAsMarker?: boolean;
+        pointIconMarkerSize?: number;
         pointColor?: string;
         pointRadius?: number;
         puckColor?: string;
@@ -121,8 +123,10 @@ export interface Options {
         lineWidth?: number;
         minzoom?: number;
         maxzoom?: number;
-        useLerp?: boolean;
-        lerpTolerance?: number;
+        iconUseLerp?: boolean;
+        iconLerpTolerance?: number;
+        cameraUseLerp?: boolean;
+        cameraLerpTolerance?: number;
     };
     useRasterTiles?: boolean;
     rasterTilesOptions?: {
@@ -217,6 +221,7 @@ export declare class Map {
     private kioskPopup;
     private mainSourceLoaded;
     private pmTilesInstance;
+    private pointIconMarker;
     constructor(options: Options);
     private initialize;
     private cancelObservers;

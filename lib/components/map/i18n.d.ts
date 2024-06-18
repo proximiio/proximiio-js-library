@@ -33,6 +33,8 @@ export declare const translations: {
         EXIT_ELEVATOR: string;
         EXIT_RAMP: string;
         CONTINUE: string;
+        TO: string;
+        FLOOR: string;
     };
     fi: {
         ELEVATOR: string;
@@ -68,6 +70,8 @@ export declare const translations: {
         EXIT_ELEVATOR: string;
         EXIT_RAMP: string;
         CONTINUE: string;
+        TO: string;
+        FLOOR: string;
     };
     ar: {
         ELEVATOR: string;
@@ -103,6 +107,8 @@ export declare const translations: {
         EXIT_ELEVATOR: string;
         EXIT_RAMP: string;
         CONTINUE: string;
+        TO: string;
+        FLOOR: string;
     };
     it: {
         ELEVATOR: string;
@@ -138,6 +144,8 @@ export declare const translations: {
         EXIT_ELEVATOR: string;
         EXIT_RAMP: string;
         CONTINUE: string;
+        TO: string;
+        FLOOR: string;
     };
     id: {
         ELEVATOR: string;
@@ -173,5 +181,7 @@ export declare const translations: {
         EXIT_ELEVATOR: string;
         EXIT_RAMP: string;
         CONTINUE: string;
+        TO: string;
+        FLOOR: string;
     };
 };
