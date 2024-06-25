@@ -71,6 +71,10 @@ export const getNestedObjectValue = (nestedObject, dynamicKey) => {
   return getNestedObjectValue(value, remainingKeys);
 };
 
+const removeLeadingZero = (str: string) => {
+  return str.replace(/^0+/, '');
+};
+
 // Function to remove non-numeric characters
 export const removeNonNumeric = (uuid: string) => {
   // Remove hyphens from the UUID
@@ -107,7 +111,7 @@ export const removeNonNumeric = (uuid: string) => {
   }
 
   // Truncate the result to fit within 10 bytes
-  result = result.slice(0, 10);
+  result = removeLeadingZero(result.slice(0, 10));
 
   return result;
 };
