@@ -1521,19 +1521,29 @@ export class Map {
   private initRasterTiles() {
     if (this.map) {
       const metadata = this.state.style.metadata;
+
+      let tileUrl = this.defaultOptions.rasterTilesOptions?.tilesUrl
+        ? this.defaultOptions.rasterTilesOptions?.tilesUrl
+        : metadata['proximiio:raster:tileurl'];
+      const isLeveled = () => {
+        return tileUrl.match(/{LEVEL}/g) !== null;
+      };
+      if (isLeveled) {
+        tileUrl = tileUrl.replace(/{LEVEL}/g, this.state.floor.level.toString());
+      }
+
+      if (this.state.style.getLayer('raster-tiles')) {
+        this.state.style.removeLayer('raster-tiles');
+        this.state.style.removeSource('raster-tiles');
+      }
+
       this.state.style.addSource('raster-tiles', {
         type: 'raster',
-        tiles: this.defaultOptions.rasterTilesOptions?.tilesUrl
-          ? [
-              `${this.defaultOptions.rasterTilesOptions?.useProxy ? 'https://api.proximi.fi/imageproxy/source=' : ''}${
-                this.defaultOptions.rasterTilesOptions.tilesUrl
-              }`,
-            ]
-          : [
-              `${this.defaultOptions.rasterTilesOptions?.useProxy ? 'https://api.proximi.fi/imageproxy/source=' : ''}${
-                metadata['proximiio:raster:tileurl']
-              }`,
-            ],
+        tiles: [
+          `${
+            this.defaultOptions.rasterTilesOptions?.useProxy ? 'https://api.proximi.fi/imageproxy/source=' : ''
+          }${tileUrl}`,
+        ],
         tileSize: this.defaultOptions.rasterTilesOptions?.tileSize
           ? this.defaultOptions.rasterTilesOptions.tileSize
           : metadata['proximiio:raster:tilesize']
@@ -3050,6 +3060,9 @@ export class Map {
       }
       this.animateRoute();
     }
+    if (this.defaultOptions.useRasterTiles) {
+      this.initRasterTiles();
+    }
     this.updateCluster();
     this.onFloorSelectListener.next(floor);
   }
@@ -3097,16 +3110,20 @@ export class Map {
       }
       if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
         cancelAnimationFrame(this.animationFrame);
-        // @ts-ignore
-        this.map.getSource('pointAlong').setData({
-          type: 'FeatureCollection',
-          features: [],
-        });
-        // @ts-ignore
-        this.map.getSource('lineAlong').setData({
-          type: 'FeatureCollection',
-          features: [],
-        });
+        if (this.map.getSource('pointAlong')) {
+          // @ts-ignore
+          this.map.getSource('pointAlong').setData({
+            type: 'FeatureCollection',
+            features: [],
+          });
+        }
+        if (this.map.getSource('lineAlong')) {
+          // @ts-ignore
+          this.map.getSource('lineAlong').setData({
+            type: 'FeatureCollection',
+            features: [],
+          });
+        }
 
         if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
           this.pointIconMarker.remove();
