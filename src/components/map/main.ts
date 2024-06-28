@@ -220,6 +220,7 @@ export interface Options {
   autoLevelChange?: boolean;
   pmTilesUrl?: string;
   autoRestartAnimationAfterFloorChange?: boolean;
+  poiIconSize?: (string | number | string[])[] | number | any;
 }
 
 export interface PaddingOptions {
@@ -398,6 +399,7 @@ export class Map {
     sendAnalytics: true,
     autoLevelChange: false,
     autoRestartAnimationAfterFloorChange: false,
+    // poiIconSize: ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.5],
   };
   private routeFactory: any;
   private startPoint?: Feature;
@@ -790,6 +792,10 @@ export class Map {
         this.map.on('click', 'pois-icons', (ev) => {
           this.onShopClick(ev);
         });
+      }
+
+      if (this.defaultOptions.poiIconSize) {
+        this.state.style.setIconSize(this.defaultOptions.poiIconSize);
       }
 
       this.onMapReadyListener.next(true);

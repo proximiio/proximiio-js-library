@@ -553,4 +553,10 @@ export default class StyleModel {
       }
     });
   }
+
+  setIconSize(size: (string | number | string[])[] | number | any) {
+    if (this.getLayer('proximiio-pois-icons')) {
+      this.getLayer('proximiio-pois-icons').layout['icon-size'] = size;
+    }
+  }
 }
