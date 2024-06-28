@@ -1,6 +1,6 @@
 {
   "name": "proximiio-js-library",
-  "version": "1.12.25",
+  "version": "1.12.26",
   "description": "Proximi.io JS Library",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
