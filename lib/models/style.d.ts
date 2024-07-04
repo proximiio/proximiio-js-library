@@ -55,4 +55,5 @@ export default class StyleModel {
     get json(): any;
     hideIconLayers(): void;
     showIconLayers(): void;
+    setIconSize(size: (string | number | string[])[] | number | any): void;
 }

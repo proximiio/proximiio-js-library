@@ -172,6 +172,7 @@ export interface Options {
     autoLevelChange?: boolean;
     pmTilesUrl?: string;
     autoRestartAnimationAfterFloorChange?: boolean;
+    poiIconSize?: (string | number | string[])[] | number | any;
 }
 export interface PaddingOptions {
     bottom: number;
