@@ -3158,29 +3158,36 @@ export class Map {
         if (floor) this.onFloorSelect(floor);
       }
       if (this.map) {
-        const routePoints =
+        if (
+          this.routingSource &&
+          this.routingSource.route &&
           this.routingSource.route[`path-part-${this.currentStep}`] &&
-          this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === this.state.floor.level
-            ? this.routingSource.route[`path-part-${this.currentStep}`]
-            : lineString(
-                this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
-              );
-        const lengthInMeters = length(routePoints, { units: 'kilometers' }) * 1000;
-        const boundingBox = bbox(routePoints);
-        if (!this.defaultOptions.routeAnimation.followRoute) {
-          if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
-            // @ts-ignore;
-            this.map.fitBounds(boundingBox, {
-              padding: this.defaultOptions.fitBoundsPadding,
-              bearing: this.map.getBearing(),
-              pitch: this.map.getPitch(),
-            });
-          } else {
-            // @ts-ignore
-            this.map.flyTo({
-              center: center(routePoints).geometry.coordinates as LngLatLike,
-              zoom: this.defaultOptions.minFitBoundsDistance < 10 ? 22 : this.map.getZoom(),
-            });
+          this.routingSource.levelPoints[this.state.floor.level]
+        ) {
+          const routePoints =
+            this.routingSource.route[`path-part-${this.currentStep}`] &&
+            this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === this.state.floor.level
+              ? this.routingSource.route[`path-part-${this.currentStep}`]
+              : lineString(
+                  this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
+                );
+          const lengthInMeters = length(routePoints, { units: 'kilometers' }) * 1000;
+          const boundingBox = bbox(routePoints);
+          if (!this.defaultOptions.routeAnimation.followRoute) {
+            if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
+              // @ts-ignore;
+              this.map.fitBounds(boundingBox, {
+                padding: this.defaultOptions.fitBoundsPadding,
+                bearing: this.map.getBearing(),
+                pitch: this.map.getPitch(),
+              });
+            } else {
+              // @ts-ignore
+              this.map.flyTo({
+                center: center(routePoints).geometry.coordinates as LngLatLike,
+                zoom: this.defaultOptions.minFitBoundsDistance < 10 ? 22 : this.map.getZoom(),
+              });
+            }
           }
         }
       }
@@ -3266,6 +3273,7 @@ export class Map {
       this.routingSource &&
       this.routingSource.route &&
       this.routingSource.route[`path-part-${this.currentStep}`] &&
+      this.routingSource.levelPoints[this.state.floor.level] &&
       !this.routingSource.preview
     ) {
       const route =
@@ -3455,49 +3463,56 @@ export class Map {
   }
 
   private onRestartRouteAnimation({ delay, recenter }: { delay: number; recenter?: boolean }) {
-    if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
-      const route =
-        this.routingSource.route[`path-part-${this.currentStep}`] &&
-        this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === this.state.floor.level
-          ? this.routingSource.route[`path-part-${this.currentStep}`]
-          : lineString(
-              this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
-              { level: this.state.floor.level },
-            );
+    if (
+      this.routingSource &&
+      this.routingSource.route &&
+      this.routingSource.route[`path-part-${this.currentStep}`] &&
+      this.routingSource.levelPoints[this.state.floor.level]
+    ) {
+      if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
+        const route =
+          this.routingSource.route[`path-part-${this.currentStep}`] &&
+          this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === this.state.floor.level
+            ? this.routingSource.route[`path-part-${this.currentStep}`]
+            : lineString(
+                this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
+                { level: this.state.floor.level },
+              );
 
-      cancelAnimationFrame(this.animationFrame);
+        cancelAnimationFrame(this.animationFrame);
 
-      // @ts-ignore
-      this.map.getSource('pointAlong').setData({
-        type: 'FeatureCollection',
-        features: [],
-      });
-      // @ts-ignore
-      this.map.getSource('lineAlong').setData({
-        type: 'FeatureCollection',
-        features: [],
-      });
+        // @ts-ignore
+        this.map.getSource('pointAlong').setData({
+          type: 'FeatureCollection',
+          features: [],
+        });
+        // @ts-ignore
+        this.map.getSource('lineAlong').setData({
+          type: 'FeatureCollection',
+          features: [],
+        });
 
-      if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
-        this.pointIconMarker.remove();
+        if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
+          this.pointIconMarker.remove();
+        }
+
+        if (recenter) {
+          setTimeout(() => {
+            this.map.jumpTo({
+              center: route.geometry.coordinates[0] as [number, number],
+            });
+          }, 100);
+        }
+
+        this.map.setStyle(this.state.style);
       }
-
-      if (recenter) {
-        setTimeout(() => {
-          this.map.jumpTo({
-            center: route.geometry.coordinates[0] as [number, number],
-          });
-        }, 100);
-      }
-
-      this.map.setStyle(this.state.style);
+      setTimeout(
+        () => {
+          this.animateRoute();
+        },
+        delay ? delay : 0,
+      );
     }
-    setTimeout(
-      () => {
-        this.animateRoute();
-      },
-      delay ? delay : 0,
-    );
   }
 
   private onStopRouteAnimation() {
