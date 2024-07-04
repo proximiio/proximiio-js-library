@@ -36,7 +36,8 @@ export const login = async (email: string, password: string) => {
     }
     return loginRes;
   } catch (e) {
-    throw new Error(`Login failed, ${e.message}`);
+    console.error(`Login failed, ${e.message}`);
+    throw e; // Re-throw the original error
   }
 };
 
@@ -68,7 +69,8 @@ export const loginWithToken = async (token: string) => {
     }
     return currentUser;
   } catch (e) {
-    throw new Error(`Login failed, ${e.message}`);
+    console.error(`Login failed, ${e.message}`);
+    throw e; // Re-throw the original error
   }
 };
 
@@ -90,7 +92,8 @@ export const getUserConfig = async () => {
     const config = await axios.get(`config`);
     return config.data;
   } catch (e) {
-    throw new Error(`Fetching config failed, ${e.message}`);
+    console.error(`Fetching config failed, ${e.message}`);
+    throw e; // Re-throw the original error
   }
 };
 
@@ -99,7 +102,8 @@ export const getCurrentUser = async () => {
     const currentUser = loggedUser ? loggedUser : await axios.get(`core/current_user`);
     return currentUser.data;
   } catch (e) {
-    throw new Error(`Fetching current user failed, ${e.message}`);
+    console.error(`Fetching current user failed, ${e.message}`);
+    throw e; // Re-throw the original error
   }
 };
 
