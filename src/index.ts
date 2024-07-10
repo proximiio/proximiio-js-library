@@ -9,6 +9,8 @@ import SelectLogger from './components/logger/select';
 import SearchLogger from './components/logger/search';
 import { ImageDetection } from './components/imageDetection/main';
 import InteractionLogger from './components/logger/interaction';
+import StoreFeedback from './components/feedback/store';
+import VisitorFeedback from './components/feedback/visitor';
 
 export default {
   Auth,
@@ -21,6 +23,8 @@ export default {
   SelectLogger,
   SearchLogger,
   InteractionLogger,
+  StoreFeedback,
+  VisitorFeedback,
 };
 
 export { ImageDetection };
