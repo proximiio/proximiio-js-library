@@ -4,6 +4,8 @@ import SelectLogger from './components/logger/select';
 import SearchLogger from './components/logger/search';
 import { ImageDetection } from './components/imageDetection/main';
 import InteractionLogger from './components/logger/interaction';
+import StoreFeedback from './components/feedback/store';
+import VisitorFeedback from './components/feedback/visitor';
 declare const _default: {
     Auth: {
         login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any, any>>;
@@ -42,6 +44,8 @@ declare const _default: {
     SelectLogger: typeof SelectLogger;
     SearchLogger: typeof SearchLogger;
     InteractionLogger: typeof InteractionLogger;
+    StoreFeedback: typeof StoreFeedback;
+    VisitorFeedback: typeof VisitorFeedback;
 };
 export default _default;
 export { ImageDetection };
