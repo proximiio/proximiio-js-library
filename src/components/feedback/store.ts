@@ -3,14 +3,17 @@ import Feedback, { IFeedback } from './base';
 
 export interface IStoreFeedback extends IFeedback {
   storeTitle: string;
+  poi_id: string;
 }
 
 export default class StoreFeedback extends Feedback {
   storeTitle: string;
+  poi_id: string;
 
   constructor(data: IStoreFeedback) {
     super(data);
     this.storeTitle = data.storeTitle;
+    this.poi_id = data.poi_id;
   }
 
   async save() {
