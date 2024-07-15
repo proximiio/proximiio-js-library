@@ -1555,6 +1555,16 @@ export class Map {
           : metadata['proximiio:raster:tilesize']
           ? metadata['proximiio:raster:tilesize']
           : 256,
+        minzoom: this.defaultOptions.rasterTilesOptions?.minZoom
+          ? this.defaultOptions.rasterTilesOptions.minZoom
+          : metadata['proximiio:raster:minzoom']
+          ? metadata['proximiio:raster:minzoom']
+          : 15,
+        maxzoom: this.defaultOptions.rasterTilesOptions?.maxZoom
+          ? this.defaultOptions.rasterTilesOptions.maxZoom
+          : metadata['proximiio:raster:maxzoom']
+          ? metadata['proximiio:raster:maxzoom']
+          : 22,
         attribution: this.defaultOptions.rasterTilesOptions?.attribution
           ? this.defaultOptions.rasterTilesOptions.attribution
           : metadata['proximiio:raster:attribution']
@@ -1571,16 +1581,6 @@ export class Map {
           id: 'raster-tiles',
           type: 'raster',
           source: 'raster-tiles',
-          minzoom: this.defaultOptions.rasterTilesOptions?.minZoom
-            ? this.defaultOptions.rasterTilesOptions.minZoom
-            : metadata['proximiio:raster:minzoom']
-            ? metadata['proximiio:raster:minzoom']
-            : 15,
-          maxzoom: this.defaultOptions.rasterTilesOptions?.maxZoom
-            ? this.defaultOptions.rasterTilesOptions.maxZoom
-            : metadata['proximiio:raster:maxzoom']
-            ? metadata['proximiio:raster:maxzoom']
-            : 22,
         },
         this.defaultOptions.rasterTilesOptions?.beforeLayer
           ? this.defaultOptions.rasterTilesOptions.beforeLayer
