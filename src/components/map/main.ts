@@ -2523,10 +2523,7 @@ export class Map {
                 .includes(i.properties._dynamic?.type),
           );
           if (polygon) {
-            if (
-              filterByAmenity([f], amenityId)?.length > 0
-              //Array.isArray(amenityId) ? amenityId.includes(f.properties.amenity) : f.properties.amenity === amenityId
-            ) {
+            if (filterByAmenity([f], amenityId)?.length > 0) {
               this.map.setFeatureState(
                 {
                   source: 'main',
