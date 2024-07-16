@@ -1,4 +1,5 @@
 import Axios from 'axios';
+import { SortedPoiItemModel } from './models/sortedPoiItemModel';
 
 export const axios = Axios.create({
   baseURL: 'https://api.proximi.fi',
@@ -182,4 +183,28 @@ function throttle<T extends (...args: any[]) => any>(func: T, delay: number): (.
   };
 }
 
-export { calculateDimensions, convertToRTL, base64toBlob, throttle };
+const filterByAmenity = (data: any, filterCriteria?: string | string[]): any[] => {
+  if (!filterCriteria) {
+    return undefined;
+  }
+  // Convert filterCriteria to an array if it's a string
+  if (typeof filterCriteria === 'string') {
+    filterCriteria = [filterCriteria];
+  }
+
+  // Filter the data based on the criteria
+  return data.filter((item) => {
+    // Check if the amenity matches any of the filterCriteria
+    const amenityMatches = filterCriteria.includes(item.properties.amenity);
+
+    // Check if any of the included_amenities match any of the filterCriteria
+    const includedAmenitiesMatch = item.properties.included_amenities?.some((amenity: string) =>
+      filterCriteria.includes(amenity),
+    );
+
+    // Return true if either amenity or included_amenities match
+    return amenityMatches || includedAmenitiesMatch;
+  });
+};
+
+export { calculateDimensions, convertToRTL, base64toBlob, throttle, filterByAmenity };

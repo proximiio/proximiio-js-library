@@ -19,7 +19,7 @@ import RoutingSource from './sources/routing_source';
 import ClusterSource from './sources/cluster_source';
 import ImageSourceManager from './sources/image_source_manager';
 import { AmenityModel } from '../../models/amenity';
-import { getBase64FromImage, getImageFromBase64, throttle, uuidv4 } from '../../common';
+import { filterByAmenity, getBase64FromImage, getImageFromBase64, throttle, uuidv4 } from '../../common';
 import {
   chevron,
   pulsingDot,
@@ -1619,10 +1619,22 @@ export class Map {
           this.onShopMouseEnter();
         });
         this.map.on('mousemove', `${layer.featureType}-custom`, (e) => {
-          this.onShopMouseMove(e);
+          if (
+            !this.defaultOptions.blockFeatureClickWhileRouting ||
+            (this.defaultOptions.blockFeatureClickWhileRouting &&
+              (!this.routingSource.route || this.routingSource.preview))
+          ) {
+            this.onShopMouseMove(e);
+          }
         });
         this.map.on('mouseleave', `${layer.featureType}-custom`, (e) => {
-          this.onShopMouseLeave(e);
+          if (
+            !this.defaultOptions.blockFeatureClickWhileRouting ||
+            (this.defaultOptions.blockFeatureClickWhileRouting &&
+              (!this.routingSource.route || this.routingSource.preview))
+          ) {
+            this.onShopMouseLeave(e);
+          }
         });
       }
 
@@ -2436,6 +2448,18 @@ export class Map {
   private setActivePolygons(amenityId: string | null | string[]) {
     if (this.defaultOptions.initPolygons) {
       const activeFeatures = this.activePolygonsAmenity
+        ? filterByAmenity(
+            this.state.allFeatures.features.filter((f) => f.geometry.type === 'Point'),
+            this.activePolygonsAmenity,
+          )
+        : [];
+      const amenityFeatures = amenityId
+        ? filterByAmenity(
+            this.state.allFeatures.features.filter((f) => f.geometry.type === 'Point'),
+            amenityId,
+          )
+        : [];
+      /*const activeFeatures = this.activePolygonsAmenity
         ? this.state.allFeatures.features.filter(
             (f) =>
               (Array.isArray(this.activePolygonsAmenity)
@@ -2450,7 +2474,7 @@ export class Map {
                 ? amenityId.includes(f.properties.amenity)
                 : f.properties.amenity === amenityId) && f.geometry.type === 'Point',
           )
-        : [];
+        : [];*/
       const featuresWithPolygon = this.state.allFeatures.features.filter(
         (f) => f.properties._dynamic?.polygon_id && f.geometry.type === 'Point',
       );
@@ -2500,7 +2524,8 @@ export class Map {
           );
           if (polygon) {
             if (
-              Array.isArray(amenityId) ? amenityId.includes(f.properties.amenity) : f.properties.amenity === amenityId
+              filterByAmenity([f], amenityId)?.length > 0
+              //Array.isArray(amenityId) ? amenityId.includes(f.properties.amenity) : f.properties.amenity === amenityId
             ) {
               this.map.setFeatureState(
                 {
