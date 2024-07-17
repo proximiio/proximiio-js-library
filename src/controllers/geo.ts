@@ -203,8 +203,9 @@ export const getFeatures = async ({
           if (!connectedPolygon && feature.properties.metadata && feature.properties.metadata.polygon_id) {
             connectedPolygon = res.data.features.find(
               (f: any) =>
+                f.properties.type === featureType &&
                 f.properties.id?.replace(/\{|\}/g, '') ===
-                feature.properties.metadata.polygon_id?.replace(/\{|\}/g, ''),
+                  feature.properties.metadata.polygon_id?.replace(/\{|\}/g, ''),
             );
           }
 
