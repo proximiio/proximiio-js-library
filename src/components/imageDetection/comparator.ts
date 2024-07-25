@@ -6,7 +6,9 @@ const compareResults = (pois: SortedPoiItemModel[], visionTextResults: string[])
     let totalScore = 0;
 
     // Get all titles to compare against
-    const titles = poi.properties.title_i18n ? Object.values(poi.properties.title_i18n) : [poi.properties.title];
+    const titles: string[] = poi.properties.title_i18n
+      ? Object.values(poi.properties.title_i18n)
+      : [poi.properties.title];
 
     // Loop through each title
     titles.forEach((title) => {
