@@ -1978,7 +1978,7 @@ export class Map {
             (f.id === startParam ||
               f.properties.id === startParam ||
               f.properties.title?.toLowerCase() === startParam?.toLowerCase() ||
-              f.properties.remote_id === startParam),
+              f.properties.remote_id?.toString() === startParam),
         ) as Feature)
       : this.startPoint;
     const destinationFeature = destinationParam
@@ -1989,7 +1989,7 @@ export class Map {
             (f.id === destinationParam ||
               f.properties.id === destinationParam ||
               f.properties.title?.toLowerCase() === destinationParam?.toLowerCase() ||
-              f.properties.remote_id === destinationParam),
+              f.properties.remote_id?.toString() === destinationParam),
         ) as Feature)
       : undefined;
 
