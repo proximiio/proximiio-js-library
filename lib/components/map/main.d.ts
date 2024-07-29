@@ -127,6 +127,7 @@ export interface Options {
         iconLerpTolerance?: number;
         cameraUseLerp?: boolean;
         cameraLerpTolerance?: number;
+        autoRestart?: boolean;
     };
     useRasterTiles?: boolean;
     rasterTilesOptions?: {
