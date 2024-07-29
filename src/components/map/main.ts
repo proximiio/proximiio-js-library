@@ -175,6 +175,7 @@ export interface Options {
     iconLerpTolerance?: number;
     cameraUseLerp?: boolean;
     cameraLerpTolerance?: number;
+    autoRestart?: boolean;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -378,6 +379,7 @@ export class Map {
       iconLerpTolerance: 0.1,
       cameraUseLerp: false,
       cameraLerpTolerance: 0.05,
+      autoRestart: true,
     },
     useRasterTiles: false,
     handleUrlParams: false,
@@ -1588,6 +1590,7 @@ export class Map {
           ? metadata['proximiio:raster:beforelayer']
           : 'osm-country_label-en',
       );
+      this.map.setStyle(this.state.style);
     }
   }
 
@@ -3088,7 +3091,9 @@ export class Map {
       if (this.defaultOptions.animatedRoute) {
         console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
       }
-      this.animateRoute();
+      if (this.defaultOptions.routeAnimation.autoRestart) {
+        this.animateRoute();
+      }
     }
     if (this.defaultOptions.useRasterTiles) {
       this.initRasterTiles();
