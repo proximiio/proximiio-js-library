@@ -211,6 +211,13 @@ export const getFeatures = async ({
 
           if (connectedPolygon) {
             feature.properties._dynamic = feature.properties._dynamic ? feature.properties._dynamic : {};
+            if (
+              feature.properties?.metadata?.prevent_polygon === true ||
+              feature.properties?.metadata?.prevent_polygon === 'true'
+            ) {
+              feature.properties._dynamic.polygon_id = connectedPolygon.properties.id?.replace(/\{|\}/g, '');
+              return feature;
+            }
             feature.properties._dynamic.id = feature.id;
             feature.properties._dynamic.type = 'poi-custom';
             feature.properties._dynamic.amenity = feature.properties.amenity;
