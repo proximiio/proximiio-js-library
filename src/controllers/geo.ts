@@ -469,13 +469,24 @@ export const getFeaturesBundle = async ({
         });
 
         // or if not check if the polygon is defined in metadata and use it instead
-        if (!connectedPolygon && feature.properties.metadata?.polygon_id) {
+        if (!connectedPolygon && feature.properties.metadata && feature.properties.metadata.polygon_id) {
           const polygonId = feature.properties.metadata.polygon_id.replace(/\{|\}/g, '');
-          connectedPolygon = data.features.find((f) => f.properties.id?.replace(/\{|\}/g, '') === polygonId);
+          connectedPolygon = data.features.find(
+            (f: any) =>
+              f.properties.type === polygonFeatureTypes.find((type) => type === connectedPolygon.properties.type) &&
+              f.properties.id?.replace(/\{|\}/g, '') === polygonId,
+          );
         }
 
         if (connectedPolygon) {
           feature.properties._dynamic = feature.properties._dynamic ? feature.properties._dynamic : {};
+          if (
+            feature.properties?.metadata?.prevent_polygon === true ||
+            feature.properties?.metadata?.prevent_polygon === 'true'
+          ) {
+            feature.properties._dynamic.polygon_id = connectedPolygon.properties.id?.replace(/\{|\}/g, '');
+            return feature;
+          }
           feature.properties._dynamic.id = feature.id;
           feature.properties._dynamic.type = 'poi-custom';
           feature.properties._dynamic.amenity = feature.properties.amenity;
