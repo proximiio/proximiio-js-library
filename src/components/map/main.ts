@@ -3256,7 +3256,9 @@ export class Map {
         .map(async (f) => {
           try {
             const response = await this.map.loadImage(
-              `${f.properties.metadata['anchor-logo']}?token=${this.state.user.token}`,
+              this.defaultOptions.bundleUrl
+                ? `${this.defaultOptions.bundleUrl}/images/${f.properties.metadata['anchor-logo']}`
+                : `${f.properties.metadata['anchor-logo']}?token=${this.state.user.token}`,
             );
             if (response) {
               this.map.addImage(f.id, response.data);
