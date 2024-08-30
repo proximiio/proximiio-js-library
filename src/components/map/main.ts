@@ -709,12 +709,9 @@ export class Map {
       map.addImage('floorchange-down-image', decodedFloorchangeDownImage as any);
       map.addImage('popup', decodedPopupImage as any, {
         // @ts-ignore
-        stretchX: [
-          [25, 55],
-          [85, 115],
-        ],
-        stretchY: [[25, 100]],
-        content: [25, 25, 115, 100],
+        stretchX: [[60, 120]],
+        stretchY: [[40, 120]],
+        content: [60, 40, 120, 120],
         pixelRatio: 2,
       });
       this.onSourceChange();
@@ -877,6 +874,7 @@ export class Map {
             this.kioskPopup.setLngLat(this.defaultOptions.kioskSettings.coordinates);
           } else {
             this.kioskPopup = new maplibregl.Popup({
+              anchor: 'bottom',
               closeOnClick: false,
               className: 'proximiio-kiosk-popup',
               offset: [0, -15],
@@ -920,6 +918,9 @@ export class Map {
                   : 'rgb(189, 82, 255)'
               };
               margin-top: -1px;
+              border-top-width: 25px;
+              border-left-width: 15px;
+              border-right-width: 15px;
             }
           `;
 
@@ -1198,9 +1199,10 @@ export class Map {
             'icon-image': ['get', 'popupImage'],
             'icon-allow-overlap': true,
             'text-allow-overlap': true,
-            'icon-anchor': 'bottom',
-            'text-anchor': 'bottom',
-            'text-offset': [0, -2.4],
+            'icon-anchor': 'top-left',
+            'text-anchor': 'top-left',
+            'icon-offset': [2.8, 1.2],
+            'text-offset': [2.8, 1.2 - 2.4],
             'text-font': this.defaultOptions.polygonsOptions.textFont,
           },
           paint: {
