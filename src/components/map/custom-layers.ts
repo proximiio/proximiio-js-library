@@ -74,6 +74,7 @@ export class PolygonIconsLayer extends SymbolLayer {
         ],
       ],
       ['==', ['to-number', ['get', 'level']], 0],
+      ['any', ['!', ['has', 'available']], ['==', ['get', 'available'], true]],
     ];
     this.layout = new LayoutProperties({
       'icon-image': data.iconImage ? data.iconImage : undefined,
@@ -124,6 +125,7 @@ export class PolygonTitlesLayer extends SymbolLayer {
         ],
       ],
       ['==', ['to-number', ['get', 'level']], 0],
+      ['any', ['!', ['has', 'available']], ['==', ['get', 'available'], true]],
     ];
     this.layout = new LayoutProperties({
       'symbol-placement': data.symbolPlacement,
