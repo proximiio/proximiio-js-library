@@ -2627,7 +2627,7 @@ export class Map {
   }
 
   private onEnablePolygonPreventedIcons() {
-    //@ts-ignore
+    // @ts-ignore
     const mainSourceData = this.map.getSource('main')._data;
     mainSourceData.features = mainSourceData.features.map((f) => {
       if (f.properties?.metadata?.prevent_polygon === true || f.properties?.metadata?.prevent_polygon === 'true') {
@@ -2635,12 +2635,12 @@ export class Map {
       }
       return f;
     });
-    //@ts-ignore
+    // @ts-ignore
     this.map.getSource('main').setData(mainSourceData);
   }
 
   private onDisablePolygonPreventedIcons() {
-    //@ts-ignore
+    // @ts-ignore
     const mainSourceData = this.map.getSource('main')._data;
     mainSourceData.features = mainSourceData.features.map((f) => {
       if (
@@ -2651,7 +2651,7 @@ export class Map {
       }
       return f;
     });
-    //@ts-ignore
+    // @ts-ignore
     this.map.getSource('main').setData(mainSourceData);
   }
 
