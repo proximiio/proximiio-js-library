@@ -1738,13 +1738,14 @@ export class Map {
     }
   }
 
-  handlePolygonSelection(poi?: Feature | Feature[]) {
+  handlePolygonSelection(poi?: Feature | (Feature | undefined)[]) {
     let features: Feature[] = [];
     if (Array.isArray(poi)) {
       features = poi;
     } else {
       features = poi?.id ? [poi] : [];
     }
+    features = features.filter((f) => f && f.id);
     const featuresIds = features.length === 0 ? [] : features.map((i) => i.id);
     const featuresWithPolygon = this.state.allFeatures.features.filter(
       (f) => f.properties._dynamic?.polygon_id && f.geometry.type === 'Point' && !featuresIds.includes(f.id),
@@ -2623,6 +2624,72 @@ export class Map {
 
   private onToggleHiddenPois() {
     this.handlePoiVisibility();
+  }
+
+  private onEnablePolygonPreventedIcons() {
+    //@ts-ignore
+    const mainSourceData = this.map.getSource('main')._data;
+    mainSourceData.features = mainSourceData.features.map((f) => {
+      if (f.properties?.metadata?.prevent_polygon === true || f.properties?.metadata?.prevent_polygon === 'true') {
+        f.properties.hideIcon = 'hide';
+      }
+      return f;
+    });
+    //@ts-ignore
+    this.map.getSource('main').setData(mainSourceData);
+  }
+
+  private onDisablePolygonPreventedIcons() {
+    //@ts-ignore
+    const mainSourceData = this.map.getSource('main')._data;
+    mainSourceData.features = mainSourceData.features.map((f) => {
+      if (
+        (this.activePolygonsAmenity === 'nonexisting' || this.activePolygonsAmenity.includes(f.properties.amenity)) &&
+        (f.properties?.metadata?.prevent_polygon === true || f.properties?.metadata?.prevent_polygon === 'true')
+      ) {
+        f.properties.hideIcon = 'show';
+      }
+      return f;
+    });
+    //@ts-ignore
+    this.map.getSource('main').setData(mainSourceData);
+  }
+
+  private onDisablePolygons() {
+    const featuresWithPolygon = this.state.allFeatures.features.filter(
+      (f) => f.properties._dynamic?.polygon_id && f.geometry.type === 'Point',
+    );
+    for (const f of featuresWithPolygon) {
+      const polygon = this.state.allFeatures.features.find(
+        (i) =>
+          i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
+          this.defaultOptions.polygonLayers
+            .map((layer) => `${layer.featureType}-custom`)
+            .includes(i.properties._dynamic?.type),
+      );
+      if (polygon) {
+        this.map.setFeatureState(
+          {
+            source: 'main',
+            id: polygon.id,
+          },
+          {
+            disabled: true,
+          },
+        );
+        if (polygon.properties._dynamic.label_id) {
+          this.map.setFeatureState(
+            {
+              source: 'main',
+              id: polygon.properties._dynamic.label_id,
+            },
+            {
+              disabled: true,
+            },
+          );
+        }
+      }
+    }
   }
 
   private onSetPerson(lat: number, lng: number, level: number, id?: string | number) {
@@ -4515,6 +4582,51 @@ export class Map {
    */
   public showIcons() {
     this.onShowIcons();
+  }
+
+  /**
+   * With this method you can enable icons for polygon prevented features.
+   *  @memberof Map
+   *  @name enablePolygonPreventedIcons
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.enablePolygonPreventedIcons();
+   *  });
+   */
+  public enablePolygonPreventedIcons() {
+    this.onEnablePolygonPreventedIcons();
+  }
+
+  /**
+   * With this method you can disable icons for polygon prevented features.
+   *  @memberof Map
+   *  @name disablePolygonPreventedIcons
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.disablePolygonPreventedIcons();
+   *  });
+   */
+  public disablePolygonPreventedIcons() {
+    this.onDisablePolygonPreventedIcons();
+  }
+
+  /**
+   * With this method you can disable all polygons.
+   *  @memberof Map
+   *  @name disablePolygons
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.disablePolygons();
+   *  });
+   */
+  public disablePolygons() {
+    this.onDisablePolygons();
   }
 
   /**
