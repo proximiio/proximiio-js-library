@@ -23,4 +23,5 @@ declare const convertToRTL: (arabicString: any) => any;
 declare const base64toBlob: (base64: any) => Blob;
 declare function throttle<T extends (...args: any[]) => any>(func: T, delay: number): (...args: Parameters<T>) => void;
 declare const filterByAmenity: (data: any, filterCriteria?: string | string[]) => any[];
-export { calculateDimensions, convertToRTL, base64toBlob, throttle, filterByAmenity };
+declare const validateLabelLine: (labelLine: string, polygon: any) => boolean;
+export { calculateDimensions, convertToRTL, base64toBlob, throttle, filterByAmenity, validateLabelLine };

@@ -242,7 +242,7 @@ export declare class Map {
     private initPolygons;
     private updateLayerOpacity;
     private onShopClick;
-    handlePolygonSelection(poi?: Feature | Feature[]): void;
+    handlePolygonSelection(poi?: Feature | (Feature | undefined)[]): void;
     private onShopMouseEnter;
     private onShopMouseMove;
     private onShopMouseLeave;
@@ -266,6 +266,9 @@ export declare class Map {
     private setActivePolygons;
     private handlePoiVisibility;
     private onToggleHiddenPois;
+    private onEnablePolygonPreventedIcons;
+    private onDisablePolygonPreventedIcons;
+    private onDisablePolygons;
     private onSetPerson;
     private onAddPerson;
     private onUpdatePerson;
@@ -885,6 +888,42 @@ export declare class Map {
      *  });
      */
     showIcons(): void;
+    /**
+     * With this method you can enable icons for polygon prevented features.
+     *  @memberof Map
+     *  @name enablePolygonPreventedIcons
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.enablePolygonPreventedIcons();
+     *  });
+     */
+    enablePolygonPreventedIcons(): void;
+    /**
+     * With this method you can disable icons for polygon prevented features.
+     *  @memberof Map
+     *  @name disablePolygonPreventedIcons
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.disablePolygonPreventedIcons();
+     *  });
+     */
+    disablePolygonPreventedIcons(): void;
+    /**
+     * With this method you can disable all polygons.
+     *  @memberof Map
+     *  @name disablePolygons
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.disablePolygons();
+     *  });
+     */
+    disablePolygons(): void;
     /**
      * Method for removing all active feature filters.
      *  @memberof Map
