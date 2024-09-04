@@ -234,12 +234,8 @@ const validateLabelLine = (labelLine: string, polygon: any): boolean => {
       }
     });
 
-    console.log('Coordinates are valid.');
-
     // 3. Create a LineString using turf.js
     const lineStringFeature = lineString(coordinates);
-
-    console.log('LineString created successfully:', lineString);
 
     // Check if the LineString is inside the polygon
     const isInside = booleanWithin(lineStringFeature, polygon);
