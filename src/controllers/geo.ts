@@ -1,4 +1,4 @@
-import { axios, getNestedObjectValue, removeNonNumeric } from '../common';
+import { axios, getNestedObjectValue, removeNonNumeric, validateLabelLine } from '../common';
 import Feature, { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 import { globalState } from '../components/map/main';
@@ -215,7 +215,7 @@ export const getFeatures = async ({
               feature.properties?.metadata?.prevent_polygon === true ||
               feature.properties?.metadata?.prevent_polygon === 'true'
             ) {
-              feature.properties._dynamic.polygon_id = connectedPolygon.properties.id?.replace(/\{|\}/g, '');
+              feature.properties._dynamic.prevented_polygon_id = connectedPolygon.properties.id?.replace(/\{|\}/g, '');
               return feature;
             }
             feature.properties._dynamic.id = feature.id;
@@ -276,7 +276,12 @@ export const getFeatures = async ({
                 : feature.properties.metadata && feature.properties.metadata['label-line']
                 ? JSON.parse(JSON.stringify(feature.properties.metadata['label-line']))
                 : undefined;
-              if (labelLine && labelLine !== undefined && labelLine.length > 0) {
+              if (
+                labelLine &&
+                labelLine !== undefined &&
+                labelLine.length > 0 &&
+                validateLabelLine(labelLine, connectedPolygon)
+              ) {
                 const parsedLabelLine = typeof labelLine === 'string' ? JSON.parse(labelLine) : labelLine;
                 if (parsedLabelLine[0] instanceof Array && parsedLabelLine[1] instanceof Array) {
                   const labelLineFeature = JSON.parse(JSON.stringify(feature));
@@ -484,7 +489,7 @@ export const getFeaturesBundle = async ({
             feature.properties?.metadata?.prevent_polygon === true ||
             feature.properties?.metadata?.prevent_polygon === 'true'
           ) {
-            feature.properties._dynamic.polygon_id = connectedPolygon.properties.id?.replace(/\{|\}/g, '');
+            feature.properties._dynamic.prevented_polygon_id = connectedPolygon.properties.id?.replace(/\{|\}/g, '');
             return feature;
           }
           feature.properties._dynamic.id = feature.id;
@@ -552,7 +557,12 @@ export const getFeaturesBundle = async ({
               : feature.properties.metadata && feature.properties.metadata['label-line']
               ? JSON.parse(JSON.stringify(feature.properties.metadata['label-line']))
               : undefined;
-            if (labelLine && labelLine !== undefined && labelLine.length > 0) {
+            if (
+              labelLine &&
+              labelLine !== undefined &&
+              labelLine.length > 0 &&
+              validateLabelLine(labelLine, connectedPolygon)
+            ) {
               const parsedLabelLine = typeof labelLine === 'string' ? JSON.parse(labelLine) : labelLine;
               if (parsedLabelLine[0] instanceof Array && parsedLabelLine[1] instanceof Array) {
                 const labelLineFeature = JSON.parse(JSON.stringify(feature));
