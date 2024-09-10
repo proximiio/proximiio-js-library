@@ -1723,9 +1723,9 @@ export class Map {
               return i.properties.id === e.features[0].properties.id;
             }
           }) as Feature;
-          if (polygonPoi ? polygonPoi.properties.available === false : poi.properties.available === false) {
+          /*if (polygonPoi ? polygonPoi.properties.available === false : poi.properties.available === false) {
             return;
-          }
+          }*/
           if (polygonPoi) {
             this.handlePolygonSelection(polygonPoi);
           }
@@ -1735,9 +1735,9 @@ export class Map {
           const poi = this.state.allFeatures.features.find(
             (i) => i.properties.id === e.features[0].properties.id,
           ) as Feature;
-          if (poi.properties.available === false) {
+          /*if (poi.properties.available === false) {
             return;
-          }
+          }*/
           this.onPoiClickListener.next(poi);
         }
       }
