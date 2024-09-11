@@ -3,13 +3,12 @@ import { FloorModel } from '../../../models/floor';
 export default class ImageSourceManager extends Eventable {
     sources: string[];
     layers: string[];
-    floors: {
-        data: FloorModel[];
-        total: number;
-    };
+    floors: FloorModel[];
     belowLayer: string;
     enabled: boolean;
     constructor();
-    initialize(): Promise<void>;
+    initialize({ floors }: {
+        floors: FloorModel[];
+    }): Promise<void>;
     setLevel(map: maplibregl.Map, level: number, state: any): void;
 }

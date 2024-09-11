@@ -10,6 +10,7 @@ declare const _default: {
     Auth: {
         login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any, any>>;
         loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any, any>>;
+        setToken: (token: string) => Promise<string>;
         getUserConfig: () => Promise<any>;
         getCurrentUser: () => Promise<any>;
     };

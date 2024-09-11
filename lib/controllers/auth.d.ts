@@ -29,6 +29,16 @@ export declare const login: (email: string, password: string) => Promise<import(
 export declare const loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any, any>>;
 /**
  *  @memberof Auth
+ *  @name setToken
+ *  @param token {string} token for authentication
+ *  @example
+ *  Proximiio.Auth.setToken(mytoken).then(res => {
+ *    // authenticated
+ *  });
+ */
+export declare const setToken: (token: string) => Promise<string>;
+/**
+ *  @memberof Auth
  *  @name getUserConfig
  *  @returns logged in user config data
  *  @example
@@ -44,6 +54,7 @@ export declare const getCurrentUser: () => Promise<any>;
 declare const _default: {
     login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any, any>>;
     loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any, any>>;
+    setToken: (token: string) => Promise<string>;
     getUserConfig: () => Promise<any>;
     getCurrentUser: () => Promise<any>;
 };
