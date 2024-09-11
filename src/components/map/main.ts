@@ -1,5 +1,5 @@
 import maplibregl, { FillExtrusionLayerSpecification, LngLatLike, Marker, SymbolLayerSpecification } from 'maplibre-gl';
-import Auth from '../../controllers/auth';
+import { axios } from '../../common';
 import {
   addFeatures,
   deleteFeatures,
@@ -548,7 +548,7 @@ export class Map {
         (f) =>
           f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
       );
-      const user = await Auth.getCurrentUser();
+      // const user = await Auth.getCurrentUser();
       const defaultPlace = placeParam
         ? places.data.find((p) => p.id === placeParam || p.name === placeParam)
         : places.data.find((p) => p.id === this.defaultOptions.defaultPlaceId);
@@ -599,7 +599,7 @@ export class Map {
       this.prepareStyle(style);
       this.imageSourceManager.enabled = this.defaultOptions.showRasterFloorplans;
       this.imageSourceManager.belowLayer = style.usesPrefixes() ? 'proximiio-floors' : 'floors';
-      this.imageSourceManager.initialize();
+      this.imageSourceManager.initialize({ floors: floors.data });
       this.state = {
         ...this.state,
         initializing: false,
@@ -618,7 +618,7 @@ export class Map {
         longitude: centerVar[0],
         zoom: this.defaultOptions.zoomLevel ? this.defaultOptions.zoomLevel : this.defaultOptions.mapboxOptions?.zoom,
         noPlaces: places.data.length === 0,
-        user,
+        // user,
       };
       style.on(this.onStyleChange);
 
@@ -2809,8 +2809,8 @@ export class Map {
 
         if (this.defaultOptions.sendAnalytics) {
           const logger = new WayfindingLogger({
-            organization_id: this.state.user.organization.id,
-            organization_name: this.state.user.organization.name,
+            // organization_id: this.state.user.organization.id,
+            // organization_name: this.state.user.organization.name,
             startLngLat: this.routingSource.start.geometry.coordinates,
             startLevel: this.routingSource.start.properties.level,
             startSegmentId: this.routingSource.start.id,
@@ -3333,7 +3333,7 @@ export class Map {
             const response = await this.map.loadImage(
               this.defaultOptions.bundleUrl
                 ? `${this.defaultOptions.bundleUrl}/images/${f.properties.metadata['anchor-logo']}`
-                : `${f.properties.metadata['anchor-logo']}?token=${this.state.user.token}`,
+                : `${f.properties.metadata['anchor-logo']}?token=${axios.defaults.headers.common.Authorization}`,
             );
             if (response) {
               this.map.addImage(f.id, response.data);

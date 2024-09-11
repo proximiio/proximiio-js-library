@@ -76,6 +76,21 @@ export const loginWithToken = async (token: string) => {
 
 /**
  *  @memberof Auth
+ *  @name setToken
+ *  @param token {string} token for authentication
+ *  @example
+ *  Proximiio.Auth.setToken(mytoken).then(res => {
+ *    // authenticated
+ *  });
+ */
+
+export const setToken = async (token: string) => {
+  axios.defaults.headers.common.Authorization = token;
+  return `Token set successfully: ${token}`;
+};
+
+/**
+ *  @memberof Auth
  *  @name getUserConfig
  *  @returns logged in user config data
  *  @example
@@ -110,6 +125,7 @@ export const getCurrentUser = async () => {
 export default {
   login,
   loginWithToken,
+  setToken,
   getUserConfig,
   getCurrentUser,
 };

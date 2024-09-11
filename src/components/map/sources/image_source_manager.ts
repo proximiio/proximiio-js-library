@@ -1,12 +1,11 @@
 import { Eventable } from '../../../eventable';
 import { FloorModel } from '../../../models/floor';
 import { ImageSource } from 'maplibre-gl';
-import { getFloors } from '../../../controllers/floors';
 
 export default class ImageSourceManager extends Eventable {
   sources: string[] = [];
   layers: string[] = [];
-  floors: { data: FloorModel[]; total: number } = { data: [], total: 0 };
+  floors: FloorModel[] = [];
   belowLayer = 'proximiio-floors';
   enabled = true;
 
@@ -14,8 +13,8 @@ export default class ImageSourceManager extends Eventable {
     super();
   }
 
-  async initialize() {
-    this.floors = await getFloors();
+  async initialize({ floors }: { floors: FloorModel[] }) {
+    this.floors = floors;
   }
 
   setLevel(map: maplibregl.Map, level: number, state: any) {
@@ -39,7 +38,7 @@ export default class ImageSourceManager extends Eventable {
     });
 
     if (this.enabled) {
-      const floors = this.floors.data.filter((floor) => floor.hasFloorplan && floor.level === level);
+      const floors = this.floors.filter((floor) => floor.hasFloorplan && floor.level === level);
       floors.forEach((floor) => {
         const source = {
           type: 'image',
