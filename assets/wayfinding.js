@@ -910,26 +910,32 @@ export class Wayfinding {
     return intersectingWallOffsetPoints;
   }
   clearData() {
-    this.floorData.forEach((data, level) => {
-      for (const index in data.points) {
-        const point = data.points[index];
+    if (this.floorData) {
+      this.floorData.forEach((data, level) => {
+        for (const index in data.points) {
+          const point = data.points[index];
+          delete point.properties.cameFrom;
+          delete point.properties.gscore;
+          delete point.properties.fscore;
+        }
+      });
+    }
+    if (this.levelChangerList) {
+      this.levelChangerList.forEach((levelChanger) => {
+        levelChanger.properties.fixedPointMap.forEach((it, level) => {
+          delete it.properties.cameFrom;
+          delete it.properties.gscore;
+          delete it.properties.fscore;
+        });
+      });
+    }
+    if (this.corridorLinePoints) {
+      this.corridorLinePoints.forEach((point) => {
         delete point.properties.cameFrom;
         delete point.properties.gscore;
         delete point.properties.fscore;
-      }
-    });
-    this.levelChangerList.forEach((levelChanger) => {
-      levelChanger.properties.fixedPointMap.forEach((it, level) => {
-        delete it.properties.cameFrom;
-        delete it.properties.gscore;
-        delete it.properties.fscore;
       });
-    });
-    this.corridorLinePoints.forEach((point) => {
-      delete point.properties.cameFrom;
-      delete point.properties.gscore;
-      delete point.properties.fscore;
-    });
+    }
   }
   /**
    *
