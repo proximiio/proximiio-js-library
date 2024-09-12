@@ -414,34 +414,36 @@ export class Wayfinding {
       const segment = corridorLinePointPairs[i];
       const segmentFeature = corridorLineFeatures[i];
       const segmentIntersections = [];
-      const walls = this.floorData.get(segment[0].properties.level).walls;
-      const wallFeatures = this.floorData.get(segment[0].properties.level).wallFeatures;
-      wallFeatures.forEach((wallFeature, wallIndex) => {
-        const intersections = turf.lineIntersect(segmentFeature, wallFeature).features;
-        if (intersections.length > 0) {
-          const intersectPoint = intersections[0];
-          intersectPoint.properties.level = segment[0].properties.level;
-          intersectPoint.properties.neighbours = [];
-          intersectPoint.properties.bordersArea = true;
-          intersectPoint.properties.walkableAreaId = walls[0][0].properties.walkableAreaId;
-          // Intersect point inherits filters from both intersecting lines
-          if (segmentFeature.properties.narrowPath) {
-            intersectPoint.properties.narrowPath = true;
+      const walls = this.floorData.get(segment[0].properties.level)?.walls;
+      const wallFeatures = this.floorData.get(segment[0].properties.level)?.wallFeatures;
+      if (wallFeatures?.length > 0) {
+        wallFeatures.forEach((wallFeature, wallIndex) => {
+          const intersections = turf.lineIntersect(segmentFeature, wallFeature).features;
+          if (intersections.length > 0) {
+            const intersectPoint = intersections[0];
+            intersectPoint.properties.level = segment[0].properties.level;
+            intersectPoint.properties.neighbours = [];
+            intersectPoint.properties.bordersArea = true;
+            intersectPoint.properties.walkableAreaId = walls[0][0].properties.walkableAreaId;
+            // Intersect point inherits filters from both intersecting lines
+            if (segmentFeature.properties.narrowPath) {
+              intersectPoint.properties.narrowPath = true;
+            }
+            if (segmentFeature.properties.ramp) {
+              intersectPoint.properties.ramp = true;
+            }
+            if (segmentFeature.properties.hill) {
+              intersectPoint.properties.hill = true;
+            }
+            const distance = this._distance(segment[0], intersectPoint);
+            segmentIntersections.push({
+              point: intersectPoint,
+              distance: distance,
+              wallIndex: wallIndex,
+            });
           }
-          if (segmentFeature.properties.ramp) {
-            intersectPoint.properties.ramp = true;
-          }
-          if (segmentFeature.properties.hill) {
-            intersectPoint.properties.hill = true;
-          }
-          const distance = this._distance(segment[0], intersectPoint);
-          segmentIntersections.push({
-            point: intersectPoint,
-            distance: distance,
-            wallIndex: wallIndex,
-          });
-        }
-      });
+        });
+      }
       if (segmentIntersections.length > 0) {
         // Sort by distance from first point
         segmentIntersections.sort((a, b) => a.distance - b.distance);
@@ -477,11 +479,11 @@ export class Wayfinding {
       i++;
     }
     segmentToWallIntersectionPointList.forEach((point) => {
-      this.floorData.get(point.properties.level).points.push(point);
+      this.floorData.get(point.properties.level)?.points.push(point);
     });
     // this.segmentToWallIntersectionPointList = segmentToWallIntersectionPointList.map(p => turf.point(p.geometry.coordinates));
     segmentToWallIntersectionPointList.forEach((point) => {
-      const neighbours = this._findNeighbours(point, null, null, this.floorData.get(point.properties.level).points);
+      const neighbours = this._findNeighbours(point, null, null, this.floorData.get(point.properties.level)?.points);
       point.properties.neighbours.push(...neighbours);
     });
     // Store corridor data
@@ -686,10 +688,12 @@ export class Wayfinding {
         // neighbours.forEach(neighbour => this.nbLines.push(turf.lineString([point.geometry.coordinates, neighbour.geometry.coordinates])));
       }
       // Store relationship for corridor point
-      if (levelNeighboursMap[pointIndex] === undefined) {
-        levelNeighboursMap[pointIndex] = neighbours.map((neighbour) => points.indexOf(neighbour));
-      } else {
-        neighbours.forEach((neighbour) => levelNeighboursMap[pointIndex].push(points.indexOf(neighbour)));
+      if (levelNeighboursMap) {
+        if (levelNeighboursMap[pointIndex] === undefined) {
+          levelNeighboursMap[pointIndex] = neighbours.map((neighbour) => points.indexOf(neighbour));
+        } else {
+          neighbours.forEach((neighbour) => levelNeighboursMap[pointIndex].push(points.indexOf(neighbour)));
+        }
       }
     });
     // Export and store data
@@ -706,8 +710,8 @@ export class Wayfinding {
         return;
       }
       // a) Find walls where the point P is used and the other points in walls: A, B
-      const walls = this.floorData.get(point.properties.level).walls.filter((wall) => wall.includes(point));
-      if (walls.length === 0) {
+      const walls = this.floorData.get(point.properties.level)?.walls.filter((wall) => wall.includes(point));
+      if (!walls || walls.length === 0) {
         return;
       }
       const pointA = walls[0][0] === point ? walls[0][1] : walls[0][0];
@@ -939,13 +943,14 @@ export class Wayfinding {
     if (natural === undefined && reverse === undefined) {
       return undefined;
     }
-    if (natural === undefined && reverse !== undefined) {
+    return natural;
+    /*if (natural === undefined && reverse !== undefined) {
       return reverse;
     }
     if (natural !== undefined && reverse === undefined) {
       return natural;
     }
-    return natural.length <= reverse.length ? natural : reverse;
+    return natural.length <= reverse.length ? natural : reverse;*/
   }
   /**
    *
@@ -1674,25 +1679,29 @@ export class Wayfinding {
     const floorData = this.floorData.get(point.properties.level);
     // If point is located without accessible area, do nothing
     let pointFound = undefined;
-    floorData.areas.forEach((polygon) => {
-      if (turf.booleanContains(polygon, point)) {
-        pointFound = point;
-        return;
-      }
-    });
+    if (floorData?.areas.length > 0) {
+      floorData.areas.forEach((polygon) => {
+        if (turf.booleanContains(polygon, point)) {
+          pointFound = point;
+          return;
+        }
+      });
+    }
     if (pointFound !== undefined) {
       return pointFound;
     }
     // Find nearest wall to stick to
     let bestWall = null;
     let bestWallDistance = Infinity;
-    floorData.wallFeatures.forEach((wall) => {
-      const distance = turf.pointToLineDistance(point.geometry.coordinates, wall, { units: this.UNIT_TYPE });
-      if (distance <= bestWallDistance) {
-        bestWall = wall;
-        bestWallDistance = distance;
-      }
-    });
+    if (floorData?.wallFeatures.length > 0) {
+      floorData.wallFeatures.forEach((wall) => {
+        const distance = turf.pointToLineDistance(point.geometry.coordinates, wall, { units: this.UNIT_TYPE });
+        if (distance <= bestWallDistance) {
+          bestWall = wall;
+          bestWallDistance = distance;
+        }
+      });
+    }
     const levelCorridorFeatures = this.corridorLineFeatures.filter(
       (corridorLine) => corridorLine.properties.level === point.properties.level,
     );
