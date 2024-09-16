@@ -204,8 +204,9 @@ export const getFeatures = async ({
             connectedPolygon = res.data.features.find(
               (f: any) =>
                 f.properties.type === featureType &&
-                f.properties.id?.replace(/\{|\}/g, '') ===
-                  feature.properties.metadata.polygon_id?.replace(/\{|\}/g, ''),
+                (f.properties.id?.replace(/\{|\}/g, '') ===
+                  feature.properties.metadata.polygon_id?.replace(/\{|\}/g, '') ||
+                  f.id?.replace(/\{|\}/g, '') === feature.properties.metadata.polygon_id?.replace(/\{|\}/g, '')),
             );
           }
 
@@ -280,7 +281,7 @@ export const getFeatures = async ({
                 labelLine &&
                 labelLine !== undefined &&
                 labelLine.length > 0 &&
-                validateLabelLine(labelLine, connectedPolygon)
+                validateLabelLine(labelLine, connectedPolygon, feature)
               ) {
                 const parsedLabelLine = typeof labelLine === 'string' ? JSON.parse(labelLine) : labelLine;
                 if (parsedLabelLine[0] instanceof Array && parsedLabelLine[1] instanceof Array) {

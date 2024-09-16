@@ -209,7 +209,7 @@ const filterByAmenity = (data: any, filterCriteria?: string | string[]): any[] =
   });
 };
 
-const validateLabelLine = (labelLine: string, polygon: any): boolean => {
+const validateLabelLine = (labelLine: string, polygon: any, feature: any): boolean => {
   try {
     const coordinates = JSON.parse(labelLine);
 
@@ -242,7 +242,8 @@ const validateLabelLine = (labelLine: string, polygon: any): boolean => {
 
     return isInside;
   } catch (error) {
-    console.error('Invalid input:', error.message);
+    console.log('Invalid input:', error.message);
+    console.log('for feature:', feature);
     return false;
   }
 };
