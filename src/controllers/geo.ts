@@ -478,9 +478,14 @@ export const getFeaturesBundle = async ({
           const polygonId = feature.properties.metadata.polygon_id.replace(/\{|\}/g, '');
           connectedPolygon = data.features.find(
             (f: any) =>
-              f.properties.type === polygonFeatureTypes.find((type) => type === connectedPolygon.properties.type) &&
-              f.properties.id?.replace(/\{|\}/g, '') === polygonId,
+              f.properties.id?.replace(/\{|\}/g, '') === polygonId || f.id.replace(/\{|\}/g, '') === polygonId,
           );
+          connectedPolygon =
+            connectedPolygon &&
+            connectedPolygon.properties.type ===
+              polygonFeatureTypes.find((type) => type === connectedPolygon.properties.type)
+              ? connectedPolygon
+              : undefined;
         }
 
         if (connectedPolygon) {
