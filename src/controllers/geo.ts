@@ -567,7 +567,7 @@ export const getFeaturesBundle = async ({
               labelLine &&
               labelLine !== undefined &&
               labelLine.length > 0 &&
-              validateLabelLine(labelLine, connectedPolygon)
+              validateLabelLine(labelLine, connectedPolygon, feature)
             ) {
               const parsedLabelLine = typeof labelLine === 'string' ? JSON.parse(labelLine) : labelLine;
               if (parsedLabelLine[0] instanceof Array && parsedLabelLine[1] instanceof Array) {

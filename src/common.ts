@@ -244,6 +244,7 @@ const validateLabelLine = (labelLine: string, polygon: any, feature: any): boole
   } catch (error) {
     console.log('Invalid input:', error.message);
     console.log('for feature:', feature);
+    console.log('for polygon:', polygon);
     return false;
   }
 };
