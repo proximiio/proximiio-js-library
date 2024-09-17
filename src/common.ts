@@ -209,9 +209,9 @@ const filterByAmenity = (data: any, filterCriteria?: string | string[]): any[] =
   });
 };
 
-const validateLabelLine = (labelLine: string, polygon: any, feature: any): boolean => {
+const validateLabelLine = (labelLine: string | [][], polygon: any, feature: any): boolean => {
   try {
-    const coordinates = JSON.parse(labelLine);
+    const coordinates = typeof labelLine === 'string' ? JSON.parse(labelLine) : labelLine;
 
     // 1. Validate that it's a valid JSON array of arrays
     if (!Array.isArray(coordinates) || coordinates.length === 0) {
