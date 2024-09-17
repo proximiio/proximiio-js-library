@@ -758,7 +758,23 @@ export class Map {
         }
         this.initAnimatedRoute();
       }
-      if (this.defaultOptions.hiddenAmenities) {
+      const layers = ['proximiio-pois-icons', 'proximiio-pois-labels', 'pois-icons', 'pois-labels', 'poi-custom-icons'];
+      layers.forEach((layer) => {
+        const l = this.map.getLayer(layer);
+        if (l) {
+          const filters = [...(l.filter as maplibregl.FilterSpecification[])];
+
+          filters.push(['any', ['!', ['has', 'available']], ['==', ['get', 'available'], true]]);
+
+          if (this.defaultOptions.hiddenAmenities) {
+            filters.push(['!=', ['get', 'hideIcon'], 'hide']);
+          }
+
+          this.state.style.getLayer(layer).filter = filters;
+          this.map.setFilter(layer, filters as maplibregl.FilterSpecification);
+        }
+      });
+      /*if (this.defaultOptions.hiddenAmenities) {
         const layers = [
           'proximiio-pois-icons',
           'proximiio-pois-labels',
@@ -777,7 +793,7 @@ export class Map {
             this.map.setFilter(layer, filters as maplibregl.FilterSpecification);
           }
         });
-      }
+      }*/
 
       this.initPersonsMap();
 
