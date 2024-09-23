@@ -346,7 +346,7 @@ export const getFeatures = async ({
                   const distanceToCenter = pointToLineDistance(center(connectedPolygon), longestBorder);
 
                   // Offset border to polygon center and make it longer to get intersections with the polygon
-                  labelBorder = transformScale(lineOffset(longestBorder, -distanceToCenter), 10);
+                  labelBorder = transformScale(lineOffset(longestBorder, distanceToCenter), 10);
 
                   // Find intersections between connectedPolygon and labelBorder
                   const intersection = lineIntersect(connectedPolygon, labelBorder);
