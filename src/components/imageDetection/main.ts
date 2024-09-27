@@ -332,6 +332,7 @@ class ImageDetection {
     video.autoplay = true;
     video.playsInline = true;
     video.muted = true;
+    video.controls = false;
     videoContainer.appendChild(video);
 
     const canvas = document.createElement('canvas');
