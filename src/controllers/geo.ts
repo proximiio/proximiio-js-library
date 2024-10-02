@@ -1,4 +1,4 @@
-import { axios, getNestedObjectValue, removeNonNumeric, validateLabelLine } from '../common';
+import { axios, getNestedObjectValue, optimizeFeatures, removeNonNumeric, validateLabelLine } from '../common';
 import Feature, { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 import { globalState } from '../components/map/main';

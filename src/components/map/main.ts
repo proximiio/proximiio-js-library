@@ -1,5 +1,5 @@
 import maplibregl, { FillExtrusionLayerSpecification, LngLatLike, Marker, SymbolLayerSpecification } from 'maplibre-gl';
-import { axios } from '../../common';
+import { axios, optimizeFeatures } from '../../common';
 import {
   addFeatures,
   deleteFeatures,
@@ -66,6 +66,7 @@ export interface State {
   readonly styles: StyleModel[];
   readonly amenities: AmenityModel[];
   readonly features: FeatureCollection;
+  readonly optimizedFeatures: FeatureCollection;
   readonly dynamicFeatures: FeatureCollection;
   readonly allFeatures: FeatureCollection;
   readonly latitude: number;
@@ -242,6 +243,7 @@ export const globalState: State = {
   styles: [],
   amenities: [],
   features: new FeatureCollection({}),
+  optimizedFeatures: new FeatureCollection({}),
   dynamicFeatures: new FeatureCollection({}),
   allFeatures: new FeatureCollection({}),
   latitude: 0,
@@ -544,6 +546,7 @@ export class Map {
       : await getKiosks().catch((error) => this.handleControllerError(error));
 
     if (places && features && floors && style && kiosks) {
+      const optimizedFeatures = new FeatureCollection({ features: optimizeFeatures(features.features) });
       const levelChangers = features.features.filter(
         (f) =>
           f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
@@ -594,7 +597,7 @@ export class Map {
       if (this.defaultOptions.routeWithDetails !== null && this.defaultOptions.routeWithDetails !== undefined) {
         this.routingSource.routing.routeWithDetails = this.defaultOptions.routeWithDetails;
       }
-      this.geojsonSource.fetch(features);
+      this.geojsonSource.fetch(optimizedFeatures);
       this.routingSource.routing.setData(new FeatureCollection(features));
       this.prepareStyle(style);
       this.imageSourceManager.enabled = this.defaultOptions.showRasterFloorplans;
@@ -612,6 +615,7 @@ export class Map {
         styles,
         amenities,
         features,
+        optimizedFeatures,
         allFeatures: new FeatureCollection(features),
         levelChangers: new FeatureCollection({ features: levelChangers }),
         latitude: centerVar[1],
@@ -861,6 +865,7 @@ export class Map {
             localSources: this.defaultOptions.localSources,
           }).catch((error) => this.handleControllerError(error));
       if (features) {
+        const optimizedFeatures = new FeatureCollection({ features: optimizeFeatures(features.features) });
         const levelChangers = features.features.filter(
           (f) =>
             f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
@@ -868,6 +873,7 @@ export class Map {
         this.state = {
           ...this.state,
           features,
+          optimizedFeatures,
           allFeatures: new FeatureCollection(features),
           levelChangers: new FeatureCollection({ features: levelChangers }),
         };
@@ -2256,7 +2262,7 @@ export class Map {
   private onFeaturesChange() {
     this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features];
     this.geojsonSource.language = this.defaultOptions.language;
-    this.geojsonSource.fetch(this.state.features);
+    this.geojsonSource.fetch(this.state.optimizedFeatures);
     this.state.style.setSource('main', this.geojsonSource);
     this.onSourceChange();
     this.routingSource.routing.setData(this.state.allFeatures);

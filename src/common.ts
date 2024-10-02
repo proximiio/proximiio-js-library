@@ -2,6 +2,7 @@ import Axios from 'axios';
 import { SortedPoiItemModel } from './models/sortedPoiItemModel';
 import { lineString } from '@turf/helpers';
 import booleanWithin from '@turf/boolean-within';
+import Feature from './models/feature';
 
 export const axios = Axios.create({
   baseURL: 'https://api.proximi.fi',
@@ -249,4 +250,62 @@ const validateLabelLine = (labelLine: string | [][], polygon: any, feature: any)
   }
 };
 
-export { calculateDimensions, convertToRTL, base64toBlob, throttle, filterByAmenity, validateLabelLine };
+const optimizeFeature = (feature: Feature) => {
+  // Keep only the necessary properties
+  const optimizedProperties = {
+    range: feature.properties.range,
+    anchor_logo: feature.properties.metadata?.['anchor-logo'] || null,
+    usecase: feature.properties.usecase,
+    type: feature.properties.type,
+    amenity: feature.properties.amenity,
+    title: feature.properties.title,
+    level: feature.properties.level,
+    id: feature.properties.id,
+    minzoom: feature.properties.minzoom,
+    title_i18n: feature.properties.title_i18n,
+    icon_only: feature.properties.icon_only,
+    text_only: feature.properties.text_only,
+    included_amenities: feature.properties.included_amenities,
+    remote_id: feature.properties.remote_id,
+    available: feature.properties.available,
+    place_id: feature.properties.place_id,
+    hideIcon: feature.properties.hideIcon,
+    _dynamic: feature.properties._dynamic,
+  };
+
+  // Function to recursively shorten coordinates (handling nested arrays)
+  function shortenCoordinates(coords) {
+    if (Array.isArray(coords)) {
+      return coords.map((c) => (Array.isArray(c) ? shortenCoordinates(c) : Number(c.toFixed(6))));
+    }
+    return Number(coords.toFixed(6));
+  }
+
+  // Optimize geometry by shortening coordinate precision
+  const optimizedGeometry = {
+    type: feature.geometry.type,
+    coordinates: shortenCoordinates(feature.geometry.coordinates),
+  };
+
+  // Return a new optimized feature object
+  return {
+    id: feature.id,
+    type: feature.type,
+    geometry: optimizedGeometry,
+    properties: optimizedProperties,
+  };
+};
+
+const optimizeFeatures = (features: Feature[]) => {
+  return features.map(optimizeFeature);
+};
+
+export {
+  calculateDimensions,
+  convertToRTL,
+  base64toBlob,
+  throttle,
+  filterByAmenity,
+  validateLabelLine,
+  optimizeFeatures,
+};
