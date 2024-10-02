@@ -260,6 +260,7 @@ const optimizeFeature = (feature: Feature) => {
     amenity: feature.properties.amenity,
     title: feature.properties.title,
     level: feature.properties.level,
+    levels: feature.properties.level,
     id: feature.properties.id,
     minzoom: feature.properties.minzoom,
     title_i18n: feature.properties.title_i18n,
@@ -272,6 +273,13 @@ const optimizeFeature = (feature: Feature) => {
     hideIcon: feature.properties.hideIcon,
     _dynamic: feature.properties._dynamic,
   };
+
+  // Dynamically include all properties that start with '__level_'
+  Object.keys(feature.properties).forEach((key) => {
+    if (key.startsWith('__level_')) {
+      optimizedProperties[key] = feature.properties[key];
+    }
+  });
 
   // Function to recursively shorten coordinates (handling nested arrays)
   function shortenCoordinates(coords) {
