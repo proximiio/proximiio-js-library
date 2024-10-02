@@ -21,6 +21,7 @@ export interface State {
     readonly styles: StyleModel[];
     readonly amenities: AmenityModel[];
     readonly features: FeatureCollection;
+    readonly optimizedFeatures: FeatureCollection;
     readonly dynamicFeatures: FeatureCollection;
     readonly allFeatures: FeatureCollection;
     readonly latitude: number;
