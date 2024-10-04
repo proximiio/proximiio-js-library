@@ -1,7 +1,7 @@
 import { axios } from '../../common';
 
 export default class InteractionLogger {
-  interactionType: 'mapclick' | 'search' | 'select' | 'qr';
+  interactionType: 'mapclick' | 'search' | 'select' | 'qr' | 'parkassist';
   targetElementType?: 'amenity' | 'feature' | 'amenity_category';
   targetElementId?: string;
   targetElementTitle?: string;
@@ -18,7 +18,7 @@ export default class InteractionLogger {
   session?: string;
 
   constructor(data: {
-    interactionType: 'mapclick' | 'search' | 'select' | 'qr';
+    interactionType: 'mapclick' | 'search' | 'select' | 'qr' | 'parkassist';
     targetElementType?: 'amenity' | 'feature' | 'amenity_category';
     targetElementId?: string;
     targetElementTitle?: string;
