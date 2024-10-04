@@ -1804,7 +1804,7 @@ export class Map {
       }
     }
 
-    if (features.length === 0) {
+    if (features.length === 0 && Array.isArray(poi) && poi.length === 0) {
       for (const f of featuresWithPolygon) {
         const polygon = this.state.allFeatures.features.find(
           (i) =>
