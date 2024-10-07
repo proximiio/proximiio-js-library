@@ -272,6 +272,8 @@ const optimizeFeature = (feature: Feature) => {
     place_id: feature.properties.place_id,
     hideIcon: feature.properties.hideIcon,
     _dynamic: feature.properties._dynamic,
+    metadata: feature.properties.metadata,
+    visibility: feature.properties.visibility,
   };
 
   // Dynamically include all properties that start with '__level_'

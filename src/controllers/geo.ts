@@ -52,7 +52,7 @@ export const getFeatures = async ({
   autoLabelLines?: boolean;
   hiddenAmenities?: string[];
   useTimerangeData?: boolean;
-  filter?: { key: string; value: string };
+  filter?: { key: string; value: string; hideIconOnly?: boolean };
   featuresMaxBounds?: LngLatBoundsLike;
   localSources?: {
     features?: FeatureCollection;
@@ -156,12 +156,21 @@ export const getFeatures = async ({
         .map((feature) => {
           if (getNestedObjectValue(feature, filter.key)) {
             // if feature filter property exists
-            if (getNestedObjectValue(feature, filter.key) === filter.value) {
+            if (
+              getNestedObjectValue(feature, filter.key).toLowerCase() === filter.value.toLocaleLowerCase() ||
+              getNestedObjectValue(feature, filter.key).toLowerCase().split(' ')[0] ===
+                filter.value.toLocaleLowerCase().split(' ')[0]
+            ) {
               // if feature property value is same as filter value
               return feature;
             } else {
               // if they are not same
-              return undefined;
+              if (filter.hideIconOnly === true) {
+                feature.properties.visibility = 'hidden';
+                return feature;
+              } else {
+                return undefined;
+              }
             }
           } else {
             // if feature filter property does not exists
@@ -402,7 +411,7 @@ export const getFeaturesBundle = async ({
   autoLabelLines?: boolean;
   hiddenAmenities?: string[];
   useTimerangeData?: boolean;
-  filter?: { key: string; value: string };
+  filter?: { key: string; value: string; hideIconOnly?: boolean };
   bundleUrl: string;
 }) => {
   const res = await fetch(`${bundleUrl}/features.json`);
@@ -438,12 +447,21 @@ export const getFeaturesBundle = async ({
         .map((feature) => {
           if (getNestedObjectValue(feature, filter.key)) {
             // if feature filter property exists
-            if (getNestedObjectValue(feature, filter.key) === filter.value) {
+            if (
+              getNestedObjectValue(feature, filter.key).toLowerCase() === filter.value.toLocaleLowerCase() ||
+              getNestedObjectValue(feature, filter.key).toLowerCase().split(' ')[0] ===
+                filter.value.toLocaleLowerCase().split(' ')[0]
+            ) {
               // if feature property value is same as filter value
               return feature;
             } else {
               // if they are not same
-              return undefined;
+              if (filter.hideIconOnly === true) {
+                feature.properties.visibility = 'hidden';
+                return feature;
+              } else {
+                return undefined;
+              }
             }
           } else {
             // if feature filter property does not exists

@@ -213,6 +213,7 @@ export interface Options {
   defaultFilter?: {
     key: string;
     value: string;
+    hideIconOnly?: boolean;
   };
   featuresMaxBounds?: LngLatBoundsLike;
   localSources?: {
@@ -223,6 +224,7 @@ export interface Options {
   pmTilesUrl?: string;
   autoRestartAnimationAfterFloorChange?: boolean;
   poiIconSize?: (string | number | string[])[] | number | any;
+  disableUnavailablePois?: boolean;
 }
 
 export interface PaddingOptions {
@@ -403,6 +405,7 @@ export class Map {
     sendAnalytics: true,
     autoLevelChange: false,
     autoRestartAnimationAfterFloorChange: false,
+    disableUnavailablePois: false,
     // poiIconSize: ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.5],
   };
   private routeFactory: any;
@@ -1745,9 +1748,9 @@ export class Map {
               return i.properties.id === e.features[0].properties.id;
             }
           }) as Feature;
-          /*if (polygonPoi ? polygonPoi.properties.available === false : poi.properties.available === false) {
-            return;
-          }*/
+          if (polygonPoi ? polygonPoi.properties.available === false : poi.properties.available === false) {
+            if (this.defaultOptions.disableUnavailablePois) return;
+          }
           if (polygonPoi) {
             this.handlePolygonSelection(polygonPoi);
           }
@@ -1757,9 +1760,9 @@ export class Map {
           const poi = this.state.allFeatures.features.find(
             (i) => i.properties.id === e.features[0].properties.id,
           ) as Feature;
-          /*if (poi.properties.available === false) {
+          if (this.defaultOptions.disableUnavailablePois && poi.properties.available === false) {
             return;
-          }*/
+          }
           this.onPoiClickListener.next(poi);
         }
       }
@@ -4524,7 +4527,7 @@ export class Map {
    *    map.setFiltering({ key: 'properties.metadata.exhibition', value: 'food'});
    *  });
    */
-  public setFiltering(options: { key: string; value: string } | null) {
+  public setFiltering(options: { key: string; value: string; hideIconOnly?: boolean } | null) {
     if (options) {
       this.defaultOptions.defaultFilter = options;
     } else {
