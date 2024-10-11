@@ -2686,6 +2686,19 @@ export class Map {
     this.map.getSource('main').setData(mainSourceData);
   }
 
+  private onSetHiddenAmenities(amenities: string[]) {
+    // @ts-ignore
+    const mainSourceData = this.map.getSource('main')._data;
+    mainSourceData.features = mainSourceData.features.map((f) => {
+      if (amenities.includes(f.properties.amenity)) {
+        f.properties.hideIcon = 'hide';
+      }
+      return f;
+    });
+    // @ts-ignore
+    this.map.getSource('main').setData(mainSourceData);
+  }
+
   private onDisablePolygons() {
     const featuresWithPolygon = this.state.allFeatures.features.filter(
       (f) => f.properties._dynamic?.polygon_id && f.geometry.type === 'Point',
@@ -4613,6 +4626,22 @@ export class Map {
    */
   public showIcons() {
     this.onShowIcons();
+  }
+
+  /**
+   * With this method you can show all icons.
+   *  @memberof Map
+   *  @name setHiddenAmenities
+   *  @param amenities {string[]} amenityIds to assign hideIcon property to features
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.setHiddenAmenities(['amenity1', 'amenity2']);
+   *  });
+   */
+  public setHiddenAmenities(amenities: string[]) {
+    this.onSetHiddenAmenities(amenities);
   }
 
   /**
