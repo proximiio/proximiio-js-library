@@ -1320,13 +1320,23 @@ export class Map {
     this.map.setStyle(this.state.style);
   }
 
-  private onSetFeaturesHighlight(
-    features: string[],
-    color?: string,
-    radius?: number,
-    blur?: number,
-    enlargeIcon?: boolean,
-  ) {
+  private onSetFeaturesHighlight({
+    features,
+    color,
+    radius,
+    blur,
+    enlargeIcon,
+    opacity,
+    translate,
+  }: {
+    features: string[];
+    color?: string;
+    radius?: number;
+    blur?: number;
+    enlargeIcon?: boolean;
+    opacity?: number;
+    translate?: [number, number];
+  }) {
     const map = this.map;
     const featuresToHiglight = this.state.allFeatures.features.filter((f) => {
       return features.includes(f.id || f.properties.id);
@@ -1400,6 +1410,8 @@ export class Map {
                   : radius,
               'circle-color': color ? color : '#000',
               'circle-blur': blur !== null && blur !== undefined ? blur : 0.8,
+              'circle-opacity': opacity !== null && opacity !== undefined ? opacity : 1,
+              'circle-translate': translate ? translate : [0, 0],
             },
             filter: [
               'all',
@@ -4964,8 +4976,10 @@ export class Map {
     radius?: number,
     blur?: number,
     enlargeIcon?: boolean,
+    opacity?: number,
+    translate?: [number, number],
   ) {
-    this.onSetFeaturesHighlight(features, color, radius, blur, enlargeIcon);
+    this.onSetFeaturesHighlight({ features, color, radius, blur, enlargeIcon, opacity, translate });
   }
 
   /**
@@ -5014,7 +5028,6 @@ export class Map {
     this.onStopRouteAnimation();
   }
 }
-
 /* TODO
  * - check clusters
  * */
