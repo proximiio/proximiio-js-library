@@ -1378,8 +1378,7 @@ export class Map {
                 [
                   'any',
                   ['all', ['has', 'metadata'], ['has', 'bays', ['get', 'metadata']]],
-                  ['!', ['has', '_dynamic']],
-                  ['all', ['has', '_dynamic'], ['!', ['has', 'polygon_id', ['get', '_dynamic']]]],
+                  ['!=', ['get', 'hideIcon'], 'hide'],
                 ],
               ],
             },
@@ -1419,8 +1418,7 @@ export class Map {
               [
                 'any',
                 ['all', ['has', 'metadata'], ['has', 'bays', ['get', 'metadata']]],
-                ['!', ['has', '_dynamic']],
-                ['all', ['has', '_dynamic'], ['!', ['has', 'polygon_id', ['get', '_dynamic']]]],
+                ['!=', ['get', 'hideIcon'], 'hide'],
               ],
             ],
           },
