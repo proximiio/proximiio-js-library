@@ -263,6 +263,7 @@ const optimizeFeature = (feature: Feature) => {
     levels: feature.properties.level,
     id: feature.properties.id,
     minzoom: feature.properties.minzoom,
+    maxzoom: feature.properties.maxzoom,
     title_i18n: feature.properties.title_i18n,
     icon_only: feature.properties.icon_only,
     text_only: feature.properties.text_only,
@@ -270,10 +271,15 @@ const optimizeFeature = (feature: Feature) => {
     remote_id: feature.properties.remote_id,
     available: feature.properties.available,
     place_id: feature.properties.place_id,
+    floor_id: feature.properties.floor_id,
     hideIcon: feature.properties.hideIcon,
     _dynamic: feature.properties._dynamic,
     metadata: feature.properties.metadata,
     visibility: feature.properties.visibility,
+    images: feature.properties.images,
+    textColor: feature.properties.textColor,
+    textFont: feature.properties.textFont,
+    textSize: feature.properties.textSize,
   };
 
   // Dynamically include all properties that start with '__level_'
