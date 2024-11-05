@@ -3,6 +3,10 @@ import { Wayfinding } from '../../../lib/assets/wayfinding';
 import Feature, { FeatureCollection } from '../../models/feature';
 import { lineString, point } from '@turf/helpers';
 import { WayfindingConfigModel } from '../../models/wayfinding';
+import osrmTextInstructionsPackage from 'osrm-text-instructions';
+
+const version = 'v5';
+const osrmTextInstructions = osrmTextInstructionsPackage(version);
 
 export default class Routing {
   data: FeatureCollection;
@@ -156,6 +160,63 @@ export default class Routing {
       levelPoints[point.properties.level].push(point);
     });
 
-    return { paths, points, levelPaths, levelPoints, details };
+    return { paths, points, route: {}, fullPath: {} as Feature, levelPaths, levelPoints, details };
+  }
+
+  async cityRoute({ start, finish, language = 'en' }: { start: Feature; finish: Feature; language?: string }) {
+    let details = null;
+
+    const osrmApiUrl = 'http://osrm.proximi.fi:5005';
+    const url = `${osrmApiUrl}/route/v1/driving/${start.geometry.coordinates[0]},${start.geometry.coordinates[1]};${finish.geometry.coordinates[0]},${finish.geometry.coordinates[1]}?steps=true&geometries=geojson`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      const route = data.routes[0];
+
+      if (!route) {
+        return null;
+      }
+
+      route.legs.forEach((leg: any) => {
+        leg.steps.forEach((step: any) => {
+          step.instruction = osrmTextInstructions.compile(language, step);
+        });
+      });
+
+      route.properties = {
+        level: start.properties.level,
+      };
+
+      details = {
+        distance: route.distance,
+        duration: route.duration,
+      };
+
+      const fullPath = new Feature(lineString(route.geometry.coordinates, { level: start.properties.level }));
+
+      const points = fullPath.geometry.coordinates.map((p: any) => new Feature(point(p)));
+
+      const paths = {};
+      for (const [index, val] of route.legs[0].steps.entries()) {
+        paths[`path-part-${index}`] = new Feature(
+          lineString(val.geometry.coordinates, { level: start.properties.level }),
+        );
+      }
+
+      const levelPaths = {};
+      levelPaths[route.properties.level] = {
+        level: route.properties.level,
+        paths: [route],
+      };
+
+      const levelPoints = {} as any;
+      levelPoints[route.properties.level] = [route];
+
+      return { data, route, points, fullPath, paths, levelPaths, levelPoints, details };
+    } catch (error) {
+      console.log(error);
+    }
   }
 }

@@ -177,6 +177,8 @@ export interface Options {
     cameraUseLerp?: boolean;
     cameraLerpTolerance?: number;
     autoRestart?: boolean;
+    dashKeepOriginalRouteLayer?: boolean;
+    cityRouteSpeedMultiplier?: number;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -384,6 +386,8 @@ export class Map {
       cameraUseLerp: false,
       cameraLerpTolerance: 0.05,
       autoRestart: true,
+      dashKeepOriginalRouteLayer: false,
+      cityRouteSpeedMultiplier: 5,
     },
     useRasterTiles: false,
     handleUrlParams: false,
@@ -1525,7 +1529,10 @@ export class Map {
         }
       }
       if (this.defaultOptions.routeAnimation.type === 'dash') {
-        if (this.state.style.getLayer('proximiio-routing-line-remaining')) {
+        if (
+          this.state.style.getLayer('proximiio-routing-line-remaining') &&
+          !this.defaultOptions.routeAnimation.dashKeepOriginalRouteLayer
+        ) {
           this.state.style.removeLayer('proximiio-routing-line-remaining');
         }
         this.state.style.addSource('lineAlong', {
@@ -2823,7 +2830,9 @@ export class Map {
         };
         this.state = { ...this.state, loadingRoute: false, textNavigation };
 
-        if (this.defaultOptions.showLevelDirectionIcon) {
+        this.centerOnRoute(routeStart);
+
+        if (this.defaultOptions.showLevelDirectionIcon && this.routingSource.navigationType === 'mall') {
           this.addDirectionFeatures();
         }
 
@@ -2831,7 +2840,9 @@ export class Map {
           if (this.defaultOptions.animatedRoute) {
             console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
           }
-          this.animateRoute();
+          setTimeout(() => {
+            this.animateRoute();
+          }, 1000);
         }
 
         if (this.defaultOptions.forceFloorLevel !== null && this.defaultOptions.forceFloorLevel !== undefined) {
@@ -2844,7 +2855,6 @@ export class Map {
         }
 
         // this.focusOnRoute();
-        this.centerOnRoute(routeStart);
 
         this.onRouteFoundListener.next({
           route: this.routingSource.route,
@@ -2897,6 +2907,10 @@ export class Map {
           start: this.startPoint,
         };
         this.state = { ...this.state, loadingRoute: false, textNavigation };
+
+        if (this.routingSource.navigationType === 'city') {
+          this.centerOnRoute(this.routingSource.fullPath);
+        }
 
         if (this.defaultOptions.forceFloorLevel !== null && this.defaultOptions.forceFloorLevel !== undefined) {
           this.routingSource.data.features = this.routingSource.data.features.map((f) => {
@@ -3308,6 +3322,28 @@ export class Map {
         if (floor) this.onFloorSelect(floor);
       }
       if (this.map) {
+        if (this.routingSource && this.routingSource.navigationType === 'city' && this.routingSource.fullPath) {
+          const routeToCenter = this.routingSource.preview
+            ? this.routingSource.fullPath
+            : this.routingSource.route[`path-part-${this.currentStep}`];
+          const lengthInMeters = length(routeToCenter, { units: 'kilometers' }) * 1000;
+          const boundingBox = bbox(routeToCenter);
+          if (lengthInMeters >= this.defaultOptions.minFitBoundsDistance) {
+            // @ts-ignore;
+            this.map.fitBounds(boundingBox, {
+              padding: this.defaultOptions.fitBoundsPadding,
+              bearing: this.map.getBearing(),
+              pitch: this.map.getPitch(),
+            });
+          } else {
+            // @ts-ignore
+            this.map.flyTo({
+              center: center(routeToCenter).geometry.coordinates as LngLatLike,
+              zoom: this.defaultOptions.minFitBoundsDistance < 10 ? 22 : this.map.getZoom(),
+            });
+          }
+          return;
+        }
         if (
           this.routingSource &&
           this.routingSource.route &&
@@ -3436,11 +3472,30 @@ export class Map {
               this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
               { level: this.state.floor.level },
             );
+      let routeUntilNextStep;
+      if (this.routingSource.navigationType === 'city') {
+        const routePoints = this.routingSource.lines
+          .map((i: any, index: number) => {
+            if (index > this.currentStep) {
+              return null;
+            } else {
+              return i.geometry.coordinates;
+            }
+          })
+          .filter((i) => i)
+          .flat(1);
+        routeUntilNextStep = lineString(routePoints, { level: this.state.floor.level });
+      }
       if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
         cancelAnimationFrame(this.animationFrame);
         clearTimeout(this.animationTimeout);
         const totalDistance = length(route);
-        const baseSpeed = 1000 * 30 * this.defaultOptions.routeAnimation.durationMultiplier; // Animation time in milliseconds per meter
+        let baseSpeed = 1000 * 30 * this.defaultOptions.routeAnimation.durationMultiplier; // Animation time in milliseconds per meter
+
+        if (this.routingSource.navigationType === 'city') {
+          baseSpeed = baseSpeed / this.defaultOptions.routeAnimation.cityRouteSpeedMultiplier;
+        }
+
         const totalDuration = totalDistance * baseSpeed; // Total animation duration based on route length
         let startTime;
 
@@ -3454,12 +3509,12 @@ export class Map {
 
           if (t >= 1) {
             // Stop the animation if we reached the end
-            if (this.defaultOptions.routeAnimation.looping) {
+            if (this.defaultOptions.routeAnimation.looping && this.routingSource.navigationType === 'mall') {
               this.animationTimeout = setTimeout(() => {
                 this.restartRouteAnimation({ delay: 0, recenter: true });
               }, 2000);
             }
-            if (this.defaultOptions.autoLevelChange) {
+            if (this.defaultOptions.autoLevelChange && this.routingSource.navigationType === 'mall') {
               if (this.routingSource.route && Object.keys(this.routingSource.route).length - 1 === this.currentStep) {
                 return;
               }
@@ -3480,7 +3535,10 @@ export class Map {
           const currentPoint = along(route, currentDistance);
 
           // cut the line at the point
-          const lineAlong = lineSplit(route, currentPoint).features[0];
+          const lineAlong = lineSplit(
+            this.routingSource.navigationType === 'city' ? routeUntilNextStep : route,
+            currentPoint,
+          ).features[0];
 
           // Update the point position
           // @ts-ignore
@@ -3591,8 +3649,10 @@ export class Map {
         ];
 
         setTimeout(() => {
-          // @ts-ignore
-          this.map.getSource('lineAlong').setData(route);
+          this.map
+            .getSource('lineAlong')
+            // @ts-ignore
+            .setData(this.routingSource.navigationType === 'city' ? routeUntilNextStep : route);
         });
 
         const animateDashArray = (timestamp: number) => {
@@ -4120,6 +4180,57 @@ export class Map {
   }
 
   /**
+   * This method will generate route based on selected features by their ids
+   *  @memberof Map
+   *  @name findCityRoute
+   *  @param start {string} finish feature id
+   *  @param destination {string} start feature id, optional for kiosk
+   *  @param autoStart {boolean} default true, if set to false route will not start automatically
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.findCityRoute({
+   *      start: {
+   *        lat: 48.606703739771774,
+   *        lng: 17.833092384506614
+   *      },
+   *      destination: {
+   *        lat: 48.60684545080579,
+   *        lng: 17.833450676669543
+   *      }
+   *    });
+   *  });
+   */
+  public findCityRoute({
+    start,
+    destination,
+    autoStart = true,
+  }: {
+    start: {
+      lat: number;
+      lng: number;
+    };
+    destination: {
+      lat: number;
+      lng: number;
+    };
+    autoStart?: boolean;
+  }) {
+    const startFeature = feature({ type: 'Point', coordinates: [start.lng, start.lat] }, { level: 0 }) as Feature;
+    const destinationFeature = feature(
+      { type: 'Point', coordinates: [destination.lng, destination.lat] },
+      { level: 0 },
+    ) as Feature;
+    this.routingSource.setNavigationType('city');
+    if (autoStart !== false) {
+      this.onRouteUpdate(startFeature, destinationFeature);
+    } else {
+      this.onRoutePreview(startFeature, destinationFeature);
+    }
+  }
+
+  /**
    * This method will cancel generated route
    *  @memberof Map
    *  @name cancelRoute
@@ -4171,6 +4282,9 @@ export class Map {
     if (this.routingSource && this.routingSource.route && this.routingSource.route[`path-part-${newStep}`]) {
       this.currentStep = newStep;
       this.centerOnRoute(this.routingSource.route[`path-part-${newStep}`]);
+      if (this.routingSource.navigationType === 'city') {
+        this.animateRoute();
+      }
       this.onStepSetListener.next(this.currentStep);
       return step;
     } else {

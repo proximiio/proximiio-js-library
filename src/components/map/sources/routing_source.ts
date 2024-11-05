@@ -33,11 +33,14 @@ export default class RoutingSource extends DataSource {
   steps: GuidanceStep[];
   preview?: boolean;
   language: string;
+  navigationType: 'mall' | 'city';
+  fullPath?: Feature;
 
   constructor() {
     super('route');
     this.changes = [];
     this.routing = new Routing();
+    this.navigationType = 'mall';
   }
 
   toggleAccessible(value: any) {
@@ -46,6 +49,10 @@ export default class RoutingSource extends DataSource {
 
   setConfig(config: WayfindingConfigModel) {
     this.routing.setConfig(config);
+  }
+
+  setNavigationType(type: 'mall' | 'city') {
+    this.navigationType = type;
   }
 
   async update({
@@ -71,7 +78,11 @@ export default class RoutingSource extends DataSource {
 
     if (start && finish) {
       this.notify('loading-start');
-      const route = this.routing.route(start, finish);
+      const route =
+        this.navigationType === 'city'
+          ? await this.routing.cityRoute({ start, finish, language: this.language })
+          : this.routing.route(start, finish);
+
       // @ts-ignore
       const paths = route?.paths;
       // @ts-ignore
@@ -81,8 +92,21 @@ export default class RoutingSource extends DataSource {
       this.levelPaths = route?.levelPaths;
       this.levelPoints = route?.levelPoints;
       this.details = route?.details;
-      const guidanceStepsGenerator = new GuidanceStepsGenerator(route?.points, this.language);
-      this.steps = guidanceStepsGenerator.steps;
+      this.fullPath = route?.fullPath;
+
+      if (this.navigationType === 'mall') {
+        const guidanceStepsGenerator = new GuidanceStepsGenerator(route?.points, this.language);
+        this.steps = guidanceStepsGenerator.steps;
+      }
+
+      if (this.navigationType === 'city') {
+        this.steps = [];
+        route.route.legs.forEach((leg) => {
+          leg.steps.forEach((step) => {
+            this.steps.push(step);
+          });
+        });
+      }
 
       if (paths) {
         const lines = [] as Feature[];
@@ -96,17 +120,12 @@ export default class RoutingSource extends DataSource {
         this.notify('route-undefined');
       }
 
-      // Older api routing
-      // this.route = await getRoute(start, finish)
-      // this.lines = Object.keys(this.route.levelPaths).map(key => this.route.levelPaths[key]).map(line => {
-      //   line.properties.amenity = 'chevron_right'
-      //   return line
-      // })
-      this.data = preview
-        ? new FeatureCollection({})
-        : new FeatureCollection({
-            features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),
-          });
+      this.data =
+        preview && this.navigationType === 'mall'
+          ? new FeatureCollection({})
+          : new FeatureCollection({
+              features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),
+            });
       this.notify(preview ? 'preview-finished' : 'loading-finished');
       this.notify('feature-updated');
     }
@@ -125,6 +144,7 @@ export default class RoutingSource extends DataSource {
     this.data = new FeatureCollection({
       features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),
     });
+    this.navigationType = 'mall';
     this.notify('feature-updated');
   }
 }
