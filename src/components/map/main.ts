@@ -27,6 +27,8 @@ import {
   floorchangeUpImage,
   floorchangeDownImage,
   popupImage,
+  routeStartSvg,
+  routeFinishSvg,
 } from './icons';
 import { LngLatBoundsLike, MapLibreEvent } from 'maplibre-gl';
 import { getFloors, getFloorsBundle, getPlaceFloors, getPlaceFloorsBundle } from '../../controllers/floors';
@@ -179,6 +181,7 @@ export interface Options {
     autoRestart?: boolean;
     dashKeepOriginalRouteLayer?: boolean;
     cityRouteSpeedMultiplier?: number;
+    cityPointIconUrl?: string;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -430,6 +433,8 @@ export class Map {
   private mainSourceLoaded = false;
   private pmTilesInstance;
   private pointIconMarker = {} as Marker;
+  private routeStartMarker = {} as Marker;
+  private routeFinishMarker = {} as Marker;
 
   constructor(options: Options) {
     // fix centering in case of kiosk with defined pitch/bearing/etc. in mapbox options
@@ -762,6 +767,16 @@ export class Map {
             const response = await map.loadImage(this.defaultOptions.routeAnimation.pointIconUrl);
             if (response) {
               map.addImage('pointIcon', response.data);
+            }
+          } catch (e) {
+            console.log(e);
+          }
+        }
+        if (this.defaultOptions.routeAnimation.cityPointIconUrl) {
+          try {
+            const response = await map.loadImage(this.defaultOptions.routeAnimation.cityPointIconUrl);
+            if (response) {
+              map.addImage('cityPointIcon', response.data);
             }
           } catch (e) {
             console.log(e);
@@ -1486,7 +1501,7 @@ export class Map {
           },
         });
 
-        if (this.defaultOptions.routeAnimation.pointIconUrl) {
+        if (this.defaultOptions.routeAnimation.pointIconUrl || this.defaultOptions.routeAnimation.cityPointIconUrl) {
           if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
             const el = document.createElement('div');
             el.style.backgroundImage = `url(${this.defaultOptions.routeAnimation.pointIconUrl})`;
@@ -1503,7 +1518,7 @@ export class Map {
                 minzoom: this.defaultOptions.routeAnimation.minzoom,
                 maxzoom: this.defaultOptions.routeAnimation.maxzoom,
                 layout: {
-                  'icon-image': 'pointIcon',
+                  'icon-image': '{pointIcon}',
                   'icon-size': this.defaultOptions.routeAnimation.pointIconSize,
                   'icon-allow-overlap': true,
                 },
@@ -2831,6 +2846,7 @@ export class Map {
         this.state = { ...this.state, loadingRoute: false, textNavigation };
 
         this.centerOnRoute(routeStart);
+        this.removeRouteMarkers();
 
         if (this.defaultOptions.showLevelDirectionIcon && this.routingSource.navigationType === 'mall') {
           this.addDirectionFeatures();
@@ -2910,6 +2926,7 @@ export class Map {
 
         if (this.routingSource.navigationType === 'city') {
           this.centerOnRoute(this.routingSource.fullPath);
+          this.addRouteMarkers();
         }
 
         if (this.defaultOptions.forceFloorLevel !== null && this.defaultOptions.forceFloorLevel !== undefined) {
@@ -3559,8 +3576,15 @@ export class Map {
           if (this.defaultOptions.routeAnimation.type === 'point') {
             if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
               this.pointIconMarker.setLngLat(newCoords as [number, number]);
+              this.pointIconMarker.getElement().style.backgroundImage =
+                this.routingSource.navigationType === 'city'
+                  ? `url(${this.defaultOptions.routeAnimation.cityPointIconUrl})`
+                  : `url(${this.defaultOptions.routeAnimation.pointIconUrl})`;
               this.pointIconMarker.addTo(this.map);
+              // set different icon based on nav type
             } else {
+              pointData.features[0].properties.pointIcon =
+                this.routingSource.navigationType === 'city' ? 'cityPointIcon' : 'pointIcon';
               // @ts-ignore
               this.map.getSource('pointAlong').setData(pointData);
             }
@@ -3802,6 +3826,47 @@ export class Map {
 
     const head = document.getElementsByTagName('head')[0];
     head.insertBefore(style, head.firstChild);
+  };
+
+  private createMarkerElement = (className: string, iconUrl: string, backgroundSize: string) => {
+    const markerElement = document.createElement('div');
+    markerElement.className = className;
+    markerElement.style.width = '50px';
+    markerElement.style.height = '50px';
+    markerElement.style.borderRadius = '50%';
+    markerElement.style.backgroundColor = this.defaultOptions.routeAnimation.lineColor || 'black';
+    markerElement.style.backgroundImage = `url("${iconUrl}")`;
+    markerElement.style.backgroundSize = backgroundSize;
+    markerElement.style.backgroundPosition = 'center';
+    markerElement.style.backgroundRepeat = 'no-repeat';
+    return markerElement;
+  };
+
+  private addMarker = (className: string, svgIcon: string, size: string, coordinates: [number, number]) => {
+    const iconUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgIcon)}`;
+    const markerElement = this.createMarkerElement(className, iconUrl, size);
+    return new maplibregl.Marker({ element: markerElement }).setLngLat(coordinates).addTo(this.map);
+  };
+
+  private addRouteMarkers = () => {
+    this.routeStartMarker = this.addMarker(
+      'route-start-marker',
+      routeStartSvg,
+      '50%',
+      this.routingSource.start.geometry.coordinates as [number, number],
+    );
+
+    this.routeFinishMarker = this.addMarker(
+      'route-finish-marker',
+      routeFinishSvg,
+      '30%',
+      this.routingSource.finish.geometry.coordinates as [number, number],
+    );
+  };
+
+  private removeRouteMarkers = () => {
+    this.routeStartMarker.remove();
+    this.routeFinishMarker.remove();
   };
 
   /**
