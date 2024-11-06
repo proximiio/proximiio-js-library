@@ -11,6 +11,7 @@ export declare const getFeatures: ({ initPolygons, polygonFeatureTypes, autoLabe
     filter?: {
         key: string;
         value: string;
+        hideIconOnly?: boolean;
     };
     featuresMaxBounds?: LngLatBoundsLike;
     localSources?: {
@@ -26,6 +27,7 @@ export declare const getFeaturesBundle: ({ initPolygons, polygonFeatureTypes, au
     filter?: {
         key: string;
         value: string;
+        hideIconOnly?: boolean;
     };
     bundleUrl: string;
 }) => Promise<FeatureCollection>;
@@ -53,6 +55,7 @@ declare const _default: {
         filter?: {
             key: string;
             value: string;
+            hideIconOnly?: boolean;
         };
         featuresMaxBounds?: LngLatBoundsLike;
         localSources?: {

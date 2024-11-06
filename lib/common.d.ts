@@ -41,8 +41,10 @@ declare const optimizeFeatures: (features: Feature[]) => {
         amenity: any;
         title: any;
         level: any;
+        levels: any;
         id: any;
         minzoom: any;
+        maxzoom: any;
         title_i18n: any;
         icon_only: any;
         text_only: any;
@@ -50,8 +52,15 @@ declare const optimizeFeatures: (features: Feature[]) => {
         remote_id: any;
         available: any;
         place_id: any;
+        floor_id: any;
         hideIcon: any;
         _dynamic: any;
+        metadata: any;
+        visibility: any;
+        images: any;
+        textColor: any;
+        textFont: any;
+        textSize: any;
     };
 }[];
 export { calculateDimensions, convertToRTL, base64toBlob, throttle, filterByAmenity, validateLabelLine, optimizeFeatures, };

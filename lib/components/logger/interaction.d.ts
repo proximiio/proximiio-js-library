@@ -1,5 +1,5 @@
 export default class InteractionLogger {
-    interactionType: 'mapclick' | 'search' | 'select' | 'qr';
+    interactionType: 'mapclick' | 'search' | 'select' | 'qr' | 'parkassist';
     targetElementType?: 'amenity' | 'feature' | 'amenity_category';
     targetElementId?: string;
     targetElementTitle?: string;
@@ -15,7 +15,7 @@ export default class InteractionLogger {
     language?: string;
     session?: string;
     constructor(data: {
-        interactionType: 'mapclick' | 'search' | 'select' | 'qr';
+        interactionType: 'mapclick' | 'search' | 'select' | 'qr' | 'parkassist';
         targetElementType?: 'amenity' | 'feature' | 'amenity_category';
         targetElementId?: string;
         targetElementTitle?: string;

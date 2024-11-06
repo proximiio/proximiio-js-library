@@ -12,8 +12,24 @@ export default class Routing {
     route(start: Feature, finish: Feature): {
         paths: any;
         points: any;
+        route: {};
+        fullPath: Feature;
         levelPaths: any;
         levelPoints: any;
         details: any;
     };
+    cityRoute({ start, finish, language }: {
+        start: Feature;
+        finish: Feature;
+        language?: string;
+    }): Promise<{
+        data: any;
+        route: any;
+        points: Feature[];
+        fullPath: Feature;
+        paths: {};
+        levelPaths: {};
+        levelPoints: any;
+        details: any;
+    }>;
 }

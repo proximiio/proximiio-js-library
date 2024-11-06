@@ -30,9 +30,12 @@ export default class RoutingSource extends DataSource {
     steps: GuidanceStep[];
     preview?: boolean;
     language: string;
+    navigationType: 'mall' | 'city';
+    fullPath?: Feature;
     constructor();
     toggleAccessible(value: any): void;
     setConfig(config: WayfindingConfigModel): void;
+    setNavigationType(type: 'mall' | 'city'): void;
     update({ start, finish, preview, language, }: {
         start?: Feature;
         finish?: Feature;

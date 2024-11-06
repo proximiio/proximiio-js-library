@@ -129,6 +129,8 @@ export interface Options {
         cameraUseLerp?: boolean;
         cameraLerpTolerance?: number;
         autoRestart?: boolean;
+        dashKeepOriginalRouteLayer?: boolean;
+        cityRouteSpeedMultiplier?: number;
     };
     useRasterTiles?: boolean;
     rasterTilesOptions?: {
@@ -165,6 +167,7 @@ export interface Options {
     defaultFilter?: {
         key: string;
         value: string;
+        hideIconOnly?: boolean;
     };
     featuresMaxBounds?: LngLatBoundsLike;
     localSources?: {
@@ -175,6 +178,7 @@ export interface Options {
     pmTilesUrl?: string;
     autoRestartAnimationAfterFloorChange?: boolean;
     poiIconSize?: (string | number | string[])[] | number | any;
+    disableUnavailablePois?: boolean;
 }
 export interface PaddingOptions {
     bottom: number;
@@ -269,6 +273,7 @@ export declare class Map {
     private onToggleHiddenPois;
     private onEnablePolygonPreventedIcons;
     private onDisablePolygonPreventedIcons;
+    private onSetHiddenAmenities;
     private onDisablePolygons;
     private onSetPerson;
     private onAddPerson;
@@ -523,6 +528,40 @@ export declare class Map {
      *  });
      */
     findRouteToNearestFeature(amenityId: string, idFrom?: string, accessibleRoute?: boolean, wayfindingConfig?: WayfindingConfigModel, addToMap?: boolean): void;
+    /**
+     * This method will generate route based on selected features by their ids
+     *  @memberof Map
+     *  @name findCityRoute
+     *  @param start {string} finish feature id
+     *  @param destination {string} start feature id, optional for kiosk
+     *  @param autoStart {boolean} default true, if set to false route will not start automatically
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.findCityRoute({
+     *      start: {
+     *        lat: 48.606703739771774,
+     *        lng: 17.833092384506614
+     *      },
+     *      destination: {
+     *        lat: 48.60684545080579,
+     *        lng: 17.833450676669543
+     *      }
+     *    });
+     *  });
+     */
+    findCityRoute({ start, destination, autoStart, }: {
+        start: {
+            lat: number;
+            lng: number;
+        };
+        destination: {
+            lat: number;
+            lng: number;
+        };
+        autoStart?: boolean;
+    }): void;
     /**
      * This method will cancel generated route
      *  @memberof Map
@@ -824,6 +863,7 @@ export declare class Map {
     setFiltering(options: {
         key: string;
         value: string;
+        hideIconOnly?: boolean;
     } | null): void;
     /**
      * With this method you can show only defined features, you can send both id or title, with inverted set to true defined feature will hide instead.
@@ -889,6 +929,19 @@ export declare class Map {
      *  });
      */
     showIcons(): void;
+    /**
+     * With this method you can show all icons.
+     *  @memberof Map
+     *  @name setHiddenAmenities
+     *  @param amenities {string[]} amenityIds to assign hideIcon property to features
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.setHiddenAmenities(['amenity1', 'amenity2']);
+     *  });
+     */
+    setHiddenAmenities(amenities: string[]): void;
     /**
      * With this method you can enable icons for polygon prevented features.
      *  @memberof Map
@@ -1127,7 +1180,7 @@ export declare class Map {
      *    map.setFeaturesHighlight(['featureid']);
      *  });
      */
-    setFeaturesHighlight(features: string[], color?: string, radius?: number, blur?: number, enlargeIcon?: boolean): void;
+    setFeaturesHighlight(features: string[], color?: string, radius?: number, blur?: number, enlargeIcon?: boolean, opacity?: number, translate?: [number, number]): void;
     /**
      * Method for refetching features data
      *  @memberof Map
