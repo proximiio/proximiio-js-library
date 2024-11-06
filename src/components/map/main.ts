@@ -3853,14 +3853,14 @@ export class Map {
       'route-start-marker',
       routeStartSvg,
       '50%',
-      this.routingSource.start.geometry.coordinates as [number, number],
+      this.routingSource.points[0].geometry.coordinates as [number, number],
     );
 
     this.routeFinishMarker = this.addMarker(
       'route-finish-marker',
       routeFinishSvg,
       '30%',
-      this.routingSource.finish.geometry.coordinates as [number, number],
+      this.routingSource.points[this.routingSource.points.length - 1].geometry.coordinates as [number, number],
     );
   };
 
