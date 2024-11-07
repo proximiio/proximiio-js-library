@@ -166,8 +166,8 @@ export default class Routing {
   async cityRoute({ start, finish, language = 'en' }: { start: Feature; finish: Feature; language?: string }) {
     let details = null;
 
-    const osrmApiUrl = 'https://osrm.proximi.fi:5005';
-    const url = `${osrmApiUrl}/route/v1/driving/${start.geometry.coordinates[0]},${start.geometry.coordinates[1]};${finish.geometry.coordinates[0]},${finish.geometry.coordinates[1]}?steps=true&geometries=geojson`;
+    const osrmApiUrl = 'https://osrm.proximi.fi';
+    const url = `${osrmApiUrl}/gcc/route/v1/driving/${start.geometry.coordinates[0]},${start.geometry.coordinates[1]};${finish.geometry.coordinates[0]},${finish.geometry.coordinates[1]}?steps=true&geometries=geojson`;
 
     try {
       const response = await fetch(url);
