@@ -131,6 +131,7 @@ export interface Options {
         autoRestart?: boolean;
         dashKeepOriginalRouteLayer?: boolean;
         cityRouteSpeedMultiplier?: number;
+        cityPointIconUrl?: string;
     };
     useRasterTiles?: boolean;
     rasterTilesOptions?: {
@@ -229,6 +230,8 @@ export declare class Map {
     private mainSourceLoaded;
     private pmTilesInstance;
     private pointIconMarker;
+    private routeStartMarker;
+    private routeFinishMarker;
     constructor(options: Options);
     private initialize;
     private cancelObservers;
@@ -312,6 +315,10 @@ export declare class Map {
     getFloorName(floor: FloorModel): string;
     private handleControllerError;
     private InjectCSS;
+    private createMarkerElement;
+    private addMarker;
+    private addRouteMarkers;
+    private removeRouteMarkers;
     /**
      *  @memberof Map
      *  @name getMapboxInstance

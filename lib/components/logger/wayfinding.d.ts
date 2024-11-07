@@ -20,6 +20,7 @@ export default class WayfindingLogger extends BaseLogger {
     optionAvoidTicketGates: boolean;
     route: [number, number, number][];
     rerouted?: boolean;
+    navigationType?: 'mall' | 'city';
     constructor(data: any);
     save(): Promise<void>;
 }
