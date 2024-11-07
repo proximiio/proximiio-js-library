@@ -2907,6 +2907,7 @@ export class Map {
               p.properties.level,
             ]),
             rerouted: false,
+            navigationType: this.routingSource.navigationType,
           });
           await logger.save();
         }

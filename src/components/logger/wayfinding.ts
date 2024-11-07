@@ -22,6 +22,7 @@ export default class WayfindingLogger extends BaseLogger {
   optionAvoidTicketGates: boolean;
   route: [number, number, number][];
   rerouted?: boolean;
+  navigationType?: 'mall' | 'city';
 
   constructor(data: any) {
     super(data);
@@ -45,6 +46,7 @@ export default class WayfindingLogger extends BaseLogger {
     this.optionAvoidTicketGates = data.optionAvoidTicketGates;
     this.route = data.route;
     this.rerouted = data.rerouted;
+    this.navigationType = data.navigationType;
   }
 
   async save() {
