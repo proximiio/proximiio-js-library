@@ -3318,6 +3318,7 @@ export class Map {
       }
     }
     this.map.setStyle(this.state.style);
+    this.removeRouteMarkers();
     this.routingSource.cancel();
     this.onRouteCancelListener.next('route cancelled');
   }
@@ -3865,8 +3866,12 @@ export class Map {
   };
 
   private removeRouteMarkers = () => {
-    this.routeStartMarker.remove();
-    this.routeFinishMarker.remove();
+    if (Object.keys(this.routeStartMarker).length > 0) {
+      this.routeStartMarker.remove();
+    }
+    if (Object.keys(this.routeFinishMarker).length > 0) {
+      this.routeFinishMarker.remove();
+    }
   };
 
   /**
