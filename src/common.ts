@@ -252,42 +252,27 @@ const validateLabelLine = (labelLine: string | [][], polygon: any, feature: any)
 
 const optimizeFeature = (feature: Feature) => {
   // Keep only the necessary properties
-  const optimizedProperties = {
-    range: feature.properties.range,
-    anchor_logo: feature.properties.metadata?.['anchor-logo'] || null,
-    usecase: feature.properties.usecase,
-    type: feature.properties.type,
-    amenity: feature.properties.amenity,
-    title: feature.properties.title,
-    level: feature.properties.level,
-    levels: feature.properties.level,
-    id: feature.properties.id,
-    minzoom: feature.properties.minzoom,
-    maxzoom: feature.properties.maxzoom,
-    title_i18n: feature.properties.title_i18n,
-    icon_only: feature.properties.icon_only,
-    text_only: feature.properties.text_only,
-    included_amenities: feature.properties.included_amenities,
-    remote_id: feature.properties.remote_id,
-    available: feature.properties.available,
-    place_id: feature.properties.place_id,
-    floor_id: feature.properties.floor_id,
-    hideIcon: feature.properties.hideIcon,
-    _dynamic: feature.properties._dynamic,
-    metadata: feature.properties.metadata,
-    visibility: feature.properties.visibility,
-    images: feature.properties.images,
-    textColor: feature.properties.textColor,
-    textFont: feature.properties.textFont,
-    textSize: feature.properties.textSize,
-  };
+  const optimizedProperties = { ...feature.properties };
 
-  // Dynamically include all properties that start with '__level_'
-  Object.keys(feature.properties).forEach((key) => {
-    if (key.startsWith('__level_')) {
-      optimizedProperties[key] = feature.properties[key];
-    }
-  });
+  if (optimizedProperties.description) {
+    delete optimizedProperties.description;
+  }
+
+  if (optimizedProperties.description_i18n) {
+    delete optimizedProperties.description_i18n;
+  }
+
+  if (optimizedProperties.spelling) {
+    delete optimizedProperties.spelling;
+  }
+
+  if (optimizedProperties.keywords) {
+    delete optimizedProperties.keywords;
+  }
+
+  if (optimizedProperties.workingHours) {
+    delete optimizedProperties.workingHours;
+  }
 
   // Function to recursively shorten coordinates (handling nested arrays)
   function shortenCoordinates(coords) {

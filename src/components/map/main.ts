@@ -3159,6 +3159,7 @@ export class Map {
               padding: this.defaultOptions.fitBoundsPadding,
               bearing: this.map.getBearing(),
               pitch: this.map.getPitch(),
+              animate: false,
             });
           } else {
             // @ts-ignore
@@ -3353,6 +3354,7 @@ export class Map {
               padding: this.defaultOptions.fitBoundsPadding,
               bearing: this.map.getBearing(),
               pitch: this.map.getPitch(),
+              animate: false,
             });
           } else {
             // @ts-ignore
@@ -3385,6 +3387,7 @@ export class Map {
                 padding: this.defaultOptions.fitBoundsPadding,
                 bearing: this.map.getBearing(),
                 pitch: this.map.getPitch(),
+                animate: false,
               });
             } else {
               // @ts-ignore
