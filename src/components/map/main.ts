@@ -182,6 +182,7 @@ export interface Options {
     dashKeepOriginalRouteLayer?: boolean;
     cityRouteSpeedMultiplier?: number;
     cityPointIconUrl?: string;
+    cityRouteMaxDuration?: number;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -391,6 +392,7 @@ export class Map {
       autoRestart: true,
       dashKeepOriginalRouteLayer: false,
       cityRouteSpeedMultiplier: 5,
+      cityRouteMaxDuration: 5,
     },
     useRasterTiles: false,
     handleUrlParams: false,
@@ -3518,7 +3520,15 @@ export class Map {
           baseSpeed = baseSpeed / this.defaultOptions.routeAnimation.cityRouteSpeedMultiplier;
         }
 
-        const totalDuration = totalDistance * baseSpeed; // Total animation duration based on route length
+        let totalDuration = totalDistance * baseSpeed; // Total animation duration based on route length
+
+        if (
+          this.routingSource.navigationType === 'city' &&
+          totalDuration > this.defaultOptions.routeAnimation.cityRouteMaxDuration * 1000
+        ) {
+          totalDuration = this.defaultOptions.routeAnimation.cityRouteMaxDuration * 1000;
+        }
+
         let startTime;
 
         this.map.setCenter(route.geometry.coordinates[0] as LngLatLike);
@@ -4355,9 +4365,10 @@ export class Map {
     }
     if (this.routingSource && this.routingSource.route && this.routingSource.route[`path-part-${newStep}`]) {
       this.currentStep = newStep;
-      this.centerOnRoute(this.routingSource.route[`path-part-${newStep}`]);
       if (this.routingSource.navigationType === 'city') {
         this.animateRoute();
+      } else {
+        this.centerOnRoute(this.routingSource.route[`path-part-${newStep}`]);
       }
       this.onStepSetListener.next(this.currentStep);
       return step;
