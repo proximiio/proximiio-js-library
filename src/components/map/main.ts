@@ -3354,15 +3354,17 @@ export class Map {
             // @ts-ignore;
             this.map.fitBounds(boundingBox, {
               padding: this.defaultOptions.fitBoundsPadding,
-              bearing: this.map.getBearing(),
+              bearing: 0,
               pitch: this.map.getPitch(),
               animate: false,
+              maxZoom: 15,
             });
           } else {
             // @ts-ignore
             this.map.flyTo({
               center: center(routeToCenter).geometry.coordinates as LngLatLike,
-              zoom: this.defaultOptions.minFitBoundsDistance < 10 ? 22 : this.map.getZoom(),
+              zoom: this.defaultOptions.minFitBoundsDistance < 10 ? 15 : this.map.getZoom(),
+              bearing: 0,
             });
           }
           return;
@@ -3633,6 +3635,9 @@ export class Map {
               this.lerp(cameraCoords[1], targetCoords[1], this.defaultOptions.routeAnimation.cameraLerpTolerance),
             ];
             if (!this.defaultOptions.routeAnimation.followRouteAngle) {
+              if (this.routingSource.navigationType === 'city') {
+                this.map.setBearing(0);
+              }
               this.map.easeTo({
                 center: this.defaultOptions.routeAnimation.cameraUseLerp
                   ? (interpolatedCoords as [number, number])
