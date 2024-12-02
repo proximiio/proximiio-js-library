@@ -2078,7 +2078,10 @@ export class Map {
       this.centerToFeature(destinationFeature.id);
     }
     if (startFeature && destinationFeature) {
-      this.onRouteUpdate(startFeature, destinationFeature);
+      this.onRouteUpdate({
+        start: startFeature,
+        finish: destinationFeature,
+      });
     }
   }
 
@@ -2721,6 +2724,8 @@ export class Map {
   }
 
   private onSetHiddenAmenities(amenities: string[]) {
+    this.defaultOptions.hiddenAmenities = [...this.defaultOptions.hiddenAmenities, ...amenities];
+    this.defaultOptions.hiddenAmenities = [...new Set(this.defaultOptions.hiddenAmenities)];
     // @ts-ignore
     const mainSourceData = this.map.getSource('main')._data;
     mainSourceData.features = mainSourceData.features.map((f) => {
@@ -3258,9 +3263,9 @@ export class Map {
     this.onFloorSelectListener.next(floor);
   }
 
-  private onRouteUpdate(start?: Feature, finish?: Feature) {
+  private onRouteUpdate({ start, finish, stops }: { start?: Feature; finish?: Feature; stops?: Feature[] }) {
     this.startPoint = start;
-    this.endPoint = finish;
+    this.endPoint = stops ? stops[stops.length - 1] : finish;
     try {
       if (finish && this.defaultOptions.initPolygons) {
         this.handlePolygonSelection(finish);
@@ -3271,17 +3276,17 @@ export class Map {
         }
         cancelAnimationFrame(this.animationFrame);
       }
-      this.routingSource.update({ start, finish, language: this.defaultOptions.language });
+      this.routingSource.update({ start, finish, stops, language: this.defaultOptions.language });
     } catch (e) {
       console.log('catched', e);
     }
     this.state = { ...this.state, style: this.state.style };
   }
 
-  private onRoutePreview(start?: Feature, finish?: Feature) {
+  private onRoutePreview({ start, finish, stops }: { start?: Feature; finish?: Feature; stops?: Feature[] }) {
     this.startPoint = start;
-    this.endPoint = finish;
-    this.routingSource.update({ start, finish, preview: true, language: this.defaultOptions.language });
+    this.endPoint = stops ? stops[stops.length - 1] : finish;
+    this.routingSource.update({ start, finish, stops, preview: true, language: this.defaultOptions.language });
   }
 
   private onRouteCancel() {
@@ -3369,6 +3374,7 @@ export class Map {
           }
           return;
         }
+        console.log('CENTER ON ROUTE', this.routingSource.route[`path-part-${this.currentStep}`]);
         if (
           this.routingSource &&
           this.routingSource.route &&
@@ -4135,9 +4141,15 @@ export class Map {
       this.routingSource.setConfig(wayfindingConfig);
     }
     if (addToMap !== false) {
-      this.onRouteUpdate(fromFeature, toFeature);
+      this.onRouteUpdate({
+        start: fromFeature,
+        finish: toFeature,
+      });
     } else {
-      this.onRoutePreview(fromFeature, toFeature);
+      this.onRoutePreview({
+        start: fromFeature,
+        finish: toFeature,
+      });
     }
   }
 
@@ -4173,9 +4185,15 @@ export class Map {
       this.routingSource.setConfig(wayfindingConfig);
     }
     if (addToMap !== false) {
-      this.onRouteUpdate(fromFeature, toFeature);
+      this.onRouteUpdate({
+        start: fromFeature,
+        finish: toFeature,
+      });
     } else {
-      this.onRoutePreview(fromFeature, toFeature);
+      this.onRoutePreview({
+        start: fromFeature,
+        finish: toFeature,
+      });
     }
   }
 
@@ -4220,9 +4238,15 @@ export class Map {
       this.routingSource.setConfig(wayfindingConfig);
     }
     if (addToMap !== false) {
-      this.onRouteUpdate(fromFeature, toFeature);
+      this.onRouteUpdate({
+        start: fromFeature,
+        finish: toFeature,
+      });
     } else {
-      this.onRoutePreview(fromFeature, toFeature);
+      this.onRoutePreview({
+        start: fromFeature,
+        finish: toFeature,
+      });
     }
   }
 
@@ -4259,9 +4283,15 @@ export class Map {
         this.routingSource.setConfig(wayfindingConfig);
       }
       if (addToMap !== false) {
-        this.onRouteUpdate(fromFeature, toFeature);
+        this.onRouteUpdate({
+          start: fromFeature,
+          finish: toFeature,
+        });
       } else {
-        this.onRoutePreview(fromFeature, toFeature);
+        this.onRoutePreview({
+          start: fromFeature,
+          finish: toFeature,
+        });
       }
     } else {
       throw new Error(`Feature not found`);
@@ -4269,11 +4299,11 @@ export class Map {
   }
 
   /**
-   * This method will generate route based on selected features by their ids
+   * This method will generate city route
    *  @memberof Map
    *  @name findCityRoute
-   *  @param start {string} finish feature id
-   *  @param destination {string} start feature id, optional for kiosk
+   *  @param start {lat: number, lng: number} start coordinates
+   *  @param destination {lat: number, lng: number} destination coordinates
    *  @param autoStart {boolean} default true, if set to false route will not start automatically
    *  @example
    *  const map = new Proximiio.Map();
@@ -4313,9 +4343,66 @@ export class Map {
     ) as Feature;
     this.routingSource.setNavigationType('city');
     if (autoStart !== false) {
-      this.onRouteUpdate(startFeature, destinationFeature);
+      this.onRouteUpdate({
+        start: startFeature,
+        finish: destinationFeature,
+      });
     } else {
-      this.onRoutePreview(startFeature, destinationFeature);
+      this.onRoutePreview({
+        start: startFeature,
+        finish: destinationFeature,
+      });
+    }
+  }
+
+  /**
+   * This method will generate route based on selected features by their ids
+   *  @memberof Map
+   *  @name findMultipointRoute
+   *  @param start {string} start feature id
+   *  @param stops [{string}] array of destination feature ids
+   *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
+   *  @param autoStart {boolean} default true, if set to false route will not be added to map
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.findMultipointRoute({
+   *      start: 'startId',
+   *      stops: ['stop1Id', 'stop2Id']
+   *    });
+   *  });
+   */
+  public findMultipointRoute({
+    start,
+    stops,
+    wayfindingConfig,
+    autoStart = true,
+  }: {
+    start: string;
+    stops: string[];
+    wayfindingConfig?: WayfindingConfigModel;
+    autoStart?: boolean;
+  }) {
+    const fromFeature = start
+      ? (this.state.allFeatures.features.find((f) => f.id === start || f.properties.id === start) as Feature)
+      : this.startPoint;
+    const destinationFeatures = stops.map((id) => {
+      return this.state.allFeatures.features.find((f) => f.id === id || f.properties.id === id) as Feature;
+    }) as Feature[];
+    if (wayfindingConfig) {
+      this.routingSource.setConfig(wayfindingConfig);
+    }
+    if (autoStart !== false) {
+      this.onRouteUpdate({
+        start: fromFeature,
+        stops: destinationFeatures,
+      });
+    } else {
+      this.onRoutePreview({
+        start: fromFeature,
+        stops: destinationFeatures,
+      });
     }
   }
 
@@ -4373,6 +4460,9 @@ export class Map {
       if (this.routingSource.navigationType === 'city') {
         this.animateRoute();
       } else {
+        if (this.routingSource.isMultipoint) {
+          this.animateRoute();
+        }
         this.centerOnRoute(this.routingSource.route[`path-part-${newStep}`]);
       }
       this.onStepSetListener.next(this.currentStep);

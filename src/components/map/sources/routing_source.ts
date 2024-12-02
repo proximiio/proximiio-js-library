@@ -13,6 +13,7 @@ export default class RoutingSource extends DataSource {
   isEditable = false;
   start?: Feature;
   finish?: Feature;
+  stops?: Feature[];
   lines?: Feature[];
   changes: ChangeContainer[];
   route: any;
@@ -35,6 +36,7 @@ export default class RoutingSource extends DataSource {
   language: string;
   navigationType: 'mall' | 'city';
   fullPath?: Feature;
+  isMultipoint = false;
 
   constructor() {
     super('route');
@@ -58,16 +60,22 @@ export default class RoutingSource extends DataSource {
   async update({
     start,
     finish,
+    stops,
     preview,
     language,
   }: {
     start?: Feature;
     finish?: Feature;
+    stops?: Feature[];
     preview?: boolean;
     language: string;
   }) {
+    this.isMultipoint = stops && stops.length > 1;
+    finish = this.isMultipoint ? stops[stops.length - 1] : finish;
+
     this.start = start;
     this.finish = finish;
+    this.stops = stops;
     this.preview = preview;
     this.language = language;
 
@@ -81,7 +89,7 @@ export default class RoutingSource extends DataSource {
       const route =
         this.navigationType === 'city'
           ? await this.routing.cityRoute({ start, finish, language: this.language })
-          : this.routing.route(start, finish);
+          : this.routing.route({ start, finish, stops });
 
       // @ts-ignore
       const paths = route?.paths;

@@ -62,18 +62,46 @@ export default class Routing {
     this.wayfinding.setConfiguration(config);
   }
 
-  route(start: Feature, finish: Feature) {
+  route({ start, finish, stops }: { start: Feature; finish?: Feature; stops?: Feature[] }) {
+    const isMultipoint = stops && stops.length > 1;
     let points = null;
     let details = null;
-    if (this.routeWithDetails) {
-      const res = this.wayfinding.runAStarWithDetails(start, finish);
-      points = res.path;
-      details = {
-        distance: res.distance,
-        duration: res.duration,
-      };
+    if (isMultipoint) {
+      for (const [index, stop] of stops.entries()) {
+        const isFirstStop = index === 0;
+        if (this.routeWithDetails) {
+          const res = this.wayfinding.runAStarWithDetails(isFirstStop ? start : stops[index - 1], stop);
+          points = points ? points.concat(res.path) : res.path;
+          if (!details) {
+            details = {
+              distance: res.distance,
+              duration: res.duration,
+            };
+          } else {
+            details.distance += res.distance;
+            details.duration.elevator += res.duration.elevator;
+            details.duration.escalator += res.duration.escalator;
+            details.duration.staircase += res.duration.staircase;
+            details.duration.realistic += res.duration.realistic;
+            details.duration.shortest += res.duration.shortest;
+          }
+        } else {
+          points = points
+            ? points.concat(this.wayfinding.runAStar(start, stop))
+            : this.wayfinding.runAStar(isFirstStop ? start : stops[index - 1], stop);
+        }
+      }
     } else {
-      points = this.wayfinding.runAStar(start, finish);
+      if (this.routeWithDetails) {
+        const res = this.wayfinding.runAStarWithDetails(start, finish);
+        points = res.path;
+        details = {
+          distance: res.distance,
+          duration: res.duration,
+        };
+      } else {
+        points = this.wayfinding.runAStar(start, finish);
+      }
     }
     if (!points) {
       return null;
@@ -81,6 +109,8 @@ export default class Routing {
     points = points.map((i) => {
       return new Feature(i);
     });
+
+    console.log('WAYFINDING ALGO OUTPUT', points);
 
     const pathPoints = {} as any;
     let pathPartIndex: any = 0;
@@ -100,6 +130,8 @@ export default class Routing {
         }
         pathPoints[`path-part-${pathPartIndex}`].push(p);
         if (p.isLevelChanger && p.properties.level !== points[index + 1].properties.level) {
+          pathPartIndex++;
+        } else if (p.isPoi && p.id === points[index + 1]?.id) {
           pathPartIndex++;
         }
       }
