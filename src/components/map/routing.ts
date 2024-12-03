@@ -136,7 +136,7 @@ export default class Routing {
     });
 
     const paths = {} as any;
-    let stop = 0;
+    let stopIndex = 0;
     for (const [key, pointsList] of Object.entries(pathPoints)) {
       if (this.forceFloorLevel !== null && this.forceFloorLevel !== undefined) {
         // @ts-ignore
@@ -164,7 +164,7 @@ export default class Routing {
         pointsList[0].id &&
         stops.findIndex((i) => i.id === pointsList[0].id) !== -1
       ) {
-        stop++;
+        stopIndex++;
       }
 
       paths[key].id = key;
@@ -174,7 +174,7 @@ export default class Routing {
         level: pointsList[pointsList.length - 1].properties.level,
         amenity: 'chevron_right',
         step: +key.split('-')[2],
-        stop,
+        stop: stopIndex,
       };
     }
 
