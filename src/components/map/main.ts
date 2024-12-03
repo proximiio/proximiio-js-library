@@ -286,6 +286,7 @@ export class Map {
   private onPoiClickListener = new CustomSubject<Feature>();
   private onPersonUpdateListener = new CustomSubject<PersonModel[]>();
   private onStepSetListener = new CustomSubject<number>();
+  private onStopSetListener = new CustomSubject<number>();
   private defaultOptions: Options = {
     selector: 'proximiioMap',
     allowNewFeatureModal: false,
@@ -431,6 +432,7 @@ export class Map {
   private hoveredPolygon: any;
   private selectedPolygons: Feature[] = [];
   private currentStep = 0;
+  private currentStop = 0;
   private kioskPopup: any;
   private mainSourceLoaded = false;
   private pmTilesInstance;
@@ -3267,8 +3269,8 @@ export class Map {
     this.startPoint = start;
     this.endPoint = stops ? stops[stops.length - 1] : finish;
     try {
-      if (finish && this.defaultOptions.initPolygons) {
-        this.handlePolygonSelection(finish);
+      if (this.defaultOptions.initPolygons) {
+        this.handlePolygonSelection([...stops, finish, start]);
       }
       if (finish && this.defaultOptions.animatedRoute) {
         if (this.defaultOptions.animatedRoute) {
@@ -3286,6 +3288,9 @@ export class Map {
   private onRoutePreview({ start, finish, stops }: { start?: Feature; finish?: Feature; stops?: Feature[] }) {
     this.startPoint = start;
     this.endPoint = stops ? stops[stops.length - 1] : finish;
+    if (this.defaultOptions.initPolygons) {
+      this.handlePolygonSelection([...stops, finish, start]);
+    }
     this.routingSource.update({ start, finish, stops, preview: true, language: this.defaultOptions.language });
   }
 
@@ -3374,7 +3379,6 @@ export class Map {
           }
           return;
         }
-        console.log('CENTER ON ROUTE', this.routingSource.route[`path-part-${this.currentStep}`]);
         if (
           this.routingSource &&
           this.routingSource.route &&
@@ -4466,6 +4470,12 @@ export class Map {
         this.centerOnRoute(this.routingSource.route[`path-part-${newStep}`]);
       }
       this.onStepSetListener.next(this.currentStep);
+      if (
+        isNumber(this.routingSource.route[`path-part-${newStep}`].properties?.stop) &&
+        this.routingSource.route[`path-part-${newStep}`].properties?.stop >= 0
+      ) {
+        this.setStop(this.routingSource.route[`path-part-${newStep}`].properties?.stop);
+      }
       return step;
     } else {
       console.error(`Route not found`);
@@ -4484,6 +4494,64 @@ export class Map {
    */
   public getNavStepSetListener() {
     return this.onStepSetListener;
+  }
+
+  /**
+   * This method will set the current stop for multipoint route navigation so map can focus on a proper path part
+   *  @memberof Map
+   *  @name setStop
+   *  @param stop { number | 'next' | 'previous' } Number of route part to focus on or string next or previous
+   *  @returns active stop
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.setStop(0);
+   *  });
+   */
+  public setStop(stop: number | 'next' | 'previous') {
+    let newStop = 0;
+    if (isNumber(stop)) {
+      newStop = +stop;
+    }
+    if (stop === 'next') {
+      newStop = this.currentStop + 1;
+    }
+    if (stop === 'next' && this.routingSource.stops && this.routingSource.stops.length - 1 === this.currentStop) {
+      newStop = 0;
+    }
+    if (stop === 'previous' && this.currentStop > 0) {
+      newStop = this.currentStop - 1;
+    }
+    if (newStop === this.currentStop) {
+      return;
+    }
+    const newStopRoute: Feature = this.routingSource?.lines?.find((i: any) => i.properties.stop === newStop);
+
+    if (newStopRoute) {
+      this.currentStop = newStop;
+      this.animateRoute();
+      this.centerOnRoute(newStopRoute);
+      this.onStopSetListener.next(this.currentStop);
+      this.setNavStep(newStopRoute.properties.step);
+      return this.currentStop;
+    } else {
+      console.error(`Route not found`);
+    }
+  }
+
+  /**
+   *  @memberof Map
+   *  @name getStopSetListener
+   *  @returns returns stop set listener
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getStopSetListener().subscribe(stop => {
+   *    console.log('new stop has been set', stop);
+   *  });
+   */
+  public getStopSetListener() {
+    return this.onStopSetListener;
   }
 
   /**
