@@ -132,6 +132,7 @@ export interface Options {
         dashKeepOriginalRouteLayer?: boolean;
         cityRouteSpeedMultiplier?: number;
         cityPointIconUrl?: string;
+        cityRouteMaxDuration?: number;
     };
     useRasterTiles?: boolean;
     rasterTilesOptions?: {
@@ -211,6 +212,7 @@ export declare class Map {
     private onPoiClickListener;
     private onPersonUpdateListener;
     private onStepSetListener;
+    private onStopSetListener;
     private defaultOptions;
     private routeFactory;
     private startPoint?;
@@ -226,6 +228,7 @@ export declare class Map {
     private hoveredPolygon;
     private selectedPolygons;
     private currentStep;
+    private currentStop;
     private kioskPopup;
     private mainSourceLoaded;
     private pmTilesInstance;
@@ -536,11 +539,11 @@ export declare class Map {
      */
     findRouteToNearestFeature(amenityId: string, idFrom?: string, accessibleRoute?: boolean, wayfindingConfig?: WayfindingConfigModel, addToMap?: boolean): void;
     /**
-     * This method will generate route based on selected features by their ids
+     * This method will generate city route
      *  @memberof Map
      *  @name findCityRoute
-     *  @param start {string} finish feature id
-     *  @param destination {string} start feature id, optional for kiosk
+     *  @param start {lat: number, lng: number} start coordinates
+     *  @param destination {lat: number, lng: number} destination coordinates
      *  @param autoStart {boolean} default true, if set to false route will not start automatically
      *  @example
      *  const map = new Proximiio.Map();
@@ -567,6 +570,30 @@ export declare class Map {
             lat: number;
             lng: number;
         };
+        autoStart?: boolean;
+    }): void;
+    /**
+     * This method will generate route based on selected features by their ids
+     *  @memberof Map
+     *  @name findMultipointRoute
+     *  @param start {string} start feature id
+     *  @param stops [{string}] array of destination feature ids
+     *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
+     *  @param autoStart {boolean} default true, if set to false route will not be added to map
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.findMultipointRoute({
+     *      start: 'startId',
+     *      stops: ['stop1Id', 'stop2Id']
+     *    });
+     *  });
+     */
+    findMultipointRoute({ start, stops, wayfindingConfig, autoStart, }: {
+        start: string;
+        stops: string[];
+        wayfindingConfig?: WayfindingConfigModel;
         autoStart?: boolean;
     }): void;
     /**
@@ -606,6 +633,31 @@ export declare class Map {
      *  });
      */
     getNavStepSetListener(): CustomSubject<number>;
+    /**
+     * This method will set the current stop for multipoint route navigation so map can focus on a proper path part
+     *  @memberof Map
+     *  @name setStop
+     *  @param stop { number | 'next' | 'previous' } Number of route part to focus on or string next or previous
+     *  @returns active stop
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.setStop(0);
+     *  });
+     */
+    setStop(stop: number | 'next' | 'previous'): number;
+    /**
+     *  @memberof Map
+     *  @name getStopSetListener
+     *  @returns returns stop set listener
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getStopSetListener().subscribe(stop => {
+     *    console.log('new stop has been set', stop);
+     *  });
+     */
+    getStopSetListener(): CustomSubject<number>;
     /**
      * This method will return turn by turn text navigation object.
      *  @memberof Map
@@ -1227,5 +1279,5 @@ export declare class Map {
      *    map.stopRouteAnimation();
      *  });
      */
-    stopRouteAnimation(): void;
+    stopRouteAnimation(keepRoute?: boolean): void;
 }

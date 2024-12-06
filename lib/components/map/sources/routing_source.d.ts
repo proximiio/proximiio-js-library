@@ -10,6 +10,7 @@ export default class RoutingSource extends DataSource {
     isEditable: boolean;
     start?: Feature;
     finish?: Feature;
+    stops?: Feature[];
     lines?: Feature[];
     changes: ChangeContainer[];
     route: any;
@@ -32,13 +33,15 @@ export default class RoutingSource extends DataSource {
     language: string;
     navigationType: 'mall' | 'city';
     fullPath?: Feature;
+    isMultipoint: boolean;
     constructor();
     toggleAccessible(value: any): void;
     setConfig(config: WayfindingConfigModel): void;
     setNavigationType(type: 'mall' | 'city'): void;
-    update({ start, finish, preview, language, }: {
+    update({ start, finish, stops, preview, language, }: {
         start?: Feature;
         finish?: Feature;
+        stops?: Feature[];
         preview?: boolean;
         language: string;
     }): Promise<void>;
