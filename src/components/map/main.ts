@@ -3789,7 +3789,7 @@ export class Map {
     }
   }
 
-  private onStopRouteAnimation(keepRoute: boolean) {
+  private onStopRouteAnimation(keepRoute?: boolean) {
     if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
       cancelAnimationFrame(this.animationFrame);
 
