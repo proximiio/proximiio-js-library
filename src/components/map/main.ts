@@ -3789,26 +3789,28 @@ export class Map {
     }
   }
 
-  private onStopRouteAnimation() {
+  private onStopRouteAnimation(keepRoute: boolean) {
     if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
       cancelAnimationFrame(this.animationFrame);
 
-      // @ts-ignore
-      this.map.getSource('pointAlong').setData({
-        type: 'FeatureCollection',
-        features: [],
-      });
-      // @ts-ignore
-      this.map.getSource('lineAlong').setData({
-        type: 'FeatureCollection',
-        features: [],
-      });
+      if (!keepRoute) {
+        // @ts-ignore
+        this.map.getSource('pointAlong').setData({
+          type: 'FeatureCollection',
+          features: [],
+        });
+        // @ts-ignore
+        this.map.getSource('lineAlong').setData({
+          type: 'FeatureCollection',
+          features: [],
+        });
 
-      if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
-        this.pointIconMarker.remove();
+        if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
+          this.pointIconMarker.remove();
+        }
+
+        this.map.setStyle(this.state.style);
       }
-
-      this.map.setStyle(this.state.style);
     }
   }
 
@@ -5390,8 +5392,8 @@ export class Map {
    *    map.stopRouteAnimation();
    *  });
    */
-  public stopRouteAnimation() {
-    this.onStopRouteAnimation();
+  public stopRouteAnimation(keepRoute?: boolean) {
+    this.onStopRouteAnimation(keepRoute);
   }
 }
 /* TODO
