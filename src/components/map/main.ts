@@ -3270,7 +3270,11 @@ export class Map {
     this.endPoint = stops ? stops[stops.length - 1] : finish;
     try {
       if (this.defaultOptions.initPolygons) {
-        this.handlePolygonSelection([...stops, finish, start]);
+        const polygonsToSelect = [finish, start];
+        if (stops && stops.length > 0) {
+          polygonsToSelect.push(...stops);
+        }
+        this.handlePolygonSelection(polygonsToSelect);
       }
       if (finish && this.defaultOptions.animatedRoute) {
         if (this.defaultOptions.animatedRoute) {
@@ -3289,7 +3293,11 @@ export class Map {
     this.startPoint = start;
     this.endPoint = stops ? stops[stops.length - 1] : finish;
     if (this.defaultOptions.initPolygons) {
-      this.handlePolygonSelection([...stops, finish, start]);
+      const polygonsToSelect = [finish, start];
+      if (stops && stops.length > 0) {
+        polygonsToSelect.push(...stops);
+      }
+      this.handlePolygonSelection(polygonsToSelect);
     }
     this.routingSource.update({ start, finish, stops, preview: true, language: this.defaultOptions.language });
   }
