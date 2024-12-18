@@ -3568,6 +3568,9 @@ export class Map {
             }
             if (this.defaultOptions.autoLevelChange && this.routingSource.navigationType === 'mall') {
               if (this.routingSource.route && Object.keys(this.routingSource.route).length - 1 === this.currentStep) {
+                if (this.routingSource.stops.length !== this.currentStop) {
+                  this.setStop('next');
+                }
                 return;
               }
               setTimeout(() => {
@@ -3811,6 +3814,47 @@ export class Map {
 
         this.map.setStyle(this.state.style);
       }
+    }
+  }
+
+  private onJumpToRouteEnd() {
+    if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
+      cancelAnimationFrame(this.animationFrame);
+      clearTimeout(this.animationTimeout);
+
+      // @ts-ignore
+      const pointData = this.map.getSource('pointAlong')._data;
+      const newCoords = this.routingSource.finish.geometry.coordinates;
+      pointData.features[0] = point(newCoords);
+
+      if (this.defaultOptions.routeAnimation.type === 'point') {
+        if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
+          this.pointIconMarker.setLngLat(newCoords as [number, number]);
+        } else {
+          // @ts-ignore
+          this.map.getSource('pointAlong').setData(pointData);
+        }
+      }
+
+      if (this.defaultOptions.routeAnimation.type === 'puck') {
+        this.map
+          .getSource('start-point')
+          // @ts-ignore
+          .setData(
+            circle(
+              pointData.geometry.coordinates,
+              this.defaultOptions.routeAnimation.puckRadius ? this.defaultOptions.routeAnimation.puckRadius : 0.002,
+              {
+                properties: {
+                  level: this.state.floor.level,
+                },
+              },
+            ),
+          );
+      }
+
+      // @ts-ignore
+      this.map.getSource('lineAlong').setData(this.routingSource.lines[this.routingSource.lines.length - 1]);
     }
   }
 
@@ -4527,7 +4571,7 @@ export class Map {
     if (stop === 'next') {
       newStop = this.currentStop + 1;
     }
-    if (stop === 'next' && this.routingSource.stops && this.routingSource.stops.length - 1 === this.currentStop) {
+    if (stop === 'next' && this.routingSource.stops && this.routingSource.stops.length === this.currentStop) {
       newStop = 0;
     }
     if (stop === 'previous' && this.currentStop > 0) {
@@ -4546,7 +4590,12 @@ export class Map {
       this.setNavStep(newStopRoute.properties.step);
       return this.currentStop;
     } else {
-      console.error(`Route not found`);
+      this.currentStop = newStop;
+      this.onStopSetListener.next(this.currentStop);
+      this.setNavStep(this.routingSource?.lines[this.routingSource?.lines?.length - 1]?.properties?.step);
+      this.onJumpToRouteEnd();
+      this.centerToFeature(this.routingSource.finish.id);
+      return this.currentStop;
     }
   }
 

@@ -349,7 +349,6 @@ export default class StyleModel {
     this.sources[id] = data.source;
     if (id === 'main') {
       this.sources[id].promoteId = 'id';
-      console.log(this.sources);
     }
   }
 
