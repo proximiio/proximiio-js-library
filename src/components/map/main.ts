@@ -4590,12 +4590,16 @@ export class Map {
       this.setNavStep(newStopRoute.properties.step);
       return this.currentStop;
     } else {
-      this.currentStop = newStop;
-      this.onStopSetListener.next(this.currentStop);
-      this.setNavStep(this.routingSource?.lines[this.routingSource?.lines?.length - 1]?.properties?.step);
-      this.onJumpToRouteEnd();
-      this.centerToFeature(this.routingSource.finish.id);
-      return this.currentStop;
+      if (this.routingSource.lines) {
+        this.currentStop = newStop;
+        this.onStopSetListener.next(this.currentStop);
+        this.setNavStep(this.routingSource?.lines[this.routingSource?.lines?.length - 1]?.properties?.step);
+        this.onJumpToRouteEnd();
+        this.centerToFeature(this.routingSource.finish.id);
+        return this.currentStop;
+      } else {
+        console.log('Route not found');
+      }
     }
   }
 
