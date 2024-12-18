@@ -1823,7 +1823,7 @@ export class Map {
         this.map.setFeatureState(
           {
             source: 'main',
-            id: polygon.id,
+            id: polygon.properties.id,
           },
           {
             selected: false,
@@ -1856,7 +1856,7 @@ export class Map {
           this.map.setFeatureState(
             {
               source: 'main',
-              id: polygon.id,
+              id: polygon.properties.id,
             },
             {
               disabled: false,
@@ -1904,7 +1904,7 @@ export class Map {
               this.map.setFeatureState(
                 {
                   source: 'main',
-                  id: polygon.id,
+                  id: polygon.properties.id,
                 },
                 {
                   disabled: true,
@@ -1926,7 +1926,7 @@ export class Map {
           this.map.setFeatureState(
             {
               source: 'main',
-              id: selectedPolygon.id,
+              id: selectedPolygon.properties.id,
             },
             {
               selected: true,
@@ -1964,7 +1964,7 @@ export class Map {
         this.map.setFeatureState(
           {
             source: 'main',
-            id: this.hoveredPolygon.id,
+            id: this.hoveredPolygon.properties.id,
           },
           {
             hover: false,
@@ -1986,7 +1986,7 @@ export class Map {
       this.map.setFeatureState(
         {
           source: 'main',
-          id: this.hoveredPolygon.id,
+          id: this.hoveredPolygon.properties.id,
         },
         {
           hover: true,
@@ -2014,7 +2014,7 @@ export class Map {
       this.map.setFeatureState(
         {
           source: 'main',
-          id: this.hoveredPolygon.id,
+          id: this.hoveredPolygon.properties.id,
         },
         {
           hover: false,
@@ -2569,7 +2569,7 @@ export class Map {
             this.map.setFeatureState(
               {
                 source: 'main',
-                id: polygon.id,
+                id: polygon.properties.id,
               },
               {
                 active: false,
@@ -2605,7 +2605,7 @@ export class Map {
               this.map.setFeatureState(
                 {
                   source: 'main',
-                  id: polygon.id,
+                  id: polygon.properties.id,
                 },
                 {
                   active: true,
@@ -2626,7 +2626,7 @@ export class Map {
               this.map.setFeatureState(
                 {
                   source: 'main',
-                  id: polygon.id,
+                  id: polygon.properties.id,
                 },
                 {
                   disabled: true,
@@ -2756,7 +2756,7 @@ export class Map {
         this.map.setFeatureState(
           {
             source: 'main',
-            id: polygon.id,
+            id: polygon.properties.id,
           },
           {
             disabled: true,

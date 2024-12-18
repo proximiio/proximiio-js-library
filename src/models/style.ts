@@ -347,6 +347,10 @@ export default class StyleModel {
 
   setSource(id: string, data: BaseSource) {
     this.sources[id] = data.source;
+    if (id === 'main') {
+      this.sources[id].promoteId = 'id';
+      console.log(this.sources);
+    }
   }
 
   getSource(sourceId: string): BaseSource {
