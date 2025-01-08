@@ -2184,6 +2184,9 @@ export class Map {
     if (icon && icon.length > 0) {
       const decodedIcon = await getImageFromBase64(icon);
       this.map.addImage(featureId, decodedIcon as any);
+      this.amenityIds.push(featureId);
+      this.filteredAmenities.push(featureId);
+      this.filterOutFeatures();
     }
 
     if (!isTemporary) {
@@ -2241,6 +2244,9 @@ export class Map {
     if (icon && icon.length > 0) {
       const decodedIcon = await getImageFromBase64(icon);
       this.map.addImage(id, decodedIcon as any);
+      this.amenityIds.push(id);
+      this.filteredAmenities.push(id);
+      this.filterOutFeatures();
     }
 
     if (!isTemporary) {
@@ -2304,7 +2310,10 @@ export class Map {
   private onFeaturesChange() {
     this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features];
     this.geojsonSource.language = this.defaultOptions.language;
-    this.geojsonSource.fetch(this.state.optimizedFeatures);
+    this.geojsonSource.fetch({
+      type: 'FeatureCollection',
+      features: [...this.state.optimizedFeatures.features, ...this.state.dynamicFeatures.features],
+    });
     this.state.style.setSource('main', this.geojsonSource);
     this.onSourceChange();
     this.routingSource.routing.setData(this.state.allFeatures);
