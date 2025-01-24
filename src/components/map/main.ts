@@ -3863,8 +3863,10 @@ export class Map {
           );
       }
 
-      // @ts-ignore
-      this.map.getSource('lineAlong').setData(this.routingSource.lines[this.routingSource.lines.length - 1]);
+      if (!this.routingSource.preview) {
+        // @ts-ignore
+        this.map.getSource('lineAlong').setData(this.routingSource.lines[this.routingSource.lines.length - 1]);
+      }
     }
   }
 
@@ -3973,9 +3975,8 @@ export class Map {
       marker.remove();
     }
     for (const [index, stop] of stops.entries()) {
-      console.log('add stop marker', stop);
       const markerElement = document.createElement('div');
-      markerElement.innerHTML = `<p>${index}</p>`;
+      markerElement.innerHTML = `<p>${index + 1}</p>`;
       markerElement.className = 'stop-marker';
       markerElement.style.width = '30px';
       markerElement.style.height = '30px';
