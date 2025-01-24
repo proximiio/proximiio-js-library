@@ -313,6 +313,7 @@ export declare class Map {
     private animateRoute;
     private onRestartRouteAnimation;
     private onStopRouteAnimation;
+    private onJumpToRouteEnd;
     private translateLayers;
     getClosestFeature(amenityId: string, fromFeature?: Feature): false | Feature;
     getFloorName(floor: FloorModel): string;
@@ -322,6 +323,9 @@ export declare class Map {
     private addMarker;
     private addRouteMarkers;
     private removeRouteMarkers;
+    private stopMarkers;
+    private addStopMarkers;
+    private removeStopMarkers;
     /**
      *  @memberof Map
      *  @name getMapboxInstance
