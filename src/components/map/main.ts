@@ -3350,6 +3350,7 @@ export class Map {
     }
     this.map.setStyle(this.state.style);
     this.removeRouteMarkers();
+    this.removeStopMarkers();
     this.routingSource.cancel();
     this.onRouteCancelListener.next('route cancelled');
   }
@@ -3966,6 +3967,33 @@ export class Map {
     }
   };
 
+  private stopMarkers: maplibregl.Marker[] = [];
+  private addStopMarkers = (stops: Feature[]) => {
+    for (const marker of this.stopMarkers) {
+      marker.remove();
+    }
+    for (const [index, stop] of stops.entries()) {
+      console.log('add stop marker', stop);
+      const markerElement = document.createElement('div');
+      markerElement.innerHTML = `<p>${index}</p>`;
+      markerElement.className = 'stop-marker';
+      markerElement.style.width = '30px';
+      markerElement.style.height = '30px';
+      markerElement.style.borderRadius = '50%';
+      markerElement.style.backgroundColor = '#fff';
+      const marker = new maplibregl.Marker({ element: markerElement })
+        .setLngLat(stop.geometry.coordinates as LngLatLike)
+        .addTo(this.map);
+      this.stopMarkers.push(marker);
+    }
+  };
+
+  private removeStopMarkers = () => {
+    for (const marker of this.stopMarkers) {
+      marker.remove();
+    }
+  };
+
   /**
    *  @memberof Map
    *  @name getMapboxInstance
@@ -4460,6 +4488,7 @@ export class Map {
     if (wayfindingConfig) {
       this.routingSource.setConfig(wayfindingConfig);
     }
+    this.addStopMarkers([fromFeature, ...destinationFeatures]);
     if (autoStart !== false) {
       this.onRouteUpdate({
         start: fromFeature,
