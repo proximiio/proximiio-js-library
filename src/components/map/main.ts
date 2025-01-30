@@ -4660,7 +4660,9 @@ export class Map {
       if (this.routingSource.lines) {
         this.currentStop = newStop;
         this.onStopSetListener.next(this.currentStop);
-        this.setNavStep(this.routingSource?.lines[this.routingSource?.lines?.length - 1]?.properties?.step);
+        if (this.routingSource.stops.length < newStop) {
+          this.setNavStep(this.routingSource?.lines[this.routingSource?.lines?.length - 1]?.properties?.step);
+        }
         this.onJumpToRouteEnd();
         this.centerToFeature(this.routingSource.finish.id);
         return this.currentStop;
