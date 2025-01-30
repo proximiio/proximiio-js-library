@@ -235,6 +235,7 @@ export declare class Map {
     private pointIconMarker;
     private routeStartMarker;
     private routeFinishMarker;
+    private stops;
     constructor(options: Options);
     private initialize;
     private cancelObservers;
