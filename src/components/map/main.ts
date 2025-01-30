@@ -439,6 +439,7 @@ export class Map {
   private pointIconMarker = {} as Marker;
   private routeStartMarker = {} as Marker;
   private routeFinishMarker = {} as Marker;
+  private stops = [] as Feature[];
 
   constructor(options: Options) {
     // fix centering in case of kiosk with defined pitch/bearing/etc. in mapbox options
@@ -3270,6 +3271,7 @@ export class Map {
     if (this.defaultOptions.useRasterTiles) {
       this.initRasterTiles();
     }
+    this.addStopMarkers();
     this.updateCluster();
     this.onFloorSelectListener.next(floor);
   }
@@ -3970,29 +3972,54 @@ export class Map {
   };
 
   private stopMarkers: maplibregl.Marker[] = [];
-  private addStopMarkers = (stops: Feature[]) => {
+  private addStopMarkers = () => {
     for (const marker of this.stopMarkers) {
       marker.remove();
     }
-    for (const [index, stop] of stops.entries()) {
-      const markerElement = document.createElement('div');
-      markerElement.innerHTML = `<p>${index + 1}</p>`;
-      markerElement.className = 'stop-marker';
-      markerElement.style.width = '30px';
-      markerElement.style.height = '30px';
-      markerElement.style.borderRadius = '50%';
-      markerElement.style.backgroundColor = '#fff';
-      const marker = new maplibregl.Marker({ element: markerElement })
-        .setLngLat(stop.geometry.coordinates as LngLatLike)
-        .addTo(this.map);
-      this.stopMarkers.push(marker);
+    for (const [index, stop] of this.stops.entries()) {
+      if (stop.properties.level === this.state.floor.level) {
+        const markerElement = document.createElement('div');
+        markerElement.innerHTML = `<p>${index + 1}</p>`;
+        markerElement.className = 'stop-marker';
+        markerElement.style.width = '30px';
+        markerElement.style.height = '30px';
+        markerElement.style.borderRadius = '50%';
+        markerElement.style.backgroundColor = '#fff';
+        const marker = new maplibregl.Marker({ element: markerElement })
+          .setLngLat(stop.geometry.coordinates as LngLatLike)
+          .addTo(this.map);
+        this.stopMarkers.push(marker);
+      }
     }
+    /*this.state.style.addSource('stopMarkers', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [],
+        },
+      });
+
+      this.state.style.addLayer(
+        {
+          id: 'pointAlong',
+          type: 'circle',
+          source: 'pointAlong',
+          minzoom: this.defaultOptions.routeAnimation.minzoom,
+          maxzoom: this.defaultOptions.routeAnimation.maxzoom,
+          paint: {
+            'circle-color': this.defaultOptions.routeAnimation.pointColor,
+            'circle-radius': this.defaultOptions.routeAnimation.pointRadius,
+          },
+        },
+        this.defaultOptions.showLevelDirectionIcon ? 'direction-popup-layer' : 'proximiio-polygons-above-paths',
+      );*/
   };
 
   private removeStopMarkers = () => {
     for (const marker of this.stopMarkers) {
       marker.remove();
     }
+    this.stops = [];
   };
 
   /**
@@ -4489,7 +4516,8 @@ export class Map {
     if (wayfindingConfig) {
       this.routingSource.setConfig(wayfindingConfig);
     }
-    this.addStopMarkers([fromFeature, ...destinationFeatures]);
+    this.stops = [fromFeature, ...destinationFeatures];
+    this.addStopMarkers();
     if (autoStart !== false) {
       this.onRouteUpdate({
         start: fromFeature,
