@@ -22,7 +22,7 @@ export const getPackage = async ({
   featuresMaxBounds,
 }: {
   initPolygons?: boolean;
-  polygonFeatureTypes?: string[];
+  polygonFeatureTypes?: { type: string; autoAssign?: boolean }[];
   autoLabelLines?: boolean;
   amenityIdProperty?: string;
   hiddenAmenities?: string[];
