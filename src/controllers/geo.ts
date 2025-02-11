@@ -182,7 +182,10 @@ export const getFeatures = async ({
 
     polygonFeatureTypes.forEach((featureType, index) => {
       const shopPolygons = res.data.features.filter(
-        (f) => f.properties.type === featureType.type && f.geometry.type === 'MultiPolygon' && featureType.autoAssign,
+        (f) =>
+          f.properties.type === featureType.type &&
+          (f.geometry.type === 'MultiPolygon' || f.geometry.type === 'Polygon') &&
+          featureType.autoAssign,
       );
       const labelLineFeatures = res.data.features.filter((f) => f.properties.type === 'label-line');
 
@@ -473,7 +476,10 @@ export const getFeaturesBundle = async ({
 
     polygonFeatureTypes.forEach((featureType, index) => {
       const shopPolygons = data.features.filter(
-        (f) => f.properties.type === featureType.type && f.geometry.type === 'MultiPolygon' && featureType.autoAssign,
+        (f) =>
+          f.properties.type === featureType.type &&
+          (f.geometry.type === 'MultiPolygon' || f.geometry.type === 'Polygon') &&
+          featureType.autoAssign,
       );
       const labelLineFeatures = data.features.filter((f) => f.properties.type === 'label-line');
 
