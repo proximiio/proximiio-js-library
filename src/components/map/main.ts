@@ -117,6 +117,7 @@ export interface PolygonLayer extends PolygonOptions {
   iconImage?: string;
   iconImageDefaultVisible?: boolean;
   autoAssign?: boolean;
+  initOnLevelchangers?: boolean;
 }
 
 export interface Options {
@@ -527,7 +528,11 @@ export class Map {
       ? await getFeaturesBundle({
           initPolygons: this.defaultOptions.initPolygons,
           polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => {
-            return { type: item.featureType, autoAssign: item.autoAssign ?? true };
+            return {
+              type: item.featureType,
+              autoAssign: item.autoAssign ?? true,
+              initOnLevelchangers: item.initOnLevelchangers ?? false,
+            };
           }),
           autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
           hiddenAmenities: this.defaultOptions.hiddenAmenities,
@@ -538,7 +543,11 @@ export class Map {
       : await getFeatures({
           initPolygons: this.defaultOptions.initPolygons,
           polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => {
-            return { type: item.featureType, autoAssign: item.autoAssign ?? true };
+            return {
+              type: item.featureType,
+              autoAssign: item.autoAssign ?? true,
+              initOnLevelchangers: item.initOnLevelchangers ?? false,
+            };
           }),
           autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
           hiddenAmenities: this.defaultOptions.hiddenAmenities,
@@ -880,7 +889,11 @@ export class Map {
         ? await getFeaturesBundle({
             initPolygons: this.defaultOptions.initPolygons,
             polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => {
-              return { type: item.featureType, autoAssign: item.autoAssign ?? true };
+              return {
+                type: item.featureType,
+                autoAssign: item.autoAssign ?? true,
+                initOnLevelchangers: item.initOnLevelchangers ?? false,
+              };
             }),
             autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
             hiddenAmenities: this.defaultOptions.hiddenAmenities,
@@ -891,7 +904,11 @@ export class Map {
         : await getFeatures({
             initPolygons: this.defaultOptions.initPolygons,
             polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => {
-              return { type: item.featureType, autoAssign: item.autoAssign ?? true };
+              return {
+                type: item.featureType,
+                autoAssign: item.autoAssign ?? true,
+                initOnLevelchangers: item.initOnLevelchangers ?? false,
+              };
             }),
             autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
             hiddenAmenities: this.defaultOptions.hiddenAmenities,

@@ -3,6 +3,7 @@ import { SortedPoiItemModel } from './models/sortedPoiItemModel';
 import { lineString } from '@turf/helpers';
 import booleanWithin from '@turf/boolean-within';
 import Feature from './models/feature';
+import { POI_TYPE } from './models/poi_type';
 
 export const axios = Axios.create({
   baseURL: 'https://api.proximi.fi',
@@ -301,6 +302,26 @@ const optimizeFeatures = (features: Feature[]) => {
   return features.map(optimizeFeature);
 };
 
+const isElevator = (poi: Feature) => {
+  return poi.properties.type === POI_TYPE.ELEVATOR;
+};
+
+const isEscalator = (poi: Feature) => {
+  return poi.properties.type === POI_TYPE.ESCALATOR;
+};
+
+const isStairCase = (poi: Feature) => {
+  return poi.properties.type === POI_TYPE.STAIRCASE;
+};
+
+const isRamp = (poi: Feature) => {
+  return poi.properties.type === POI_TYPE.RAMP;
+};
+
+const isLevelChanger = (poi: Feature) => {
+  return isElevator(poi) || isEscalator(poi) || isStairCase(poi) || isRamp(poi);
+};
+
 export {
   calculateDimensions,
   convertToRTL,
@@ -309,4 +330,5 @@ export {
   filterByAmenity,
   validateLabelLine,
   optimizeFeatures,
+  isLevelChanger,
 };

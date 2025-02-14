@@ -1,4 +1,11 @@
-import { axios, getNestedObjectValue, optimizeFeatures, removeNonNumeric, validateLabelLine } from '../common';
+import {
+  axios,
+  getNestedObjectValue,
+  isLevelChanger,
+  optimizeFeatures,
+  removeNonNumeric,
+  validateLabelLine,
+} from '../common';
 import Feature, { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 import { globalState } from '../components/map/main';
@@ -48,7 +55,7 @@ export const getFeatures = async ({
   localSources,
 }: {
   initPolygons?: boolean;
-  polygonFeatureTypes?: { type: string; autoAssign?: boolean }[];
+  polygonFeatureTypes?: { type: string; autoAssign?: boolean; initOnLevelchangers?: boolean }[];
   autoLabelLines?: boolean;
   hiddenAmenities?: string[];
   useTimerangeData?: boolean;
@@ -193,7 +200,10 @@ export const getFeatures = async ({
         if (hiddenAmenities && hiddenAmenities.length > 0 && hiddenAmenities.includes(feature.properties.amenity)) {
           feature.properties.hideIcon = 'hide';
         }
-        if (feature.properties.type === 'poi') {
+        if (
+          feature.properties.type === 'poi' ||
+          (featureType.initOnLevelchangers && isLevelChanger(feature) && feature.properties.usecase === 'poi')
+        ) {
           feature.id = feature.id ? feature.id.replace(/\{|\}/g, '') : null;
           feature.properties.id = feature.properties.id ? feature.properties.id.replace(/\{|\}/g, '') : null;
 
@@ -410,7 +420,7 @@ export const getFeaturesBundle = async ({
   bundleUrl,
 }: {
   initPolygons?: boolean;
-  polygonFeatureTypes?: { type: string; autoAssign?: boolean }[];
+  polygonFeatureTypes?: { type: string; autoAssign?: boolean; initOnLevelchangers?: boolean }[];
   autoLabelLines?: boolean;
   hiddenAmenities?: string[];
   useTimerangeData?: boolean;
@@ -487,7 +497,10 @@ export const getFeaturesBundle = async ({
         if (hiddenAmenities && hiddenAmenities.length > 0 && hiddenAmenities.includes(feature.properties.amenity)) {
           feature.properties.hideIcon = 'hide';
         }
-        if (feature.properties.type === 'poi') {
+        if (
+          feature.properties.type === 'poi' ||
+          (featureType.initOnLevelchangers && isLevelChanger(feature) && feature.properties.usecase === 'poi')
+        ) {
           feature.id = feature.id ? feature.id.replace(/\{|\}/g, '') : null;
           feature.properties.id = feature.properties.id ? feature.properties.id.replace(/\{|\}/g, '') : null;
 
