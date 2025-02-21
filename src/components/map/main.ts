@@ -110,6 +110,7 @@ export interface PolygonOptions {
   adaptiveLabelOpacity?: boolean;
   adaptiveMaxPitch?: number;
   drawRouteUnderPolygons?: boolean;
+  handleDisabledPolygons?: boolean;
 }
 
 export interface PolygonLayer extends PolygonOptions {
@@ -361,6 +362,7 @@ export class Map {
       adaptiveLabelOpacity: false,
       adaptiveMaxPitch: 30,
       drawRouteUnderPolygons: false,
+      handleDisabledPolygons: true,
     },
     considerVisibilityParam: true,
     fitBoundsPadding: 250,
@@ -1894,7 +1896,11 @@ export class Map {
       }
     }
 
-    if (features.length === 0 && ((Array.isArray(poi) && poi.length === 0) || !poi)) {
+    if (
+      this.defaultOptions.polygonsOptions.handleDisabledPolygons &&
+      features.length === 0 &&
+      ((Array.isArray(poi) && poi.length === 0) || !poi)
+    ) {
       for (const f of featuresWithPolygon) {
         const polygon = this.state.allFeatures.features.find(
           (i) =>
@@ -1943,37 +1949,40 @@ export class Map {
               .includes(i.properties._dynamic?.type),
         );
         if (selectedPolygon) {
-          for (const f of featuresWithPolygon) {
-            const polygon = this.state.allFeatures.features.find(
-              (i) =>
-                i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
-                this.defaultOptions.polygonLayers
-                  .map((layer) => `${layer.featureType}-custom`)
-                  .includes(i.properties._dynamic?.type),
-            );
-            if (polygon) {
-              this.map.setFeatureState(
-                {
-                  source: 'main',
-                  id: polygon.properties.id,
-                },
-                {
-                  disabled: true,
-                },
+          if (this.defaultOptions.polygonsOptions.handleDisabledPolygons) {
+            for (const f of featuresWithPolygon) {
+              const polygon = this.state.allFeatures.features.find(
+                (i) =>
+                  i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
+                  this.defaultOptions.polygonLayers
+                    .map((layer) => `${layer.featureType}-custom`)
+                    .includes(i.properties._dynamic?.type),
               );
-              if (polygon.properties._dynamic.label_id) {
+              if (polygon) {
                 this.map.setFeatureState(
                   {
                     source: 'main',
-                    id: polygon.properties._dynamic.label_id,
+                    id: polygon.properties.id,
                   },
                   {
                     disabled: true,
                   },
                 );
+                if (polygon.properties._dynamic.label_id) {
+                  this.map.setFeatureState(
+                    {
+                      source: 'main',
+                      id: polygon.properties._dynamic.label_id,
+                    },
+                    {
+                      disabled: true,
+                    },
+                  );
+                }
               }
             }
           }
+
           this.map.setFeatureState(
             {
               source: 'main',
@@ -2682,7 +2691,7 @@ export class Map {
                   },
                 );
               }
-            } else {
+            } else if (this.defaultOptions.polygonsOptions.handleDisabledPolygons) {
               this.map.setFeatureState(
                 {
                   source: 'main',
@@ -2801,37 +2810,39 @@ export class Map {
   }
 
   private onDisablePolygons() {
-    const featuresWithPolygon = this.state.allFeatures.features.filter(
-      (f) => f.properties._dynamic?.polygon_id && f.geometry.type === 'Point',
-    );
-    for (const f of featuresWithPolygon) {
-      const polygon = this.state.allFeatures.features.find(
-        (i) =>
-          i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
-          this.defaultOptions.polygonLayers
-            .map((layer) => `${layer.featureType}-custom`)
-            .includes(i.properties._dynamic?.type),
+    if (this.defaultOptions.polygonsOptions.handleDisabledPolygons) {
+      const featuresWithPolygon = this.state.allFeatures.features.filter(
+        (f) => f.properties._dynamic?.polygon_id && f.geometry.type === 'Point',
       );
-      if (polygon) {
-        this.map.setFeatureState(
-          {
-            source: 'main',
-            id: polygon.properties.id,
-          },
-          {
-            disabled: true,
-          },
+      for (const f of featuresWithPolygon) {
+        const polygon = this.state.allFeatures.features.find(
+          (i) =>
+            i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
+            this.defaultOptions.polygonLayers
+              .map((layer) => `${layer.featureType}-custom`)
+              .includes(i.properties._dynamic?.type),
         );
-        if (polygon.properties._dynamic.label_id) {
+        if (polygon) {
           this.map.setFeatureState(
             {
               source: 'main',
-              id: polygon.properties._dynamic.label_id,
+              id: polygon.properties.id,
             },
             {
               disabled: true,
             },
           );
+          if (polygon.properties._dynamic.label_id) {
+            this.map.setFeatureState(
+              {
+                source: 'main',
+                id: polygon.properties._dynamic.label_id,
+              },
+              {
+                disabled: true,
+              },
+            );
+          }
         }
       }
     }
