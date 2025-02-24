@@ -8,7 +8,7 @@ import {
 } from '../common';
 import Feature, { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
-import { globalState } from '../components/map/main';
+import { globalState, PolygonLayer } from '../components/map/main';
 import { FeatureCollection as FCModel, Feature as FModel } from '@turf/helpers';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import pointOnFeature from '@turf/point-on-feature';
@@ -46,7 +46,7 @@ async function fetchFeatures({
 
 export const getFeatures = async ({
   initPolygons,
-  polygonFeatureTypes,
+  polygonLayers,
   autoLabelLines,
   hiddenAmenities,
   useTimerangeData,
@@ -55,7 +55,7 @@ export const getFeatures = async ({
   localSources,
 }: {
   initPolygons?: boolean;
-  polygonFeatureTypes?: { type: string; autoAssign?: boolean; initOnLevelchangers?: boolean }[];
+  polygonLayers: PolygonLayer[];
   autoLabelLines?: boolean;
   hiddenAmenities?: string[];
   useTimerangeData?: boolean;
@@ -187,12 +187,12 @@ export const getFeatures = async ({
         .filter((feature) => feature !== undefined);
     }
 
-    polygonFeatureTypes.forEach((featureType, index) => {
+    polygonLayers.forEach((polygonLayer, index) => {
       const shopPolygons = res.data.features.filter(
         (f) =>
-          f.properties.type === featureType.type &&
+          f.properties.type === polygonLayer.featureType &&
           (f.geometry.type === 'MultiPolygon' || f.geometry.type === 'Polygon') &&
-          featureType.autoAssign,
+          polygonLayer.autoAssign,
       );
       const labelLineFeatures = res.data.features.filter((f) => f.properties.type === 'label-line');
 
@@ -202,7 +202,7 @@ export const getFeatures = async ({
         }
         if (
           feature.properties.type === 'poi' ||
-          (featureType.initOnLevelchangers && isLevelChanger(feature) && feature.properties.usecase === 'poi')
+          (polygonLayer.initOnLevelchangers && isLevelChanger(feature) && feature.properties.usecase === 'poi')
         ) {
           feature.id = feature.id ? feature.id.replace(/\{|\}/g, '') : null;
           feature.properties.id = feature.properties.id ? feature.properties.id.replace(/\{|\}/g, '') : null;
@@ -225,7 +225,7 @@ export const getFeatures = async ({
           if (!connectedPolygon && feature.properties.metadata && feature.properties.metadata.polygon_id) {
             connectedPolygon = res.data.features.find(
               (f: any) =>
-                f.properties.type === featureType.type &&
+                f.properties.type === polygonLayer.featureType &&
                 (f.properties.id?.replace(/\{|\}/g, '') ===
                   feature.properties.metadata.polygon_id?.replace(/\{|\}/g, '') ||
                   f.id?.replace(/\{|\}/g, '') === feature.properties.metadata.polygon_id?.replace(/\{|\}/g, '')),
@@ -250,7 +250,7 @@ export const getFeatures = async ({
               ? connectedPolygon.properties._dynamic
               : {};
             connectedPolygon.properties._dynamic.id = connectedPolygon.properties.id?.replace(/\{|\}/g, '');
-            connectedPolygon.properties._dynamic.type = `${featureType.type}-custom`;
+            connectedPolygon.properties._dynamic.type = `polygons-custom`;
             connectedPolygon.properties._dynamic.poi_id = feature.properties.id;
             connectedPolygon.properties._dynamic.amenity = feature.properties.amenity;
             // id have to be changed to numeric type so feature state will work
@@ -281,8 +281,8 @@ export const getFeatures = async ({
               connectedLabelLine.properties.metadata = feature.properties.metadata;
               connectedLabelLine.properties.id = connectedLabelLine.id;
               connectedLabelLine.properties._dynamic.id = connectedLabelLine.id;
-              connectedLabelLine.properties.type = `${featureType.type}-label`;
-              connectedLabelLine.properties._dynamic.type = `${featureType.type}-label`;
+              connectedLabelLine.properties.type = `polygons-label`;
+              connectedLabelLine.properties._dynamic.type = `polygons-label`;
               connectedLabelLine.properties._dynamic.poi_id = feature.properties.id;
               connectedLabelLine.properties._dynamic.amenity = feature.properties.amenity;
               connectedLabelLine.properties._dynamic.polygon_id = connectedPolygon.properties._dynamic.id;
@@ -314,8 +314,8 @@ export const getFeatures = async ({
                   };
                   labelLineFeature.properties.id = `${connectedPolygon.id}9999`;
                   labelLineFeature.id = `${connectedPolygon.id}9999`;
-                  labelLineFeature.properties.type = `${featureType.type}-label`;
-                  labelLineFeature.properties._dynamic.type = `${featureType.type}-label`;
+                  labelLineFeature.properties.type = `polygons-label`;
+                  labelLineFeature.properties._dynamic.type = `polygons-label`;
                   labelLineFeature.properties._dynamic.length = Math.ceil(length(labelLineFeature) * 1000);
                   connectedPolygon.properties._dynamic.label_id = labelLineFeature.properties.id;
                   featuresToAdd.push(labelLineFeature);
@@ -393,8 +393,8 @@ export const getFeatures = async ({
                 // labelBorder.properties = { ...labelBorder.properties, ...feature.properties };
                 labelBorder.properties.id = `${connectedPolygon.id}9999`;
                 labelBorder.id = `${connectedPolygon.id}9999`;
-                labelBorder.properties.type = `${featureType.type}-label`;
-                labelBorder.properties._dynamic.type = `${featureType.type}-label`;
+                labelBorder.properties.type = `polygons-label`;
+                labelBorder.properties._dynamic.type = `polygons-label`;
                 connectedPolygon.properties._dynamic.label_id = labelBorder.properties.id;
                 featuresToAdd.push(labelBorder);
               }
@@ -412,7 +412,7 @@ export const getFeatures = async ({
 
 export const getFeaturesBundle = async ({
   initPolygons,
-  polygonFeatureTypes,
+  polygonLayers,
   autoLabelLines,
   hiddenAmenities,
   useTimerangeData,
@@ -420,7 +420,7 @@ export const getFeaturesBundle = async ({
   bundleUrl,
 }: {
   initPolygons?: boolean;
-  polygonFeatureTypes?: { type: string; autoAssign?: boolean; initOnLevelchangers?: boolean }[];
+  polygonLayers: PolygonLayer[];
   autoLabelLines?: boolean;
   hiddenAmenities?: string[];
   useTimerangeData?: boolean;
@@ -484,12 +484,12 @@ export const getFeaturesBundle = async ({
         .filter((feature) => feature !== undefined);
     }
 
-    polygonFeatureTypes.forEach((featureType, index) => {
+    polygonLayers.forEach((polygonLayer, index) => {
       const shopPolygons = data.features.filter(
         (f) =>
-          f.properties.type === featureType.type &&
+          f.properties.type === polygonLayer.featureType &&
           (f.geometry.type === 'MultiPolygon' || f.geometry.type === 'Polygon') &&
-          featureType.autoAssign,
+          polygonLayer.autoAssign,
       );
       const labelLineFeatures = data.features.filter((f) => f.properties.type === 'label-line');
 
@@ -499,7 +499,7 @@ export const getFeaturesBundle = async ({
         }
         if (
           feature.properties.type === 'poi' ||
-          (featureType.initOnLevelchangers && isLevelChanger(feature) && feature.properties.usecase === 'poi')
+          (polygonLayer.initOnLevelchangers && isLevelChanger(feature) && feature.properties.usecase === 'poi')
         ) {
           feature.id = feature.id ? feature.id.replace(/\{|\}/g, '') : null;
           feature.properties.id = feature.properties.id ? feature.properties.id.replace(/\{|\}/g, '') : null;
@@ -522,7 +522,7 @@ export const getFeaturesBundle = async ({
           if (!connectedPolygon && feature.properties.metadata && feature.properties.metadata.polygon_id) {
             connectedPolygon = data.features.find(
               (f: any) =>
-                f.properties.type === featureType.type &&
+                f.properties.type === polygonLayer.featureType &&
                 (f.properties.id?.replace(/\{|\}/g, '') ===
                   feature.properties.metadata.polygon_id?.replace(/\{|\}/g, '') ||
                   f.id?.replace(/\{|\}/g, '') === feature.properties.metadata.polygon_id?.replace(/\{|\}/g, '')),
@@ -547,7 +547,7 @@ export const getFeaturesBundle = async ({
               ? connectedPolygon.properties._dynamic
               : {};
             connectedPolygon.properties._dynamic.id = connectedPolygon.properties.id?.replace(/\{|\}/g, '');
-            connectedPolygon.properties._dynamic.type = `${featureType.type}-custom`;
+            connectedPolygon.properties._dynamic.type = `polygons-custom`;
             connectedPolygon.properties._dynamic.poi_id = feature.properties.id;
             connectedPolygon.properties._dynamic.amenity = feature.properties.amenity;
             // id have to be changed to numeric type so feature state will work
@@ -578,8 +578,8 @@ export const getFeaturesBundle = async ({
               connectedLabelLine.properties.metadata = feature.properties.metadata;
               connectedLabelLine.properties.id = connectedLabelLine.id;
               connectedLabelLine.properties._dynamic.id = connectedLabelLine.id;
-              connectedLabelLine.properties.type = `${featureType.type}-label`;
-              connectedLabelLine.properties._dynamic.type = `${featureType.type}-label`;
+              connectedLabelLine.properties.type = `polygons-label`;
+              connectedLabelLine.properties._dynamic.type = `polygons-label`;
               connectedLabelLine.properties._dynamic.poi_id = feature.properties.id;
               connectedLabelLine.properties._dynamic.amenity = feature.properties.amenity;
               connectedLabelLine.properties._dynamic.polygon_id = connectedPolygon.properties._dynamic.id;
@@ -611,8 +611,8 @@ export const getFeaturesBundle = async ({
                   };
                   labelLineFeature.properties.id = `${connectedPolygon.id}9999`;
                   labelLineFeature.id = `${connectedPolygon.id}9999`;
-                  labelLineFeature.properties.type = `${featureType.type}-label`;
-                  labelLineFeature.properties._dynamic.type = `${featureType.type}-label`;
+                  labelLineFeature.properties.type = `polygons-label`;
+                  labelLineFeature.properties._dynamic.type = `polygons-label`;
                   labelLineFeature.properties._dynamic.length = Math.ceil(length(labelLineFeature) * 1000);
                   connectedPolygon.properties._dynamic.label_id = labelLineFeature.properties.id;
                   featuresToAdd.push(labelLineFeature);
@@ -690,8 +690,8 @@ export const getFeaturesBundle = async ({
                 // labelBorder.properties = { ...labelBorder.properties, ...feature.properties };
                 labelBorder.properties.id = `${connectedPolygon.id}9999`;
                 labelBorder.id = `${connectedPolygon.id}9999`;
-                labelBorder.properties.type = `${featureType.type}-label`;
-                labelBorder.properties._dynamic.type = `${featureType.type}-label`;
+                labelBorder.properties.type = `polygons-label`;
+                labelBorder.properties._dynamic.type = `polygons-label`;
                 connectedPolygon.properties._dynamic.label_id = labelBorder.properties.id;
                 featuresToAdd.push(labelBorder);
               }

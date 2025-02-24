@@ -111,12 +111,12 @@ export interface PolygonOptions {
   adaptiveMaxPitch?: number;
   drawRouteUnderPolygons?: boolean;
   handleDisabledPolygons?: boolean;
+  iconImage?: string;
+  iconImageDefaultVisible?: boolean;
 }
 
 export interface PolygonLayer extends PolygonOptions {
   featureType: string;
-  iconImage?: string;
-  iconImageDefaultVisible?: boolean;
   autoAssign?: boolean;
   initOnLevelchangers?: boolean;
 }
@@ -529,12 +529,10 @@ export class Map {
     const features = useBundle
       ? await getFeaturesBundle({
           initPolygons: this.defaultOptions.initPolygons,
-          polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => {
-            return {
-              type: item.featureType,
-              autoAssign: item.autoAssign ?? true,
-              initOnLevelchangers: item.initOnLevelchangers ?? false,
-            };
+          polygonLayers: this.defaultOptions.polygonLayers.map((item) => {
+            item.autoAssign = item.autoAssign ?? true;
+            item.initOnLevelchangers = item.initOnLevelchangers ?? false;
+            return item;
           }),
           autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
           hiddenAmenities: this.defaultOptions.hiddenAmenities,
@@ -544,12 +542,10 @@ export class Map {
         }).catch((error) => this.handleControllerError(error))
       : await getFeatures({
           initPolygons: this.defaultOptions.initPolygons,
-          polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => {
-            return {
-              type: item.featureType,
-              autoAssign: item.autoAssign ?? true,
-              initOnLevelchangers: item.initOnLevelchangers ?? false,
-            };
+          polygonLayers: this.defaultOptions.polygonLayers.map((item) => {
+            item.autoAssign = item.autoAssign ?? true;
+            item.initOnLevelchangers = item.initOnLevelchangers ?? false;
+            return item;
           }),
           autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
           hiddenAmenities: this.defaultOptions.hiddenAmenities,
@@ -890,12 +886,10 @@ export class Map {
       const features = useBundle
         ? await getFeaturesBundle({
             initPolygons: this.defaultOptions.initPolygons,
-            polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => {
-              return {
-                type: item.featureType,
-                autoAssign: item.autoAssign ?? true,
-                initOnLevelchangers: item.initOnLevelchangers ?? false,
-              };
+            polygonLayers: this.defaultOptions.polygonLayers.map((item) => {
+              item.autoAssign = item.autoAssign ?? true;
+              item.initOnLevelchangers = item.initOnLevelchangers ?? false;
+              return item;
             }),
             autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
             hiddenAmenities: this.defaultOptions.hiddenAmenities,
@@ -905,12 +899,10 @@ export class Map {
           })
         : await getFeatures({
             initPolygons: this.defaultOptions.initPolygons,
-            polygonFeatureTypes: this.defaultOptions.polygonLayers.map((item) => {
-              return {
-                type: item.featureType,
-                autoAssign: item.autoAssign ?? true,
-                initOnLevelchangers: item.initOnLevelchangers ?? false,
-              };
+            polygonLayers: this.defaultOptions.polygonLayers.map((item) => {
+              item.autoAssign = item.autoAssign ?? true;
+              item.initOnLevelchangers = item.initOnLevelchangers ?? false;
+              return item;
             }),
             autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
             hiddenAmenities: this.defaultOptions.hiddenAmenities,
@@ -1689,18 +1681,6 @@ export class Map {
   private initPolygons() {
     if (this.map) {
       for (const layer of this.defaultOptions.polygonLayers) {
-        const polygonIconsLayer = new PolygonIconsLayer(layer);
-        polygonIconsLayer.setFilterLevel(this.state.floor.level);
-        this.state.style.addLayer(polygonIconsLayer.json, 'proximiio-paths');
-
-        const polygonTitlesLayer = new PolygonTitlesLayer(layer);
-        polygonTitlesLayer.setFilterLevel(this.state.floor.level);
-        this.state.style.addLayer(polygonTitlesLayer.json, 'proximiio-paths');
-
-        const polygonsLayer = new PolygonsLayer(layer);
-        polygonsLayer.setFilterLevel(this.state.floor.level);
-        this.state.style.addLayer(polygonsLayer.json, 'proximiio-paths');
-
         if (this.state.style.getLayer(`proximiio-${layer.featureType}`)) {
           if (layer.removeOriginalPolygonsLayer) {
             this.state.style.removeLayer(`proximiio-${layer.featureType}`);
@@ -1718,44 +1698,65 @@ export class Map {
             );
           }
         }
-
-        this.map.on('click', `${layer.featureType}-custom`, (e) => {
-          const currentZoom = e.target.style.z;
-          if (layer.minZoom && currentZoom < layer.minZoom) return;
-          if (layer.maxZoom && currentZoom > layer.maxZoom) return;
-          this.onShopClick(e);
-        });
-        this.map.on('mouseenter', `${layer.featureType}-custom`, (e) => {
-          const currentZoom = e.target.style.z;
-          if (layer.minZoom && currentZoom < layer.minZoom) return;
-          if (layer.maxZoom && currentZoom > layer.maxZoom) return;
-          this.onShopMouseEnter();
-        });
-        this.map.on('mousemove', `${layer.featureType}-custom`, (e) => {
-          if (
-            !this.defaultOptions.blockFeatureClickWhileRouting ||
-            (this.defaultOptions.blockFeatureClickWhileRouting &&
-              (!this.routingSource.route || this.routingSource.preview))
-          ) {
-            const currentZoom = e.target.style.z;
-            if (layer.minZoom && currentZoom < layer.minZoom) return;
-            if (layer.maxZoom && currentZoom > layer.maxZoom) return;
-            this.onShopMouseMove(e);
-          }
-        });
-        this.map.on('mouseleave', `${layer.featureType}-custom`, (e) => {
-          if (
-            !this.defaultOptions.blockFeatureClickWhileRouting ||
-            (this.defaultOptions.blockFeatureClickWhileRouting &&
-              (!this.routingSource.route || this.routingSource.preview))
-          ) {
-            const currentZoom = e.target.style.z;
-            if (layer.minZoom && currentZoom < layer.minZoom) return;
-            if (layer.maxZoom && currentZoom > layer.maxZoom) return;
-            this.onShopMouseLeave(e);
-          }
-        });
       }
+
+      this.map.setStyle(this.state.style);
+
+      const polygonIconsLayer = new PolygonIconsLayer(this.defaultOptions.polygonsOptions);
+      polygonIconsLayer.setFilterLevel(this.state.floor.level);
+      this.state.style.addLayer(polygonIconsLayer.json, 'proximiio-paths');
+
+      const polygonTitlesLayer = new PolygonTitlesLayer(this.defaultOptions.polygonsOptions);
+      polygonTitlesLayer.setFilterLevel(this.state.floor.level);
+      this.state.style.addLayer(polygonTitlesLayer.json, 'proximiio-paths');
+
+      const polygonsLayer = new PolygonsLayer(this.defaultOptions.polygonsOptions);
+      polygonsLayer.setFilterLevel(this.state.floor.level);
+      this.state.style.addLayer(polygonsLayer.json, 'proximiio-paths');
+
+      this.map.on('click', (e) => {
+        // Get all features at the clicked point
+        const features = this.map.queryRenderedFeatures(e.point);
+
+        if (features.length) {
+          // Iterate through features to get layer information
+          features.forEach((feature) => {
+            console.log('Layer clicked:', feature.layer.id);
+          });
+
+          // If you only need the first matching layer
+          console.log('First layer clicked:', features[0].layer.id);
+        } else {
+          console.log('No layer clicked.');
+        }
+      });
+
+      this.map.on('click', `polygons-custom`, (e) => {
+        this.onShopClick(e);
+      });
+      this.map.on('mouseenter', `polygons-custom`, (e) => {
+        this.onShopMouseEnter(e);
+      });
+      this.map.on('mousemove', `polygons-custom`, (e) => {
+        if (
+          !this.defaultOptions.blockFeatureClickWhileRouting ||
+          (this.defaultOptions.blockFeatureClickWhileRouting &&
+            (!this.routingSource.route || this.routingSource.preview))
+        ) {
+          this.onShopMouseMove(e);
+        }
+      });
+      this.map.on('mouseleave', `polygons-custom`, (e) => {
+        if (
+          !this.defaultOptions.blockFeatureClickWhileRouting ||
+          (this.defaultOptions.blockFeatureClickWhileRouting &&
+            (!this.routingSource.route || this.routingSource.preview))
+        ) {
+          this.onShopMouseLeave(e);
+        }
+      });
+
+      console.log(this.state.style);
 
       // const polygonTitlesLineLayer = new PolygonTitlesLineLayer({ featureType: 'shop' });
       // polygonTitlesLineLayer.setFilterLevel(this.state.floor.level);
@@ -1803,13 +1804,20 @@ export class Map {
       opacity = 1 - pitch / maxPitch; // Linear interpolation between 1 and 0 for pitch < minPitch
     }*/
 
-    for (const layer of this.defaultOptions.polygonLayers) {
+    /*for (const layer of this.defaultOptions.polygonLayers) {
       if (layer.adaptiveLabelOpacity) {
         if (this.map.getLayer(`${layer.featureType}-labels`)) {
           const l = { ...this.state.style.getLayer(`${layer.featureType}-labels`) };
           l.paint['text-opacity'] = opacity;
           this.map.setPaintProperty(`${layer.featureType}-labels`, 'text-opacity', opacity);
         }
+      }
+    }*/
+    if (this.defaultOptions.polygonsOptions.adaptiveLabelOpacity) {
+      if (this.map.getLayer(`polygons-labels`)) {
+        const l = { ...this.state.style.getLayer(`polygons-labels`) };
+        l.paint['text-opacity'] = opacity;
+        this.map.setPaintProperty(`polygons-labels`, 'text-opacity', opacity);
       }
     }
   }
@@ -1825,6 +1833,13 @@ export class Map {
         e.features[0].properties._dynamic = e.features[0].properties._dynamic
           ? JSON.parse(e.features[0].properties._dynamic)
           : {};
+
+        const currentZoom = e.target.style.z;
+        if (e.features[0].properties._dynamic.minZoom && currentZoom < e.features[0].properties._dynamic.minZoom)
+          return;
+        if (e.features[0].properties._dynamic.maxZoom && currentZoom > e.features[0].properties._dynamic.maxZoom)
+          return;
+
         if (this.defaultOptions.initPolygons) {
           // @ts-ignore
           const polygonPoi = this.state.allFeatures.features.find(
@@ -1905,9 +1920,7 @@ export class Map {
         const polygon = this.state.allFeatures.features.find(
           (i) =>
             i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
-            this.defaultOptions.polygonLayers
-              .map((layer) => `${layer.featureType}-custom`)
-              .includes(i.properties._dynamic?.type),
+            i.properties._dynamic?.type === 'polygons-custom',
         );
         if (polygon) {
           this.map.setFeatureState(
@@ -1942,11 +1955,7 @@ export class Map {
       const connectedPolygonId = feat && feat.properties._dynamic ? feat.properties._dynamic.polygon_id : null;
       if (connectedPolygonId) {
         const selectedPolygon = this.state.allFeatures.features.find(
-          (i) =>
-            i.properties._dynamic?.id === connectedPolygonId &&
-            this.defaultOptions.polygonLayers
-              .map((layer) => `${layer.featureType}-custom`)
-              .includes(i.properties._dynamic?.type),
+          (i) => i.properties._dynamic?.id === connectedPolygonId && i.properties._dynamic?.type === 'polygons-custom',
         );
         if (selectedPolygon) {
           if (this.defaultOptions.polygonsOptions.handleDisabledPolygons) {
@@ -1954,9 +1963,7 @@ export class Map {
               const polygon = this.state.allFeatures.features.find(
                 (i) =>
                   i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
-                  this.defaultOptions.polygonLayers
-                    .map((layer) => `${layer.featureType}-custom`)
-                    .includes(i.properties._dynamic?.type),
+                  i.properties._dynamic?.type === 'polygons-custom',
               );
               if (polygon) {
                 this.map.setFeatureState(
@@ -2009,7 +2016,18 @@ export class Map {
     });
   }
 
-  private onShopMouseEnter() {
+  private onShopMouseEnter(
+    e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] | undefined } & object,
+  ) {
+    if (e.features && e.features[0] && e.features[0].properties) {
+      e.features[0].properties._dynamic = e.features[0].properties._dynamic
+        ? JSON.parse(e.features[0].properties._dynamic)
+        : {};
+
+      const currentZoom = e.target.style.z;
+      if (e.features[0].properties._dynamic.minZoom && currentZoom < e.features[0].properties._dynamic.minZoom) return;
+      if (e.features[0].properties._dynamic.maxZoom && currentZoom > e.features[0].properties._dynamic.maxZoom) return;
+    }
     this.map.getCanvas().style.cursor = 'pointer';
   }
 
@@ -2020,6 +2038,11 @@ export class Map {
       e.features[0].properties._dynamic = JSON.parse(
         e.features[0].properties._dynamic ? e.features[0].properties._dynamic : {},
       );
+
+      const currentZoom = e.target.style.z;
+      if (e.features[0].properties._dynamic.minZoom && currentZoom < e.features[0].properties._dynamic.minZoom) return;
+      if (e.features[0].properties._dynamic.maxZoom && currentZoom > e.features[0].properties._dynamic.maxZoom) return;
+
       if (this.hoveredPolygon) {
         this.map.setFeatureState(
           {
@@ -2069,6 +2092,15 @@ export class Map {
   private onShopMouseLeave(
     e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] | undefined } & object,
   ) {
+    if (e.features && e.features.length > 0) {
+      e.features[0].properties._dynamic = JSON.parse(
+        e.features[0].properties._dynamic ? e.features[0].properties._dynamic : {},
+      );
+
+      const currentZoom = e.target.style.z;
+      if (e.features[0].properties._dynamic.minZoom && currentZoom < e.features[0].properties._dynamic.minZoom) return;
+      if (e.features[0].properties._dynamic.maxZoom && currentZoom > e.features[0].properties._dynamic.maxZoom) return;
+    }
     this.map.getCanvas().style.cursor = '';
     if (this.hoveredPolygon) {
       this.map.setFeatureState(
@@ -2630,9 +2662,7 @@ export class Map {
           const polygon = this.state.allFeatures.features.find(
             (i) =>
               i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
-              this.defaultOptions.polygonLayers
-                .map((layer) => `${layer.featureType}-custom`)
-                .includes(i.properties._dynamic?.type),
+              i.properties._dynamic?.type === 'polygons-custom',
           );
           if (polygon) {
             this.map.setFeatureState(
@@ -2665,9 +2695,7 @@ export class Map {
           const polygon = this.state.allFeatures.features.find(
             (i) =>
               i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
-              this.defaultOptions.polygonLayers
-                .map((layer) => `${layer.featureType}-custom`)
-                .includes(i.properties._dynamic?.type),
+              i.properties._dynamic?.type === 'polygons-custom',
           );
           if (polygon) {
             if (filterByAmenity([f], amenityId)?.length > 0) {
@@ -2818,9 +2846,7 @@ export class Map {
         const polygon = this.state.allFeatures.features.find(
           (i) =>
             i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
-            this.defaultOptions.polygonLayers
-              .map((layer) => `${layer.featureType}-custom`)
-              .includes(i.properties._dynamic?.type),
+            i.properties._dynamic?.type === 'polygons-custom',
         );
         if (polygon) {
           this.map.setFeatureState(

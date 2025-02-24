@@ -10,10 +10,11 @@ import { AmenityModel } from '../models/amenity';
 import { LngLatBoundsLike } from 'maplibre-gl';
 import { getKiosks } from './kiosks';
 import { KioskModel } from '../models/kiosk';
+import { PolygonLayer } from '../components/map/main';
 
 export const getPackage = async ({
   initPolygons,
-  polygonFeatureTypes,
+  polygonLayers,
   autoLabelLines,
   amenityIdProperty,
   hiddenAmenities,
@@ -22,7 +23,7 @@ export const getPackage = async ({
   featuresMaxBounds,
 }: {
   initPolygons?: boolean;
-  polygonFeatureTypes?: { type: string; autoAssign?: boolean }[];
+  polygonLayers?: PolygonLayer[];
   autoLabelLines?: boolean;
   amenityIdProperty?: string;
   hiddenAmenities?: string[];
@@ -53,7 +54,7 @@ export const getPackage = async ({
 
     const featuresPromise = getFeatures({
       initPolygons,
-      polygonFeatureTypes,
+      polygonLayers,
       autoLabelLines,
       hiddenAmenities,
       useTimerangeData,
