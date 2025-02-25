@@ -1714,7 +1714,7 @@ export class Map {
       polygonsLayer.setFilterLevel(this.state.floor.level);
       this.state.style.addLayer(polygonsLayer.json, 'proximiio-paths');
 
-      this.map.on('click', (e) => {
+      /*this.map.on('click', (e) => {
         // Get all features at the clicked point
         const features = this.map.queryRenderedFeatures(e.point);
 
@@ -1729,7 +1729,7 @@ export class Map {
         } else {
           console.log('No layer clicked.');
         }
-      });
+      });*/
 
       this.map.on('click', `polygons-custom`, (e) => {
         this.onShopClick(e);
@@ -1755,8 +1755,6 @@ export class Map {
           this.onShopMouseLeave(e);
         }
       });
-
-      console.log(this.state.style);
 
       // const polygonTitlesLineLayer = new PolygonTitlesLineLayer({ featureType: 'shop' });
       // polygonTitlesLineLayer.setFilterLevel(this.state.floor.level);

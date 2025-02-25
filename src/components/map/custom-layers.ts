@@ -12,10 +12,10 @@ export class PolygonsLayer extends FillExtrusionLayer {
     this.id = `polygons-custom`;
     this.type = 'fill-extrusion';
     this.source = 'main';
-    /*this.filter = [
+    this.filter = [
       'all',
-      ['>=', ['zoom'], ['coalesce', ['get', 'minZoom', ['get', '_dynamic']], data.minZoom]],
-      ['<=', ['zoom'], ['coalesce', ['get', 'maxZoom', ['get', '_dynamic']], data.maxZoom]],
+      ['>=', ['zoom'], ['get', 'dynamic_minZoom']],
+      ['<=', ['zoom'], ['get', 'dynamic_maxZoom']],
       ['==', ['get', 'type', ['get', '_dynamic']], `polygons-custom`],
       ['==', ['to-number', ['get', 'level']], 0],
     ];
@@ -23,46 +23,31 @@ export class PolygonsLayer extends FillExtrusionLayer {
       'fill-extrusion-height': [
         'case',
         ['boolean', ['feature-state', 'selected'], false],
-        ['coalesce', ['get', 'selectedHeight', ['get', '_dynamic']], data.selectedPolygonHeight],
+        ['get', 'dynamic_selectedHeight'],
         ['boolean', ['feature-state', 'hover'], false],
-        ['coalesce', ['get', 'hoverHeight', ['get', '_dynamic']], data.hoverPolygonHeight],
+        ['get', 'dynamic_hoverHeight'],
         ['boolean', ['feature-state', 'active'], false],
-        ['coalesce', ['get', 'activeHeight', ['get', '_dynamic']], data.hoverPolygonHeight],
+        ['get', 'dynamic_activeHeight'],
         ['boolean', ['feature-state', 'disabled'], false],
-        ['coalesce', ['get', 'disabledHeight', ['get', '_dynamic']], data.disabledPolygonHeight],
-        ['coalesce', ['get', 'defaultHeight', ['get', '_dynamic']], data.defaultPolygonHeight],
+        ['get', 'dynamic_disabledHeight'],
+        ['get', 'dynamic_defaultHeight'],
       ],
+      'fill-extrusion-base': ['get', 'dynamic_base'],
 
-      'fill-extrusion-base': ['coalesce', ['get', 'base', ['get', '_dynamic']], data.base],
-
-      'fill-extrusion-opacity': ['coalesce', ['get', 'opacity', ['get', '_dynamic']], data.opacity],
+      'fill-extrusion-opacity': data.opacity,
 
       'fill-extrusion-color': [
         'case',
         ['boolean', ['feature-state', 'selected'], false],
-        ['coalesce', ['get', 'selectedColor', ['get', '_dynamic']], data.selectedPolygonColor],
+        ['get', 'dynamic_selectedColor'],
         ['boolean', ['feature-state', 'hover'], false],
-        ['coalesce', ['get', 'hoverColor', ['get', '_dynamic']], data.hoverPolygonColor],
+        ['get', 'dynamic_hoverColor'],
         ['boolean', ['feature-state', 'active'], false],
-        ['coalesce', ['get', 'activeColor', ['get', '_dynamic']], data.hoverPolygonColor],
+        ['get', 'dynamic_activeColor'],
         ['boolean', ['feature-state', 'disabled'], false],
-        ['coalesce', ['get', 'disabledColor', ['get', '_dynamic']], data.disabledPolygonColor],
-        ['coalesce', ['get', 'defaultColor', ['get', '_dynamic']], data.defaultPolygonColor],
+        ['get', 'dynamic_disabledColor'],
+        ['get', 'dynamic_defaultColor'],
       ],
-    });*/
-    this.filter = [
-      'all',
-      ['==', ['get', 'type', ['get', '_dynamic']], `polygons-custom`],
-      ['==', ['to-number', ['get', 'level']], 0],
-    ];
-    this.paint = new PaintProperties({
-      'fill-extrusion-height': 10,
-
-      'fill-extrusion-base': 0,
-
-      'fill-extrusion-opacity': 1,
-
-      'fill-extrusion-color': '#00C1D5',
     });
   }
 }
@@ -75,8 +60,8 @@ export class PolygonIconsLayer extends SymbolLayer {
     this.source = 'main';
     this.filter = [
       'all',
-      ['>=', ['zoom'], ['coalesce', ['get', 'minZoom', ['get', '_dynamic']], data.iconMinZoom]],
-      ['<=', ['zoom'], ['coalesce', ['get', 'maxZoom', ['get', '_dynamic']], data.iconMaxZoom]],
+      ['>=', ['zoom'], ['get', 'dynamic_iconMinZoom']],
+      ['<=', ['zoom'], ['get', 'dynamic_iconMaxZoom']],
       ['==', ['get', 'type', ['get', '_dynamic']], `polygons-label`],
       [
         'any',
@@ -94,12 +79,8 @@ export class PolygonIconsLayer extends SymbolLayer {
       ['any', ['!', ['has', 'available']], ['==', ['get', 'available'], true]],
     ];
     this.layout = new LayoutProperties({
-      'icon-image': [
-        'coalesce',
-        ['get', 'iconImage', ['get', '_dynamic']],
-        data.iconImage ? data.iconImage : undefined,
-      ],
-      'symbol-placement': ['coalesce', ['get', 'symbolPlacement', ['get', '_dynamic']], data.symbolPlacement],
+      'icon-image': ['get', 'id'],
+      'symbol-placement': data.symbolPlacement,
       'icon-size': ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.5],
       'icon-allow-overlap': true,
       'icon-ignore-placement': true,
@@ -115,16 +96,8 @@ export class PolygonIconsLayer extends SymbolLayer {
         ['boolean', ['feature-state', 'active'], false],
         1,
         ['boolean', ['feature-state', 'disabled'], false],
-        [
-          'coalesce',
-          ['get', 'disabledOpacity', ['get', '_dynamic']],
-          data.iconImageDefaultVisible || data.iconImageDefaultVisible === undefined ? 1 : 0,
-        ],
-        [
-          'coalesce',
-          ['get', 'defaultOpacity', ['get', '_dynamic']],
-          data.iconImageDefaultVisible || data.iconImageDefaultVisible === undefined ? 1 : 0,
-        ],
+        ['get', 'dynamic_disabledOpacity'],
+        ['get', 'dynamic_disabledOpacity'],
       ],
     });
   }
@@ -138,8 +111,8 @@ export class PolygonTitlesLayer extends SymbolLayer {
     this.source = 'main';
     this.filter = [
       'all',
-      ['>=', ['zoom'], ['coalesce', ['get', 'minZoom', ['get', '_dynamic']], data.labelMinZoom]],
-      ['<=', ['zoom'], ['coalesce', ['get', 'maxZoom', ['get', '_dynamic']], data.labelMaxZoom]],
+      ['>=', ['zoom'], ['get', 'dynamic_labelMinZoom']],
+      ['<=', ['zoom'], ['get', 'dynamic_labelMaxZoom']],
       ['==', ['get', 'type', ['get', '_dynamic']], `polygons-label`],
       [
         'any',
@@ -157,13 +130,13 @@ export class PolygonTitlesLayer extends SymbolLayer {
       ['any', ['!', ['has', 'available']], ['==', ['get', 'available'], true]],
     ];
     this.layout = new LayoutProperties({
-      'symbol-placement': ['coalesce', ['get', 'symbolPlacement', ['get', '_dynamic']], data.symbolPlacement],
+      'symbol-placement': data.symbolPlacement,
       'text-anchor': 'center',
       'text-ignore-placement': true,
       'text-allow-overlap': true,
       'text-field': '{title}',
-      'text-font': ['coalesce', ['get', 'textFont', ['get', '_dynamic']], data.textFont],
-      'text-size': ['coalesce', ['get', 'textSize', ['get', '_dynamic']], data.labelFontSize],
+      'text-font': data.textFont,
+      'text-size': data.labelFontSize,
       'text-letter-spacing': 0.005,
       'text-max-width': 7,
     });
@@ -171,14 +144,14 @@ export class PolygonTitlesLayer extends SymbolLayer {
       'text-color': [
         'case',
         ['boolean', ['feature-state', 'selected'], false],
-        ['coalesce', ['get', 'selectedTextColor', ['get', '_dynamic']], data.selectedLabelColor],
+        ['get', 'dynamic_selectedTextColor'],
         ['boolean', ['feature-state', 'hover'], false],
-        ['coalesce', ['get', 'hoverTextColor', ['get', '_dynamic']], data.hoverLabelColor],
+        ['get', 'dynamic_hoverTextColor'],
         ['boolean', ['feature-state', 'active'], false],
-        ['coalesce', ['get', 'activeTextColor', ['get', '_dynamic']], data.hoverLabelColor],
+        ['get', 'dynamic_activeTextColor'],
         ['boolean', ['feature-state', 'disabled'], false],
-        ['coalesce', ['get', 'disabledTextColor', ['get', '_dynamic']], data.disabledLabelColor],
-        ['coalesce', ['get', 'defaultTextColor', ['get', '_dynamic']], data.defaultLabelColor],
+        ['get', 'dynamic_disabledTextColor'],
+        ['get', 'dynamic_defaultTextColor'],
       ],
     });
   }

@@ -253,6 +253,23 @@ export const getFeatures = async ({
             connectedPolygon.properties._dynamic.type = `polygons-custom`;
             connectedPolygon.properties._dynamic.poi_id = feature.properties.id;
             connectedPolygon.properties._dynamic.amenity = feature.properties.amenity;
+
+            connectedPolygon.properties = {
+              ...connectedPolygon.properties,
+              dynamic_minZoom: polygonLayer.minZoom,
+              dynamic_maxZoom: polygonLayer.maxZoom,
+              dynamic_selectedHeight: polygonLayer.selectedPolygonHeight,
+              dynamic_hoverHeight: polygonLayer.hoverPolygonHeight,
+              dynamic_activeHeight: polygonLayer.hoverPolygonHeight,
+              dynamic_disabledHeight: polygonLayer.disabledPolygonHeight,
+              dynamic_defaultHeight: polygonLayer.defaultPolygonHeight,
+              dynamic_base: polygonLayer.base,
+              dynamic_selectedColor: polygonLayer.selectedPolygonColor,
+              dynamic_hoverColor: polygonLayer.hoverPolygonColor,
+              dynamic_activeColor: polygonLayer.hoverPolygonColor,
+              dynamic_disabledColor: polygonLayer.disabledPolygonColor,
+              dynamic_defaultColor: polygonLayer.defaultPolygonColor,
+            };
             // id have to be changed to numeric type so feature state will work
             connectedPolygon.id = connectedPolygon.id;
 
@@ -289,6 +306,22 @@ export const getFeatures = async ({
               connectedLabelLine.properties._dynamic.length = Math.ceil(length(connectedLabelLine) * 1000);
               connectedLabelLine.properties.title = feature.properties.title;
               connectedLabelLine.properties.title_i18n = feature.properties.title_i18n;
+
+              connectedLabelLine.properties = {
+                ...connectedLabelLine.properties,
+                dynamic_iconMinZoom: polygonLayer.iconMinZoom,
+                dynamic_iconMaxZoom: polygonLayer.iconMaxZoom,
+                dynamic_labelMinZoom: polygonLayer.labelMinZoom,
+                dynamic_labelMaxZoom: polygonLayer.labelMaxZoom,
+                dynamic_symbolPlacement: polygonLayer.symbolPlacement,
+                dynamic_disabledOpacity:
+                  polygonLayer.iconImageDefaultVisible || polygonLayer.iconImageDefaultVisible === undefined ? 1 : 0,
+                dynamic_selectedTextColor: polygonLayer.selectedLabelColor,
+                dynamic_hoverTextColor: polygonLayer.hoverLabelColor,
+                dynamic_activeTextColor: polygonLayer.hoverLabelColor,
+                dynamic_disabledTextColor: polygonLayer.disabledLabelColor,
+                dynamic_defaultTextColor: polygonLayer.defaultLabelColor,
+              };
             }
 
             if (!connectedLabelLine) {
@@ -317,6 +350,24 @@ export const getFeatures = async ({
                   labelLineFeature.properties.type = `polygons-label`;
                   labelLineFeature.properties._dynamic.type = `polygons-label`;
                   labelLineFeature.properties._dynamic.length = Math.ceil(length(labelLineFeature) * 1000);
+
+                  labelLineFeature.properties = {
+                    ...labelLineFeature.properties,
+                    dynamic_iconMinZoom: polygonLayer.iconMinZoom,
+                    dynamic_iconMaxZoom: polygonLayer.iconMaxZoom,
+                    dynamic_labelMinZoom: polygonLayer.labelMinZoom,
+                    dynamic_labelMaxZoom: polygonLayer.labelMaxZoom,
+                    dynamic_symbolPlacement: polygonLayer.symbolPlacement,
+                    dynamic_disabledOpacity:
+                      polygonLayer.iconImageDefaultVisible || polygonLayer.iconImageDefaultVisible === undefined
+                        ? 1
+                        : 0,
+                    dynamic_selectedTextColor: polygonLayer.selectedLabelColor,
+                    dynamic_hoverTextColor: polygonLayer.hoverLabelColor,
+                    dynamic_activeTextColor: polygonLayer.hoverLabelColor,
+                    dynamic_disabledTextColor: polygonLayer.disabledLabelColor,
+                    dynamic_defaultTextColor: polygonLayer.defaultLabelColor,
+                  };
                   connectedPolygon.properties._dynamic.label_id = labelLineFeature.properties.id;
                   featuresToAdd.push(labelLineFeature);
                 }
@@ -396,6 +447,23 @@ export const getFeatures = async ({
                 labelBorder.properties.type = `polygons-label`;
                 labelBorder.properties._dynamic.type = `polygons-label`;
                 connectedPolygon.properties._dynamic.label_id = labelBorder.properties.id;
+
+                labelBorder.properties = {
+                  ...labelBorder.properties,
+                  dynamic_iconMinZoom: polygonLayer.iconMinZoom,
+                  dynamic_iconMaxZoom: polygonLayer.iconMaxZoom,
+                  dynamic_labelMinZoom: polygonLayer.labelMinZoom,
+                  dynamic_labelMaxZoom: polygonLayer.labelMaxZoom,
+                  dynamic_symbolPlacement: polygonLayer.symbolPlacement,
+                  dynamic_disabledOpacity:
+                    polygonLayer.iconImageDefaultVisible || polygonLayer.iconImageDefaultVisible === undefined ? 1 : 0,
+                  dynamic_selectedTextColor: polygonLayer.selectedLabelColor,
+                  dynamic_hoverTextColor: polygonLayer.hoverLabelColor,
+                  dynamic_activeTextColor: polygonLayer.hoverLabelColor,
+                  dynamic_disabledTextColor: polygonLayer.disabledLabelColor,
+                  dynamic_defaultTextColor: polygonLayer.defaultLabelColor,
+                };
+
                 featuresToAdd.push(labelBorder);
               }
             }
@@ -550,6 +618,24 @@ export const getFeaturesBundle = async ({
             connectedPolygon.properties._dynamic.type = `polygons-custom`;
             connectedPolygon.properties._dynamic.poi_id = feature.properties.id;
             connectedPolygon.properties._dynamic.amenity = feature.properties.amenity;
+
+            connectedPolygon.properties = {
+              ...connectedPolygon.properties,
+              dynamic_minZoom: polygonLayer.minZoom,
+              dynamic_maxZoom: polygonLayer.maxZoom,
+              dynamic_selectedHeight: polygonLayer.selectedPolygonHeight,
+              dynamic_hoverHeight: polygonLayer.hoverPolygonHeight,
+              dynamic_activeHeight: polygonLayer.hoverPolygonHeight,
+              dynamic_disabledHeight: polygonLayer.disabledPolygonHeight,
+              dynamic_defaultHeight: polygonLayer.defaultPolygonHeight,
+              dynamic_base: polygonLayer.base,
+              dynamic_selectedColor: polygonLayer.selectedPolygonColor,
+              dynamic_hoverColor: polygonLayer.hoverPolygonColor,
+              dynamic_activeColor: polygonLayer.hoverPolygonColor,
+              dynamic_disabledColor: polygonLayer.disabledPolygonColor,
+              dynamic_defaultColor: polygonLayer.defaultPolygonColor,
+            };
+
             // id have to be changed to numeric type so feature state will work
             connectedPolygon.id = connectedPolygon.id;
 
@@ -586,6 +672,22 @@ export const getFeaturesBundle = async ({
               connectedLabelLine.properties._dynamic.length = Math.ceil(length(connectedLabelLine) * 1000);
               connectedLabelLine.properties.title = feature.properties.title;
               connectedLabelLine.properties.title_i18n = feature.properties.title_i18n;
+
+              connectedLabelLine.properties = {
+                ...connectedLabelLine.properties,
+                dynamic_iconMinZoom: polygonLayer.iconMinZoom,
+                dynamic_iconMaxZoom: polygonLayer.iconMaxZoom,
+                dynamic_labelMinZoom: polygonLayer.labelMinZoom,
+                dynamic_labelMaxZoom: polygonLayer.labelMaxZoom,
+                dynamic_symbolPlacement: polygonLayer.symbolPlacement,
+                dynamic_disabledOpacity:
+                  polygonLayer.iconImageDefaultVisible || polygonLayer.iconImageDefaultVisible === undefined ? 1 : 0,
+                dynamic_selectedTextColor: polygonLayer.selectedLabelColor,
+                dynamic_hoverTextColor: polygonLayer.hoverLabelColor,
+                dynamic_activeTextColor: polygonLayer.hoverLabelColor,
+                dynamic_disabledTextColor: polygonLayer.disabledLabelColor,
+                dynamic_defaultTextColor: polygonLayer.defaultLabelColor,
+              };
             }
 
             if (!connectedLabelLine) {
@@ -614,6 +716,25 @@ export const getFeaturesBundle = async ({
                   labelLineFeature.properties.type = `polygons-label`;
                   labelLineFeature.properties._dynamic.type = `polygons-label`;
                   labelLineFeature.properties._dynamic.length = Math.ceil(length(labelLineFeature) * 1000);
+
+                  labelLineFeature.properties = {
+                    ...labelLineFeature.properties,
+                    dynamic_iconMinZoom: polygonLayer.iconMinZoom,
+                    dynamic_iconMaxZoom: polygonLayer.iconMaxZoom,
+                    dynamic_labelMinZoom: polygonLayer.labelMinZoom,
+                    dynamic_labelMaxZoom: polygonLayer.labelMaxZoom,
+                    dynamic_symbolPlacement: polygonLayer.symbolPlacement,
+                    dynamic_disabledOpacity:
+                      polygonLayer.iconImageDefaultVisible || polygonLayer.iconImageDefaultVisible === undefined
+                        ? 1
+                        : 0,
+                    dynamic_selectedTextColor: polygonLayer.selectedLabelColor,
+                    dynamic_hoverTextColor: polygonLayer.hoverLabelColor,
+                    dynamic_activeTextColor: polygonLayer.hoverLabelColor,
+                    dynamic_disabledTextColor: polygonLayer.disabledLabelColor,
+                    dynamic_defaultTextColor: polygonLayer.defaultLabelColor,
+                  };
+
                   connectedPolygon.properties._dynamic.label_id = labelLineFeature.properties.id;
                   featuresToAdd.push(labelLineFeature);
                 }
@@ -693,6 +814,23 @@ export const getFeaturesBundle = async ({
                 labelBorder.properties.type = `polygons-label`;
                 labelBorder.properties._dynamic.type = `polygons-label`;
                 connectedPolygon.properties._dynamic.label_id = labelBorder.properties.id;
+
+                labelBorder.properties = {
+                  ...labelBorder.properties,
+                  dynamic_iconMinZoom: polygonLayer.iconMinZoom,
+                  dynamic_iconMaxZoom: polygonLayer.iconMaxZoom,
+                  dynamic_labelMinZoom: polygonLayer.labelMinZoom,
+                  dynamic_labelMaxZoom: polygonLayer.labelMaxZoom,
+                  dynamic_symbolPlacement: polygonLayer.symbolPlacement,
+                  dynamic_disabledOpacity:
+                    polygonLayer.iconImageDefaultVisible || polygonLayer.iconImageDefaultVisible === undefined ? 1 : 0,
+                  dynamic_selectedTextColor: polygonLayer.selectedLabelColor,
+                  dynamic_hoverTextColor: polygonLayer.hoverLabelColor,
+                  dynamic_activeTextColor: polygonLayer.hoverLabelColor,
+                  dynamic_disabledTextColor: polygonLayer.disabledLabelColor,
+                  dynamic_defaultTextColor: polygonLayer.defaultLabelColor,
+                };
+
                 featuresToAdd.push(labelBorder);
               }
             }
