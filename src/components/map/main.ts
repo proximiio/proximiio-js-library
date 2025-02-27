@@ -3964,7 +3964,7 @@ export class Map {
     this.state.style.setSource('main', this.geojsonSource);
   }
 
-  public getClosestFeature(amenityId: string, fromFeature?: Feature) {
+  public getClosestFeature(amenityId: string, fromFeature?: Feature, handleDefaultPlace: boolean = true) {
     let sameLevelfeatures = this.state.allFeatures.features.filter(
       (i) =>
         i.properties.amenity === amenityId &&
@@ -3974,7 +3974,7 @@ export class Map {
     let features = this.state.allFeatures.features.filter(
       (i) => i.properties.amenity === amenityId && i.geometry.type === 'Point',
     );
-    if (this.defaultOptions.defaultPlaceId) {
+    if (this.defaultOptions.defaultPlaceId && handleDefaultPlace) {
       sameLevelfeatures = sameLevelfeatures.filter((i) => i.properties.place_id === this.defaultOptions.defaultPlaceId);
       features = features.filter((i) => i.properties.place_id === this.defaultOptions.defaultPlaceId);
     }
