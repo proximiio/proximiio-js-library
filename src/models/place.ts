@@ -21,6 +21,7 @@ export class PlaceModel extends BaseModel {
     this.location = data.location ? data.location : { lat: 60.1669635, lng: 24.9217484 };
     this.tags = data.tags;
     this.remoteId = data.remote_id;
+    this.metadata = data.metadata;
   }
 
   get hasLocation() {
