@@ -61,6 +61,7 @@ export interface State {
   readonly initializing: boolean;
   readonly floor: FloorModel;
   readonly floors: FloorModel[];
+  readonly allFloors: FloorModel[];
   readonly place: PlaceModel;
   readonly places: PlaceModel[];
   readonly kiosks: KioskModel[];
@@ -247,6 +248,7 @@ export const globalState: State = {
   initializing: true,
   floor: new FloorModel({}),
   floors: [],
+  allFloors: [],
   place: new PlaceModel({}),
   places: [],
   kiosks: [],
@@ -639,6 +641,7 @@ export class Map {
         places: places.data,
         floor,
         floors: floors.data,
+        allFloors: floors.data,
         kiosks: kiosks.data,
         style,
         styles,
