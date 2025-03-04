@@ -1750,27 +1750,27 @@ export class Map {
             }
           });
         } else {
-          const layer = this.defaultOptions.polygonLayers.find((layer) => layer.layerId === layerId);
-          if (layer) {
-            const polygonIconsLayer = new PolygonIconsLayer(layer);
+          const polygonLayer = this.defaultOptions.polygonLayers.find((layer) => layer.layerId === layerId);
+          if (polygonLayer) {
+            const polygonIconsLayer = new PolygonIconsLayer(polygonLayer);
             polygonIconsLayer.setFilterLevel(this.state.floor.level);
             this.state.style.addLayer(polygonIconsLayer.json, 'proximiio-paths');
 
-            const polygonTitlesLayer = new PolygonTitlesLayer(layer);
+            const polygonTitlesLayer = new PolygonTitlesLayer(polygonLayer);
             polygonTitlesLayer.setFilterLevel(this.state.floor.level);
             this.state.style.addLayer(polygonTitlesLayer.json, 'proximiio-paths');
 
-            const polygonsLayer = new PolygonsLayer(layer);
+            const polygonsLayer = new PolygonsLayer(polygonLayer);
             polygonsLayer.setFilterLevel(this.state.floor.level);
             this.state.style.addLayer(polygonsLayer.json, 'proximiio-paths');
 
-            this.map.on('click', `${layer.layerId}-custom`, (e) => {
+            this.map.on('click', `${polygonLayer.layerId}-custom`, (e) => {
               this.onShopClick(e);
             });
-            this.map.on('mouseenter', `${layer.layerId}-custom`, (e) => {
+            this.map.on('mouseenter', `${polygonLayer.layerId}-custom`, (e) => {
               this.onShopMouseEnter(e);
             });
-            this.map.on('mousemove', `${layer.layerId}-custom`, (e) => {
+            this.map.on('mousemove', `${polygonLayer.layerId}-custom`, (e) => {
               if (
                 !this.defaultOptions.blockFeatureClickWhileRouting ||
                 (this.defaultOptions.blockFeatureClickWhileRouting &&
@@ -1779,7 +1779,7 @@ export class Map {
                 this.onShopMouseMove(e);
               }
             });
-            this.map.on('mouseleave', `${layer.layerId}-custom`, (e) => {
+            this.map.on('mouseleave', `${polygonLayer.layerId}-custom`, (e) => {
               if (
                 !this.defaultOptions.blockFeatureClickWhileRouting ||
                 (this.defaultOptions.blockFeatureClickWhileRouting &&
