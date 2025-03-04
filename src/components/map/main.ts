@@ -943,7 +943,7 @@ export class Map {
         }) as Feature;
 
         if (this.defaultOptions.kioskSettings.showLabel) {
-          if (this.kioskPopup) {
+          if (this.kioskPopup && Object.keys(this.kioskPopup).length > 0) {
             this.kioskPopup.setLngLat(this.defaultOptions.kioskSettings.coordinates);
           } else {
             this.kioskPopup = new maplibregl.Popup({
@@ -1144,6 +1144,7 @@ export class Map {
 
       if (this.kioskPopup) {
         this.kioskPopup.remove();
+        this.kioskPopup = undefined;
       }
 
       if (document.getElementById('proximiio-kiosk-popup-css')) {
@@ -1735,7 +1736,9 @@ export class Map {
             if (
               !this.defaultOptions.blockFeatureClickWhileRouting ||
               (this.defaultOptions.blockFeatureClickWhileRouting &&
-                (!this.routingSource.route || this.routingSource.preview))
+                !this.routingSource.route &&
+                !this.routingSource.preview &&
+                this.routingSource.navigationType === 'mall')
             ) {
               this.onShopMouseMove(e);
             }
@@ -1744,7 +1747,9 @@ export class Map {
             if (
               !this.defaultOptions.blockFeatureClickWhileRouting ||
               (this.defaultOptions.blockFeatureClickWhileRouting &&
-                (!this.routingSource.route || this.routingSource.preview))
+                !this.routingSource.route &&
+                !this.routingSource.preview &&
+                this.routingSource.navigationType === 'mall')
             ) {
               this.onShopMouseLeave(e);
             }
@@ -1774,7 +1779,9 @@ export class Map {
               if (
                 !this.defaultOptions.blockFeatureClickWhileRouting ||
                 (this.defaultOptions.blockFeatureClickWhileRouting &&
-                  (!this.routingSource.route || this.routingSource.preview))
+                  !this.routingSource.route &&
+                  !this.routingSource.preview &&
+                  this.routingSource.navigationType === 'mall')
               ) {
                 this.onShopMouseMove(e);
               }
@@ -1783,7 +1790,9 @@ export class Map {
               if (
                 !this.defaultOptions.blockFeatureClickWhileRouting ||
                 (this.defaultOptions.blockFeatureClickWhileRouting &&
-                  (!this.routingSource.route || this.routingSource.preview))
+                  !this.routingSource.route &&
+                  !this.routingSource.preview &&
+                  this.routingSource.navigationType === 'mall')
               ) {
                 this.onShopMouseLeave(e);
               }
@@ -1878,7 +1887,10 @@ export class Map {
   ) {
     if (
       !this.defaultOptions.blockFeatureClickWhileRouting ||
-      (this.defaultOptions.blockFeatureClickWhileRouting && (!this.routingSource.route || this.routingSource.preview))
+      (this.defaultOptions.blockFeatureClickWhileRouting &&
+        !this.routingSource.route &&
+        !this.routingSource.preview &&
+        this.routingSource.navigationType === 'mall')
     ) {
       if (e.features && e.features[0] && e.features[0].properties) {
         e.features[0].properties._dynamic = e.features[0].properties._dynamic
@@ -5135,6 +5147,10 @@ export class Map {
    *  });
    */
   public setKiosk(lat: number, lng: number, level: number) {
+    if (!this.defaultOptions.isKiosk) {
+      this.defaultOptions.isKiosk = true;
+      this.initKiosk();
+    }
     if (this.defaultOptions.isKiosk) {
       this.onSetKiosk(lat, lng, level);
     } else {
