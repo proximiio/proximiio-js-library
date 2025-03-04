@@ -114,6 +114,7 @@ export interface PolygonOptions {
   handleDisabledPolygons?: boolean;
   iconImage?: string;
   iconImageDefaultVisible?: boolean;
+  layerId?: string;
 }
 
 export interface PolygonLayer extends PolygonOptions {
@@ -1705,17 +1706,91 @@ export class Map {
 
       this.map.setStyle(this.state.style);
 
-      const polygonIconsLayer = new PolygonIconsLayer(this.defaultOptions.polygonsOptions);
-      polygonIconsLayer.setFilterLevel(this.state.floor.level);
-      this.state.style.addLayer(polygonIconsLayer.json, 'proximiio-paths');
+      const uniqueLayerIds = [
+        ...new Set(this.defaultOptions.polygonLayers.map((layer) => layer.layerId).filter(Boolean)),
+        'polygons',
+      ];
 
-      const polygonTitlesLayer = new PolygonTitlesLayer(this.defaultOptions.polygonsOptions);
-      polygonTitlesLayer.setFilterLevel(this.state.floor.level);
-      this.state.style.addLayer(polygonTitlesLayer.json, 'proximiio-paths');
+      for (const layerId of uniqueLayerIds) {
+        if (layerId === 'polygons') {
+          const polygonIconsLayer = new PolygonIconsLayer(this.defaultOptions.polygonsOptions);
+          polygonIconsLayer.setFilterLevel(this.state.floor.level);
+          this.state.style.addLayer(polygonIconsLayer.json, 'proximiio-paths');
 
-      const polygonsLayer = new PolygonsLayer(this.defaultOptions.polygonsOptions);
-      polygonsLayer.setFilterLevel(this.state.floor.level);
-      this.state.style.addLayer(polygonsLayer.json, 'proximiio-paths');
+          const polygonTitlesLayer = new PolygonTitlesLayer(this.defaultOptions.polygonsOptions);
+          polygonTitlesLayer.setFilterLevel(this.state.floor.level);
+          this.state.style.addLayer(polygonTitlesLayer.json, 'proximiio-paths');
+
+          const polygonsLayer = new PolygonsLayer(this.defaultOptions.polygonsOptions);
+          polygonsLayer.setFilterLevel(this.state.floor.level);
+          this.state.style.addLayer(polygonsLayer.json, 'proximiio-paths');
+
+          this.map.on('click', `polygons-custom`, (e) => {
+            this.onShopClick(e);
+          });
+          this.map.on('mouseenter', `polygons-custom`, (e) => {
+            this.onShopMouseEnter(e);
+          });
+          this.map.on('mousemove', `polygons-custom`, (e) => {
+            if (
+              !this.defaultOptions.blockFeatureClickWhileRouting ||
+              (this.defaultOptions.blockFeatureClickWhileRouting &&
+                (!this.routingSource.route || this.routingSource.preview))
+            ) {
+              this.onShopMouseMove(e);
+            }
+          });
+          this.map.on('mouseleave', `polygons-custom`, (e) => {
+            if (
+              !this.defaultOptions.blockFeatureClickWhileRouting ||
+              (this.defaultOptions.blockFeatureClickWhileRouting &&
+                (!this.routingSource.route || this.routingSource.preview))
+            ) {
+              this.onShopMouseLeave(e);
+            }
+          });
+        } else {
+          const layer = this.defaultOptions.polygonLayers.find((layer) => layer.layerId === layerId);
+          if (layer) {
+            const polygonIconsLayer = new PolygonIconsLayer(layer);
+            polygonIconsLayer.setFilterLevel(this.state.floor.level);
+            this.state.style.addLayer(polygonIconsLayer.json, 'proximiio-paths');
+
+            const polygonTitlesLayer = new PolygonTitlesLayer(layer);
+            polygonTitlesLayer.setFilterLevel(this.state.floor.level);
+            this.state.style.addLayer(polygonTitlesLayer.json, 'proximiio-paths');
+
+            const polygonsLayer = new PolygonsLayer(layer);
+            polygonsLayer.setFilterLevel(this.state.floor.level);
+            this.state.style.addLayer(polygonsLayer.json, 'proximiio-paths');
+
+            this.map.on('click', `${layer.layerId}-custom`, (e) => {
+              this.onShopClick(e);
+            });
+            this.map.on('mouseenter', `${layer.layerId}-custom`, (e) => {
+              this.onShopMouseEnter(e);
+            });
+            this.map.on('mousemove', `${layer.layerId}-custom`, (e) => {
+              if (
+                !this.defaultOptions.blockFeatureClickWhileRouting ||
+                (this.defaultOptions.blockFeatureClickWhileRouting &&
+                  (!this.routingSource.route || this.routingSource.preview))
+              ) {
+                this.onShopMouseMove(e);
+              }
+            });
+            this.map.on('mouseleave', `${layer.layerId}-custom`, (e) => {
+              if (
+                !this.defaultOptions.blockFeatureClickWhileRouting ||
+                (this.defaultOptions.blockFeatureClickWhileRouting &&
+                  (!this.routingSource.route || this.routingSource.preview))
+              ) {
+                this.onShopMouseLeave(e);
+              }
+            });
+          }
+        }
+      }
 
       /*this.map.on('click', (e) => {
         // Get all features at the clicked point
@@ -1733,31 +1808,6 @@ export class Map {
           console.log('No layer clicked.');
         }
       });*/
-
-      this.map.on('click', `polygons-custom`, (e) => {
-        this.onShopClick(e);
-      });
-      this.map.on('mouseenter', `polygons-custom`, (e) => {
-        this.onShopMouseEnter(e);
-      });
-      this.map.on('mousemove', `polygons-custom`, (e) => {
-        if (
-          !this.defaultOptions.blockFeatureClickWhileRouting ||
-          (this.defaultOptions.blockFeatureClickWhileRouting &&
-            (!this.routingSource.route || this.routingSource.preview))
-        ) {
-          this.onShopMouseMove(e);
-        }
-      });
-      this.map.on('mouseleave', `polygons-custom`, (e) => {
-        if (
-          !this.defaultOptions.blockFeatureClickWhileRouting ||
-          (this.defaultOptions.blockFeatureClickWhileRouting &&
-            (!this.routingSource.route || this.routingSource.preview))
-        ) {
-          this.onShopMouseLeave(e);
-        }
-      });
 
       // const polygonTitlesLineLayer = new PolygonTitlesLineLayer({ featureType: 'shop' });
       // polygonTitlesLineLayer.setFilterLevel(this.state.floor.level);
@@ -1917,11 +1967,15 @@ export class Map {
       features.length === 0 &&
       ((Array.isArray(poi) && poi.length === 0) || !poi)
     ) {
+      const uniqueLayerIds = [
+        ...new Set(this.defaultOptions.polygonLayers.map((layer) => `${layer.layerId}-custom`).filter(Boolean)),
+        'polygons-custom',
+      ];
       for (const f of featuresWithPolygon) {
         const polygon = this.state.allFeatures.features.find(
           (i) =>
             i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
-            i.properties._dynamic?.type === 'polygons-custom',
+            uniqueLayerIds.includes(i.properties._dynamic?.type),
         );
         if (polygon) {
           this.map.setFeatureState(
@@ -1955,8 +2009,13 @@ export class Map {
     features.forEach((feat) => {
       const connectedPolygonId = feat && feat.properties._dynamic ? feat.properties._dynamic.polygon_id : null;
       if (connectedPolygonId) {
+        const uniqueLayerIds = [
+          ...new Set(this.defaultOptions.polygonLayers.map((layer) => `${layer.layerId}-custom`).filter(Boolean)),
+          'polygons-custom',
+        ];
         const selectedPolygon = this.state.allFeatures.features.find(
-          (i) => i.properties._dynamic?.id === connectedPolygonId && i.properties._dynamic?.type === 'polygons-custom',
+          (i) =>
+            i.properties._dynamic?.id === connectedPolygonId && uniqueLayerIds.includes(i.properties._dynamic?.type),
         );
         if (selectedPolygon) {
           if (this.defaultOptions.polygonsOptions.handleDisabledPolygons) {
@@ -1964,7 +2023,7 @@ export class Map {
               const polygon = this.state.allFeatures.features.find(
                 (i) =>
                   i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
-                  i.properties._dynamic?.type === 'polygons-custom',
+                  uniqueLayerIds.includes(i.properties._dynamic?.type),
               );
               if (polygon) {
                 this.map.setFeatureState(
@@ -2658,12 +2717,16 @@ export class Map {
       const featuresWithPolygon = this.state.allFeatures.features.filter(
         (f) => f.properties._dynamic?.polygon_id && f.geometry.type === 'Point',
       );
+      const uniqueLayerIds = [
+        ...new Set(this.defaultOptions.polygonLayers.map((layer) => `${layer.layerId}-custom`).filter(Boolean)),
+        'polygons-custom',
+      ];
       if (activeFeatures.length > 0) {
         for (const f of featuresWithPolygon) {
           const polygon = this.state.allFeatures.features.find(
             (i) =>
               i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
-              i.properties._dynamic?.type === 'polygons-custom',
+              uniqueLayerIds.includes(i.properties._dynamic?.type),
           );
           if (polygon) {
             this.map.setFeatureState(
@@ -2696,7 +2759,7 @@ export class Map {
           const polygon = this.state.allFeatures.features.find(
             (i) =>
               i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
-              i.properties._dynamic?.type === 'polygons-custom',
+              uniqueLayerIds.includes(i.properties._dynamic?.type),
           );
           if (polygon) {
             if (filterByAmenity([f], amenityId)?.length > 0) {
@@ -2843,11 +2906,15 @@ export class Map {
       const featuresWithPolygon = this.state.allFeatures.features.filter(
         (f) => f.properties._dynamic?.polygon_id && f.geometry.type === 'Point',
       );
+      const uniqueLayerIds = [
+        ...new Set(this.defaultOptions.polygonLayers.map((layer) => `${layer.layerId}-custom`).filter(Boolean)),
+        'polygons-custom',
+      ];
       for (const f of featuresWithPolygon) {
         const polygon = this.state.allFeatures.features.find(
           (i) =>
             i.properties._dynamic?.id === f.properties._dynamic?.polygon_id &&
-            i.properties._dynamic?.type === 'polygons-custom',
+            uniqueLayerIds.includes(i.properties._dynamic?.type),
         );
         if (polygon) {
           this.map.setFeatureState(

@@ -250,7 +250,9 @@ export const getFeatures = async ({
               ? connectedPolygon.properties._dynamic
               : {};
             connectedPolygon.properties._dynamic.id = connectedPolygon.properties.id?.replace(/\{|\}/g, '');
-            connectedPolygon.properties._dynamic.type = `polygons-custom`;
+            connectedPolygon.properties._dynamic.type = `${
+              polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+            }-custom`;
             connectedPolygon.properties._dynamic.poi_id = feature.properties.id;
             connectedPolygon.properties._dynamic.amenity = feature.properties.amenity;
 
@@ -298,8 +300,10 @@ export const getFeatures = async ({
               connectedLabelLine.properties.metadata = feature.properties.metadata;
               connectedLabelLine.properties.id = connectedLabelLine.id;
               connectedLabelLine.properties._dynamic.id = connectedLabelLine.id;
-              connectedLabelLine.properties.type = `polygons-label`;
-              connectedLabelLine.properties._dynamic.type = `polygons-label`;
+              connectedLabelLine.properties.type = `${polygonLayer.layerId ? polygonLayer.layerId : 'polygons'}-label`;
+              connectedLabelLine.properties._dynamic.type = `${
+                polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+              }-label`;
               connectedLabelLine.properties._dynamic.poi_id = feature.properties.id;
               connectedLabelLine.properties._dynamic.amenity = feature.properties.amenity;
               connectedLabelLine.properties._dynamic.polygon_id = connectedPolygon.properties._dynamic.id;
@@ -347,8 +351,12 @@ export const getFeatures = async ({
                   };
                   labelLineFeature.properties.id = `${connectedPolygon.id}9999`;
                   labelLineFeature.id = `${connectedPolygon.id}9999`;
-                  labelLineFeature.properties.type = `polygons-label`;
-                  labelLineFeature.properties._dynamic.type = `polygons-label`;
+                  labelLineFeature.properties.type = `${
+                    polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+                  }-label`;
+                  labelLineFeature.properties._dynamic.type = `${
+                    polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+                  }-label`;
                   labelLineFeature.properties._dynamic.length = Math.ceil(length(labelLineFeature) * 1000);
 
                   labelLineFeature.properties = {
@@ -444,8 +452,10 @@ export const getFeatures = async ({
                 // labelBorder.properties = { ...labelBorder.properties, ...feature.properties };
                 labelBorder.properties.id = `${connectedPolygon.id}9999`;
                 labelBorder.id = `${connectedPolygon.id}9999`;
-                labelBorder.properties.type = `polygons-label`;
-                labelBorder.properties._dynamic.type = `polygons-label`;
+                labelBorder.properties.type = `${polygonLayer.layerId ? polygonLayer.layerId : 'polygons'}-label`;
+                labelBorder.properties._dynamic.type = `${
+                  polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+                }-label`;
                 connectedPolygon.properties._dynamic.label_id = labelBorder.properties.id;
 
                 labelBorder.properties = {
@@ -615,7 +625,9 @@ export const getFeaturesBundle = async ({
               ? connectedPolygon.properties._dynamic
               : {};
             connectedPolygon.properties._dynamic.id = connectedPolygon.properties.id?.replace(/\{|\}/g, '');
-            connectedPolygon.properties._dynamic.type = `polygons-custom`;
+            connectedPolygon.properties._dynamic.type = `${
+              polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+            }-custom`;
             connectedPolygon.properties._dynamic.poi_id = feature.properties.id;
             connectedPolygon.properties._dynamic.amenity = feature.properties.amenity;
 
@@ -664,8 +676,10 @@ export const getFeaturesBundle = async ({
               connectedLabelLine.properties.metadata = feature.properties.metadata;
               connectedLabelLine.properties.id = connectedLabelLine.id;
               connectedLabelLine.properties._dynamic.id = connectedLabelLine.id;
-              connectedLabelLine.properties.type = `polygons-label`;
-              connectedLabelLine.properties._dynamic.type = `polygons-label`;
+              connectedLabelLine.properties.type = `${polygonLayer.layerId ? polygonLayer.layerId : 'polygons'}-label`;
+              connectedLabelLine.properties._dynamic.type = `${
+                polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+              }-label`;
               connectedLabelLine.properties._dynamic.poi_id = feature.properties.id;
               connectedLabelLine.properties._dynamic.amenity = feature.properties.amenity;
               connectedLabelLine.properties._dynamic.polygon_id = connectedPolygon.properties._dynamic.id;
@@ -713,8 +727,12 @@ export const getFeaturesBundle = async ({
                   };
                   labelLineFeature.properties.id = `${connectedPolygon.id}9999`;
                   labelLineFeature.id = `${connectedPolygon.id}9999`;
-                  labelLineFeature.properties.type = `polygons-label`;
-                  labelLineFeature.properties._dynamic.type = `polygons-label`;
+                  labelLineFeature.properties.type = `${
+                    polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+                  }-label`;
+                  labelLineFeature.properties._dynamic.type = `${
+                    polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+                  }-label`;
                   labelLineFeature.properties._dynamic.length = Math.ceil(length(labelLineFeature) * 1000);
 
                   labelLineFeature.properties = {
@@ -811,8 +829,10 @@ export const getFeaturesBundle = async ({
                 // labelBorder.properties = { ...labelBorder.properties, ...feature.properties };
                 labelBorder.properties.id = `${connectedPolygon.id}9999`;
                 labelBorder.id = `${connectedPolygon.id}9999`;
-                labelBorder.properties.type = `polygons-label`;
-                labelBorder.properties._dynamic.type = `polygons-label`;
+                labelBorder.properties.type = `${polygonLayer.layerId ? polygonLayer.layerId : 'polygons'}-label`;
+                labelBorder.properties._dynamic.type = `${
+                  polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+                }-label`;
                 connectedPolygon.properties._dynamic.label_id = labelBorder.properties.id;
 
                 labelBorder.properties = {

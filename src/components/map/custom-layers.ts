@@ -4,19 +4,19 @@ import LineLayer, {
   PaintProperties as LinePaintProperties,
 } from './layers/line_layer';
 import SymbolLayer, { LayoutProperties, PaintProperties as PaintPropertiesSymbol } from './layers/symbol_layer';
-import { PolygonOptions } from './main';
+import { PolygonLayer, PolygonOptions } from './main';
 
 export class PolygonsLayer extends FillExtrusionLayer {
-  constructor(data: PolygonOptions) {
+  constructor(data: PolygonLayer | PolygonOptions) {
     super(data);
-    this.id = `polygons-custom`;
+    this.id = `${data.layerId ? data.layerId : 'polygons'}-custom`;
     this.type = 'fill-extrusion';
     this.source = 'main';
     this.filter = [
       'all',
       ['>=', ['zoom'], ['get', 'dynamic_minZoom']],
       ['<=', ['zoom'], ['get', 'dynamic_maxZoom']],
-      ['==', ['get', 'type', ['get', '_dynamic']], `polygons-custom`],
+      ['==', ['get', 'type', ['get', '_dynamic']], `${data.layerId ? data.layerId : 'polygons'}-custom`],
       ['==', ['to-number', ['get', 'level']], 0],
     ];
     this.paint = new PaintProperties({
@@ -53,16 +53,16 @@ export class PolygonsLayer extends FillExtrusionLayer {
 }
 
 export class PolygonIconsLayer extends SymbolLayer {
-  constructor(data: PolygonOptions) {
+  constructor(data: PolygonLayer | PolygonOptions) {
     super(data);
-    this.id = `polygons-icons`;
+    this.id = `${data.layerId ? data.layerId : 'polygons'}-icons`;
     this.type = 'symbol';
     this.source = 'main';
     this.filter = [
       'all',
       ['>=', ['zoom'], ['get', 'dynamic_iconMinZoom']],
       ['<=', ['zoom'], ['get', 'dynamic_iconMaxZoom']],
-      ['==', ['get', 'type', ['get', '_dynamic']], `polygons-label`],
+      ['==', ['get', 'type', ['get', '_dynamic']], `${data.layerId ? data.layerId : 'polygons'}-label`],
       [
         'any',
         ['all', ['!', ['has', 'icon_only']], ['!', ['has', 'text_only']]],
@@ -104,16 +104,16 @@ export class PolygonIconsLayer extends SymbolLayer {
 }
 
 export class PolygonTitlesLayer extends SymbolLayer {
-  constructor(data: PolygonOptions) {
+  constructor(data: PolygonLayer | PolygonOptions) {
     super(data);
-    this.id = `polygons-labels`;
+    this.id = `${data.layerId ? data.layerId : 'polygons'}-labels`;
     this.type = 'symbol';
     this.source = 'main';
     this.filter = [
       'all',
       ['>=', ['zoom'], ['get', 'dynamic_labelMinZoom']],
       ['<=', ['zoom'], ['get', 'dynamic_labelMaxZoom']],
-      ['==', ['get', 'type', ['get', '_dynamic']], `polygons-label`],
+      ['==', ['get', 'type', ['get', '_dynamic']], `${data.layerId ? data.layerId : 'polygons'}-label`],
       [
         'any',
         ['all', ['!', ['has', 'icon_only']], ['!', ['has', 'text_only']]],
