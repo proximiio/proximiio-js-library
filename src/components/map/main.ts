@@ -1683,6 +1683,13 @@ export class Map {
     }
   }
 
+  private async onBootPolygons() {
+    this.defaultOptions.initPolygons = true;
+    await this.onRefetch();
+    this.initPolygons();
+    this.onFloorSelect(this.state.floor);
+  }
+
   private initPolygons() {
     if (this.map) {
       for (const layer of this.defaultOptions.polygonLayers) {
@@ -5687,6 +5694,10 @@ export class Map {
    */
   public stopRouteAnimation(keepRoute?: boolean) {
     this.onStopRouteAnimation(keepRoute);
+  }
+
+  public bootPolygons() {
+    this.onBootPolygons();
   }
 }
 /* TODO
