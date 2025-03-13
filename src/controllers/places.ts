@@ -88,4 +88,5 @@ export const getPlaceByIdBundle = async ({
 export default {
   getPlaces,
   getPlaceById,
+  getPlaceByIdBundle,
 };

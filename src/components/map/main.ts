@@ -277,6 +277,7 @@ export class Map {
   private routingSource: RoutingSource = new RoutingSource();
   private clusterSource: ClusterSource = new ClusterSource();
   private imageSourceManager: ImageSourceManager = new ImageSourceManager();
+  private onMapLoadListener = new CustomSubject<boolean>();
   private onMapReadyListener = new CustomSubject<boolean>();
   private onMainSourceLoadedListener = new CustomSubject<boolean>();
   private onMapFailedListener = new CustomSubject<boolean>();
@@ -674,6 +675,7 @@ export class Map {
       });
 
       this.map.on('load', async (e) => {
+        this.onMapLoadListener.next(true);
         this.map.setCenter(centerVar);
         await this.onMapReady(e);
       });
@@ -4220,6 +4222,19 @@ export class Map {
     return this.state;
   }
 
+  /**
+   *  @memberof Map
+   *  @name getMapLoadListener
+   *  @returns returns map load listener
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapLoadListener().subscribe(loaded => {
+   *    console.log('map load', loaded);
+   *  });
+   */
+  public getMapLoadListener() {
+    return this.onMapLoadListener;
+  }
   /**
    *  @memberof Map
    *  @name getMapReadyListener

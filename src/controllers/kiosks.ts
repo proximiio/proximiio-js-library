@@ -69,7 +69,28 @@ export const getKioskById = async (kioskId: string): Promise<KioskModel> => {
   }
 };
 
+export const getKioskByIdBundle = async ({
+  bundleUrl,
+  kioskId,
+}: {
+  bundleUrl: string;
+  kioskId: string;
+}): Promise<KioskModel> => {
+  try {
+    const res = await fetch(`${bundleUrl}/kiosks.json`);
+    const data = await res.json();
+    return data.find(
+      (item: any) =>
+        item.id.toLowerCase() === kioskId.toLowerCase() || item.name.toLowerCase() === kioskId.toLowerCase(),
+    );
+  } catch (e) {
+    throw new Error(`Retrieving kiosk failed, ${e.message}`);
+  }
+};
+
 export default {
   getKiosks,
+  getKiosksBundle,
   getKioskById,
+  getKioskByIdBundle,
 };

@@ -954,6 +954,36 @@ export const deleteFeatures = async (featureCollection: FCModel) => {
   }
 };
 
+export const getFeatureById = async (featureId: string): Promise<Feature> => {
+  try {
+    const res = await axios.get(`/v5/geo/feature/${featureId}`);
+    return new Feature(res.data) as Feature;
+  } catch (e) {
+    throw new Error(`Retrieving feature by id '${featureId}' failed, ${e.message}`);
+  }
+};
+
+export const getFeatureByIdBundle = async ({
+  bundleUrl,
+  featureId,
+}: {
+  bundleUrl: string;
+  featureId: string;
+}): Promise<Feature> => {
+  try {
+    const res = await fetch(`${bundleUrl}/features.json`);
+    const data = await res.json();
+    return data.find(
+      (item: any) =>
+        item.id.toLowerCase() === featureId.toLowerCase() ||
+        item.properties?.title.toLowerCase() === featureId.toLowerCase() ||
+        item.properties?.id.toLowerCase() === featureId.toLowerCase(),
+    );
+  } catch (e) {
+    throw new Error(`Retrieving feature failed, ${e.message}`);
+  }
+};
+
 export default {
   getFeatures,
   addFeatures,
@@ -961,4 +991,6 @@ export default {
   deleteFeatures,
   getAmenities,
   getPois,
+  getFeatureById,
+  getFeatureByIdBundle,
 };

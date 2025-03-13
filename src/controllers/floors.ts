@@ -83,7 +83,35 @@ export const getPlaceFloorsBundle = async ({
   }
 };
 
+export const getFloorById = async (floorId: string): Promise<FloorModel> => {
+  try {
+    const res = await axios.get(`core/floors/${floorId}`);
+    return new FloorModel(res.data) as FloorModel;
+  } catch (e) {
+    throw new Error(`Retrieving floor by id '${floorId}' failed, ${e.message}`);
+  }
+};
+
+export const getFloorByIdBundle = async ({
+  bundleUrl,
+  floorId,
+}: {
+  bundleUrl: string;
+  floorId: string;
+}): Promise<FloorModel> => {
+  try {
+    const res = await fetch(`${bundleUrl}/floors.json`);
+    const data = await res.json();
+    return data.find((item: any) => item.id === floorId);
+  } catch (e) {
+    throw new Error(`Retrieving floor failed, ${e.message}`);
+  }
+};
+
 export default {
   getFloors,
+  getFloorsBundle,
   getPlaceFloors,
+  getFloorById,
+  getFloorByIdBundle,
 };
