@@ -2,6 +2,7 @@ import { axios } from '../common';
 import { LoginDataModel } from '../models/auth-data';
 
 let loggedUser = null;
+let token = null;
 
 /**
  *  @memberof Auth
@@ -84,7 +85,8 @@ export const loginWithToken = async (token: string) => {
  *  });
  */
 
-export const setToken = async (token: string) => {
+export const setToken = async (tkn: string) => {
+  token = tkn;
   axios.defaults.headers.common.Authorization = token;
   return `Token set successfully: ${token}`;
 };
@@ -128,4 +130,6 @@ export default {
   setToken,
   getUserConfig,
   getCurrentUser,
+  token,
+  loggedUser,
 };

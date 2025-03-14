@@ -277,6 +277,7 @@ export class Map {
   private routingSource: RoutingSource = new RoutingSource();
   private clusterSource: ClusterSource = new ClusterSource();
   private imageSourceManager: ImageSourceManager = new ImageSourceManager();
+  private onDataFetchedListener = new CustomSubject<boolean>();
   private onMapLoadListener = new CustomSubject<boolean>();
   private onMapReadyListener = new CustomSubject<boolean>();
   private onMainSourceLoadedListener = new CustomSubject<boolean>();
@@ -658,6 +659,7 @@ export class Map {
         noPlaces: places.data.length === 0,
         // user,
       };
+      this.onDataFetchedListener.next(true);
       style.on(this.onStyleChange);
 
       if (this.defaultOptions.pmTilesUrl) {
@@ -4224,6 +4226,20 @@ export class Map {
 
   /**
    *  @memberof Map
+   *  @name getDataFetchedListener
+   *  @returns returns map data fetched listener
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getDataFetchedListener().subscribe(fetched => {
+   *    console.log('data fetched', fetched);
+   *  });
+   */
+  public getDataFetchedListener() {
+    return this.onDataFetchedListener;
+  }
+
+  /**
+   *  @memberof Map
    *  @name getMapLoadListener
    *  @returns returns map load listener
    *  @example
@@ -4235,6 +4251,7 @@ export class Map {
   public getMapLoadListener() {
     return this.onMapLoadListener;
   }
+
   /**
    *  @memberof Map
    *  @name getMapReadyListener

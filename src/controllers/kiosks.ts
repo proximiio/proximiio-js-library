@@ -81,7 +81,7 @@ export const getKioskByIdBundle = async ({
     const data = await res.json();
     return data.find(
       (item: any) =>
-        item.id.toLowerCase() === kioskId.toLowerCase() || item.name.toLowerCase() === kioskId.toLowerCase(),
+        item.id?.toLowerCase() === kioskId.toLowerCase() || item.name?.toLowerCase() === kioskId.toLowerCase(),
     );
   } catch (e) {
     throw new Error(`Retrieving kiosk failed, ${e.message}`);

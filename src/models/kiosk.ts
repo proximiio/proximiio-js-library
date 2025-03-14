@@ -11,6 +11,7 @@ export class KioskModel extends BaseModel {
   bearing?: number;
   pitch?: number;
   bounds?: [[number, number], [number, number]];
+  floor_id?: string;
 
   constructor(data: any) {
     super(data);
@@ -21,6 +22,7 @@ export class KioskModel extends BaseModel {
     this.bearing = data.bearing;
     this.pitch = data.pitch;
     this.bounds = data.bounds;
+    this.floor_id = data.floor_id;
   }
 
   get hasLocation() {

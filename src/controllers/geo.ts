@@ -973,11 +973,11 @@ export const getFeatureByIdBundle = async ({
   try {
     const res = await fetch(`${bundleUrl}/features.json`);
     const data = await res.json();
-    return data.find(
+    return data.features.find(
       (item: any) =>
-        item.id.toLowerCase() === featureId.toLowerCase() ||
-        item.properties?.title.toLowerCase() === featureId.toLowerCase() ||
-        item.properties?.id.toLowerCase() === featureId.toLowerCase(),
+        item.id?.toLowerCase() === featureId.toLowerCase() ||
+        item.properties?.title?.toLowerCase() === featureId.toLowerCase() ||
+        item.properties?.id?.toLowerCase() === featureId.toLowerCase(),
     );
   } catch (e) {
     throw new Error(`Retrieving feature failed, ${e.message}`);
