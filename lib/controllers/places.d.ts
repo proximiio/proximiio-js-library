@@ -20,5 +20,9 @@ declare const _default: {
         total: number;
     }>;
     getPlaceById: (placeId: string) => Promise<PlaceModel>;
+    getPlaceByIdBundle: ({ bundleUrl, placeId, }: {
+        bundleUrl: string;
+        placeId: string;
+    }) => Promise<PlaceModel>;
 };
 export default _default;

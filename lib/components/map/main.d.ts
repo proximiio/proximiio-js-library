@@ -14,6 +14,7 @@ export interface State {
     readonly initializing: boolean;
     readonly floor: FloorModel;
     readonly floors: FloorModel[];
+    readonly allFloors: FloorModel[];
     readonly place: PlaceModel;
     readonly places: PlaceModel[];
     readonly kiosks: KioskModel[];
@@ -62,11 +63,15 @@ export interface PolygonOptions {
     adaptiveLabelOpacity?: boolean;
     adaptiveMaxPitch?: number;
     drawRouteUnderPolygons?: boolean;
+    handleDisabledPolygons?: boolean;
+    iconImage?: string;
+    iconImageDefaultVisible?: boolean;
+    layerId?: string;
 }
 export interface PolygonLayer extends PolygonOptions {
     featureType: string;
-    iconImage?: string;
-    iconImageDefaultVisible?: boolean;
+    autoAssign?: boolean;
+    initOnLevelchangers?: boolean;
 }
 export interface Options {
     bundleUrl?: string;
@@ -197,6 +202,8 @@ export declare class Map {
     private routingSource;
     private clusterSource;
     private imageSourceManager;
+    private onDataFetchedListener;
+    private onMapLoadListener;
     private onMapReadyListener;
     private onMainSourceLoadedListener;
     private onMapFailedListener;
@@ -251,6 +258,7 @@ export declare class Map {
     private onSetFeaturesHighlight;
     private initAnimatedRoute;
     private initRasterTiles;
+    private onBootPolygons;
     private initPolygons;
     private updateLayerOpacity;
     private onShopClick;
@@ -316,7 +324,7 @@ export declare class Map {
     private onStopRouteAnimation;
     private onJumpToRouteEnd;
     private translateLayers;
-    getClosestFeature(amenityId: string, fromFeature?: Feature): false | Feature;
+    getClosestFeature(amenityId: string, fromFeature?: Feature, handleDefaultPlace?: boolean): false | Feature;
     getFloorName(floor: FloorModel): string;
     private handleControllerError;
     private InjectCSS;
@@ -345,6 +353,28 @@ export declare class Map {
      *  map.getMapState();
      */
     getMapState(): any;
+    /**
+     *  @memberof Map
+     *  @name getDataFetchedListener
+     *  @returns returns map data fetched listener
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getDataFetchedListener().subscribe(fetched => {
+     *    console.log('data fetched', fetched);
+     *  });
+     */
+    getDataFetchedListener(): CustomSubject<boolean>;
+    /**
+     *  @memberof Map
+     *  @name getMapLoadListener
+     *  @returns returns map load listener
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapLoadListener().subscribe(loaded => {
+     *    console.log('map load', loaded);
+     *  });
+     */
+    getMapLoadListener(): CustomSubject<boolean>;
     /**
      *  @memberof Map
      *  @name getMapReadyListener
@@ -1285,4 +1315,5 @@ export declare class Map {
      *  });
      */
     stopRouteAnimation(keepRoute?: boolean): void;
+    bootPolygons(): void;
 }

@@ -10,6 +10,7 @@ export declare class KioskModel extends BaseModel {
     bearing?: number;
     pitch?: number;
     bounds?: [[number, number], [number, number]];
+    floor_id?: string;
     constructor(data: any);
     get hasLocation(): boolean;
 }

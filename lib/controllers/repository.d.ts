@@ -5,9 +5,10 @@ import { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 import { LngLatBoundsLike } from 'maplibre-gl';
 import { KioskModel } from '../models/kiosk';
-export declare const getPackage: ({ initPolygons, polygonFeatureTypes, autoLabelLines, amenityIdProperty, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, }: {
+import { PolygonLayer } from '../components/map/main';
+export declare const getPackage: ({ initPolygons, polygonLayers, autoLabelLines, amenityIdProperty, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, }: {
     initPolygons?: boolean;
-    polygonFeatureTypes?: string[];
+    polygonLayers?: PolygonLayer[];
     autoLabelLines?: boolean;
     amenityIdProperty?: string;
     hiddenAmenities?: string[];
@@ -27,9 +28,9 @@ export declare const getPackage: ({ initPolygons, polygonFeatureTypes, autoLabel
     amenities: AmenityModel[];
 }>;
 declare const _default: {
-    getPackage: ({ initPolygons, polygonFeatureTypes, autoLabelLines, amenityIdProperty, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, }: {
+    getPackage: ({ initPolygons, polygonLayers, autoLabelLines, amenityIdProperty, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, }: {
         initPolygons?: boolean;
-        polygonFeatureTypes?: string[];
+        polygonLayers?: PolygonLayer[];
         autoLabelLines?: boolean;
         amenityIdProperty?: string;
         hiddenAmenities?: string[];

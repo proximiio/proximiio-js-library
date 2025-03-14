@@ -35,4 +35,5 @@ declare const optimizeFeatures: (features: Feature[]) => {
     };
     properties: any;
 }[];
-export { calculateDimensions, convertToRTL, base64toBlob, throttle, filterByAmenity, validateLabelLine, optimizeFeatures, };
+declare const isLevelChanger: (poi: Feature) => boolean;
+export { calculateDimensions, convertToRTL, base64toBlob, throttle, filterByAmenity, validateLabelLine, optimizeFeatures, isLevelChanger, };

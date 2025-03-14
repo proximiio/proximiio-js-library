@@ -1,10 +1,11 @@
 import Feature, { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
+import { PolygonLayer } from '../components/map/main';
 import { FeatureCollection as FCModel, Feature as FModel } from '@turf/helpers';
 import { LngLatBoundsLike } from 'maplibre-gl';
-export declare const getFeatures: ({ initPolygons, polygonFeatureTypes, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, }: {
+export declare const getFeatures: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, }: {
     initPolygons?: boolean;
-    polygonFeatureTypes?: string[];
+    polygonLayers: PolygonLayer[];
     autoLabelLines?: boolean;
     hiddenAmenities?: string[];
     useTimerangeData?: boolean;
@@ -18,9 +19,9 @@ export declare const getFeatures: ({ initPolygons, polygonFeatureTypes, autoLabe
         features?: FeatureCollection;
     };
 }) => Promise<FeatureCollection>;
-export declare const getFeaturesBundle: ({ initPolygons, polygonFeatureTypes, autoLabelLines, hiddenAmenities, useTimerangeData, filter, bundleUrl, }: {
+export declare const getFeaturesBundle: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, bundleUrl, }: {
     initPolygons?: boolean;
-    polygonFeatureTypes?: string[];
+    polygonLayers: PolygonLayer[];
     autoLabelLines?: boolean;
     hiddenAmenities?: string[];
     useTimerangeData?: boolean;
@@ -45,10 +46,15 @@ export declare const getPois: () => Promise<Feature[]>;
 export declare const addFeatures: (featureCollection: FCModel) => Promise<void>;
 export declare const updateFeature: (featureData: FModel, featureId: string) => Promise<void>;
 export declare const deleteFeatures: (featureCollection: FCModel) => Promise<void>;
+export declare const getFeatureById: (featureId: string) => Promise<Feature>;
+export declare const getFeatureByIdBundle: ({ bundleUrl, featureId, }: {
+    bundleUrl: string;
+    featureId: string;
+}) => Promise<Feature>;
 declare const _default: {
-    getFeatures: ({ initPolygons, polygonFeatureTypes, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, }: {
+    getFeatures: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, }: {
         initPolygons?: boolean;
-        polygonFeatureTypes?: string[];
+        polygonLayers: PolygonLayer[];
         autoLabelLines?: boolean;
         hiddenAmenities?: string[];
         useTimerangeData?: boolean;
@@ -78,5 +84,10 @@ declare const _default: {
         };
     }) => Promise<any>;
     getPois: () => Promise<Feature[]>;
+    getFeatureById: (featureId: string) => Promise<Feature>;
+    getFeatureByIdBundle: ({ bundleUrl, featureId, }: {
+        bundleUrl: string;
+        featureId: string;
+    }) => Promise<Feature>;
 };
 export default _default;
