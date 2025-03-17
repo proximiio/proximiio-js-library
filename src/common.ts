@@ -242,6 +242,10 @@ const validateLabelLine = (labelLine: string | [][], polygon: any, feature: any)
     // Check if the LineString is inside the polygon
     const isInside = booleanWithin(lineStringFeature, polygon);
 
+    if (!isInside) {
+      console.log('LineString is not inside the polygon.', lineStringFeature, polygon);
+    }
+
     return isInside;
   } catch (error) {
     console.log('Invalid input:', error.message);
