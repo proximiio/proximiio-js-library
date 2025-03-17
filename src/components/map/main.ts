@@ -87,14 +87,17 @@ export interface PolygonOptions {
   hoverPolygonColor?: string;
   selectedPolygonColor?: string;
   disabledPolygonColor?: string;
+  activePolygonColor?: string;
   defaultLabelColor?: string;
   hoverLabelColor?: string;
   selectedLabelColor?: string;
   disabledLabelColor?: string;
+  activeLabelColor?: string;
   defaultPolygonHeight?: number;
   hoverPolygonHeight?: number;
   selectedPolygonHeight?: number;
   disabledPolygonHeight?: number;
+  activePolygonHeight?: number;
   base?: number;
   opacity?: number;
   removeOriginalPolygonsLayer?: boolean;
