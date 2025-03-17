@@ -1932,6 +1932,13 @@ export class Map {
           if (polygonPoi ? polygonPoi.properties.available === false : poi.properties.available === false) {
             if (this.defaultOptions.disableUnavailablePois) return;
           }
+          if (
+            polygonPoi
+              ? polygonPoi.properties.metadata?.clickable === 'false'
+              : poi.properties.metadata?.clickable === 'false'
+          ) {
+            return;
+          }
           if (polygonPoi) {
             this.handlePolygonSelection(polygonPoi);
           }
@@ -1942,6 +1949,9 @@ export class Map {
             (i) => i.properties.id === e.features[0].properties.id,
           ) as Feature;
           if (this.defaultOptions.disableUnavailablePois && poi.properties.available === false) {
+            return;
+          }
+          if (poi.properties.metadata?.clickable === 'false') {
             return;
           }
           this.onPoiClickListener.next(poi);
