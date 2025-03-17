@@ -282,9 +282,9 @@ const optimizeFeature = (feature: Feature) => {
   // Function to recursively shorten coordinates (handling nested arrays)
   function shortenCoordinates(coords) {
     if (Array.isArray(coords)) {
-      return coords.map((c) => (Array.isArray(c) ? shortenCoordinates(c) : Number(c.toFixed(6))));
+      return coords.map((c) => (Array.isArray(c) ? shortenCoordinates(c) : Number(c.toFixed(8))));
     }
-    return Number(coords.toFixed(6));
+    return Number(coords.toFixed(8));
   }
 
   // Optimize geometry by shortening coordinate precision
