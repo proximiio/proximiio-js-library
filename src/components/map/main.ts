@@ -208,6 +208,7 @@ export interface Options {
     startFeauture?: string;
     destinationFeature?: string;
     defaultPlace?: string;
+    autoRouting?: boolean;
   };
   useGpsLocation?: boolean;
   geolocationControlOptions?: {
@@ -413,6 +414,7 @@ export class Map {
       startFeauture: 'startFeature',
       destinationFeature: 'destinationFeature',
       defaultPlace: 'defaultPlace',
+      autoRouting: true,
     },
     useGpsLocation: false,
     geolocationControlOptions: {
@@ -2268,10 +2270,17 @@ export class Map {
       this.centerToFeature(destinationFeature.id);
     }
     if (startFeature && destinationFeature) {
-      this.onRouteUpdate({
-        start: startFeature,
-        finish: destinationFeature,
-      });
+      if (this.defaultOptions.urlParams.autoRouting) {
+        this.onRouteUpdate({
+          start: startFeature,
+          finish: destinationFeature,
+        });
+      } else {
+        this.onRoutePreview({
+          start: startFeature,
+          finish: destinationFeature,
+        });
+      }
     }
   }
 
