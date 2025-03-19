@@ -384,7 +384,10 @@ export const getFeatures = async ({
                 let labelBorder;
 
                 // Extract the exterior ring coordinates of the connectedPolygon
-                const exteriorRing = connectedPolygon.geometry.coordinates[0][0];
+                const exteriorRing =
+                  connectedPolygon.geometry.type === 'MultiPolygon'
+                    ? connectedPolygon.geometry.coordinates[0][0]
+                    : connectedPolygon.geometry.coordinates[0];
 
                 // Initialize variables to store the longest border length and its index
                 let longestBorderLength = 0;
@@ -761,7 +764,10 @@ export const getFeaturesBundle = async ({
                 let labelBorder;
 
                 // Extract the exterior ring coordinates of the connectedPolygon
-                const exteriorRing = connectedPolygon.geometry.coordinates[0][0];
+                const exteriorRing =
+                  connectedPolygon.geometry.type === 'MultiPolygon'
+                    ? connectedPolygon.geometry.coordinates[0][0]
+                    : connectedPolygon.geometry.coordinates[0];
 
                 // Initialize variables to store the longest border length and its index
                 let longestBorderLength = 0;
