@@ -191,6 +191,7 @@ export interface Options {
     cityRouteSpeedMultiplier?: number;
     cityPointIconUrl?: string;
     cityRouteMaxDuration?: number;
+    autoStart?: boolean;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -407,6 +408,7 @@ export class Map {
       dashKeepOriginalRouteLayer: false,
       cityRouteSpeedMultiplier: 5,
       cityRouteMaxDuration: 5,
+      autoStart: true,
     },
     useRasterTiles: false,
     handleUrlParams: false,
@@ -3071,7 +3073,10 @@ export class Map {
           this.addDirectionFeatures();
         }
 
-        if (this.defaultOptions.animatedRoute || this.defaultOptions.routeAnimation.enabled) {
+        if (
+          (this.defaultOptions.animatedRoute || this.defaultOptions.routeAnimation.enabled) &&
+          this.defaultOptions.routeAnimation.autoStart
+        ) {
           if (this.defaultOptions.animatedRoute) {
             console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
           }
@@ -3780,7 +3785,7 @@ export class Map {
             }
             if (this.defaultOptions.autoLevelChange && this.routingSource.navigationType === 'mall') {
               if (this.routingSource.route && Object.keys(this.routingSource.route).length - 1 === this.currentStep) {
-                if (this.routingSource.stops.length !== this.currentStop) {
+                if (this.routingSource.stops?.length !== this.currentStop) {
                   this.setStop('next');
                 }
                 return;
