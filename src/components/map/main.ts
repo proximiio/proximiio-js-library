@@ -132,6 +132,7 @@ export interface Options {
   allowNewFeatureModal?: boolean;
   newFeatureModalEvent?: string;
   enableTBTNavigation?: boolean;
+  landmarkTBTNavigation?: boolean;
   mapboxOptions?: MapboxOptions;
   zoomIntoPlace?: boolean;
   defaultPlaceId?: string;
@@ -305,6 +306,7 @@ export class Map {
     allowNewFeatureModal: false,
     newFeatureModalEvent: 'click',
     enableTBTNavigation: true,
+    landmarkTBTNavigation: false,
     zoomIntoPlace: true,
     defaultFloorLevel: 0,
     isKiosk: false,
@@ -637,6 +639,14 @@ export class Map {
       }
       if (this.defaultOptions.routeWithDetails !== null && this.defaultOptions.routeWithDetails !== undefined) {
         this.routingSource.routing.routeWithDetails = this.defaultOptions.routeWithDetails;
+      }
+      if (this.defaultOptions.landmarkTBTNavigation) {
+        this.routingSource.setLandmarkTBT(this.defaultOptions.landmarkTBTNavigation);
+        this.routingSource.setPois(
+          optimizedFeatures.features.filter(
+            (f) => f.geometry.coordinates && f.geometry.type === 'Point' && f.properties.type === 'poi',
+          ),
+        );
       }
       this.geojsonSource.fetch(optimizedFeatures);
       this.routingSource.routing.setData(new FeatureCollection(features));

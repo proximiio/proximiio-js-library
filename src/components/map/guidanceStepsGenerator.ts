@@ -2,8 +2,9 @@ import Feature from '../../models/feature';
 import { GuidanceStep } from '../../models/wayfinding';
 import bearing from '@turf/bearing';
 import distance from '@turf/distance';
-import { lineString } from '@turf/helpers';
+import { FeatureCollection, lineString } from '@turf/helpers';
 import { translations } from './i18n';
+import nearestPoint from '@turf/nearest-point';
 
 enum Direction {
   Start = 'START',
@@ -44,10 +45,26 @@ export default class GuidanceStepsGenerator {
   points: Feature[];
   steps: GuidanceStep[];
   language: string;
+  landMarkNav: boolean;
+  pois?: Feature[];
 
-  constructor(points: Feature[], language: string) {
+  constructor({
+    points,
+    language,
+    landMarkNav,
+    pois,
+  }: {
+    points: Feature[];
+    language: string;
+    landMarkNav: boolean;
+    pois?: Feature[];
+  }) {
     this.points = points;
     this.language = language;
+    if (landMarkNav) {
+      this.landMarkNav = landMarkNav;
+      this.pois = pois;
+    }
     if (this.points && this.points.length > 0) {
       this.generateStepsFromPoints();
     }
@@ -69,6 +86,15 @@ export default class GuidanceStepsGenerator {
       const distanceFromLastStep = this.getDistanceFromLastStep(data);
 
       const extendedData = { ...data, direction, distanceFromLastStep };
+
+      if (
+        this.landMarkNav &&
+        (direction === Direction.Start ||
+          direction === Direction.TurnAround ||
+          direction === `${Direction.Exit}_${LevelChangerTypes[currentPoint.properties.type]}`)
+      ) {
+        return;
+      }
 
       return {
         bearingFromLastStep: this.getBearingFromLastStep(data),
@@ -179,6 +205,23 @@ export default class GuidanceStepsGenerator {
       default:
         instruction += translations[this.language].CONTINUE;
         break;
+    }
+
+    if (direction === Direction.TurnAround || direction === Direction.Start || direction === Direction.Finish) {
+      return instruction;
+    }
+
+    if (this.landMarkNav) {
+      const featureCollection = {
+        type: 'FeatureCollection',
+        features: this.pois.filter((feature: Feature) => feature.properties.level === currentPoint.properties.level),
+      };
+      const nearestPoi = nearestPoint(currentPoint.geometry.coordinates, featureCollection as any);
+      instruction = `${instruction.slice(0, -1)} ${translations[this.language].BY} ${
+        nearestPoi.properties.title_i18n && nearestPoi.properties.title_i18n[this.language]
+          ? nearestPoi.properties.title_i18n[this.language]
+          : nearestPoi.properties.title
+      }`;
     }
 
     return instruction;

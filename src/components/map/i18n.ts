@@ -35,6 +35,7 @@ export const translations = {
     CONTINUE: 'continue.',
     TO: 'to',
     FLOOR: 'floor',
+    BY: 'by',
   },
   fi: {
     ELEVATOR: 'Hissi',
@@ -72,6 +73,7 @@ export const translations = {
     CONTINUE: 'jatka.',
     TO: 'osoitteeseen',
     FLOOR: 'lattia',
+    BY: 'liikkeellä',
   },
   ar: {
     ELEVATOR: 'المصعد',
@@ -109,6 +111,7 @@ export const translations = {
     CONTINUE: 'تابع.',
     TO: 'إلى',
     FLOOR: 'الطابق',
+    BY: 'بواسطة',
   },
   it: {
     ELEVATOR: 'Ascensore',
@@ -146,6 +149,7 @@ export const translations = {
     CONTINUE: 'continua.',
     TO: 'al',
     FLOOR: 'piano',
+    BY: 'per',
   },
   id: {
     ELEVATOR: 'Lift',
@@ -183,6 +187,7 @@ export const translations = {
     CONTINUE: 'lanjutkan.',
     TO: 'ke',
     FLOOR: 'lantai',
+    BY: 'oleh',
   },
   zh: {
     ELEVATOR: '电梯',
@@ -220,6 +225,7 @@ export const translations = {
     CONTINUE: '继续',
     TO: '到 ',
     FLOOR: '楼层',
+    BY: '通过',
   },
   ru: {
     ELEVATOR: 'Лифт',
@@ -257,5 +263,6 @@ export const translations = {
     CONTINUE: 'продолжать',
     TO: 'к',
     FLOOR: 'пол',
+    BY: 'по',
   },
 };
