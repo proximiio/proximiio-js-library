@@ -91,7 +91,8 @@ export default class GuidanceStepsGenerator {
         this.landMarkNav &&
         (direction === Direction.Start ||
           direction === Direction.TurnAround ||
-          direction === `${Direction.Exit}_${LevelChangerTypes[currentPoint.properties.type]}`)
+          direction === `${Direction.Exit}_${LevelChangerTypes[currentPoint.properties.type]}` ||
+          distanceFromLastStep === 0)
       ) {
         return;
       }

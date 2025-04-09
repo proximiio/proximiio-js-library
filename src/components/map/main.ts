@@ -4828,7 +4828,7 @@ export class Map {
       if (this.routingSource.navigationType === 'city') {
         this.animateRoute();
       } else {
-        if (this.routingSource.isMultipoint) {
+        if (this.routingSource.isMultipoint || this.defaultOptions.enableTBTNavigation) {
           this.animateRoute();
         }
         this.centerOnRoute(this.routingSource.route[`path-part-${newStep}`]);
