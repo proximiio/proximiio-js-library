@@ -2389,7 +2389,7 @@ export class Map {
     }
 
     if (!isTemporary) {
-      this.state.features.features.push(featureVar);
+      this.state.optimizedFeatures.features.push(featureVar);
       await addFeatures({
         type: 'FeatureCollection',
         features: [featureVar.json],
@@ -2449,22 +2449,22 @@ export class Map {
     }
 
     if (!isTemporary) {
-      const featureIndex = this.state.features.features.findIndex(
+      const featureIndex = this.state.optimizedFeatures.features.findIndex(
         (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
       );
-      this.state.features.features[featureIndex] = featureVar;
+      this.state.optimizedFeatures.features[featureIndex] = featureVar;
       await addFeatures({
         type: 'FeatureCollection',
         features: [featureVar.json],
       });
     } else {
-      const featureIndex = this.state.features.features.findIndex(
+      const featureIndex = this.state.optimizedFeatures.features.findIndex(
         (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
       );
       const dynamicIndex = this.state.dynamicFeatures.features.findIndex(
         (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
       );
-      if (featureIndex) this.state.features.features[featureIndex] = featureVar;
+      if (featureIndex) this.state.optimizedFeatures.features[featureIndex] = featureVar;
       if (dynamicIndex) this.state.dynamicFeatures.features[dynamicIndex] = featureVar;
     }
 
@@ -2486,8 +2486,10 @@ export class Map {
     }
 
     if (!isTemporary) {
-      const featureIndex = this.state.features.features.findIndex((x) => x.id === id || x.properties.id === id);
-      this.state.features.features.splice(featureIndex, 1);
+      const featureIndex = this.state.optimizedFeatures.features.findIndex(
+        (x) => x.id === id || x.properties.id === id,
+      );
+      this.state.optimizedFeatures.features.splice(featureIndex, 1);
       await deleteFeatures({
         type: 'FeatureCollection',
         features: [foundFeature],
