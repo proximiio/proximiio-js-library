@@ -120,7 +120,9 @@ export default class RoutingSource extends DataSource {
           landMarkNav: this.landmarkTBT,
           pois: this.pois,
         });
-        this.steps = guidanceStepsGenerator.steps.filter((i) => i !== undefined);
+        if (guidanceStepsGenerator.steps) {
+          this.steps = guidanceStepsGenerator.steps.filter((i) => i !== undefined);
+        }
       }
 
       if (this.navigationType === 'city') {
