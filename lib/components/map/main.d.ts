@@ -141,6 +141,7 @@ export interface Options {
         cityRouteSpeedMultiplier?: number;
         cityPointIconUrl?: string;
         cityRouteMaxDuration?: number;
+        autoStart?: boolean;
     };
     useRasterTiles?: boolean;
     rasterTilesOptions?: {
@@ -158,6 +159,7 @@ export interface Options {
         startFeauture?: string;
         destinationFeature?: string;
         defaultPlace?: string;
+        autoRouting?: boolean;
     };
     useGpsLocation?: boolean;
     geolocationControlOptions?: {
