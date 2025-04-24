@@ -39,6 +39,7 @@ export default class RoutingSource extends DataSource {
   isMultipoint = false;
   landmarkTBT: boolean;
   pois?: Feature[];
+  levelChangers?: Feature[];
 
   constructor() {
     super('route');
@@ -66,6 +67,10 @@ export default class RoutingSource extends DataSource {
 
   setPois(pois: Feature[]) {
     this.pois = pois;
+  }
+
+  setLevelChangers(levelChangers: Feature[]) {
+    this.levelChangers = levelChangers;
   }
 
   async update({
@@ -119,6 +124,7 @@ export default class RoutingSource extends DataSource {
           language: this.language,
           landMarkNav: this.landmarkTBT,
           pois: this.pois,
+          levelChangers: this.levelChangers,
         });
         if (guidanceStepsGenerator.steps) {
           this.steps = guidanceStepsGenerator.steps.filter((i) => i !== undefined);

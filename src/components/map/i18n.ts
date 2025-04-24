@@ -36,6 +36,7 @@ export const translations = {
     TO: 'to',
     FLOOR: 'floor',
     BY: 'by',
+    IS_ON_YOUR: 'is on your',
   },
   fi: {
     ELEVATOR: 'Hissi',
@@ -74,6 +75,7 @@ export const translations = {
     TO: 'osoitteeseen',
     FLOOR: 'lattia',
     BY: 'liikkeellä',
+    IS_ON_YOUR: 'on sinun',
   },
   ar: {
     ELEVATOR: 'المصعد',
@@ -112,6 +114,7 @@ export const translations = {
     TO: 'إلى',
     FLOOR: 'الطابق',
     BY: 'بواسطة',
+    IS_ON_YOUR: 'في',
   },
   it: {
     ELEVATOR: 'Ascensore',
@@ -150,6 +153,7 @@ export const translations = {
     TO: 'al',
     FLOOR: 'piano',
     BY: 'per',
+    IS_ON_YOUR: 'su',
   },
   id: {
     ELEVATOR: 'Lift',
@@ -188,6 +192,7 @@ export const translations = {
     TO: 'ke',
     FLOOR: 'lantai',
     BY: 'oleh',
+    IS_ON_YOUR: 'di',
   },
   zh: {
     ELEVATOR: '电梯',
@@ -226,6 +231,7 @@ export const translations = {
     TO: '到 ',
     FLOOR: '楼层',
     BY: '通过',
+    IS_ON_YOUR: '在',
   },
   ru: {
     ELEVATOR: 'Лифт',
@@ -264,5 +270,6 @@ export const translations = {
     TO: 'к',
     FLOOR: 'пол',
     BY: 'по',
+    IS_ON_YOUR: 'на',
   },
 };

@@ -130,10 +130,18 @@ export default class Routing {
             return;
           } else if (p.isPoi && p.id === points[index + 1]?.id) {
             return;
+          } else if (points[index + 1]?.isPoi) {
+            // do not add another path part if next poi is finish
+            return;
           }
           if (points[index + 1]) {
             pathPoints[`path-part-${pathPartIndex}`] = [];
-            pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1]);
+            if (points[index + 2] && points[index + 2].isPoi) {
+              // if second next poi is path destination, add three points to path part as there won't be another path part added
+              pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1], points[index + 2]);
+            } else {
+              pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1]);
+            }
             pathPartIndex++;
           }
         }
