@@ -103,7 +103,7 @@ export default class GuidanceStepsGenerator {
       if (
         this.landMarkNav &&
         (direction === Direction.Start ||
-          direction === Direction.Finish ||
+          (direction === Direction.Finish && currentPoint.isPoi) ||
           direction === Direction.TurnAround ||
           direction === `${Direction.Exit}_${LevelChangerTypes[currentPoint.properties.type]}` ||
           distanceFromLastStep === 0)
@@ -115,7 +115,7 @@ export default class GuidanceStepsGenerator {
         bearingFromLastStep: this.getBearingFromLastStep(data),
         coordinates: [point.geometry.coordinates[0], point.geometry.coordinates[1]],
         direction: this.landMarkNav
-          ? nextStepDirection === Direction.Finish
+          ? nextStepDirection === Direction.Finish && nextPoint?.isPoi
             ? Direction.Finish
             : direction
           : direction,
@@ -185,7 +185,7 @@ export default class GuidanceStepsGenerator {
         nextPoint: secondNextPoint,
       });
 
-      if (nextPointDirection === Direction.Finish) {
+      if (nextPointDirection === Direction.Finish && nextPoint.isPoi) {
         instruction += `${translations[this.language].DESTINATION} ${
           nextPoint.properties.title_i18n && nextPoint.properties.title_i18n[this.language]
             ? nextPoint.properties.title_i18n[this.language]
