@@ -82,6 +82,7 @@ export interface Options {
     allowNewFeatureModal?: boolean;
     newFeatureModalEvent?: string;
     enableTBTNavigation?: boolean;
+    landmarkTBTNavigation?: boolean;
     mapboxOptions?: MapboxOptions;
     zoomIntoPlace?: boolean;
     defaultPlaceId?: string;
@@ -142,6 +143,7 @@ export interface Options {
         cityPointIconUrl?: string;
         cityRouteMaxDuration?: number;
         autoStart?: boolean;
+        autoContinue?: boolean;
     };
     useRasterTiles?: boolean;
     rasterTilesOptions?: {

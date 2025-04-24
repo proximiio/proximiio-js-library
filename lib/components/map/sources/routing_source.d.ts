@@ -34,10 +34,16 @@ export default class RoutingSource extends DataSource {
     navigationType: 'mall' | 'city';
     fullPath?: Feature;
     isMultipoint: boolean;
+    landmarkTBT: boolean;
+    pois?: Feature[];
+    levelChangers?: Feature[];
     constructor();
     toggleAccessible(value: any): void;
     setConfig(config: WayfindingConfigModel): void;
     setNavigationType(type: 'mall' | 'city'): void;
+    setLandmarkTBT(value: boolean): void;
+    setPois(pois: Feature[]): void;
+    setLevelChangers(levelChangers: Feature[]): void;
     update({ start, finish, stops, preview, language, }: {
         start?: Feature;
         finish?: Feature;

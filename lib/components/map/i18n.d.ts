@@ -35,6 +35,8 @@ export declare const translations: {
         CONTINUE: string;
         TO: string;
         FLOOR: string;
+        BY: string;
+        IS_ON_YOUR: string;
     };
     fi: {
         ELEVATOR: string;
@@ -72,6 +74,8 @@ export declare const translations: {
         CONTINUE: string;
         TO: string;
         FLOOR: string;
+        BY: string;
+        IS_ON_YOUR: string;
     };
     ar: {
         ELEVATOR: string;
@@ -109,6 +113,8 @@ export declare const translations: {
         CONTINUE: string;
         TO: string;
         FLOOR: string;
+        BY: string;
+        IS_ON_YOUR: string;
     };
     it: {
         ELEVATOR: string;
@@ -146,6 +152,8 @@ export declare const translations: {
         CONTINUE: string;
         TO: string;
         FLOOR: string;
+        BY: string;
+        IS_ON_YOUR: string;
     };
     id: {
         ELEVATOR: string;
@@ -183,6 +191,8 @@ export declare const translations: {
         CONTINUE: string;
         TO: string;
         FLOOR: string;
+        BY: string;
+        IS_ON_YOUR: string;
     };
     zh: {
         ELEVATOR: string;
@@ -220,6 +230,8 @@ export declare const translations: {
         CONTINUE: string;
         TO: string;
         FLOOR: string;
+        BY: string;
+        IS_ON_YOUR: string;
     };
     ru: {
         ELEVATOR: string;
@@ -257,5 +269,7 @@ export declare const translations: {
         CONTINUE: string;
         TO: string;
         FLOOR: string;
+        BY: string;
+        IS_ON_YOUR: string;
     };
 };
