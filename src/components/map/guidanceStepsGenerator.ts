@@ -152,7 +152,7 @@ export default class GuidanceStepsGenerator {
     let instruction = '';
 
     if (previousPoint.isLevelChanger) {
-      const levelChangerFeature = this.levelChangers.find((feature) => feature.id === previousPoint.id);
+      const levelChangerFeature = this.levelChangers.find((f) => f.id === previousPoint.id);
       const levelChangeDirection = this.getStepDirection({
         previousPoint: levelChangerFeature,
         currentPoint: previousPoint,
@@ -176,7 +176,7 @@ export default class GuidanceStepsGenerator {
     if (this.landMarkNav) {
       const featureCollection = {
         type: 'FeatureCollection',
-        features: this.pois.filter((feature: Feature) => feature.properties.level === currentPoint.properties.level),
+        features: this.pois.filter((f: Feature) => f.properties.level === currentPoint.properties.level),
       };
 
       const nextPointDirection = this.getStepDirection({
