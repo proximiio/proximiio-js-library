@@ -62,7 +62,17 @@ export default class Routing {
     this.wayfinding.setConfiguration(config);
   }
 
-  route({ start, finish, stops }: { start: Feature; finish?: Feature; stops?: Feature[] }) {
+  route({
+    start,
+    finish,
+    stops,
+    landmarkTBT = false,
+  }: {
+    start: Feature;
+    finish?: Feature;
+    stops?: Feature[];
+    landmarkTBT?: boolean;
+  }) {
     const isMultipoint = stops && stops.length > 1;
     let points = null;
     let details = null;
@@ -114,23 +124,46 @@ export default class Routing {
     let pathPartIndex: any = 0;
 
     points.forEach((p: Feature | any, index: number) => {
-      if (this.forceFloorLevel !== null && this.forceFloorLevel !== undefined) {
-        if (typeof pathPoints['path-part-'.concat(pathPartIndex)] === 'undefined') {
-          pathPoints['path-part-'.concat(pathPartIndex)] = [];
-        }
-        pathPoints['path-part-'.concat(pathPartIndex)].push(p);
-        if (p.isLevelChanger && points[index + 1].isLevelChanger && p.level !== points[index + 1].level) {
-          pathPartIndex++;
+      if (landmarkTBT) {
+        if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
+          if (p.isLevelChanger && p.properties.level !== points[index + 1].properties.level) {
+            return;
+          } else if (p.isPoi && p.id === points[index + 1]?.id) {
+            return;
+          } else if (points[index + 1]?.isPoi) {
+            // do not add another path part if next poi is finish
+            return;
+          }
+          if (points[index + 1]) {
+            pathPoints[`path-part-${pathPartIndex}`] = [];
+            if (points[index + 2] && points[index + 2].isPoi) {
+              // if second next poi is path destination, add three points to path part as there won't be another path part added
+              pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1], points[index + 2]);
+            } else {
+              pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1]);
+            }
+            pathPartIndex++;
+          }
         }
       } else {
-        if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
-          pathPoints[`path-part-${pathPartIndex}`] = [];
-        }
-        pathPoints[`path-part-${pathPartIndex}`].push(p);
-        if (p.isLevelChanger && p.properties.level !== points[index + 1].properties.level) {
-          pathPartIndex++;
-        } else if (p.isPoi && p.id === points[index + 1]?.id) {
-          pathPartIndex++;
+        if (this.forceFloorLevel !== null && this.forceFloorLevel !== undefined) {
+          if (typeof pathPoints['path-part-'.concat(pathPartIndex)] === 'undefined') {
+            pathPoints['path-part-'.concat(pathPartIndex)] = [];
+          }
+          pathPoints['path-part-'.concat(pathPartIndex)].push(p);
+          if (p.isLevelChanger && points[index + 1].isLevelChanger && p.level !== points[index + 1].level) {
+            pathPartIndex++;
+          }
+        } else {
+          if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
+            pathPoints[`path-part-${pathPartIndex}`] = [];
+          }
+          pathPoints[`path-part-${pathPartIndex}`].push(p);
+          if (p.isLevelChanger && p.properties.level !== points[index + 1].properties.level) {
+            pathPartIndex++;
+          } else if (p.isPoi && p.id === points[index + 1]?.id) {
+            pathPartIndex++;
+          }
         }
       }
     });

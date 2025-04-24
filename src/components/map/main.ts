@@ -132,6 +132,7 @@ export interface Options {
   allowNewFeatureModal?: boolean;
   newFeatureModalEvent?: string;
   enableTBTNavigation?: boolean;
+  landmarkTBTNavigation?: boolean;
   mapboxOptions?: MapboxOptions;
   zoomIntoPlace?: boolean;
   defaultPlaceId?: string;
@@ -192,6 +193,7 @@ export interface Options {
     cityPointIconUrl?: string;
     cityRouteMaxDuration?: number;
     autoStart?: boolean;
+    autoContinue?: boolean;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -305,6 +307,7 @@ export class Map {
     allowNewFeatureModal: false,
     newFeatureModalEvent: 'click',
     enableTBTNavigation: true,
+    landmarkTBTNavigation: false,
     zoomIntoPlace: true,
     defaultFloorLevel: 0,
     isKiosk: false,
@@ -409,6 +412,7 @@ export class Map {
       cityRouteSpeedMultiplier: 5,
       cityRouteMaxDuration: 5,
       autoStart: true,
+      autoContinue: true,
     },
     useRasterTiles: false,
     handleUrlParams: false,
@@ -637,6 +641,15 @@ export class Map {
       }
       if (this.defaultOptions.routeWithDetails !== null && this.defaultOptions.routeWithDetails !== undefined) {
         this.routingSource.routing.routeWithDetails = this.defaultOptions.routeWithDetails;
+      }
+      if (this.defaultOptions.landmarkTBTNavigation) {
+        this.routingSource.setLandmarkTBT(this.defaultOptions.landmarkTBTNavigation);
+        this.routingSource.setPois(
+          optimizedFeatures.features.filter(
+            (f) => f.geometry.coordinates && f.geometry.type === 'Point' && f.properties.type === 'poi',
+          ),
+        );
+        this.routingSource.setLevelChangers(levelChangers);
       }
       this.geojsonSource.fetch(optimizedFeatures);
       this.routingSource.routing.setData(new FeatureCollection(features));
@@ -3562,6 +3575,8 @@ export class Map {
     this.removeStopMarkers();
     this.routingSource.cancel();
     this.onRouteCancelListener.next('route cancelled');
+    this.currentStep = 0;
+    this.currentStop = 0;
   }
 
   private centerOnPoi(poi: any) {
@@ -3736,8 +3751,9 @@ export class Map {
               { level: this.state.floor.level },
             );
       let routeUntilNextStep;
-      if (this.routingSource.navigationType === 'city') {
+      if (this.routingSource.navigationType === 'city' || this.defaultOptions.landmarkTBTNavigation) {
         const routePoints = this.routingSource.lines
+          .filter((i) => i.properties.level === this.state.floor.level)
           .map((i: any, index: number) => {
             if (index > this.currentStep) {
               return null;
@@ -3793,8 +3809,13 @@ export class Map {
                 return;
               }
               setTimeout(() => {
-                this.setNavStep('next');
-                if (this.defaultOptions.autoRestartAnimationAfterFloorChange) {
+                if (this.defaultOptions.routeAnimation.autoContinue) {
+                  this.setNavStep('next');
+                }
+                if (
+                  this.defaultOptions.autoRestartAnimationAfterFloorChange &&
+                  !this.defaultOptions.landmarkTBTNavigation
+                ) {
                   this.restartRouteAnimation({ delay: 0, recenter: true });
                 }
               }, 2000);
@@ -3810,7 +3831,9 @@ export class Map {
 
           // cut the line at the point
           const lineAlong = lineSplit(
-            this.routingSource.navigationType === 'city' ? routeUntilNextStep : route,
+            this.routingSource.navigationType === 'city' || this.defaultOptions.landmarkTBTNavigation
+              ? routeUntilNextStep
+              : route,
             currentPoint,
           ).features[0];
 
@@ -4820,7 +4843,7 @@ export class Map {
       if (this.routingSource.navigationType === 'city') {
         this.animateRoute();
       } else {
-        if (this.routingSource.isMultipoint) {
+        if (this.routingSource.isMultipoint || this.defaultOptions.enableTBTNavigation) {
           this.animateRoute();
         }
         this.centerOnRoute(this.routingSource.route[`path-part-${newStep}`]);

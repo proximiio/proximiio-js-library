@@ -37,12 +37,16 @@ export default class RoutingSource extends DataSource {
   navigationType: 'mall' | 'city';
   fullPath?: Feature;
   isMultipoint = false;
+  landmarkTBT: boolean;
+  pois?: Feature[];
+  levelChangers?: Feature[];
 
   constructor() {
     super('route');
     this.changes = [];
     this.routing = new Routing();
     this.navigationType = 'mall';
+    this.landmarkTBT = false;
   }
 
   toggleAccessible(value: any) {
@@ -55,6 +59,18 @@ export default class RoutingSource extends DataSource {
 
   setNavigationType(type: 'mall' | 'city') {
     this.navigationType = type;
+  }
+
+  setLandmarkTBT(value: boolean) {
+    this.landmarkTBT = value;
+  }
+
+  setPois(pois: Feature[]) {
+    this.pois = pois;
+  }
+
+  setLevelChangers(levelChangers: Feature[]) {
+    this.levelChangers = levelChangers;
   }
 
   async update({
@@ -89,7 +105,7 @@ export default class RoutingSource extends DataSource {
       const route =
         this.navigationType === 'city'
           ? await this.routing.cityRoute({ start, finish, language: this.language })
-          : this.routing.route({ start, finish, stops });
+          : this.routing.route({ start, finish, stops, landmarkTBT: this.landmarkTBT });
 
       // @ts-ignore
       const paths = route?.paths;
@@ -103,8 +119,16 @@ export default class RoutingSource extends DataSource {
       this.fullPath = route?.fullPath;
 
       if (this.navigationType === 'mall') {
-        const guidanceStepsGenerator = new GuidanceStepsGenerator(route?.points, this.language);
-        this.steps = guidanceStepsGenerator.steps;
+        const guidanceStepsGenerator = new GuidanceStepsGenerator({
+          points: route?.points,
+          language: this.language,
+          landMarkNav: this.landmarkTBT,
+          pois: this.pois,
+          levelChangers: this.levelChangers,
+        });
+        if (guidanceStepsGenerator.steps) {
+          this.steps = guidanceStepsGenerator.steps.filter((i) => i !== undefined);
+        }
       }
 
       if (this.navigationType === 'city') {
