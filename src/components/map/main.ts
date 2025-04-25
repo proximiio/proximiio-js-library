@@ -3803,7 +3803,7 @@ export class Map {
             }
             if (this.defaultOptions.autoLevelChange && this.routingSource.navigationType === 'mall') {
               if (this.routingSource.route && Object.keys(this.routingSource.route).length - 1 === this.currentStep) {
-                if (this.routingSource.stops?.length !== this.currentStop) {
+                if (this.routingSource.stops && this.routingSource.stops?.length !== this.currentStop) {
                   this.setStop('next');
                 }
                 return;
@@ -4851,7 +4851,8 @@ export class Map {
       this.onStepSetListener.next(this.currentStep);
       if (
         isNumber(this.routingSource.route[`path-part-${newStep}`].properties?.stop) &&
-        this.routingSource.route[`path-part-${newStep}`].properties?.stop >= 0
+        this.routingSource.route[`path-part-${newStep}`].properties?.stop >= 0 &&
+        this.currentStop !== this.routingSource.route[`path-part-${newStep}`].properties?.stop
       ) {
         this.setStop(this.routingSource.route[`path-part-${newStep}`].properties?.stop);
       }
@@ -4918,7 +4919,7 @@ export class Map {
       if (this.routingSource.lines) {
         this.currentStop = newStop;
         this.onStopSetListener.next(this.currentStop);
-        if (this.routingSource.stops.length < newStop) {
+        if (this.routingSource.stops?.length < newStop) {
           this.setNavStep(this.routingSource?.lines[this.routingSource?.lines?.length - 1]?.properties?.step);
         }
         this.onJumpToRouteEnd();
