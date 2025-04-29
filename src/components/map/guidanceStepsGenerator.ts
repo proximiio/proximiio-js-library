@@ -339,8 +339,8 @@ export default class GuidanceStepsGenerator {
     return this.getDirectionFromBearing(bearingVar);
   }
 
-  private getDirectionFromBearing(bearing: number) {
-    const degreeNormalized = this.degreeNormalized(bearing);
+  private getDirectionFromBearing(bearingValue: number) {
+    const degreeNormalized = this.degreeNormalized(bearingValue);
 
     if (Math.abs(degreeNormalized) < 22.5) {
       return Direction.Straight;
