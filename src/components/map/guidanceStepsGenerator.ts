@@ -175,7 +175,7 @@ export default class GuidanceStepsGenerator {
     if (this.landMarkNav && !secondPreviousPoint && this.initialBearing) {
       // if first step
       const bearingVar =
-        bearing(currentPoint.geometry.coordinates, nextPoint.geometry.coordinates) - this.initialBearing;
+        bearing(previousPoint.geometry.coordinates, currentPoint.geometry.coordinates) - this.initialBearing;
 
       const dir = this.getDirectionFromBearing(bearingVar);
       instruction += `${this.getDirectionInstruction(dir)} `;
