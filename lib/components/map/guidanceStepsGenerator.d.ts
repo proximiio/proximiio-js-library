@@ -7,12 +7,14 @@ export default class GuidanceStepsGenerator {
     landMarkNav: boolean;
     pois?: Feature[];
     levelChangers?: Feature[];
-    constructor({ points, language, landMarkNav, pois, levelChangers, }: {
+    initialBearing: number;
+    constructor({ points, language, landMarkNav, pois, levelChangers, initialBearing, }: {
         points: Feature[];
         language: string;
         landMarkNav: boolean;
         pois?: Feature[];
         levelChangers?: Feature[];
+        initialBearing: number;
     });
     private capitalize;
     private generateStepsFromPoints;
@@ -20,6 +22,7 @@ export default class GuidanceStepsGenerator {
     private getDirectionInstruction;
     private getBearingFromLastStep;
     private getStepDirection;
+    private getDirectionFromBearing;
     private getDistanceFromLastStep;
     private getLevelChangerDirection;
     private getLineStringFeatureFromLastStep;

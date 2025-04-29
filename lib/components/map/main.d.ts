@@ -333,6 +333,7 @@ export declare class Map {
     private translateLayers;
     getClosestFeature(amenityId: string, fromFeature?: Feature, handleDefaultPlace?: boolean): false | Feature;
     getFloorName(floor: FloorModel): string;
+    setInitialBearing(bearingValue: number): void;
     private handleControllerError;
     private InjectCSS;
     private createMarkerElement;

@@ -37,11 +37,13 @@ export default class RoutingSource extends DataSource {
     landmarkTBT: boolean;
     pois?: Feature[];
     levelChangers?: Feature[];
+    initialBearing: number;
     constructor();
     toggleAccessible(value: any): void;
     setConfig(config: WayfindingConfigModel): void;
     setNavigationType(type: 'mall' | 'city'): void;
     setLandmarkTBT(value: boolean): void;
+    setInitialBearing(initialBearing: number): void;
     setPois(pois: Feature[]): void;
     setLevelChangers(levelChangers: Feature[]): void;
     update({ start, finish, stops, preview, language, }: {
