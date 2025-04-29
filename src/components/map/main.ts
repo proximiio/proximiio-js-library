@@ -4142,6 +4142,10 @@ export class Map {
     }
   }
 
+  public setInitialBearing(bearing: number) {
+    this.routingSource.setInitialBearing(bearing);
+  }
+
   private handleControllerError = (err) => {
     this.onMapFailedListener.next(true);
   };

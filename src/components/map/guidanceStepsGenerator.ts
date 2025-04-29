@@ -48,6 +48,7 @@ export default class GuidanceStepsGenerator {
   landMarkNav: boolean;
   pois?: Feature[];
   levelChangers?: Feature[];
+  initialBearing: number;
 
   constructor({
     points,
@@ -55,12 +56,14 @@ export default class GuidanceStepsGenerator {
     landMarkNav,
     pois,
     levelChangers,
+    initialBearing,
   }: {
     points: Feature[];
     language: string;
     landMarkNav: boolean;
     pois?: Feature[];
     levelChangers?: Feature[];
+    initialBearing: number;
   }) {
     this.points = points;
     this.language = language;
@@ -68,6 +71,7 @@ export default class GuidanceStepsGenerator {
       this.landMarkNav = landMarkNav;
       this.pois = pois;
       this.levelChangers = levelChangers;
+      this.initialBearing = initialBearing;
     }
     if (this.points && this.points.length > 0) {
       this.generateStepsFromPoints();
@@ -79,12 +83,14 @@ export default class GuidanceStepsGenerator {
   private generateStepsFromPoints() {
     this.steps = this.points.map((point: Feature, index: number) => {
       const previousPoint = this.points[index - 1] ? new Feature(this.points[index - 1]) : null;
+      const secondPreviousPoint = this.points[index - 2] ? new Feature(this.points[index - 2]) : null;
       const currentPoint = new Feature(point);
       const nextPoint = this.points[index + 1] ? new Feature(this.points[index + 1]) : null;
       const secondNextPoint = this.points[index + 2] ? new Feature(this.points[index + 2]) : null;
 
       const data = {
         previousPoint,
+        secondPreviousPoint,
         currentPoint,
         nextPoint,
         secondNextPoint,
@@ -105,6 +111,8 @@ export default class GuidanceStepsGenerator {
         (direction === Direction.Start ||
           (direction === Direction.Finish && currentPoint.isPoi) ||
           direction === Direction.TurnAround ||
+          direction === `${Direction.Down}_${LevelChangerTypes[currentPoint.properties.type]}` ||
+          direction === `${Direction.Up}_${LevelChangerTypes[currentPoint.properties.type]}` ||
           direction === `${Direction.Exit}_${LevelChangerTypes[currentPoint.properties.type]}` ||
           distanceFromLastStep === 0)
       ) {
@@ -136,6 +144,7 @@ export default class GuidanceStepsGenerator {
 
   private generateInstruction({
     previousPoint,
+    secondPreviousPoint,
     currentPoint,
     nextPoint,
     secondNextPoint,
@@ -143,6 +152,7 @@ export default class GuidanceStepsGenerator {
     distanceFromLastStep,
   }: {
     previousPoint: Feature;
+    secondPreviousPoint: Feature;
     currentPoint: Feature;
     nextPoint: Feature;
     secondNextPoint: Feature;
@@ -151,7 +161,7 @@ export default class GuidanceStepsGenerator {
   }) {
     let instruction = '';
 
-    if (previousPoint.isLevelChanger) {
+    if (this.landMarkNav && previousPoint.isLevelChanger) {
       const levelChangerFeature = this.levelChangers.find((f) => f.id === previousPoint.id);
       const levelChangeDirection = this.getStepDirection({
         previousPoint: levelChangerFeature,
@@ -160,6 +170,15 @@ export default class GuidanceStepsGenerator {
         levelChangerDirection: true,
       });
       instruction += `${this.capitalize(this.getDirectionInstruction(levelChangeDirection))} `;
+    }
+
+    if (this.landMarkNav && !secondPreviousPoint && this.initialBearing) {
+      // if first step
+      const bearingVar =
+        bearing(currentPoint.geometry.coordinates, nextPoint.geometry.coordinates) - this.initialBearing;
+
+      const dir = this.getDirectionFromBearing(bearingVar);
+      instruction += `${this.getDirectionInstruction(dir)} `;
     }
 
     if (distanceFromLastStep > 0) {
@@ -191,6 +210,13 @@ export default class GuidanceStepsGenerator {
             ? nextPoint.properties.title_i18n[this.language]
             : nextPoint.properties.title
         } ${translations[this.language].IS_ON_YOUR} ${this.getDirectionInstruction(direction).replace('turn ', '')}`;
+        return instruction;
+      }
+
+      if (nextPoint.isLevelChanger) {
+        instruction += `${this.getDirectionInstruction(nextPointDirection).slice(0, -1)} ${
+          translations[this.language].TO_FLOOR
+        } ${secondNextPoint.properties.level}`;
         return instruction;
       }
 
@@ -309,7 +335,12 @@ export default class GuidanceStepsGenerator {
     const bearingVar =
       bearing(currentPoint.geometry.coordinates, nextPoint.geometry.coordinates) -
       bearing(previousPoint.geometry.coordinates, currentPoint.geometry.coordinates);
-    const degreeNormalized = this.degreeNormalized(bearingVar);
+
+    return this.getDirectionFromBearing(bearingVar);
+  }
+
+  private getDirectionFromBearing(bearing: number) {
+    const degreeNormalized = this.degreeNormalized(bearing);
 
     if (Math.abs(degreeNormalized) < 22.5) {
       return Direction.Straight;

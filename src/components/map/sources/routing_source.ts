@@ -40,6 +40,7 @@ export default class RoutingSource extends DataSource {
   landmarkTBT: boolean;
   pois?: Feature[];
   levelChangers?: Feature[];
+  initialBearing: number;
 
   constructor() {
     super('route');
@@ -63,6 +64,10 @@ export default class RoutingSource extends DataSource {
 
   setLandmarkTBT(value: boolean) {
     this.landmarkTBT = value;
+  }
+
+  setInitialBearing(initialBearing: number) {
+    this.initialBearing = initialBearing;
   }
 
   setPois(pois: Feature[]) {
@@ -125,6 +130,7 @@ export default class RoutingSource extends DataSource {
           landMarkNav: this.landmarkTBT,
           pois: this.pois,
           levelChangers: this.levelChangers,
+          initialBearing: this.initialBearing,
         });
         if (guidanceStepsGenerator.steps) {
           this.steps = guidanceStepsGenerator.steps.filter((i) => i !== undefined);
@@ -174,6 +180,7 @@ export default class RoutingSource extends DataSource {
     this.details = undefined;
     this.steps = undefined;
     this.preview = undefined;
+    this.initialBearing = undefined;
     this.data = new FeatureCollection({
       features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),
     });

@@ -133,11 +133,17 @@ export default class Routing {
           } else if (points[index + 1]?.isPoi) {
             // do not add another path part if next poi is finish
             return;
+          } else if (points[index + 1]?.isLevelChanger) {
+            // do not add another path part if next poi is levelChanger
+            return;
           }
           if (points[index + 1]) {
             pathPoints[`path-part-${pathPartIndex}`] = [];
             if (points[index + 2] && points[index + 2].isPoi) {
               // if second next poi is path destination, add three points to path part as there won't be another path part added
+              pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1], points[index + 2]);
+            } else if (points[index + 2] && points[index + 2].isLevelChanger) {
+              // if second next poi is level changer, add three points to path part as there won't be another path part added
               pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1], points[index + 2]);
             } else {
               pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1]);
