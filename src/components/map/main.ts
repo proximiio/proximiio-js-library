@@ -4272,7 +4272,7 @@ export class Map {
   private getClosestPointOnPath = (f: Feature) => {
     const featurePoint = point([f.geometry.coordinates[0], f.geometry.coordinates[1]]);
     const paths = this.state.allFeatures.features.filter(
-      (f) => f.properties.class === 'path' && f.properties.level === f.properties.level,
+      (path) => path.properties.class === 'path' && path.properties.level === f.properties.level,
     );
     let minDist = Infinity;
     let closestSegment = null;
@@ -4655,13 +4655,13 @@ export class Map {
    *  });
    */
   public findPathPoint({ featureId, displayOnMap = false }: { featureId: string; displayOnMap?: boolean }) {
-    const feature = this.state.allFeatures.features.find((f) => f.id === featureId);
-    if (!feature) {
+    const fromFeature = this.state.allFeatures.features.find((f) => f.id === featureId);
+    if (!fromFeature) {
       throw new Error(`Feature with id '${featureId}' does not exist!`);
     }
-    const point: Feature = this.getClosestPointOnPath(feature);
-    if (point && displayOnMap) {
-      this.displayPointOnMap(point);
+    const featurePoint: Feature = this.getClosestPointOnPath(fromFeature);
+    if (featurePoint && displayOnMap) {
+      this.displayPointOnMap(featurePoint);
     }
     return point;
   }
