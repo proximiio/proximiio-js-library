@@ -4269,10 +4269,10 @@ export class Map {
     this.stops = [];
   };
 
-  private getClosestPointOnPath = (feature: Feature) => {
-    const featurePoint = point([feature.geometry.coordinates[0], feature.geometry.coordinates[1]]);
+  private getClosestPointOnPath = (f: Feature) => {
+    const featurePoint = point([f.geometry.coordinates[0], f.geometry.coordinates[1]]);
     const paths = this.state.allFeatures.features.filter(
-      (f) => f.properties.class === 'path' && f.properties.level === feature.properties.level,
+      (f) => f.properties.class === 'path' && f.properties.level === f.properties.level,
     );
     let minDist = Infinity;
     let closestSegment = null;
@@ -4288,7 +4288,7 @@ export class Map {
         closestSegment = lineString([featurePoint.geometry.coordinates, snapped.geometry.coordinates]);
         finalBearing = bearing(featurePoint, snapped);
         snapped.properties.bearing = finalBearing;
-        snapped.properties.level = feature.properties.level;
+        snapped.properties.level = f.properties.level;
         finalPoint = snapped;
       }
     });
@@ -4297,7 +4297,7 @@ export class Map {
   };
 
   private startPointPopup = {} as Popup;
-  private displayPointOnMap = (point: Feature) => {
+  private displayPointOnMap = (p: Feature) => {
     if (Object.keys(this.startPointPopup).length > 0) {
       this.startPointPopup.remove();
       this.startPointPopup = {} as Popup;
@@ -4315,7 +4315,7 @@ export class Map {
       type: 'geojson',
       data: {
         type: 'FeatureCollection',
-        features: [point],
+        features: [p],
       },
     });
     const startLayer: SymbolLayerSpecification = {
@@ -4325,7 +4325,7 @@ export class Map {
       layout: {
         'icon-image': 'pulsing-dot',
       },
-      filter: ['all', ['==', ['to-number', ['get', 'level']], point.properties.level]],
+      filter: ['all', ['==', ['to-number', ['get', 'level']], p.properties.level]],
     };
 
     this.state.style.addLayer(startLayer);
@@ -4336,7 +4336,7 @@ export class Map {
       className: 'proximiio-startPoint-popup',
       offset: [0, -15],
     })
-      .setLngLat(point.geometry.coordinates as [number, number])
+      .setLngLat(p.geometry.coordinates as [number, number])
       .setHTML(translations[this.defaultOptions.language].YOU_ARE_HERE)
       .addTo(this.map);
 
