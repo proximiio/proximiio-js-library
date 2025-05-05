@@ -1,4 +1,10 @@
-import maplibregl, { FillExtrusionLayerSpecification, LngLatLike, Marker, SymbolLayerSpecification } from 'maplibre-gl';
+import maplibregl, {
+  FillExtrusionLayerSpecification,
+  LngLatLike,
+  Marker,
+  Popup,
+  SymbolLayerSpecification,
+} from 'maplibre-gl';
 import { axios, optimizeFeatures } from '../../common';
 import {
   addFeatures,
@@ -56,6 +62,9 @@ import { KioskModel } from '../../models/kiosk';
 import { getStyle, getStyleBundle, getStyles, getStylesBundle } from '../../controllers/style';
 import { getKiosks, getKiosksBundle } from '../../controllers/kiosks';
 import { Protocol, PMTiles } from 'pmtiles';
+import nearestPointToLine from '@turf/nearest-point-to-line';
+import distance from '@turf/distance';
+import nearestPointOnLine from '@turf/nearest-point-on-line';
 
 export interface State {
   readonly initializing: boolean;
@@ -3573,6 +3582,7 @@ export class Map {
     this.map.setStyle(this.state.style);
     this.removeRouteMarkers();
     this.removeStopMarkers();
+    this.removeStartPointOnMap();
     this.routingSource.cancel();
     this.onRouteCancelListener.next('route cancelled');
     this.currentStep = 0;
@@ -4106,6 +4116,9 @@ export class Map {
     if (this.defaultOptions.isKiosk && this.defaultOptions.kioskSettings.showLabel && this.kioskPopup) {
       this.kioskPopup.setHTML(translations[this.defaultOptions.language].YOU_ARE_HERE);
     }
+    if (Object.keys(this.startPointPopup).length > 0) {
+      this.startPointPopup.setHTML(translations[this.defaultOptions.language].YOU_ARE_HERE);
+    }
     this.state.style.setSource('main', this.geojsonSource);
   }
 
@@ -4254,6 +4267,140 @@ export class Map {
       marker.remove();
     }
     this.stops = [];
+  };
+
+  private getClosestPointOnPath = (feature: Feature) => {
+    const featurePoint = point([feature.geometry.coordinates[0], feature.geometry.coordinates[1]]);
+    const paths = this.state.allFeatures.features.filter(
+      (f) => f.properties.class === 'path' && f.properties.level === feature.properties.level,
+    );
+    let minDist = Infinity;
+    let closestSegment = null;
+    let finalBearing = null;
+    let finalPoint = null;
+
+    paths.forEach((line) => {
+      const snapped = nearestPointOnLine(line, featurePoint);
+      const dist = distance(featurePoint, snapped);
+
+      if (dist < minDist) {
+        minDist = dist;
+        closestSegment = lineString([featurePoint.geometry.coordinates, snapped.geometry.coordinates]);
+        finalBearing = bearing(featurePoint, snapped);
+        snapped.properties.bearing = finalBearing;
+        snapped.properties.level = feature.properties.level;
+        finalPoint = snapped;
+      }
+    });
+
+    return finalPoint;
+  };
+
+  private startPointPopup = {} as Popup;
+  private displayPointOnMap = (point: Feature) => {
+    if (Object.keys(this.startPointPopup).length > 0) {
+      this.startPointPopup.remove();
+      this.startPointPopup = {} as Popup;
+    }
+
+    if (this.state.style.sources['user-point']) {
+      this.state.style.removeSource('user-point');
+    }
+
+    if (this.state.style.getLayer('user-point-layer')) {
+      this.state.style.removeLayer('user-point-layer');
+    }
+
+    this.state.style.addSource('user-point', {
+      type: 'geojson',
+      data: {
+        type: 'FeatureCollection',
+        features: [point],
+      },
+    });
+    const startLayer: SymbolLayerSpecification = {
+      id: 'user-point-layer',
+      type: 'symbol',
+      source: 'user-point',
+      layout: {
+        'icon-image': 'pulsing-dot',
+      },
+      filter: ['all', ['==', ['to-number', ['get', 'level']], point.properties.level]],
+    };
+
+    this.state.style.addLayer(startLayer);
+
+    this.startPointPopup = new maplibregl.Popup({
+      anchor: 'bottom',
+      closeOnClick: false,
+      className: 'proximiio-startPoint-popup',
+      offset: [0, -15],
+    })
+      .setLngLat(point.geometry.coordinates as [number, number])
+      .setHTML(translations[this.defaultOptions.language].YOU_ARE_HERE)
+      .addTo(this.map);
+
+    const css = `
+    .proximiio-startPoint-popup.hidden {
+      display: none;
+    }
+    .proximiio-startPoint-popup .maplibregl-popup-close-button {
+      display: none;
+    }
+    .proximiio-startPoint-popup .maplibregl-popup-content {
+      font-family: ${
+        this.defaultOptions.kioskSettings.labelFont
+          ? this.defaultOptions.kioskSettings.labelFont
+          : 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"'
+      };
+      color: white;
+      font-size: 16px;
+      border-radius: 12px;
+      padding: .6rem .8rem;
+      font-weight: 500;
+      max-width: 100px;
+      text-align: center;
+      box-shadow: none;
+      background-color: ${
+        this.defaultOptions.kioskSettings.pointColor
+          ? `rgb(${this.defaultOptions.kioskSettings.pointColor})`
+          : 'rgb(189, 82, 255)'
+      };
+    }
+    .proximiio-startPoint-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+      border-top-color: ${
+        this.defaultOptions.kioskSettings.pointColor
+          ? `rgb(${this.defaultOptions.kioskSettings.pointColor})`
+          : 'rgb(189, 82, 255)'
+      };
+      margin-top: -1px;
+      border-top-width: 25px;
+      border-left-width: 15px;
+      border-right-width: 15px;
+    }
+  `;
+
+    if (!document.getElementById('proximiio-startPoint-popup-css')) {
+      this.InjectCSS({ id: 'proximiio-startPoint-popup-css', css });
+    }
+
+    this.map.setStyle(this.state.style);
+  };
+
+  public removeStartPointOnMap = () => {
+    if (Object.keys(this.startPointPopup).length > 0) {
+      this.startPointPopup.remove();
+      this.startPointPopup = {} as Popup;
+    }
+
+    if (this.state.style.sources['user-point']) {
+      this.state.style.removeSource('user-point');
+    }
+
+    if (this.state.style.getLayer('user-point-layer')) {
+      this.state.style.removeLayer('user-point-layer');
+    }
+    this.map.setStyle(this.state.style);
   };
 
   /**
@@ -4492,6 +4639,31 @@ export class Map {
    */
   public getFloorSelectListener() {
     return this.onFloorSelectListener;
+  }
+
+  /**
+   * This method will find closest point on the path nearby of defined feature.
+   *  @memberof Map
+   *  @name findPathPoint
+   *  @param featureId {string} ID of the feature to find path point for
+   *  @returns closest point
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.findPathPoint({featureId: 'featureId'});
+   *  });
+   */
+  public findPathPoint({ featureId, displayOnMap = false }: { featureId: string; displayOnMap?: boolean }) {
+    const feature = this.state.allFeatures.features.find((f) => f.id === featureId);
+    if (!feature) {
+      throw new Error(`Feature with id '${featureId}' does not exist!`);
+    }
+    const point: Feature = this.getClosestPointOnPath(feature);
+    if (point && displayOnMap) {
+      this.displayPointOnMap(point);
+    }
+    return point;
   }
 
   /**
