@@ -4663,7 +4663,7 @@ export class Map {
     if (featurePoint && displayOnMap) {
       this.displayPointOnMap(featurePoint);
     }
-    return point;
+    return featurePoint;
   }
 
   /**
