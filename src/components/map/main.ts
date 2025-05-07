@@ -3453,6 +3453,18 @@ export class Map {
         map.setFilter('persons-layer', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('persons-layer').filter = filter;
       }
+      if (map.getLayer('user-point-layer')) {
+        const snappedPathPoint = this.state.allFeatures.features.find((feature) => feature.id === 'snapped-path-point');
+        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
+        map.setFilter('user-point-layer', filter as maplibregl.FilterSpecification);
+        this.state.style.getLayer('user-point-layer').filter = filter;
+
+        if (snappedPathPoint?.properties?.level !== undefined && floor.level === snappedPathPoint.properties.level) {
+          this.startPointPopup.removeClassName('hidden');
+        } else {
+          this.startPointPopup.addClassName('hidden');
+        }
+      }
       if (this.defaultOptions.showLevelDirectionIcon && map.getLayer('direction-halo-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
         map.setFilter('direction-halo-layer', filter as maplibregl.FilterSpecification);
@@ -4286,13 +4298,15 @@ export class Map {
       if (dist < minDist) {
         minDist = dist;
         closestSegment = lineString([featurePoint.geometry.coordinates, snapped.geometry.coordinates]);
-        finalBearing = bearing(featurePoint, snapped);
+        finalBearing = bearing(snapped, featurePoint);
+        snapped.id = 'snapped-path-point';
         snapped.properties.bearing = finalBearing;
         snapped.properties.level = f.properties.level;
         finalPoint = snapped;
       }
     });
 
+    this.state.allFeatures.features = [...this.state.allFeatures.features, finalPoint];
     return finalPoint;
   };
 
@@ -4401,6 +4415,12 @@ export class Map {
       this.state.style.removeLayer('user-point-layer');
     }
     this.map.setStyle(this.state.style);
+    const snappedPathPointIndex = this.state.allFeatures.features.findIndex(
+      (feature) => feature.id === 'snapped-path-point',
+    );
+    if (snappedPathPointIndex !== -1) {
+      this.state.allFeatures.features.splice(snappedPathPointIndex, 1);
+    }
   };
 
   /**
