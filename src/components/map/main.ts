@@ -4415,9 +4415,7 @@ export class Map {
       this.state.style.removeLayer('user-point-layer');
     }
     this.map.setStyle(this.state.style);
-    const snappedPathPointIndex = this.state.allFeatures.features.findIndex(
-      (feature) => feature.id === 'snapped-path-point',
-    );
+    const snappedPathPointIndex = this.state.allFeatures.features.findIndex((f) => f.id === 'snapped-path-point');
     if (snappedPathPointIndex !== -1) {
       this.state.allFeatures.features.splice(snappedPathPointIndex, 1);
     }
