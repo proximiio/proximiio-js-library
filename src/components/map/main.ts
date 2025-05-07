@@ -3454,7 +3454,7 @@ export class Map {
         this.state.style.getLayer('persons-layer').filter = filter;
       }
       if (map.getLayer('user-point-layer')) {
-        const snappedPathPoint = this.state.allFeatures.features.find((feature) => feature.id === 'snapped-path-point');
+        const snappedPathPoint = this.state.allFeatures.features.find((f) => f.id === 'snapped-path-point');
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
         map.setFilter('user-point-layer', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('user-point-layer').filter = filter;
