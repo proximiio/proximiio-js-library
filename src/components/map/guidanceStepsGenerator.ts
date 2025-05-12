@@ -222,16 +222,18 @@ export default class GuidanceStepsGenerator {
 
       instruction += this.getDirectionInstruction(direction);
 
+      if (currentPoint.isLevelChanger) {
+        instruction = instruction.slice(0, -1);
+        instruction += ` ${translations[this.language].TO_FLOOR} ${nextPoint.properties.level}`;
+        return instruction;
+      }
+
       const nearestPoi = nearestPoint(currentPoint.geometry.coordinates, featureCollection as any);
       instruction = `${instruction.slice(0, -1)} ${translations[this.language].BY} ${
         nearestPoi.properties.title_i18n && nearestPoi.properties.title_i18n[this.language]
           ? nearestPoi.properties.title_i18n[this.language]
           : nearestPoi.properties.title
       }`;
-
-      if (currentPoint.isLevelChanger) {
-        instruction += ` ${translations[this.language].TO_FLOOR} ${nextPoint.properties.level}`;
-      }
     }
 
     return instruction;
