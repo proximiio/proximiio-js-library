@@ -111,8 +111,8 @@ export default class GuidanceStepsGenerator {
         (direction === Direction.Start ||
           (direction === Direction.Finish && currentPoint.isPoi) ||
           direction === Direction.TurnAround ||
-          direction === `${Direction.Down}_${LevelChangerTypes[currentPoint.properties.type]}` ||
-          direction === `${Direction.Up}_${LevelChangerTypes[currentPoint.properties.type]}` ||
+          /*direction === `${Direction.Down}_${LevelChangerTypes[currentPoint.properties.type]}` ||
+          direction === `${Direction.Up}_${LevelChangerTypes[currentPoint.properties.type]}` ||*/
           direction === `${Direction.Exit}_${LevelChangerTypes[currentPoint.properties.type]}` ||
           distanceFromLastStep === 0)
       ) {
@@ -213,12 +213,12 @@ export default class GuidanceStepsGenerator {
         return instruction;
       }
 
-      if (nextPoint.isLevelChanger) {
+      /*if (nextPoint.isLevelChanger) {
         instruction += `${this.getDirectionInstruction(nextPointDirection).slice(0, -1)} ${
           translations[this.language].TO_FLOOR
         } ${secondNextPoint.properties.level}`;
         return instruction;
-      }
+      }*/
 
       instruction += this.getDirectionInstruction(direction);
 
@@ -228,6 +228,10 @@ export default class GuidanceStepsGenerator {
           ? nearestPoi.properties.title_i18n[this.language]
           : nearestPoi.properties.title
       }`;
+
+      if (currentPoint.isLevelChanger) {
+        instruction += ` ${translations[this.language].TO_FLOOR} ${nextPoint.properties.level}`;
+      }
     }
 
     return instruction;
