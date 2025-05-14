@@ -234,6 +234,8 @@ export default class GuidanceStepsGenerator {
           ? nearestPoi.properties.title_i18n[this.language]
           : nearestPoi.properties.title
       }`;
+    } else {
+      instruction += this.getDirectionInstruction(direction);
     }
 
     return instruction;

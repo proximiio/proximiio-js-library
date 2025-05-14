@@ -2471,22 +2471,30 @@ export class Map {
     }
 
     if (!isTemporary) {
-      const featureIndex = this.state.optimizedFeatures.features.findIndex(
+      const featureIndex = this.state.features.features.findIndex(
         (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
       );
-      this.state.optimizedFeatures.features[featureIndex] = featureVar;
+      const optimizedFeatureIndex = this.state.optimizedFeatures.features.findIndex(
+        (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
+      );
+      if (featureIndex) this.state.features.features[featureIndex] = featureVar;
+      if (optimizedFeatureIndex) this.state.optimizedFeatures.features[optimizedFeatureIndex] = featureVar;
       await addFeatures({
         type: 'FeatureCollection',
         features: [featureVar.json],
       });
     } else {
-      const featureIndex = this.state.optimizedFeatures.features.findIndex(
+      const featureIndex = this.state.features.features.findIndex(
+        (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
+      );
+      const optimizedFeatureIndex = this.state.optimizedFeatures.features.findIndex(
         (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
       );
       const dynamicIndex = this.state.dynamicFeatures.features.findIndex(
         (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
       );
-      if (featureIndex) this.state.optimizedFeatures.features[featureIndex] = featureVar;
+      if (featureIndex) this.state.features.features[featureIndex] = featureVar;
+      if (optimizedFeatureIndex) this.state.optimizedFeatures.features[optimizedFeatureIndex] = featureVar;
       if (dynamicIndex) this.state.dynamicFeatures.features[dynamicIndex] = featureVar;
     }
 
