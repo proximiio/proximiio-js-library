@@ -214,6 +214,7 @@ export default class Routing {
         amenity: 'chevron_right',
         step: +key.split('-')[2],
         stop: stopIndex,
+        source: 'mallRoute',
       };
     }
 
@@ -276,14 +277,16 @@ export default class Routing {
         duration: route.duration,
       };
 
-      const fullPath = new Feature(lineString(route.geometry.coordinates, { level: start.properties.level }));
+      const fullPath = new Feature(
+        lineString(route.geometry.coordinates, { level: start.properties.level, source: 'cityRoute' }),
+      );
 
       const points = fullPath.geometry.coordinates.map((p: any) => new Feature(point(p)));
 
       const paths = {};
       for (const [index, val] of route.legs[0].steps.entries()) {
         paths[`path-part-${index}`] = new Feature(
-          lineString(val.geometry.coordinates, { level: start.properties.level }),
+          lineString(val.geometry.coordinates, { level: start.properties.level, source: 'cityRoute' }),
         );
       }
 

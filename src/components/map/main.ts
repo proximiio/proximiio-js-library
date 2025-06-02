@@ -3525,7 +3525,17 @@ export class Map {
     this.onFloorSelectListener.next(floor);
   }
 
-  private onRouteUpdate({ start, finish, stops }: { start?: Feature; finish?: Feature; stops?: Feature[] }) {
+  private onRouteUpdate({
+    start,
+    finish,
+    stops,
+    connectingPoint,
+  }: {
+    start?: Feature;
+    finish?: Feature;
+    stops?: Feature[];
+    connectingPoint?: Feature;
+  }) {
     this.startPoint = start;
     this.endPoint = stops ? stops[stops.length - 1] : finish;
     try {
@@ -3542,14 +3552,24 @@ export class Map {
         }
         cancelAnimationFrame(this.animationFrame);
       }
-      this.routingSource.update({ start, finish, stops, language: this.defaultOptions.language });
+      this.routingSource.update({ start, finish, stops, language: this.defaultOptions.language, connectingPoint });
     } catch (e) {
       console.log('catched', e);
     }
     this.state = { ...this.state, style: this.state.style };
   }
 
-  private onRoutePreview({ start, finish, stops }: { start?: Feature; finish?: Feature; stops?: Feature[] }) {
+  private onRoutePreview({
+    start,
+    finish,
+    stops,
+    connectingPoint,
+  }: {
+    start?: Feature;
+    finish?: Feature;
+    stops?: Feature[];
+    connectingPoint?: Feature;
+  }) {
     this.startPoint = start;
     this.endPoint = stops ? stops[stops.length - 1] : finish;
     if (this.defaultOptions.initPolygons) {
@@ -3559,7 +3579,14 @@ export class Map {
       }
       this.handlePolygonSelection(polygonsToSelect);
     }
-    this.routingSource.update({ start, finish, stops, preview: true, language: this.defaultOptions.language });
+    this.routingSource.update({
+      start,
+      finish,
+      stops,
+      preview: true,
+      language: this.defaultOptions.language,
+      connectingPoint,
+    });
   }
 
   private onRouteCancel() {
@@ -3626,7 +3653,7 @@ export class Map {
         if (floor) this.onFloorSelect(floor);
       }
       if (this.map) {
-        if (this.routingSource && this.routingSource.navigationType === 'city' && this.routingSource.fullPath) {
+        if (this.routingSource && route.properties.source === 'cityRoute' && this.routingSource.fullPath) {
           const routeToCenter = this.routingSource.preview
             ? this.routingSource.fullPath
             : this.routingSource.route[`path-part-${this.currentStep}`];
@@ -3781,7 +3808,7 @@ export class Map {
               { level: this.state.floor.level },
             );
       let routeUntilNextStep;
-      if (this.routingSource.navigationType === 'city' || this.defaultOptions.landmarkTBTNavigation) {
+      if (route.properties.source === 'cityRoute' || this.defaultOptions.landmarkTBTNavigation) {
         const routePoints = this.routingSource.lines
           .filter((i) => i.properties.level === this.state.floor.level)
           .map((i: any, index: number) => {
@@ -3801,14 +3828,14 @@ export class Map {
         const totalDistance = length(route);
         let baseSpeed = 1000 * 30 * this.defaultOptions.routeAnimation.durationMultiplier; // Animation time in milliseconds per meter
 
-        if (this.routingSource.navigationType === 'city') {
+        if (route.properties.source === 'cityRoute') {
           baseSpeed = baseSpeed / this.defaultOptions.routeAnimation.cityRouteSpeedMultiplier;
         }
 
         let totalDuration = totalDistance * baseSpeed; // Total animation duration based on route length
 
         if (
-          this.routingSource.navigationType === 'city' &&
+          route.properties.source === 'cityRoute' &&
           totalDuration > this.defaultOptions.routeAnimation.cityRouteMaxDuration * 1000
         ) {
           totalDuration = this.defaultOptions.routeAnimation.cityRouteMaxDuration * 1000;
@@ -3826,12 +3853,12 @@ export class Map {
 
           if (t >= 1) {
             // Stop the animation if we reached the end
-            if (this.defaultOptions.routeAnimation.looping && this.routingSource.navigationType === 'mall') {
+            if (this.defaultOptions.routeAnimation.looping && route.properties.source === 'mallRoute') {
               this.animationTimeout = setTimeout(() => {
                 this.restartRouteAnimation({ delay: 0, recenter: true });
               }, 2000);
             }
-            if (this.defaultOptions.autoLevelChange && this.routingSource.navigationType === 'mall') {
+            if (this.defaultOptions.autoLevelChange && route.properties.source === 'mallRoute') {
               if (this.routingSource.route && Object.keys(this.routingSource.route).length - 1 === this.currentStep) {
                 if (this.routingSource.stops && this.routingSource.stops?.length !== this.currentStop) {
                   this.setStop('next');
@@ -3861,7 +3888,7 @@ export class Map {
 
           // cut the line at the point
           const lineAlong = lineSplit(
-            this.routingSource.navigationType === 'city' || this.defaultOptions.landmarkTBTNavigation
+            route.properties.source === 'cityRoute' || this.defaultOptions.landmarkTBTNavigation
               ? routeUntilNextStep
               : route,
             currentPoint,
@@ -3887,14 +3914,14 @@ export class Map {
             if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
               this.pointIconMarker.setLngLat(newCoords as [number, number]);
               this.pointIconMarker.getElement().style.backgroundImage =
-                this.routingSource.navigationType === 'city'
+                route.properties.source === 'cityRoute'
                   ? `url(${this.defaultOptions.routeAnimation.cityPointIconUrl})`
                   : `url(${this.defaultOptions.routeAnimation.pointIconUrl})`;
               this.pointIconMarker.addTo(this.map);
               // set different icon based on nav type
             } else {
               pointData.features[0].properties.pointIcon =
-                this.routingSource.navigationType === 'city' ? 'cityPointIcon' : 'pointIcon';
+                route.properties.source === 'cityRoute' ? 'cityPointIcon' : 'pointIcon';
               // @ts-ignore
               this.map.getSource('pointAlong').setData(pointData);
             }
@@ -3928,7 +3955,7 @@ export class Map {
               this.lerp(cameraCoords[1], targetCoords[1], this.defaultOptions.routeAnimation.cameraLerpTolerance),
             ];
             if (!this.defaultOptions.routeAnimation.followRouteAngle) {
-              if (this.routingSource.navigationType === 'city') {
+              if (route.properties.source === 'cityRoute') {
                 this.map.setBearing(0);
               }
               this.map.easeTo({
@@ -3989,7 +4016,7 @@ export class Map {
           this.map
             .getSource('lineAlong')
             // @ts-ignore
-            .setData(this.routingSource.navigationType === 'city' ? routeUntilNextStep : route);
+            .setData(route.properties.source === 'cityRoute' ? routeUntilNextStep : route);
         });
 
         const animateDashArray = (timestamp: number) => {
@@ -4992,6 +5019,88 @@ export class Map {
   }
 
   /**
+   * This method will generate combined mall/city route
+   *  @memberof Map
+   *  @name findCombinedRoute
+   *  @param start {lat: number, lng: number} | {string} start coordinates / feature id
+   *  @param connectingPoint {lat: number, lng: number} connecting point coordinates for mall/city nav
+   *  @param destination {lat: number, lng: number} | {string} destination coordinates / feature id
+   *  @param autoStart {boolean} default true, if set to false route will not start automatically
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.findCombinedRoute({
+   *      start: {
+   *        lat: 48.606703739771774,
+   *        lng: 17.833092384506614
+   *      },
+   *      connectingPoint: {
+   *        lat: 48.60684545080579,
+   *        lng: 17.833450676669543
+   *      },
+   *      destination: 'destinationId'
+   *    });
+   *  });
+   */
+  public findCombinedRoute({
+    start,
+    connectingPoint,
+    destination,
+    autoStart = true,
+  }: {
+    start:
+      | {
+          lat: number;
+          lng: number;
+        }
+      | string;
+    connectingPoint: {
+      lat: number;
+      lng: number;
+    };
+    destination:
+      | {
+          lat: number;
+          lng: number;
+        }
+      | string;
+    autoStart?: boolean;
+  }) {
+    const startFeature =
+      typeof start === 'string' || start instanceof String
+        ? this.state.allFeatures.features.find((f) => f.id === start || f.properties.id === start)
+        : (feature({ type: 'Point', coordinates: [start.lng, start.lat] }, { level: 0 }) as Feature);
+
+    const connectingPointFeature = feature(
+      { type: 'Point', coordinates: [connectingPoint.lng, connectingPoint.lat] },
+      { level: 0 },
+    ) as Feature;
+
+    const destinationFeature =
+      typeof destination === 'string' || destination instanceof String
+        ? (this.state.allFeatures.features.find(
+            (f) => f.id === destination || f.properties.id === destination,
+          ) as Feature)
+        : (feature({ type: 'Point', coordinates: [destination.lng, destination.lat] }, { level: 0 }) as Feature);
+
+    this.routingSource.setNavigationType('combined');
+    if (autoStart !== false) {
+      this.onRouteUpdate({
+        start: startFeature,
+        connectingPoint: connectingPointFeature,
+        finish: destinationFeature,
+      });
+    } else {
+      this.onRoutePreview({
+        start: startFeature,
+        connectingPoint: connectingPointFeature,
+        finish: destinationFeature,
+      });
+    }
+  }
+
+  /**
    * This method will cancel generated route
    *  @memberof Map
    *  @name cancelRoute
@@ -5041,14 +5150,23 @@ export class Map {
       return;
     }
     if (this.routingSource && this.routingSource.route && this.routingSource.route[`path-part-${newStep}`]) {
+      const route = this.routingSource.route[`path-part-${newStep}`];
+      const prevRoute = this.routingSource.route[`path-part-${newStep - 1}`];
+      const nextRoute = this.routingSource.route[`path-part-${newStep + 1}`];
       this.currentStep = newStep;
-      if (this.routingSource.navigationType === 'city') {
+      if (route.properties.source === 'cityRoute') {
         this.animateRoute();
       } else {
         if (this.routingSource.isMultipoint || this.defaultOptions.enableTBTNavigation) {
           this.animateRoute();
         }
         this.centerOnRoute(this.routingSource.route[`path-part-${newStep}`]);
+      }
+      if (
+        route.properties.source !== prevRoute?.properties.source ||
+        route.properties.source !== nextRoute?.properties.source
+      ) {
+        this.map.setZoom(route.properties.source === 'cityRoute' ? 15 : 18);
       }
       this.onStepSetListener.next(this.currentStep);
       if (

@@ -3,6 +3,7 @@ import Feature, { FeatureCollection } from '../../../models/feature';
 import Routing from '../routing';
 import { GuidanceStep, WayfindingConfigModel } from '../../../models/wayfinding';
 import GuidanceStepsGenerator from '../guidanceStepsGenerator';
+import combineRoutes from '../combineRoutes';
 
 interface ChangeContainer {
   action: string;
@@ -12,6 +13,7 @@ interface ChangeContainer {
 export default class RoutingSource extends DataSource {
   isEditable = false;
   start?: Feature;
+  connectingPoint?: Feature;
   finish?: Feature;
   stops?: Feature[];
   lines?: Feature[];
@@ -24,9 +26,9 @@ export default class RoutingSource extends DataSource {
   details: {
     distance: number;
     duration: {
-      elevator: number;
-      escalator: number;
-      staircase: number;
+      elevator?: number;
+      escalator?: number;
+      staircase?: number;
       realistic: number;
       shortest: number;
     };
@@ -34,7 +36,7 @@ export default class RoutingSource extends DataSource {
   steps: GuidanceStep[];
   preview?: boolean;
   language: string;
-  navigationType: 'mall' | 'city';
+  navigationType: 'mall' | 'city' | 'combined';
   fullPath?: Feature;
   isMultipoint = false;
   landmarkTBT: boolean;
@@ -58,7 +60,7 @@ export default class RoutingSource extends DataSource {
     this.routing.setConfig(config);
   }
 
-  setNavigationType(type: 'mall' | 'city') {
+  setNavigationType(type: 'mall' | 'city' | 'combined') {
     this.navigationType = type;
   }
 
@@ -80,12 +82,14 @@ export default class RoutingSource extends DataSource {
 
   async update({
     start,
+    connectingPoint,
     finish,
     stops,
     preview,
     language,
   }: {
     start?: Feature;
+    connectingPoint?: Feature;
     finish?: Feature;
     stops?: Feature[];
     preview?: boolean;
@@ -99,21 +103,37 @@ export default class RoutingSource extends DataSource {
     this.stops = stops;
     this.preview = preview;
     this.language = language;
+    this.connectingPoint = connectingPoint;
 
     this.data = new FeatureCollection({
-      features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),
+      features: [this.start, this.finish, this.connectingPoint].concat(this.lines || []).filter((i) => i),
     });
     this.notify('feature-updated');
 
     if (start && finish) {
       this.notify('loading-start');
-      const route =
-        this.navigationType === 'city'
-          ? await this.routing.cityRoute({ start, finish, language: this.language })
-          : this.routing.route({ start, finish, stops, landmarkTBT: this.landmarkTBT });
+
+      let route;
+      let mallRoute;
+      let cityRoute;
+      const startAtMall = !!start.id;
+      if (this.navigationType === 'city') {
+        route = await this.routing.cityRoute({ start, finish, language: this.language });
+      } else if (this.navigationType === 'mall') {
+        route = this.routing.route({ start, finish, stops, landmarkTBT: this.landmarkTBT });
+      } else if (this.navigationType === 'combined' && connectingPoint) {
+        if (startAtMall) {
+          cityRoute = await this.routing.cityRoute({ start: connectingPoint, finish, language: this.language });
+          mallRoute = this.routing.route({ start, finish: connectingPoint, stops, landmarkTBT: this.landmarkTBT });
+        } else {
+          cityRoute = await this.routing.cityRoute({ start, finish: connectingPoint, language: this.language });
+          mallRoute = this.routing.route({ start: connectingPoint, finish, stops, landmarkTBT: this.landmarkTBT });
+        }
+        console.log('mallRoute', mallRoute);
+      }
 
       // @ts-ignore
-      const paths = route?.paths;
+      let paths = route?.paths;
       // @ts-ignore
       this.route = route?.paths;
       // @ts-ignore
@@ -144,6 +164,44 @@ export default class RoutingSource extends DataSource {
             this.steps.push(step);
           });
         });
+      }
+
+      if (this.navigationType === 'combined') {
+        const combined = combineRoutes(cityRoute, mallRoute, startAtMall ? 'mall-first' : 'city-first');
+        // @ts-ignore
+        paths = combined?.paths;
+        // @ts-ignore
+        this.route = combined?.paths;
+        // @ts-ignore
+        this.points = combined?.points;
+        this.levelPaths = combined?.levelPaths;
+        this.levelPoints = combined?.levelPoints;
+        this.details = combined?.details;
+        this.fullPath = combined?.fullPath as any;
+
+        this.steps = [];
+        const citySteps = [];
+        cityRoute.route.legs.forEach((leg) => {
+          leg.steps.forEach((step) => {
+            step.navMode = 'city';
+            citySteps.push(step);
+          });
+        });
+
+        const mallStepsGenerator = new GuidanceStepsGenerator({
+          points: mallRoute?.points,
+          language: this.language,
+          landMarkNav: this.landmarkTBT,
+          pois: this.pois,
+          levelChangers: this.levelChangers,
+          initialBearing: this.initialBearing,
+        });
+        if (mallStepsGenerator.steps) {
+          const mallSteps = mallStepsGenerator.steps.filter((i) => i !== undefined);
+          this.steps = startAtMall
+            ? mallSteps.map((i) => ({ ...i, navMode: 'mall' })).concat(citySteps)
+            : citySteps.concat(mallSteps.map((i) => ({ ...i, navMode: 'mall' })));
+        }
       }
 
       if (paths) {
@@ -181,8 +239,9 @@ export default class RoutingSource extends DataSource {
     this.steps = undefined;
     this.preview = undefined;
     this.initialBearing = undefined;
+    this.connectingPoint = undefined;
     this.data = new FeatureCollection({
-      features: [this.start, this.finish].concat(this.lines || []).filter((i) => i),
+      features: [this.start, this.finish, this.connectingPoint].concat(this.lines || []).filter((i) => i),
     });
     this.navigationType = 'mall';
     this.notify('feature-updated');
