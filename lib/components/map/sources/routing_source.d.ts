@@ -9,6 +9,7 @@ interface ChangeContainer {
 export default class RoutingSource extends DataSource {
     isEditable: boolean;
     start?: Feature;
+    connectingPoint?: Feature;
     finish?: Feature;
     stops?: Feature[];
     lines?: Feature[];
@@ -21,9 +22,9 @@ export default class RoutingSource extends DataSource {
     details: {
         distance: number;
         duration: {
-            elevator: number;
-            escalator: number;
-            staircase: number;
+            elevator?: number;
+            escalator?: number;
+            staircase?: number;
             realistic: number;
             shortest: number;
         };
@@ -31,7 +32,7 @@ export default class RoutingSource extends DataSource {
     steps: GuidanceStep[];
     preview?: boolean;
     language: string;
-    navigationType: 'mall' | 'city';
+    navigationType: 'mall' | 'city' | 'combined';
     fullPath?: Feature;
     isMultipoint: boolean;
     landmarkTBT: boolean;
@@ -41,13 +42,14 @@ export default class RoutingSource extends DataSource {
     constructor();
     toggleAccessible(value: any): void;
     setConfig(config: WayfindingConfigModel): void;
-    setNavigationType(type: 'mall' | 'city'): void;
+    setNavigationType(type: 'mall' | 'city' | 'combined'): void;
     setLandmarkTBT(value: boolean): void;
     setInitialBearing(initialBearing: number): void;
     setPois(pois: Feature[]): void;
     setLevelChangers(levelChangers: Feature[]): void;
-    update({ start, finish, stops, preview, language, }: {
+    update({ start, connectingPoint, finish, stops, preview, language, }: {
         start?: Feature;
+        connectingPoint?: Feature;
         finish?: Feature;
         stops?: Feature[];
         preview?: boolean;

@@ -21,4 +21,5 @@ export interface GuidanceStep {
     levelChangerDirection?: 'UP' | 'DOWN';
     levelChangerDestinationLevel?: number;
     lineStringFeatureFromLastStep?: Feature;
+    navMode?: 'city' | 'mall';
 }

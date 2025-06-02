@@ -343,6 +343,10 @@ export declare class Map {
     private stopMarkers;
     private addStopMarkers;
     private removeStopMarkers;
+    private getClosestPointOnPath;
+    private startPointPopup;
+    private displayPointOnMap;
+    removeStartPointOnMap: () => void;
     /**
      *  @memberof Map
      *  @name getMapboxInstance
@@ -510,6 +514,23 @@ export declare class Map {
      */
     getFloorSelectListener(): CustomSubject<FloorModel>;
     /**
+     * This method will find closest point on the path nearby of defined feature.
+     *  @memberof Map
+     *  @name findPathPoint
+     *  @param featureId {string} ID of the feature to find path point for
+     *  @returns closest point
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.findPathPoint({featureId: 'featureId'});
+     *  });
+     */
+    findPathPoint({ featureId, displayOnMap }: {
+        featureId: string;
+        displayOnMap?: boolean;
+    }): Feature;
+    /**
      * This method will generate route based on selected features by their ids
      *  @memberof Map
      *  @name findRouteByIds
@@ -637,6 +658,46 @@ export declare class Map {
         start: string;
         stops: string[];
         wayfindingConfig?: WayfindingConfigModel;
+        autoStart?: boolean;
+    }): void;
+    /**
+     * This method will generate combined mall/city route
+     *  @memberof Map
+     *  @name findCombinedRoute
+     *  @param start {lat: number, lng: number} | {string} start coordinates / feature id
+     *  @param connectingPoint {lat: number, lng: number} connecting point coordinates for mall/city nav
+     *  @param destination {lat: number, lng: number} | {string} destination coordinates / feature id
+     *  @param autoStart {boolean} default true, if set to false route will not start automatically
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.findCombinedRoute({
+     *      start: {
+     *        lat: 48.606703739771774,
+     *        lng: 17.833092384506614
+     *      },
+     *      connectingPoint: {
+     *        lat: 48.60684545080579,
+     *        lng: 17.833450676669543
+     *      },
+     *      destination: 'destinationId'
+     *    });
+     *  });
+     */
+    findCombinedRoute({ start, connectingPoint, destination, autoStart, }: {
+        start: {
+            lat: number;
+            lng: number;
+        } | string;
+        connectingPoint: {
+            lat: number;
+            lng: number;
+        };
+        destination: {
+            lat: number;
+            lng: number;
+        } | string;
         autoStart?: boolean;
     }): void;
     /**
