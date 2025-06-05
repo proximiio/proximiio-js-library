@@ -203,6 +203,8 @@ export interface Options {
     cityRouteMaxDuration?: number;
     autoStart?: boolean;
     autoContinue?: boolean;
+    cityRouteZoom?: number;
+    mallRouteZoom?: number;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -422,6 +424,8 @@ export class Map {
       cityRouteMaxDuration: 5,
       autoStart: true,
       autoContinue: true,
+      cityRouteZoom: 15,
+      mallRouteZoom: 18,
     },
     useRasterTiles: false,
     handleUrlParams: false,
@@ -1351,13 +1355,15 @@ export class Map {
     // Filter the steps in textNavigation state to find level changers
     const levelChangers = this.state.textNavigation.steps
       .filter((i, index, array) => {
-        // Get the first part of the direction string
-        const direction = i.direction.split('_')[0];
-        // Check if the current step is a level changer and has a valid direction
-        if (i.levelChangerId && (direction === 'UP' || direction === 'DOWN')) {
-          // Set the destination level for the level changer
-          i.destinationLevel = array[index + 1] ? array[index + 1]?.level : null;
-          return i;
+        if (i.direction) {
+          // Get the first part of the direction string
+          const direction = i.direction.split('_')[0];
+          // Check if the current step is a level changer and has a valid direction
+          if (i.levelChangerId && (direction === 'UP' || direction === 'DOWN')) {
+            // Set the destination level for the level changer
+            i.destinationLevel = array[index + 1] ? array[index + 1]?.level : null;
+            return i;
+          }
         }
       })
       // Map the level changers to feature objects
@@ -3101,7 +3107,10 @@ export class Map {
         this.centerOnRoute(routeStart);
         this.removeRouteMarkers();
 
-        if (this.defaultOptions.showLevelDirectionIcon && this.routingSource.navigationType === 'mall') {
+        if (
+          this.defaultOptions.showLevelDirectionIcon &&
+          (this.routingSource.navigationType === 'mall' || this.routingSource.navigationType === 'combined')
+        ) {
           this.addDirectionFeatures();
         }
 
@@ -5166,7 +5175,11 @@ export class Map {
         route.properties.source !== prevRoute?.properties.source ||
         route.properties.source !== nextRoute?.properties.source
       ) {
-        this.map.setZoom(route.properties.source === 'cityRoute' ? 15 : 18);
+        this.map.setZoom(
+          route.properties.source === 'cityRoute'
+            ? this.defaultOptions.routeAnimation.cityRouteZoom
+            : this.defaultOptions.routeAnimation.mallRouteZoom,
+        );
       }
       this.onStepSetListener.next(this.currentStep);
       if (

@@ -129,7 +129,6 @@ export default class RoutingSource extends DataSource {
           cityRoute = await this.routing.cityRoute({ start, finish: connectingPoint, language: this.language });
           mallRoute = this.routing.route({ start: connectingPoint, finish, stops, landmarkTBT: this.landmarkTBT });
         }
-        console.log('mallRoute', mallRoute);
       }
 
       // @ts-ignore
@@ -167,6 +166,12 @@ export default class RoutingSource extends DataSource {
       }
 
       if (this.navigationType === 'combined') {
+        if (!startAtMall) {
+          // remove the arrive path
+          const keys = Object.keys(cityRoute.paths);
+          const lastKey = keys[keys.length - 1];
+          delete cityRoute.paths[lastKey];
+        }
         const combined = combineRoutes(cityRoute, mallRoute, startAtMall ? 'mall-first' : 'city-first');
         // @ts-ignore
         paths = combined?.paths;
@@ -182,8 +187,11 @@ export default class RoutingSource extends DataSource {
         this.steps = [];
         const citySteps = [];
         cityRoute.route.legs.forEach((leg) => {
-          leg.steps.forEach((step) => {
+          leg.steps.forEach((step, index) => {
             step.navMode = 'city';
+            if (!startAtMall && index === leg.steps.length - 1) {
+              return;
+            }
             citySteps.push(step);
           });
         });
