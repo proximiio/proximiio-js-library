@@ -152,7 +152,9 @@ export default class RoutingSource extends DataSource {
           initialBearing: this.initialBearing,
         });
         if (guidanceStepsGenerator.steps) {
-          this.steps = guidanceStepsGenerator.steps.filter((i) => i !== undefined);
+          this.steps = guidanceStepsGenerator.steps
+            .filter((i) => i !== undefined)
+            .map((i) => ({ ...i, navMode: 'mall' }));
         }
       }
 
