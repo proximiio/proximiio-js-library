@@ -160,6 +160,7 @@ export default class RoutingSource extends DataSource {
         this.steps = [];
         route.route.legs.forEach((leg) => {
           leg.steps.forEach((step) => {
+            step.navMode = 'city';
             this.steps.push(step);
           });
         });
