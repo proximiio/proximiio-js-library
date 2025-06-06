@@ -175,6 +175,11 @@ export default class RoutingSource extends DataSource {
           const lastKey = keys[keys.length - 1];
           delete cityRoute.paths[lastKey];
         }
+        if (!mallRoute?.paths || !cityRoute?.paths) {
+          this.lines = [];
+          this.notify('route-undefined');
+          return;
+        }
         const combined = combineRoutes(cityRoute, mallRoute, startAtMall ? 'mall-first' : 'city-first');
         // @ts-ignore
         paths = combined?.paths;
