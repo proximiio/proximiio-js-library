@@ -3810,7 +3810,10 @@ export class Map {
     ) {
       const route =
         this.routingSource.route[`path-part-${this.currentStep}`] &&
-        this.routingSource.route[`path-part-${this.currentStep}`].properties?.level === this.state.floor.level
+        this.routingSource.route[`path-part-${this.currentStep}`].properties?.level ===
+          (this.routingSource.route[`path-part-${this.currentStep}`].properties?.source === 'cityRoute'
+            ? this.routingSource.route[`path-part-${this.currentStep}`].properties?.level
+            : this.state.floor.level)
           ? this.routingSource.route[`path-part-${this.currentStep}`]
           : lineString(
               this.routingSource.levelPoints[this.state.floor.level].map((i: any) => i.geometry.coordinates),
@@ -3819,7 +3822,11 @@ export class Map {
       let routeUntilNextStep;
       if (route.properties.source === 'cityRoute' || this.defaultOptions.landmarkTBTNavigation) {
         const routePoints = this.routingSource.lines
-          .filter((i) => i.properties.level === this.state.floor.level)
+          .filter(
+            (i) =>
+              i.properties.level ===
+              (route.properties.source === 'cityRoute' ? route.properties.level : this.state.floor.level),
+          )
           .map((i: any, index: number) => {
             if (index > this.currentStep) {
               return null;
@@ -3829,7 +3836,9 @@ export class Map {
           })
           .filter((i) => i)
           .flat(1);
-        routeUntilNextStep = lineString(routePoints, { level: this.state.floor.level });
+        routeUntilNextStep = lineString(routePoints, {
+          level: route.properties.source === 'cityRoute' ? route.properties.level : this.state.floor.level,
+        });
       }
       if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
         cancelAnimationFrame(this.animationFrame);
@@ -5164,6 +5173,7 @@ export class Map {
       const nextRoute = this.routingSource.route[`path-part-${newStep + 1}`];
       this.currentStep = newStep;
       if (route.properties.source === 'cityRoute') {
+        this.setFloorByLevel(route.properties.level);
         this.animateRoute();
       } else {
         if (this.routingSource.isMultipoint || this.defaultOptions.enableTBTNavigation) {
