@@ -205,6 +205,7 @@ export interface Options {
     autoContinue?: boolean;
     cityRouteZoom?: number;
     mallRouteZoom?: number;
+    mallEntryLevel?: number;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -426,6 +427,7 @@ export class Map {
       autoContinue: true,
       cityRouteZoom: 15,
       mallRouteZoom: 18,
+      mallEntryLevel: 0,
     },
     useRasterTiles: false,
     handleUrlParams: false,
@@ -4964,10 +4966,13 @@ export class Map {
     };
     autoStart?: boolean;
   }) {
-    const startFeature = feature({ type: 'Point', coordinates: [start.lng, start.lat] }, { level: 0 }) as Feature;
+    const startFeature = feature(
+      { type: 'Point', coordinates: [start.lng, start.lat] },
+      { level: this.defaultOptions.routeAnimation.mallEntryLevel },
+    ) as Feature;
     const destinationFeature = feature(
       { type: 'Point', coordinates: [destination.lng, destination.lat] },
-      { level: 0 },
+      { level: this.defaultOptions.routeAnimation.mallEntryLevel },
     ) as Feature;
     this.routingSource.setNavigationType('city');
     if (autoStart !== false) {
@@ -5044,6 +5049,8 @@ export class Map {
    *  @param connectingPoint {lat: number, lng: number} connecting point coordinates for mall/city nav
    *  @param destination {lat: number, lng: number} | {string} destination coordinates / feature id
    *  @param autoStart {boolean} default true, if set to false route will not start automatically
+   *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
+   *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
@@ -5066,6 +5073,8 @@ export class Map {
     connectingPoint,
     destination,
     autoStart = true,
+    accessibleRoute,
+    wayfindingConfig,
   }: {
     start:
       | {
@@ -5084,15 +5093,20 @@ export class Map {
         }
       | string;
     autoStart?: boolean;
+    accessibleRoute?: boolean;
+    wayfindingConfig?: WayfindingConfigModel;
   }) {
     const startFeature =
       typeof start === 'string' || start instanceof String
         ? this.state.allFeatures.features.find((f) => f.id === start || f.properties.id === start)
-        : (feature({ type: 'Point', coordinates: [start.lng, start.lat] }, { level: 0 }) as Feature);
+        : (feature(
+            { type: 'Point', coordinates: [start.lng, start.lat] },
+            { level: this.defaultOptions.routeAnimation.mallEntryLevel },
+          ) as Feature);
 
     const connectingPointFeature = feature(
       { type: 'Point', coordinates: [connectingPoint.lng, connectingPoint.lat] },
-      { level: 0 },
+      { level: this.defaultOptions.routeAnimation.mallEntryLevel },
     ) as Feature;
 
     const destinationFeature =
@@ -5100,9 +5114,16 @@ export class Map {
         ? (this.state.allFeatures.features.find(
             (f) => f.id === destination || f.properties.id === destination,
           ) as Feature)
-        : (feature({ type: 'Point', coordinates: [destination.lng, destination.lat] }, { level: 0 }) as Feature);
+        : (feature(
+            { type: 'Point', coordinates: [destination.lng, destination.lat] },
+            { level: this.defaultOptions.routeAnimation.mallEntryLevel },
+          ) as Feature);
 
     this.routingSource.setNavigationType('combined');
+    this.routingSource.toggleAccessible(accessibleRoute);
+    if (wayfindingConfig) {
+      this.routingSource.setConfig(wayfindingConfig);
+    }
     if (autoStart !== false) {
       this.onRouteUpdate({
         start: startFeature,

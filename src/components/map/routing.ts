@@ -274,7 +274,10 @@ export default class Routing {
 
       details = {
         distance: route.distance,
-        duration: route.duration,
+        duration: {
+          realistic: route.duration,
+          shortest: route.duration,
+        },
       };
 
       const fullPath = new Feature(
