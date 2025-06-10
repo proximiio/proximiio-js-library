@@ -3823,23 +3823,51 @@ export class Map {
             );
       let routeUntilNextStep;
       if (route.properties.source === 'cityRoute' || this.defaultOptions.landmarkTBTNavigation) {
-        const routePoints = this.routingSource.lines
-          .filter(
-            (i) =>
-              i.properties.level ===
-              (route.properties.source === 'cityRoute' ? route.properties.level : this.state.floor.level),
-          )
-          .map((i: any, index: number) => {
-            if (index > this.currentStep) {
-              return null;
-            } else {
-              return i.geometry.coordinates;
-            }
-          })
-          .filter((i) => i)
-          .flat(1);
+        // Step 1: Determine the current level to filter on
+        const level =
+          route.properties.source === 'cityRoute'
+            ? route.properties.level // Use route level if it's a city route
+            : this.state.floor.level; // Otherwise, use the currently selected floor level
+
+        const currentStep = this.currentStep; // Step we want to render path up to
+        const lines = this.routingSource.lines; // Array of all path segments (lines with geometry and properties)
+
+        // Step 2: Find the index of the line that matches the current step and level
+        const currentIndex = lines.findIndex((p) => p.properties.step === currentStep && p.properties.level === level);
+
+        if (currentIndex === -1) {
+          // If no path segment matches the current step and level, stop processing
+          return;
+        }
+
+        // Step 3: Walk backward from the current index to find the start of the most recent continuous segment
+        let startIndex = currentIndex;
+        for (let i = currentIndex - 1; i >= 0; i--) {
+          const curr = lines[i]; // The line at position i
+          const next = lines[i + 1]; // The line ahead (closer to currentIndex)
+
+          const isSameLevel = curr.properties.level === level; // Still on the correct level?
+          const isConsecutiveStep = curr.properties.step + 1 === next.properties.step; // Is the step incrementing by 1?
+
+          if (isSameLevel && isConsecutiveStep) {
+            // Keep moving backward if it's part of the same contiguous segment
+            startIndex = i;
+          } else {
+            // Stop if we hit a different level or a break in step continuity
+            break;
+          }
+        }
+
+        // Step 4: Slice out the contiguous segment and extract coordinates
+        const routePoints = lines
+          .slice(startIndex, currentIndex + 1) // Get the relevant continuous path segment
+          .map((i: any) => i.geometry.coordinates) // Extract coordinates
+          .filter(Boolean) // Filter out any undefined/null geometries
+          .flat(); // Flatten if coordinates are arrays of arrays
+
+        // Step 5: Create a LineString from the filtered path segment
         routeUntilNextStep = lineString(routePoints, {
-          level: route.properties.source === 'cityRoute' ? route.properties.level : this.state.floor.level,
+          level: level, // Attach the appropriate level to the LineString metadata
         });
       }
       if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
