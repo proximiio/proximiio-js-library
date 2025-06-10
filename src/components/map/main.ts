@@ -3867,7 +3867,7 @@ export class Map {
 
         // Step 5: Create a LineString from the filtered path segment
         routeUntilNextStep = lineString(routePoints, {
-          level: level, // Attach the appropriate level to the LineString metadata
+          level, // Attach the appropriate level to the LineString metadata
         });
       }
       if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
