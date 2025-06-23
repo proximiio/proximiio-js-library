@@ -5231,8 +5231,9 @@ export class Map {
         this.centerOnRoute(this.routingSource.route[`path-part-${newStep}`]);
       }
       if (
-        route.properties.source !== prevRoute?.properties.source ||
-        route.properties.source !== nextRoute?.properties.source
+        this.routingSource.navigationType === 'combined' &&
+        (route.properties.source !== prevRoute?.properties.source ||
+          route.properties.source !== nextRoute?.properties.source)
       ) {
         this.map.setZoom(
           route.properties.source === 'cityRoute'
