@@ -35,6 +35,7 @@ import {
   popupImage,
   routeStartSvg,
   routeFinishSvg,
+  createHeadingArrow,
 } from './icons';
 import { LngLatBoundsLike, MapLibreEvent } from 'maplibre-gl';
 import { getFloors, getFloorsBundle, getPlaceFloors, getPlaceFloorsBundle } from '../../controllers/floors';
@@ -65,6 +66,7 @@ import { Protocol, PMTiles } from 'pmtiles';
 import nearestPointToLine from '@turf/nearest-point-to-line';
 import distance from '@turf/distance';
 import nearestPointOnLine from '@turf/nearest-point-on-line';
+import getCurrentStepIndex from './getCurrentStep';
 
 export interface State {
   readonly initializing: boolean;
@@ -206,6 +208,7 @@ export interface Options {
     cityRouteZoom?: number;
     mallRouteZoom?: number;
     mallEntryLevel?: number;
+    lineProgress?: boolean;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -428,6 +431,7 @@ export class Map {
       cityRouteZoom: 15,
       mallRouteZoom: 18,
       mallEntryLevel: 0,
+      lineProgress: false,
     },
     useRasterTiles: false,
     handleUrlParams: false,
@@ -475,6 +479,8 @@ export class Map {
   private routeStartMarker = {} as Marker;
   private routeFinishMarker = {} as Marker;
   private stops = [] as Feature[];
+  private useCustomPosition = false;
+  private customPosition: [number, number] = null;
 
   constructor(options: Options) {
     // fix centering in case of kiosk with defined pitch/bearing/etc. in mapbox options
@@ -780,6 +786,7 @@ export class Map {
         }),
         { pixelRatio: 2 },
       );
+      map.addImage('heading-arrow', createHeadingArrow({ size: 64 }), { pixelRatio: 2 });
       map.addImage('person', decodedPersonIcon as any);
       map.addImage('floorchange-up-image', decodedFloorchangeUpImage as any);
       map.addImage('floorchange-down-image', decodedFloorchangeDownImage as any);
@@ -1557,7 +1564,9 @@ export class Map {
             maxzoom: this.defaultOptions.routeAnimation.maxzoom,
             paint: {
               'line-width': this.defaultOptions.routeAnimation.lineWidth,
-              'line-color': this.defaultOptions.routeAnimation.lineColor,
+              'line-color': this.defaultOptions.routeAnimation.lineProgress
+                ? ['get', 'color']
+                : this.defaultOptions.routeAnimation.lineColor,
               'line-opacity': this.defaultOptions.routeAnimation.lineOpacity,
             },
           },
@@ -3484,6 +3493,11 @@ export class Map {
           this.startPointPopup.addClassName('hidden');
         }
       }
+      if (map.getLayer('custom-position-point-layer')) {
+        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
+        map.setFilter('custom-position-point-layer', filter as maplibregl.FilterSpecification);
+        this.state.style.getLayer('custom-position-point-layer').filter = filter;
+      }
       if (this.defaultOptions.showLevelDirectionIcon && map.getLayer('direction-halo-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
         map.setFilter('direction-halo-layer', filter as maplibregl.FilterSpecification);
@@ -3524,7 +3538,7 @@ export class Map {
       if (this.defaultOptions.animatedRoute) {
         console.log(`animatedRoute property is deprecated, please use routeAnimation.enabled instead!`);
       }
-      if (this.defaultOptions.routeAnimation.autoRestart) {
+      if (this.defaultOptions.routeAnimation.autoRestart && !this.useCustomPosition) {
         this.animateRoute();
       }
     }
@@ -3859,11 +3873,16 @@ export class Map {
         }
 
         // Step 4: Slice out the contiguous segment and extract coordinates
-        const routePoints = lines
+        let routePoints = lines
           .slice(startIndex, currentIndex + 1) // Get the relevant continuous path segment
           .map((i: any) => i.geometry.coordinates) // Extract coordinates
           .filter(Boolean) // Filter out any undefined/null geometries
           .flat(); // Flatten if coordinates are arrays of arrays
+
+        if (this.useCustomPosition) {
+          routePoints.splice(-1);
+          routePoints.push(this.customPosition);
+        }
 
         // Step 5: Create a LineString from the filtered path segment
         routeUntilNextStep = lineString(routePoints, {
@@ -3891,7 +3910,9 @@ export class Map {
 
         let startTime;
 
-        this.map.setCenter(route.geometry.coordinates[0] as LngLatLike);
+        if (!this.useCustomPosition) {
+          this.map.setCenter(route.geometry.coordinates[0] as LngLatLike);
+        }
 
         const animate = (currentTime) => {
           if (!startTime) startTime = currentTime;
@@ -3934,6 +3955,8 @@ export class Map {
           // Interpolate the current point along the route
           const currentPoint = along(route, currentDistance);
 
+          const routeProgress = (this.currentStep / this.routingSource.steps.length) * 100;
+
           // cut the line at the point
           const lineAlong = lineSplit(
             route.properties.source === 'cityRoute' || this.defaultOptions.landmarkTBTNavigation
@@ -3941,6 +3964,10 @@ export class Map {
               : route,
             currentPoint,
           ).features[0];
+
+          if (this.defaultOptions.routeAnimation.lineProgress) {
+            lineAlong.properties.color = routeProgress < 30 ? '#FF4136' : routeProgress < 60 ? '#FF851B' : '#2ECC40';
+          }
 
           // Update the point position
           // @ts-ignore
@@ -3958,44 +3985,48 @@ export class Map {
               : newCoords,
           );
 
-          if (this.defaultOptions.routeAnimation.type === 'point') {
-            if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
-              this.pointIconMarker.setLngLat(newCoords as [number, number]);
-              this.pointIconMarker.getElement().style.backgroundImage =
-                route.properties.source === 'cityRoute'
-                  ? `url(${this.defaultOptions.routeAnimation.cityPointIconUrl})`
-                  : `url(${this.defaultOptions.routeAnimation.pointIconUrl})`;
-              this.pointIconMarker.addTo(this.map);
-              // set different icon based on nav type
-            } else {
-              pointData.features[0].properties.pointIcon =
-                route.properties.source === 'cityRoute' ? 'cityPointIcon' : 'pointIcon';
-              // @ts-ignore
-              this.map.getSource('pointAlong').setData(pointData);
+          if (!this.useCustomPosition) {
+            if (this.defaultOptions.routeAnimation.type === 'point') {
+              if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
+                this.pointIconMarker.setLngLat(newCoords as [number, number]);
+                this.pointIconMarker.getElement().style.backgroundImage =
+                  route.properties.source === 'cityRoute'
+                    ? `url(${this.defaultOptions.routeAnimation.cityPointIconUrl})`
+                    : `url(${this.defaultOptions.routeAnimation.pointIconUrl})`;
+                this.pointIconMarker.addTo(this.map);
+                // set different icon based on nav type
+              } else {
+                pointData.features[0].properties.pointIcon =
+                  route.properties.source === 'cityRoute' ? 'cityPointIcon' : 'pointIcon';
+                // @ts-ignore
+                this.map.getSource('pointAlong').setData(pointData);
+              }
             }
-          }
 
-          if (this.defaultOptions.routeAnimation.type === 'puck') {
-            this.map
-              .getSource('start-point')
-              // @ts-ignore
-              .setData(
-                circle(
-                  pointData.geometry.coordinates,
-                  this.defaultOptions.routeAnimation.puckRadius ? this.defaultOptions.routeAnimation.puckRadius : 0.002,
-                  {
-                    properties: {
-                      level: this.state.floor.level,
+            if (this.defaultOptions.routeAnimation.type === 'puck') {
+              this.map
+                .getSource('start-point')
+                // @ts-ignore
+                .setData(
+                  circle(
+                    pointData.geometry.coordinates,
+                    this.defaultOptions.routeAnimation.puckRadius
+                      ? this.defaultOptions.routeAnimation.puckRadius
+                      : 0.002,
+                    {
+                      properties: {
+                        level: this.state.floor.level,
+                      },
                     },
-                  },
-                ),
-              );
+                  ),
+                );
+            }
           }
 
           // @ts-ignore
           this.map.getSource('lineAlong').setData(lineAlong);
 
-          if (this.defaultOptions.routeAnimation.followRoute) {
+          if (this.defaultOptions.routeAnimation.followRoute && !this.useCustomPosition) {
             const cameraCoords = this.map.getCenter().toArray();
             const targetCoords = currentPoint.geometry.coordinates;
             const interpolatedCoords = [
@@ -4174,30 +4205,32 @@ export class Map {
       const newCoords = this.routingSource.finish.geometry.coordinates;
       pointData.features[0] = point(newCoords);
 
-      if (this.defaultOptions.routeAnimation.type === 'point') {
-        if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
-          this.pointIconMarker.setLngLat(newCoords as [number, number]);
-        } else {
-          // @ts-ignore
-          this.map.getSource('pointAlong').setData(pointData);
+      if (!this.useCustomPosition) {
+        if (this.defaultOptions.routeAnimation.type === 'point') {
+          if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
+            this.pointIconMarker.setLngLat(newCoords as [number, number]);
+          } else {
+            // @ts-ignore
+            this.map.getSource('pointAlong').setData(pointData);
+          }
         }
-      }
 
-      if (this.defaultOptions.routeAnimation.type === 'puck') {
-        this.map
-          .getSource('start-point')
-          // @ts-ignore
-          .setData(
-            circle(
-              pointData.geometry.coordinates,
-              this.defaultOptions.routeAnimation.puckRadius ? this.defaultOptions.routeAnimation.puckRadius : 0.002,
-              {
-                properties: {
-                  level: this.state.floor.level,
+        if (this.defaultOptions.routeAnimation.type === 'puck') {
+          this.map
+            .getSource('start-point')
+            // @ts-ignore
+            .setData(
+              circle(
+                pointData.geometry.coordinates,
+                this.defaultOptions.routeAnimation.puckRadius ? this.defaultOptions.routeAnimation.puckRadius : 0.002,
+                {
+                  properties: {
+                    level: this.state.floor.level,
+                  },
                 },
-              },
-            ),
-          );
+              ),
+            );
+        }
       }
 
       if (!this.routingSource.preview) {
@@ -4503,6 +4536,188 @@ export class Map {
       this.state.allFeatures.features.splice(snappedPathPointIndex, 1);
     }
   };
+
+  private previousBearing = undefined;
+  private onSetCustomPosition({
+    coordinates,
+    level,
+    recenter = true,
+  }: {
+    coordinates: [number, number];
+    level: number;
+    recenter?: boolean;
+  }) {
+    const positionFeature = new Feature({
+      type: 'Feature',
+      properties: {
+        level: level,
+      },
+      geometry: {
+        type: 'Point',
+        coordinates: coordinates,
+      },
+    });
+
+    this.startPoint = positionFeature;
+    this.useCustomPosition = true;
+
+    if (recenter) {
+      this.map.flyTo({ center: coordinates });
+      this.setFloorByLevel(level);
+    }
+
+    const from = this.customPosition;
+    const to = coordinates;
+
+    if (from) {
+      const fromPoint = point(from);
+      const toPoint = point(to);
+      const movedDistance = distance(fromPoint, toPoint, { units: 'meters' });
+
+      if (movedDistance > 2) {
+        const userBearing = bearing(fromPoint, toPoint);
+
+        if (this.previousBearing === undefined || Math.abs(this.previousBearing - userBearing) > 10) {
+          this.previousBearing = userBearing;
+
+          positionFeature.properties.bearing = userBearing;
+        }
+      }
+    }
+
+    if (this.state.style.sources['custom-position-point']) {
+      // Animate between positions
+      const from = this.customPosition;
+      const to = coordinates;
+      this.animateCustomPosition(from, to, level, this.previousBearing);
+      this.customPosition = coordinates;
+    } else {
+      this.state.style.addSource('custom-position-point', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [positionFeature],
+        },
+      });
+
+      this.state.style.addLayer({
+        id: 'custom-position-point-layer',
+        type: 'symbol',
+        source: 'custom-position-point',
+        layout: {
+          'icon-image': 'pulsing-dot',
+          'icon-allow-overlap': true,
+        },
+        filter: ['all', ['==', ['to-number', ['get', 'level']], level]],
+      });
+
+      this.state.style.addLayer({
+        id: 'heading-arrow-layer',
+        type: 'symbol',
+        source: 'custom-position-point',
+        layout: {
+          'icon-image': 'heading-arrow',
+          'icon-size': 1.25,
+          'icon-rotate': ['get', 'bearing'],
+          'icon-rotation-alignment': 'map',
+          'icon-allow-overlap': true,
+        },
+        filter: [
+          'all',
+          ['==', ['to-number', ['get', 'level']], level],
+          ['has', 'bearing'], // 👈 Hides arrow if no bearing
+        ],
+      });
+
+      this.map.setStyle(this.state.style);
+
+      this.customPosition = coordinates;
+    }
+
+    if (this.routingSource && this.routingSource.route) {
+      const stepIndex = getCurrentStepIndex({
+        userPosition: coordinates,
+        steps: this.routingSource.steps,
+        lastKnownStepIndex: this.currentStep,
+      });
+      this.setNavStep(stepIndex);
+    }
+  }
+
+  private onCancelCustomPosition() {
+    if (this.useCustomPosition) {
+      this.useCustomPosition = false;
+      this.customPosition = null;
+      this.startPoint = null;
+
+      if (this.state.style.sources['custom-position-point']) {
+        this.state.style.removeSource('custom-position-point');
+      }
+
+      if (this.state.style.getLayer('custom-position-point-layer')) {
+        this.state.style.removeLayer('custom-position-point-layer');
+      }
+
+      this.map.setStyle(this.state.style);
+    }
+  }
+
+  private customPositionAnimationFrameId: number | null = null;
+  private customPostionAnimationStartTime: number | null = null;
+  private customPostionAnimationDuration = 1000;
+
+  private animateCustomPosition(from: [number, number], to: [number, number], level: number, userBearing: number) {
+    // Cancel any ongoing animation
+    if (this.customPositionAnimationFrameId !== null) {
+      cancelAnimationFrame(this.customPositionAnimationFrameId);
+      this.customPositionAnimationFrameId = null;
+    }
+
+    const startTime = performance.now();
+    this.customPostionAnimationStartTime = startTime;
+
+    const step = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / this.customPostionAnimationDuration, 1);
+
+      // Optional easing function (easeInOutQuad)
+      const easedProgress = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+
+      const current: [number, number] = [
+        from[0] + (to[0] - from[0]) * easedProgress,
+        from[1] + (to[1] - from[1]) * easedProgress,
+      ];
+
+      const source = this.map.getSource('custom-position-point') as maplibregl.GeoJSONSource;
+      if (source) {
+        source.setData({
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              properties: { level, bearing: userBearing },
+              geometry: {
+                type: 'Point',
+                coordinates: current,
+              },
+            },
+          ],
+        });
+        const sourceFeature = this.state.style.sources['custom-position-point'].data.features[0];
+        sourceFeature.geometry.coordinates = current;
+        sourceFeature.properties.level = level;
+        sourceFeature.properties.bearing = userBearing;
+      }
+
+      if (progress < 1) {
+        this.customPositionAnimationFrameId = requestAnimationFrame(step);
+      } else {
+        this.customPositionAnimationFrameId = null; // Finished
+      }
+    };
+
+    this.customPositionAnimationFrameId = requestAnimationFrame(step);
+  }
 
   /**
    *  @memberof Map
@@ -6175,6 +6390,66 @@ export class Map {
 
   public bootPolygons() {
     this.onBootPolygons();
+  }
+
+  /**
+   * Method for setting custom position
+   *  @memberof Map
+   *  @name setCustomPosition
+   *  @param coordinates [number, number] coordinates for custom position.
+   *  @param level {number} level for custom position.
+   *  @param recenter {boolean} center to custom position, default true.
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.onSetCustomPosition({ coordinates: [17.833135351538658, 48.60678469647394], level: 0});
+   *  });
+   */
+  public setCustomPosition({
+    coordinates,
+    level,
+    recenter = true,
+  }: {
+    coordinates: [number, number];
+    level: number;
+    recenter?: boolean;
+  }) {
+    this.onSetCustomPosition({ coordinates, level, recenter });
+  }
+
+  /**
+   * Method for setting custom position
+   *  @memberof Map
+   *  @name getCustomPosition
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.getCustomPosition();
+   *  });
+   */
+  public getCustomPosition() {
+    if (this.useCustomPosition) {
+      return this.customPosition;
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * Method for setting custom position
+   *  @memberof Map
+   *  @name cancelCustomPosition
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.cancelCustomPosition();
+   *  });
+   */
+  public cancelCustomPosition() {
+    this.onCancelCustomPosition();
   }
 }
 /* TODO
