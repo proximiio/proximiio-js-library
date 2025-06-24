@@ -786,7 +786,7 @@ export class Map {
         }),
         { pixelRatio: 2 },
       );
-      map.addImage('heading-arrow', createHeadingArrow({ size: 64 }), { pixelRatio: 2 });
+      map.addImage('heading-arrow', createHeadingArrow({ arrowSize: 64 }), { pixelRatio: 2 });
       map.addImage('person', decodedPersonIcon as any);
       map.addImage('floorchange-up-image', decodedFloorchangeUpImage as any);
       map.addImage('floorchange-down-image', decodedFloorchangeDownImage as any);
@@ -3873,7 +3873,7 @@ export class Map {
         }
 
         // Step 4: Slice out the contiguous segment and extract coordinates
-        let routePoints = lines
+        const routePoints = lines
           .slice(startIndex, currentIndex + 1) // Get the relevant continuous path segment
           .map((i: any) => i.geometry.coordinates) // Extract coordinates
           .filter(Boolean) // Filter out any undefined/null geometries
@@ -4552,11 +4552,11 @@ export class Map {
     const positionFeature = new Feature({
       type: 'Feature',
       properties: {
-        level: level,
+        level,
       },
       geometry: {
         type: 'Point',
-        coordinates: coordinates,
+        coordinates,
       },
     });
 
@@ -4589,8 +4589,6 @@ export class Map {
 
     if (this.state.style.sources['custom-position-point']) {
       // Animate between positions
-      const from = this.customPosition.coordinates;
-      const to = coordinates;
       this.animateCustomPosition(from, to, level, this.previousBearing);
       this.customPosition = { coordinates, level };
     } else {

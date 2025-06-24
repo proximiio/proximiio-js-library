@@ -110,44 +110,11 @@ export const pulsingDot = ({ rgbValues, pointOutline }: { rgbValues?: string; po
   };
 };
 
-export const createHeadingArrow = ({ size = 100, rgbValues }: { size?: number; rgbValues?: string }) => {
-  /*return {
-    width: size,
-    height: size,
-    data: new Uint8Array(size * size * 4),
-
-    // get rendering context for the map canvas when layer is added to the map
-    onAdd(map, gl) {
-      const canvas = document.createElement('canvas');
-      canvas.width = this.width;
-      canvas.height = this.height;
-      this.context = canvas.getContext('2d', { willReadFrequently: true });
-      this.map = map;
-    },
-
-    // called once before every frame where the icon will be used
-    render(gl, matrix) {
-      const ctx = this.context;
-
-      ctx.translate(size / 2, size / 2);
-      ctx.beginPath();
-      ctx.moveTo(0, -size / 2 + 10);
-      ctx.lineTo(-10, 10);
-      ctx.lineTo(10, 10);
-      ctx.closePath();
-
-      ctx.fillStyle = `rgba(${rgbValues ? rgbValues : '189,82,255'},0.7)`;
-      ctx.fill();
-
-      // return `true` to let the map know that the image was updated
-      return true;
-    },
-  };*/
-
+export const createHeadingArrow = ({ arrowSize = 100, rgbValues }: { arrowSize?: number; rgbValues?: string }) => {
   return {
-    width: size,
-    height: size,
-    data: new Uint8Array(size * size * 4),
+    width: arrowSize,
+    height: arrowSize,
+    data: new Uint8Array(arrowSize * arrowSize * 4),
 
     onAdd(map, gl) {
       const canvas = document.createElement('canvas');
@@ -161,11 +128,11 @@ export const createHeadingArrow = ({ size = 100, rgbValues }: { size?: number; r
       const ctx = this.context as CanvasRenderingContext2D;
       const map = this.map;
 
-      ctx.clearRect(0, 0, size, size);
+      ctx.clearRect(0, 0, arrowSize, arrowSize);
 
       // Center of canvas
-      const cx = size / 2;
-      const cy = size / 2;
+      const cx = arrowSize / 2;
+      const cy = arrowSize / 2;
 
       // Draw upward-pointing triangle (arrow shape)
       ctx.save();
