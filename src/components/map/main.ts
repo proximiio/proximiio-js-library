@@ -480,7 +480,7 @@ export class Map {
   private routeFinishMarker = {} as Marker;
   private stops = [] as Feature[];
   private useCustomPosition = false;
-  private customPosition: [number, number] = null;
+  private customPosition: { coordinates: [number, number]; level: number } = null;
 
   constructor(options: Options) {
     // fix centering in case of kiosk with defined pitch/bearing/etc. in mapbox options
@@ -3881,7 +3881,7 @@ export class Map {
 
         if (this.useCustomPosition) {
           routePoints.splice(-1);
-          routePoints.push(this.customPosition);
+          routePoints.push(this.customPosition.coordinates);
         }
 
         // Step 5: Create a LineString from the filtered path segment
@@ -3921,32 +3921,34 @@ export class Map {
           const t = elapsedTime / totalDuration;
 
           if (t >= 1) {
-            // Stop the animation if we reached the end
-            if (this.defaultOptions.routeAnimation.looping && route.properties.source === 'mallRoute') {
-              this.animationTimeout = setTimeout(() => {
-                this.restartRouteAnimation({ delay: 0, recenter: true });
-              }, 2000);
-            }
-            if (this.defaultOptions.autoLevelChange && route.properties.source === 'mallRoute') {
-              if (this.routingSource.route && Object.keys(this.routingSource.route).length - 1 === this.currentStep) {
-                if (this.routingSource.stops && this.routingSource.stops?.length !== this.currentStop) {
-                  this.setStop('next');
-                }
-                return;
-              }
-              setTimeout(() => {
-                if (this.defaultOptions.routeAnimation.autoContinue) {
-                  this.setNavStep('next');
-                }
-                if (
-                  this.defaultOptions.autoRestartAnimationAfterFloorChange &&
-                  !this.defaultOptions.landmarkTBTNavigation
-                ) {
+            if (!this.useCustomPosition) {
+              // Stop the animation if we reached the end
+              if (this.defaultOptions.routeAnimation.looping && route.properties.source === 'mallRoute') {
+                this.animationTimeout = setTimeout(() => {
                   this.restartRouteAnimation({ delay: 0, recenter: true });
+                }, 2000);
+              }
+              if (this.defaultOptions.autoLevelChange && route.properties.source === 'mallRoute') {
+                if (this.routingSource.route && Object.keys(this.routingSource.route).length - 1 === this.currentStep) {
+                  if (this.routingSource.stops && this.routingSource.stops?.length !== this.currentStop) {
+                    this.setStop('next');
+                  }
+                  return;
                 }
-              }, 2000);
+                setTimeout(() => {
+                  if (this.defaultOptions.routeAnimation.autoContinue) {
+                    this.setNavStep('next');
+                  }
+                  if (
+                    this.defaultOptions.autoRestartAnimationAfterFloorChange &&
+                    !this.defaultOptions.landmarkTBTNavigation
+                  ) {
+                    this.restartRouteAnimation({ delay: 0, recenter: true });
+                  }
+                }, 2000);
+              }
+              return;
             }
-            return;
           }
 
           // Calculate the current distance along the route
@@ -4566,7 +4568,7 @@ export class Map {
       this.setFloorByLevel(level);
     }
 
-    const from = this.customPosition;
+    const from = this.customPosition?.coordinates;
     const to = coordinates;
 
     if (from) {
@@ -4587,10 +4589,10 @@ export class Map {
 
     if (this.state.style.sources['custom-position-point']) {
       // Animate between positions
-      const from = this.customPosition;
+      const from = this.customPosition.coordinates;
       const to = coordinates;
       this.animateCustomPosition(from, to, level, this.previousBearing);
-      this.customPosition = coordinates;
+      this.customPosition = { coordinates, level };
     } else {
       this.state.style.addSource('custom-position-point', {
         type: 'geojson',
@@ -4631,7 +4633,7 @@ export class Map {
 
       this.map.setStyle(this.state.style);
 
-      this.customPosition = coordinates;
+      this.customPosition = { coordinates, level };
     }
 
     if (this.routingSource && this.routingSource.route) {
