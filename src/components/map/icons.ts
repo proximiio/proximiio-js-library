@@ -109,3 +109,87 @@ export const pulsingDot = ({ rgbValues, pointOutline }: { rgbValues?: string; po
     },
   };
 };
+
+export const createHeadingArrow = ({ size = 100, rgbValues }: { size?: number; rgbValues?: string }) => {
+  /*return {
+    width: size,
+    height: size,
+    data: new Uint8Array(size * size * 4),
+
+    // get rendering context for the map canvas when layer is added to the map
+    onAdd(map, gl) {
+      const canvas = document.createElement('canvas');
+      canvas.width = this.width;
+      canvas.height = this.height;
+      this.context = canvas.getContext('2d', { willReadFrequently: true });
+      this.map = map;
+    },
+
+    // called once before every frame where the icon will be used
+    render(gl, matrix) {
+      const ctx = this.context;
+
+      ctx.translate(size / 2, size / 2);
+      ctx.beginPath();
+      ctx.moveTo(0, -size / 2 + 10);
+      ctx.lineTo(-10, 10);
+      ctx.lineTo(10, 10);
+      ctx.closePath();
+
+      ctx.fillStyle = `rgba(${rgbValues ? rgbValues : '189,82,255'},0.7)`;
+      ctx.fill();
+
+      // return `true` to let the map know that the image was updated
+      return true;
+    },
+  };*/
+
+  return {
+    width: size,
+    height: size,
+    data: new Uint8Array(size * size * 4),
+
+    onAdd(map, gl) {
+      const canvas = document.createElement('canvas');
+      canvas.width = this.width;
+      canvas.height = this.height;
+      this.context = canvas.getContext('2d', { willReadFrequently: true });
+      this.map = map;
+    },
+
+    render(gl: WebGLRenderingContext, matrix: number[]) {
+      const ctx = this.context as CanvasRenderingContext2D;
+      const map = this.map;
+
+      ctx.clearRect(0, 0, size, size);
+
+      // Center of canvas
+      const cx = size / 2;
+      const cy = size / 2;
+
+      // Draw upward-pointing triangle (arrow shape)
+      ctx.save();
+      ctx.translate(cx, cy); // Center of canvas
+
+      // Important: no rotation here — rotation is done by MapLibre via `icon-rotate`
+      ctx.beginPath();
+      ctx.moveTo(0, -12); // tip of arrow
+      ctx.lineTo(8, 8); // bottom right
+      ctx.lineTo(-8, 8); // bottom left
+      ctx.closePath();
+
+      ctx.fillStyle = `rgba(0,0,0,0.4)`;
+      ctx.fill();
+
+      ctx.restore();
+
+      // update this image's data with data from the canvas
+      this.data = ctx.getImageData(0, 0, this.width, this.height).data;
+
+      // continuously repaint the map, resulting in the smooth animation of the dot
+      map.triggerRepaint();
+
+      return true; // tells map to update this image
+    },
+  };
+};
