@@ -28,6 +28,9 @@ const getCurrentStepIndex = ({
   // Only check steps ahead of current one to avoid regressions
   for (let i = 0 /*lastKnownStepIndex*/; i < steps.length; i++) {
     const step = steps[i];
+    if (!step.lineStringFeatureFromLastStep) {
+      return;
+    }
     const lineCoords = step.lineStringFeatureFromLastStep.geometry.coordinates;
     const line = lineString(lineCoords);
 

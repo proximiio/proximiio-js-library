@@ -145,7 +145,7 @@ export const createHeadingArrow = ({ arrowSize = 100, rgbValues }: { arrowSize?:
       ctx.lineTo(-8, 8); // bottom left
       ctx.closePath();
 
-      ctx.fillStyle = `rgba(0,0,0,0.4)`;
+      ctx.fillStyle = `rgba(255,255,255,1)`;
       ctx.fill();
 
       ctx.restore();

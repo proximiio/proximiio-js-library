@@ -311,7 +311,7 @@ export class Map {
   private onRouteCancelListener = new CustomSubject();
   private onFeatureAddListener = new CustomSubject<Feature>();
   private onFeatureUpdateListener = new CustomSubject<Feature>();
-  private onFeatureDeleteListener = new CustomSubject();
+  private onFeatureDeleteListener = new CustomSubject<Feature>();
   private onPolygonClickListener = new CustomSubject<Feature>();
   private onPoiClickListener = new CustomSubject<Feature>();
   private onPersonUpdateListener = new CustomSubject<PersonModel[]>();
@@ -4549,10 +4549,12 @@ export class Map {
     level: number;
     recenter?: boolean;
   }) {
+    const floor = this.state.floors.find((f) => f.level === level);
     const positionFeature = new Feature({
       type: 'Feature',
       properties: {
         level,
+        floor_id: floor?.id,
       },
       geometry: {
         type: 'Point',
@@ -4591,6 +4593,17 @@ export class Map {
       // Animate between positions
       this.animateCustomPosition(from, to, level, this.previousBearing);
       this.customPosition = { coordinates, level };
+
+      this.onUpdateFeature(
+        'custom-position',
+        undefined,
+        level,
+        coordinates[1],
+        coordinates[0],
+        undefined,
+        undefined,
+        floor?.id,
+      );
     } else {
       this.state.style.addSource('custom-position-point', {
         type: 'geojson',
@@ -4605,6 +4618,7 @@ export class Map {
         type: 'symbol',
         source: 'custom-position-point',
         layout: {
+          'icon-size': 1.5,
           'icon-image': 'pulsing-dot',
           'icon-allow-overlap': true,
         },
@@ -4628,6 +4642,18 @@ export class Map {
           ['has', 'bearing'], // 👈 Hides arrow if no bearing
         ],
       });
+
+      this.onAddNewFeature(
+        'Custom position',
+        level,
+        coordinates[1],
+        coordinates[0],
+        undefined,
+        'custom-position',
+        undefined,
+        floor?.id,
+        { visibility: 'hidden', amenity: 'hidden' },
+      );
 
       this.map.setStyle(this.state.style);
 
@@ -4657,6 +4683,8 @@ export class Map {
       if (this.state.style.getLayer('custom-position-point-layer')) {
         this.state.style.removeLayer('custom-position-point-layer');
       }
+
+      this.onDeleteFeature('custom-position');
 
       this.map.setStyle(this.state.style);
     }
@@ -5818,8 +5846,8 @@ export class Map {
    *  @returns returns feature delete listener
    *  @example
    *  const map = new Proximiio.Map();
-   *  map.getFeatureDeleteListener().subscribe(() => {
-   *    console.log('feature deleted');
+   *  map.getFeatureDeleteListener().subscribe(feature => {
+   *    console.log('feature deleted', feature);
    *  });
    */
   public getFeatureDeleteListener() {
