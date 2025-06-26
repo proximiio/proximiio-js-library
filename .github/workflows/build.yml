@@ -1,0 +1,20 @@
+name: Sync Space
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: idlefingers/do-space-sync-action@master
+        with:
+          args: --acl public-read
+        env:
+          SOURCE_DIR: './lib'
+          SPACE_NAME: 'proximiiojs'
+          SPACE_REGION: 'ams3'
+          SPACE_ACCESS_KEY: 'DO801FY36T7HZNCQB3KE'
+          SPACE_SECRET_ACCESS_KEY: 'pvi3P26M3mpJOJzx4PUrHX68657S2sxTPm84OdwLm6E'
