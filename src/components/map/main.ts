@@ -209,6 +209,7 @@ export interface Options {
     mallRouteZoom?: number;
     mallEntryLevel?: number;
     lineProgress?: boolean;
+    showTailSegment?: boolean;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -432,6 +433,7 @@ export class Map {
       mallRouteZoom: 18,
       mallEntryLevel: 0,
       lineProgress: false,
+      showTailSegment: false,
     },
     useRasterTiles: false,
     handleUrlParams: false,
@@ -3880,10 +3882,18 @@ export class Map {
           .flat(); // Flatten if coordinates are arrays of arrays
 
         if (this.useCustomPosition) {
-          routePoints.splice(-1);
-          routePoints.push(this.customPosition.coordinates);
+          if (this.currentStep !== this.routingSource.steps.length - 1) {
+            routePoints.splice(-1);
+          }
+          if (this.defaultOptions.routeAnimation.showTailSegment) {
+            routePoints.push(this.customPosition.coordinates);
+          }
         }
 
+        if (routePoints.length < 2) {
+          // If the path segment is too short, stop processing
+          return;
+        }
         // Step 5: Create a LineString from the filtered path segment
         routeUntilNextStep = lineString(routePoints, {
           level, // Attach the appropriate level to the LineString metadata
@@ -4566,7 +4576,6 @@ export class Map {
     this.useCustomPosition = true;
 
     if (recenter) {
-      this.map.flyTo({ center: coordinates });
       this.setFloorByLevel(level);
     }
 
@@ -4585,6 +4594,10 @@ export class Map {
           this.previousBearing = userBearing;
 
           positionFeature.properties.bearing = userBearing;
+        }
+
+        if (recenter) {
+          this.map.flyTo({ center: coordinates, padding: this.defaultOptions.fitBoundsPadding });
         }
       }
     }
@@ -5492,6 +5505,7 @@ export class Map {
       ) {
         this.setStop(this.routingSource.route[`path-part-${newStep}`].properties?.stop);
       }
+
       return step;
     } else {
       console.error(`Route not found`);
