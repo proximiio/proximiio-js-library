@@ -27,7 +27,7 @@ jobs:
       - name: Upload to versioned folder
         run: |
           aws --endpoint-url=https://ams3.digitaloceanspaces.com \
-            s3 sync ./lib s3://proximiiojs/v${TAG_NAME}/ --acl public-read
+            s3 sync ./lib s3://proximiiojs/${TAG_NAME}/ --acl public-read
 
       - name: Also update /latest (optional)
         run: |
