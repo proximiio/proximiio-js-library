@@ -12,6 +12,12 @@ This requires to load js file into script tag of html file.
 <script src="lib/proximiio.js"></script>
 ```
 
+#### or with cdn link
+
+```javascript
+<script src="https://proximiiojs.ams3.cdn.digitaloceanspaces.com/latest/proximiio.js"></script>
+```
+
 ### Using in node.js
 
 ```javascript
