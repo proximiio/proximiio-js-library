@@ -20,7 +20,7 @@ jobs:
       - name: Sync to DigitalOcean Space
         uses: idlefingers/do-space-sync-action@master
         with:
-          args: --acl public-read --dry-run --verbose
+          args: --acl public-read
         env:
           SOURCE_DIR: './lib'
           SPACE_NAME: 'proximiiojs'
