@@ -209,7 +209,7 @@ export default class GuidanceStepsGenerator {
           nextPoint.properties.title_i18n && nextPoint.properties.title_i18n[this.language]
             ? nextPoint.properties.title_i18n[this.language]
             : nextPoint.properties.title
-        } ${translations[this.language].IS_ON_YOUR} ${this.getDirectionInstruction(direction).replace('turn ', '')}`;
+        } ${translations[this.language].navInstructions[direction]}`;
         return instruction;
       }
 

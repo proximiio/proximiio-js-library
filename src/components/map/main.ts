@@ -3881,23 +3881,31 @@ export class Map {
           .filter(Boolean) // Filter out any undefined/null geometries
           .flat(); // Flatten if coordinates are arrays of arrays
 
-        if (this.useCustomPosition) {
-          if (this.currentStep !== this.routingSource.steps.length - 1) {
-            routePoints.splice(-1);
-          }
-          if (this.defaultOptions.routeAnimation.showTailSegment) {
-            routePoints.push(this.customPosition.coordinates);
-          }
-        }
-
         if (routePoints.length < 2) {
           // If the path segment is too short, stop processing
           return;
         }
+
         // Step 5: Create a LineString from the filtered path segment
         routeUntilNextStep = lineString(routePoints, {
           level, // Attach the appropriate level to the LineString metadata
         });
+
+        if (this.useCustomPosition) {
+          const customPositionPoint = point(this.customPosition.coordinates);
+          const snappedPoint = nearestPointOnLine(routeUntilNextStep, customPositionPoint);
+
+          routePoints.splice(-1);
+          routePoints.push(snappedPoint.geometry.coordinates);
+
+          if (this.defaultOptions.routeAnimation.showTailSegment) {
+            routePoints.push(this.customPosition.coordinates);
+          }
+
+          routeUntilNextStep = lineString(routePoints, {
+            level, // Attach the appropriate level to the LineString metadata
+          });
+        }
       }
       if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
         cancelAnimationFrame(this.animationFrame);
@@ -4550,6 +4558,8 @@ export class Map {
   };
 
   private previousBearing = undefined;
+  private floorChangeBuffer = [];
+  private lastFloorChangeTimestamp = 0;
   private onSetCustomPosition({
     coordinates,
     level,
@@ -4559,6 +4569,40 @@ export class Map {
     level: number;
     recenter?: boolean;
   }) {
+    // Initialize debounce/cooldown tracking
+    this.floorChangeBuffer = this.floorChangeBuffer || [];
+    this.lastFloorChangeTimestamp = this.lastFloorChangeTimestamp || 0;
+
+    // Push the new level into the buffer
+    this.floorChangeBuffer.push(level);
+    if (this.floorChangeBuffer.length > 5) {
+      this.floorChangeBuffer.shift();
+    }
+
+    // Helper to get mode
+    const getMostFrequent = (arr: number[]) =>
+      arr
+        .slice()
+        .sort((a, b) => arr.filter((v) => v === a).length - arr.filter((v) => v === b).length)
+        .pop();
+
+    const now = Date.now();
+    const mostFrequentLevel = getMostFrequent(this.floorChangeBuffer);
+    const count = this.floorChangeBuffer.filter((lvl) => lvl === mostFrequentLevel).length;
+
+    const FLOOR_CONFIRMATION_THRESHOLD = 3;
+    const FLOOR_CHANGE_COOLDOWN_MS = 5000;
+
+    const shouldSwitchFloor =
+      mostFrequentLevel !== this.state.floor.level &&
+      count >= FLOOR_CONFIRMATION_THRESHOLD &&
+      now - this.lastFloorChangeTimestamp > FLOOR_CHANGE_COOLDOWN_MS;
+
+    if (shouldSwitchFloor) {
+      this.setFloorByLevel(mostFrequentLevel);
+      this.lastFloorChangeTimestamp = now;
+    }
+
     const floor = this.state.floors.find((f) => f.level === level);
     const positionFeature = new Feature({
       type: 'Feature',
@@ -4574,10 +4618,6 @@ export class Map {
 
     this.startPoint = positionFeature;
     this.useCustomPosition = true;
-
-    if (recenter) {
-      this.setFloorByLevel(level);
-    }
 
     const from = this.customPosition?.coordinates;
     const to = coordinates;
