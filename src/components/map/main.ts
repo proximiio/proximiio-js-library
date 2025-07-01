@@ -210,6 +210,7 @@ export interface Options {
     mallEntryLevel?: number;
     lineProgress?: boolean;
     showTailSegment?: boolean;
+    showCompassDirection?: boolean;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -434,6 +435,7 @@ export class Map {
       mallEntryLevel: 0,
       lineProgress: false,
       showTailSegment: false,
+      showCompassDirection: false,
     },
     useRasterTiles: false,
     handleUrlParams: false,
@@ -2512,9 +2514,9 @@ export class Map {
       const dynamicIndex = this.state.dynamicFeatures.features.findIndex(
         (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
       );
-      if (featureIndex) this.state.features.features[featureIndex] = featureVar;
-      if (optimizedFeatureIndex) this.state.optimizedFeatures.features[optimizedFeatureIndex] = featureVar;
-      if (dynamicIndex) this.state.dynamicFeatures.features[dynamicIndex] = featureVar;
+      if (featureIndex !== -1) this.state.features.features[featureIndex] = featureVar;
+      if (optimizedFeatureIndex !== -1) this.state.optimizedFeatures.features[optimizedFeatureIndex] = featureVar;
+      if (dynamicIndex !== -1) this.state.dynamicFeatures.features[dynamicIndex] = featureVar;
     }
 
     // this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features]; // this is not probably updated with non dynamic feature update TODO
@@ -3499,6 +3501,11 @@ export class Map {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
         map.setFilter('custom-position-point-layer', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('custom-position-point-layer').filter = filter;
+      }
+      if (map.getLayer('heading-arrow-layer')) {
+        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
+        map.setFilter('heading-arrow-layer', filter as maplibregl.FilterSpecification);
+        this.state.style.getLayer('heading-arrow-layer').filter = filter;
       }
       if (this.defaultOptions.showLevelDirectionIcon && map.getLayer('direction-halo-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
@@ -4603,123 +4610,130 @@ export class Map {
       this.lastFloorChangeTimestamp = now;
     }
 
-    const floor = this.state.floors.find((f) => f.level === level);
-    const positionFeature = new Feature({
-      type: 'Feature',
-      properties: {
-        level,
-        floor_id: floor?.id,
-      },
-      geometry: {
-        type: 'Point',
-        coordinates,
-      },
-    });
+    const isCurrentVisibleFloor = level === this.state.floor.level;
+    const isDebouncedFloor = level === mostFrequentLevel && count >= FLOOR_CONFIRMATION_THRESHOLD;
 
-    this.startPoint = positionFeature;
-    this.useCustomPosition = true;
+    if (isCurrentVisibleFloor || isDebouncedFloor) {
+      const floor = this.state.floors.find((f) => f.level === level);
+      const positionFeature = new Feature({
+        type: 'Feature',
+        properties: {
+          level,
+          floor_id: floor?.id,
+        },
+        geometry: {
+          type: 'Point',
+          coordinates,
+        },
+      });
 
-    const from = this.customPosition?.coordinates;
-    const to = coordinates;
+      this.startPoint = positionFeature;
+      this.useCustomPosition = true;
 
-    if (from) {
-      const fromPoint = point(from);
-      const toPoint = point(to);
-      const movedDistance = distance(fromPoint, toPoint, { units: 'meters' });
+      const from = this.customPosition?.coordinates;
+      const to = coordinates;
 
-      if (movedDistance > 2) {
-        const userBearing = bearing(fromPoint, toPoint);
+      if (from) {
+        const fromPoint = point(from);
+        const toPoint = point(to);
+        const movedDistance = distance(fromPoint, toPoint, { units: 'meters' });
 
-        if (this.previousBearing === undefined || Math.abs(this.previousBearing - userBearing) > 10) {
-          this.previousBearing = userBearing;
+        if (movedDistance > 2) {
+          const userBearing = bearing(fromPoint, toPoint);
 
-          positionFeature.properties.bearing = userBearing;
-        }
+          if (this.previousBearing === undefined || Math.abs(this.previousBearing - userBearing) > 10) {
+            this.previousBearing = userBearing;
 
-        if (recenter) {
-          this.map.flyTo({ center: coordinates, padding: this.defaultOptions.fitBoundsPadding });
+            positionFeature.properties.bearing = userBearing;
+          }
+
+          if (recenter) {
+            this.map.flyTo({ center: coordinates, padding: this.defaultOptions.fitBoundsPadding });
+          }
         }
       }
-    }
 
-    if (this.state.style.sources['custom-position-point']) {
-      // Animate between positions
-      this.animateCustomPosition(from, to, level, this.previousBearing);
-      this.customPosition = { coordinates, level };
+      if (this.state.style.sources['custom-position-point']) {
+        // Animate between positions
+        this.animateCustomPosition(from, to, level, this.previousBearing);
+        this.customPosition = { coordinates, level };
 
-      this.onUpdateFeature(
-        'custom-position',
-        undefined,
-        level,
-        coordinates[1],
-        coordinates[0],
-        undefined,
-        undefined,
-        floor?.id,
-      );
-    } else {
-      this.state.style.addSource('custom-position-point', {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: [positionFeature],
-        },
-      });
+        this.onUpdateFeature(
+          'custom-position',
+          undefined,
+          level,
+          coordinates[1],
+          coordinates[0],
+          undefined,
+          undefined,
+          floor?.id,
+        );
+      } else {
+        this.state.style.addSource('custom-position-point', {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: [positionFeature],
+          },
+        });
 
-      this.state.style.addLayer({
-        id: 'custom-position-point-layer',
-        type: 'symbol',
-        source: 'custom-position-point',
-        layout: {
-          'icon-size': 1.5,
-          'icon-image': 'pulsing-dot',
-          'icon-allow-overlap': true,
-        },
-        filter: ['all', ['==', ['to-number', ['get', 'level']], level]],
-      });
+        this.state.style.addLayer({
+          id: 'custom-position-point-layer',
+          type: 'symbol',
+          source: 'custom-position-point',
+          layout: {
+            'icon-size': 1.5,
+            'icon-image': 'pulsing-dot',
+            'icon-allow-overlap': true,
+          },
+          filter: ['all', ['==', ['to-number', ['get', 'level']], level]],
+        });
 
-      this.state.style.addLayer({
-        id: 'heading-arrow-layer',
-        type: 'symbol',
-        source: 'custom-position-point',
-        layout: {
-          'icon-image': 'heading-arrow',
-          'icon-size': 1.25,
-          'icon-rotate': ['get', 'bearing'],
-          'icon-rotation-alignment': 'map',
-          'icon-allow-overlap': true,
-        },
-        filter: [
-          'all',
-          ['==', ['to-number', ['get', 'level']], level],
-          ['has', 'bearing'], // 👈 Hides arrow if no bearing
-        ],
-      });
+        if (this.defaultOptions.routeAnimation.showCompassDirection) {
+          this.state.style.addLayer({
+            id: 'heading-arrow-layer',
+            type: 'symbol',
+            source: 'custom-position-point',
+            layout: {
+              'icon-image': 'heading-arrow',
+              'icon-size': 1.25,
+              'icon-rotate': ['get', 'bearing'],
+              'icon-rotation-alignment': 'map',
+              'icon-allow-overlap': true,
+            },
+            filter: [
+              'all',
+              ['==', ['to-number', ['get', 'level']], level],
+              ['has', 'bearing'], // 👈 Hides arrow if no bearing
+            ],
+          });
+        }
 
-      this.onAddNewFeature(
-        'Custom position',
-        level,
-        coordinates[1],
-        coordinates[0],
-        undefined,
-        'custom-position',
-        undefined,
-        floor?.id,
-        { visibility: 'hidden', amenity: 'hidden' },
-      );
+        this.onAddNewFeature(
+          'Custom position',
+          level,
+          coordinates[1],
+          coordinates[0],
+          undefined,
+          'custom-position',
+          undefined,
+          floor?.id,
+          { visibility: 'hidden', amenity: 'hidden' },
+        );
 
-      this.map.setStyle(this.state.style);
+        this.map.setStyle(this.state.style);
 
-      this.customPosition = { coordinates, level };
-    }
+        this.customPosition = { coordinates, level };
+      }
 
-    if (this.routingSource && this.routingSource.route) {
-      const stepIndex = getCurrentStepIndex({
-        userPosition: coordinates,
-        steps: this.routingSource.steps,
-        lastKnownStepIndex: this.currentStep,
-      });
-      this.setNavStep(stepIndex);
+      if (this.routingSource && this.routingSource.route) {
+        const stepIndex = getCurrentStepIndex({
+          userPosition: coordinates,
+          steps: this.routingSource.steps,
+          lastKnownStepIndex: this.currentStep,
+        });
+        this.setNavStep(stepIndex);
+      }
     }
   }
 
@@ -4735,6 +4749,10 @@ export class Map {
 
       if (this.state.style.getLayer('custom-position-point-layer')) {
         this.state.style.removeLayer('custom-position-point-layer');
+      }
+
+      if (this.state.style.getLayer('heading-arrow-layer')) {
+        this.state.style.removeLayer('heading-arrow-layer');
       }
 
       this.onDeleteFeature('custom-position');
