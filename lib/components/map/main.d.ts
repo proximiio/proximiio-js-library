@@ -144,6 +144,13 @@ export interface Options {
         cityRouteMaxDuration?: number;
         autoStart?: boolean;
         autoContinue?: boolean;
+        cityRouteZoom?: number;
+        mallRouteZoom?: number;
+        mallEntryLevel?: number;
+        lineProgress?: boolean;
+        showTailSegment?: boolean;
+        showCompassDirection?: boolean;
+        stepChangeThreshold?: number;
     };
     useRasterTiles?: boolean;
     rasterTilesOptions?: {
@@ -250,6 +257,8 @@ export declare class Map {
     private routeStartMarker;
     private routeFinishMarker;
     private stops;
+    private useCustomPosition;
+    private customPosition;
     constructor(options: Options);
     private initialize;
     private cancelObservers;
@@ -347,6 +356,15 @@ export declare class Map {
     private startPointPopup;
     private displayPointOnMap;
     removeStartPointOnMap: () => void;
+    private previousBearing;
+    private floorChangeBuffer;
+    private lastFloorChangeTimestamp;
+    private onSetCustomPosition;
+    private onCancelCustomPosition;
+    private customPositionAnimationFrameId;
+    private customPostionAnimationStartTime;
+    private customPostionAnimationDuration;
+    private animateCustomPosition;
     /**
      *  @memberof Map
      *  @name getMapboxInstance
@@ -668,6 +686,8 @@ export declare class Map {
      *  @param connectingPoint {lat: number, lng: number} connecting point coordinates for mall/city nav
      *  @param destination {lat: number, lng: number} | {string} destination coordinates / feature id
      *  @param autoStart {boolean} default true, if set to false route will not start automatically
+     *  @param accessibleRoute {boolean} if true generated routed will be accessible without stairs, etc., optional
+     *  @param wayfindingConfig {WayfindingConfigModel} wayfinding configuration, optional
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
@@ -685,7 +705,7 @@ export declare class Map {
      *    });
      *  });
      */
-    findCombinedRoute({ start, connectingPoint, destination, autoStart, }: {
+    findCombinedRoute({ start, connectingPoint, destination, autoStart, accessibleRoute, wayfindingConfig, }: {
         start: {
             lat: number;
             lng: number;
@@ -699,6 +719,8 @@ export declare class Map {
             lng: number;
         } | string;
         autoStart?: boolean;
+        accessibleRoute?: boolean;
+        wayfindingConfig?: WayfindingConfigModel;
     }): void;
     /**
      * This method will cancel generated route
@@ -952,11 +974,11 @@ export declare class Map {
      *  @returns returns feature delete listener
      *  @example
      *  const map = new Proximiio.Map();
-     *  map.getFeatureDeleteListener().subscribe(() => {
-     *    console.log('feature deleted');
+     *  map.getFeatureDeleteListener().subscribe(feature => {
+     *    console.log('feature deleted', feature);
      *  });
      */
-    getFeatureDeleteListener(): CustomSubject<unknown>;
+    getFeatureDeleteListener(): CustomSubject<Feature>;
     /**
      * This method will set new kiosk settings.
      *  @memberof Map
@@ -1385,4 +1407,52 @@ export declare class Map {
      */
     stopRouteAnimation(keepRoute?: boolean): void;
     bootPolygons(): void;
+    /**
+     * Method for setting custom position
+     *  @memberof Map
+     *  @name setCustomPosition
+     *  @param coordinates [number, number] coordinates for custom position.
+     *  @param level {number} level for custom position.
+     *  @param recenter {boolean} center to custom position, default true.
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.onSetCustomPosition({ coordinates: [17.833135351538658, 48.60678469647394], level: 0});
+     *  });
+     */
+    setCustomPosition({ coordinates, level, recenter, iconSize, arrowSize, }: {
+        coordinates: [number, number];
+        level: number;
+        recenter?: boolean;
+        iconSize?: number;
+        arrowSize?: number;
+    }): void;
+    /**
+     * Method for setting custom position
+     *  @memberof Map
+     *  @name getCustomPosition
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.getCustomPosition();
+     *  });
+     */
+    getCustomPosition(): {
+        coordinates: [number, number];
+        level: number;
+    };
+    /**
+     * Method for setting custom position
+     *  @memberof Map
+     *  @name cancelCustomPosition
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.cancelCustomPosition();
+     *  });
+     */
+    cancelCustomPosition(): void;
 }

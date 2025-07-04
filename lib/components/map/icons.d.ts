@@ -29,3 +29,13 @@ export declare const pulsingDot: ({ rgbValues, pointOutline }: {
     onAdd(map: any, gl: any): void;
     render(gl: any, matrix: any): boolean;
 };
+export declare const createHeadingArrow: ({ arrowSize, rgbValues }: {
+    arrowSize?: number;
+    rgbValues?: string;
+}) => {
+    width: number;
+    height: number;
+    data: Uint8Array;
+    onAdd(map: any, gl: any): void;
+    render(gl: WebGLRenderingContext, matrix: number[]): boolean;
+};

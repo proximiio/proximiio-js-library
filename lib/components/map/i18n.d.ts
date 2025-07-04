@@ -37,6 +37,16 @@ export declare const translations: {
         FLOOR: string;
         BY: string;
         IS_ON_YOUR: string;
+        navInstructions: {
+            STRAIGHT: string;
+            TURN_AROUND: string;
+            HARD_LEFT: string;
+            SLIGHT_LEFT: string;
+            LEFT: string;
+            HARD_RIGHT: string;
+            SLIGHT_RIGHT: string;
+            RIGHT: string;
+        };
     };
     fi: {
         ELEVATOR: string;
@@ -76,6 +86,16 @@ export declare const translations: {
         FLOOR: string;
         BY: string;
         IS_ON_YOUR: string;
+        navInstructions: {
+            STRAIGHT: string;
+            TURN_AROUND: string;
+            HARD_LEFT: string;
+            SLIGHT_LEFT: string;
+            LEFT: string;
+            HARD_RIGHT: string;
+            SLIGHT_RIGHT: string;
+            RIGHT: string;
+        };
     };
     ar: {
         ELEVATOR: string;
@@ -115,6 +135,16 @@ export declare const translations: {
         FLOOR: string;
         BY: string;
         IS_ON_YOUR: string;
+        navInstructions: {
+            STRAIGHT: string;
+            TURN_AROUND: string;
+            HARD_LEFT: string;
+            SLIGHT_LEFT: string;
+            LEFT: string;
+            HARD_RIGHT: string;
+            SLIGHT_RIGHT: string;
+            RIGHT: string;
+        };
     };
     it: {
         ELEVATOR: string;
@@ -154,6 +184,16 @@ export declare const translations: {
         FLOOR: string;
         BY: string;
         IS_ON_YOUR: string;
+        navInstructions: {
+            STRAIGHT: string;
+            TURN_AROUND: string;
+            HARD_LEFT: string;
+            SLIGHT_LEFT: string;
+            LEFT: string;
+            HARD_RIGHT: string;
+            SLIGHT_RIGHT: string;
+            RIGHT: string;
+        };
     };
     id: {
         ELEVATOR: string;
@@ -193,6 +233,16 @@ export declare const translations: {
         FLOOR: string;
         BY: string;
         IS_ON_YOUR: string;
+        navInstructions: {
+            STRAIGHT: string;
+            TURN_AROUND: string;
+            HARD_LEFT: string;
+            SLIGHT_LEFT: string;
+            LEFT: string;
+            HARD_RIGHT: string;
+            SLIGHT_RIGHT: string;
+            RIGHT: string;
+        };
     };
     zh: {
         ELEVATOR: string;
@@ -232,6 +282,16 @@ export declare const translations: {
         FLOOR: string;
         BY: string;
         IS_ON_YOUR: string;
+        navInstructions: {
+            STRAIGHT: string;
+            TURN_AROUND: string;
+            HARD_LEFT: string;
+            SLIGHT_LEFT: string;
+            LEFT: string;
+            HARD_RIGHT: string;
+            SLIGHT_RIGHT: string;
+            RIGHT: string;
+        };
     };
     ru: {
         ELEVATOR: string;
@@ -271,5 +331,15 @@ export declare const translations: {
         FLOOR: string;
         BY: string;
         IS_ON_YOUR: string;
+        navInstructions: {
+            STRAIGHT: string;
+            TURN_AROUND: string;
+            HARD_LEFT: string;
+            SLIGHT_LEFT: string;
+            LEFT: string;
+            HARD_RIGHT: string;
+            SLIGHT_RIGHT: string;
+            RIGHT: string;
+        };
     };
 };
