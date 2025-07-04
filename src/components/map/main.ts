@@ -211,6 +211,7 @@ export interface Options {
     lineProgress?: boolean;
     showTailSegment?: boolean;
     showCompassDirection?: boolean;
+    stepChangeThreshold?: number;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -436,6 +437,7 @@ export class Map {
       lineProgress: false,
       showTailSegment: false,
       showCompassDirection: false,
+      stepChangeThreshold: 5,
     },
     useRasterTiles: false,
     handleUrlParams: false,
@@ -4571,10 +4573,14 @@ export class Map {
     coordinates,
     level,
     recenter = true,
+    iconSize = 1.5,
+    arrowSize = 1.25,
   }: {
     coordinates: [number, number];
     level: number;
     recenter?: boolean;
+    iconSize?: number;
+    arrowSize?: number;
   }) {
     // Initialize debounce/cooldown tracking
     this.floorChangeBuffer = this.floorChangeBuffer || [];
@@ -4682,7 +4688,7 @@ export class Map {
           type: 'symbol',
           source: 'custom-position-point',
           layout: {
-            'icon-size': 1.5,
+            'icon-size': iconSize,
             'icon-image': 'pulsing-dot',
             'icon-allow-overlap': true,
           },
@@ -4696,7 +4702,7 @@ export class Map {
             source: 'custom-position-point',
             layout: {
               'icon-image': 'heading-arrow',
-              'icon-size': 1.25,
+              'icon-size': arrowSize,
               'icon-rotate': ['get', 'bearing'],
               'icon-rotation-alignment': 'map',
               'icon-allow-overlap': true,
@@ -4731,6 +4737,7 @@ export class Map {
           userPosition: coordinates,
           steps: this.routingSource.steps,
           lastKnownStepIndex: this.currentStep,
+          thresholdMeters: this.defaultOptions.routeAnimation.stepChangeThreshold,
         });
         this.setNavStep(stepIndex);
       }
@@ -6511,12 +6518,16 @@ export class Map {
     coordinates,
     level,
     recenter = true,
+    iconSize,
+    arrowSize,
   }: {
     coordinates: [number, number];
     level: number;
     recenter?: boolean;
+    iconSize?: number;
+    arrowSize?: number;
   }) {
-    this.onSetCustomPosition({ coordinates, level, recenter });
+    this.onSetCustomPosition({ coordinates, level, recenter, iconSize, arrowSize });
   }
 
   /**
