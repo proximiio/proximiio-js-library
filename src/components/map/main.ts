@@ -55,7 +55,7 @@ import lineSplit from '@turf/line-split';
 import nearestPoint from '@turf/nearest-point';
 import bearing from '@turf/bearing';
 import circle from '@turf/circle';
-import { isNumber, lineString, point, feature, featureCollection, polygon } from '@turf/helpers';
+import { isNumber, lineString, point, feature, featureCollection, polygon as turfPolygon } from '@turf/helpers';
 import WayfindingLogger from '../logger/wayfinding';
 import { translations } from './i18n';
 import { WayfindingConfigModel } from '../../models/wayfinding';
@@ -63,7 +63,6 @@ import { KioskModel } from '../../models/kiosk';
 import { getStyle, getStyleBundle, getStyles, getStylesBundle } from '../../controllers/style';
 import { getKiosks, getKiosksBundle } from '../../controllers/kiosks';
 import { Protocol, PMTiles } from 'pmtiles';
-import nearestPointToLine from '@turf/nearest-point-to-line';
 import distance from '@turf/distance';
 import nearestPointOnLine from '@turf/nearest-point-on-line';
 import getCurrentStepIndex from './getCurrentStep';
@@ -3919,7 +3918,7 @@ export class Map {
           const targetCoord = snappedPoint.geometry.coordinates;
           const splitterSize = 0.0000002; // small enough not to mess with precision
           // Create a square polygon around the target point
-          const splitter = polygon([
+          const splitter = turfPolygon([
             [
               [targetCoord[0] - splitterSize, targetCoord[1] - splitterSize],
               [targetCoord[0] + splitterSize, targetCoord[1] - splitterSize],
