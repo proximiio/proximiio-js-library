@@ -261,6 +261,7 @@ export interface Options {
   autoRestartAnimationAfterFloorChange?: boolean;
   poiIconSize?: (string | number | string[])[] | number | any;
   disableUnavailablePois?: boolean;
+  arrivalThreshold?: number;
 }
 
 export interface PaddingOptions {
@@ -320,6 +321,8 @@ export class Map {
   private onPersonUpdateListener = new CustomSubject<PersonModel[]>();
   private onStepSetListener = new CustomSubject<number>();
   private onStopSetListener = new CustomSubject<number>();
+  private onPositionSetListener = new CustomSubject<{ coordinates: number[]; level: number }>();
+  private onArrivalListener = new CustomSubject<boolean>();
   private defaultOptions: Options = {
     selector: 'proximiioMap',
     allowNewFeatureModal: false,
@@ -461,6 +464,7 @@ export class Map {
     autoLevelChange: false,
     autoRestartAnimationAfterFloorChange: false,
     disableUnavailablePois: false,
+    arrivalThreshold: 3,
     // poiIconSize: ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.5],
   };
   private routeFactory: any;
@@ -4740,7 +4744,19 @@ export class Map {
           thresholdMeters: this.defaultOptions.routeAnimation.stepChangeThreshold,
         });
         this.setNavStep(stepIndex);
+
+        if (this.routingSource.finish?.geometry?.coordinates) {
+          const distanceToFinish = distance(this.routingSource.finish.geometry.coordinates, point(coordinates)) * 1000;
+          if (distanceToFinish <= this.defaultOptions.arrivalThreshold) {
+            this.onArrivalListener.next(true);
+          }
+        }
       }
+
+      this.onPositionSetListener.next({
+        coordinates,
+        level,
+      });
     }
   }
 
@@ -6562,6 +6578,34 @@ export class Map {
    */
   public cancelCustomPosition() {
     this.onCancelCustomPosition();
+  }
+
+  /**
+   *  @memberof Map
+   *  @name getPositionSetListener
+   *  @returns returns position set listener
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getPositionSetListener().subscribe({coordinates, level} => {
+   *    console.log('custom position set', coordinates, level);
+   *  });
+   */
+  public getPositionSetListener() {
+    return this.onPositionSetListener;
+  }
+
+  /**
+   *  @memberof Map
+   *  @name getArrivalListener
+   *  @returns returns event when custom position reach the destination
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getArrivalListener().subscribe(() => {
+   *    console.log('you have reached your destination');
+   *  });
+   */
+  public getArrivalListener() {
+    return this.onArrivalListener;
   }
 }
 /* TODO
