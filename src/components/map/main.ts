@@ -55,7 +55,7 @@ import lineSplit from '@turf/line-split';
 import nearestPoint from '@turf/nearest-point';
 import bearing from '@turf/bearing';
 import circle from '@turf/circle';
-import { isNumber, lineString, point, feature, featureCollection } from '@turf/helpers';
+import { isNumber, lineString, point, feature, featureCollection, polygon } from '@turf/helpers';
 import WayfindingLogger from '../logger/wayfinding';
 import { translations } from './i18n';
 import { WayfindingConfigModel } from '../../models/wayfinding';
@@ -3888,11 +3888,17 @@ export class Map {
         }
 
         // Step 4: Slice out the contiguous segment and extract coordinates
-        const routePoints = lines
-          .slice(startIndex, currentIndex + 1) // Get the relevant continuous path segment
-          .map((i: any) => i.geometry.coordinates) // Extract coordinates
-          .filter(Boolean) // Filter out any undefined/null geometries
-          .flat(); // Flatten if coordinates are arrays of arrays
+        const routePoints = this.useCustomPosition
+          ? lines
+              .filter((i: any) => i.properties.level === level)
+              .map((i: any) => i.geometry.coordinates)
+              .filter(Boolean)
+              .flat()
+          : lines
+              .slice(startIndex, currentIndex + 1) // Get the relevant continuous path segment
+              .map((i: any) => i.geometry.coordinates) // Extract coordinates
+              .filter(Boolean) // Filter out any undefined/null geometries
+              .flat(); // Flatten if coordinates are arrays of arrays
 
         if (routePoints.length < 2) {
           // If the path segment is too short, stop processing
@@ -3907,17 +3913,34 @@ export class Map {
         if (this.useCustomPosition) {
           const customPositionPoint = point(this.customPosition.coordinates);
           const snappedPoint = nearestPointOnLine(routeUntilNextStep, customPositionPoint);
+          const snappedPointOnVertex = [...new Set(routePoints)].findIndex(
+            (i) => i[0] === snappedPoint.geometry.coordinates[0] && i[1] === snappedPoint.geometry.coordinates[1],
+          );
+          const targetCoord = snappedPoint.geometry.coordinates;
+          const splitterSize = 0.0000002; // small enough not to mess with precision
+          // Create a square polygon around the target point
+          const splitter = polygon([
+            [
+              [targetCoord[0] - splitterSize, targetCoord[1] - splitterSize],
+              [targetCoord[0] + splitterSize, targetCoord[1] - splitterSize],
+              [targetCoord[0] + splitterSize, targetCoord[1] + splitterSize],
+              [targetCoord[0] - splitterSize, targetCoord[1] + splitterSize],
+              [targetCoord[0] - splitterSize, targetCoord[1] - splitterSize], // close the polygon
+            ],
+          ]);
 
-          routePoints.splice(-1);
-          routePoints.push(snappedPoint.geometry.coordinates);
+          const customPathLine = lineSplit(
+            lineString([...new Set(routePoints)], {
+              level,
+            }),
+            snappedPointOnVertex >= 0 ? splitter : snappedPoint,
+          ).features[0];
 
           if (this.defaultOptions.routeAnimation.showTailSegment) {
-            routePoints.push(this.customPosition.coordinates);
+            customPathLine.geometry.coordinates.push(this.customPosition.coordinates);
           }
 
-          routeUntilNextStep = lineString(routePoints, {
-            level, // Attach the appropriate level to the LineString metadata
-          });
+          routeUntilNextStep = customPathLine;
         }
       }
       if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
@@ -5551,6 +5574,9 @@ export class Map {
       newStep = this.currentStep - 1;
     }
     if (newStep === this.currentStep) {
+      if (this.useCustomPosition) {
+        this.animateRoute();
+      }
       return;
     }
     if (this.routingSource && this.routingSource.route && this.routingSource.route[`path-part-${newStep}`]) {
