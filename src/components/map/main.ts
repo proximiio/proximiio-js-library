@@ -4733,7 +4733,7 @@ export class Map {
             'icon-image': 'pulsing-dot',
             'icon-allow-overlap': true,
           },
-          filter: ['all', ['==', ['to-number', ['get', 'level']], level]],
+          filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
         });
 
         if (this.defaultOptions.routeAnimation.showCompassDirection) {
@@ -4750,7 +4750,7 @@ export class Map {
             },
             filter: [
               'all',
-              ['==', ['to-number', ['get', 'level']], level],
+              ['==', ['to-number', ['get', 'level']], this.state.floor.level],
               ['has', 'bearing'], // 👈 Hides arrow if no bearing
             ],
           });
