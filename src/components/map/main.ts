@@ -4700,6 +4700,11 @@ export class Map {
         }
       }
 
+      if (bearing) {
+        this.previousBearing = bearing;
+        positionFeature.properties.bearing = bearing;
+      }
+
       if (this.state.style.sources['custom-position-point']) {
         // Animate between positions
         this.animateCustomPosition(from, to, level, this.previousBearing);
