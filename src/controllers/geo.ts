@@ -53,6 +53,7 @@ export const getFeatures = async ({
   filter,
   featuresMaxBounds,
   localSources,
+  apiPaginate,
 }: {
   initPolygons?: boolean;
   polygonLayers: PolygonLayer[];
@@ -64,8 +65,9 @@ export const getFeatures = async ({
   localSources?: {
     features?: FeatureCollection;
   };
+  apiPaginate?: boolean;
 }) => {
-  let url = '/v5/geo/features';
+  let url = '/v7/geo/features';
   if (featuresMaxBounds) {
     url += `/${featuresMaxBounds[0][0]},${featuresMaxBounds[0][1]},${featuresMaxBounds[1][0]},${featuresMaxBounds[1][1]}`;
   }
@@ -75,61 +77,64 @@ export const getFeatures = async ({
       data: localSources.features,
     };
   } else {
-    res = await axios.get(url);
-    /*const items = [] as Feature[];
-    let from = 0;
-    let size = 250;
-    let totalRecords = 0;
-    let recordsFetched = 0;
+    if (!apiPaginate) {
+      res = await axios.get(url);
+    } else {
+      const items = [] as Feature[];
+      let from = 0;
+      let size = 250;
+      let totalRecords = 0;
+      let recordsFetched = 0;
 
-    // Fetch the total number of records for the first time
-    const firstResponse = await fetchFeatures({ from, size, featuresMaxBounds });
-    totalRecords = firstResponse.total;
-    recordsFetched += firstResponse.data.features.length;
-    items.push(...firstResponse.data.features);
+      // Fetch the total number of records for the first time
+      const firstResponse = await fetchFeatures({ from, size, featuresMaxBounds });
+      totalRecords = firstResponse.total;
+      recordsFetched += firstResponse.data.features.length;
+      items.push(...firstResponse.data.features);
 
-    // Calculate the number of parallel requests to make
-    const numParallelRequests = Math.ceil(totalRecords / size);
+      // Calculate the number of parallel requests to make
+      const numParallelRequests = Math.ceil(totalRecords / size);
 
-    // Define the number of queues
-    const numQueues = 8;
+      // Define the number of queues
+      const numQueues = 8;
 
-    // Calculate the number of requests per queue
-    const requestsPerQueue = Math.ceil(numParallelRequests / numQueues);
+      // Calculate the number of requests per queue
+      const requestsPerQueue = Math.ceil(numParallelRequests / numQueues);
 
-    // Create an array to hold all queues
-    const queues = [];
+      // Create an array to hold all queues
+      const queues = [];
 
-    // Create and populate the queues with requests
-    for (let i = 0; i < numQueues; i++) {
-      const queueRequests = [];
-      for (let j = 0; j < requestsPerQueue; j++) {
-        const pageIndex = i * requestsPerQueue + j;
-        if (pageIndex < numParallelRequests) {
-          const newFrom = from + pageIndex * size;
-          if (pageIndex !== 0) {
-            // Skip the first request
-            queueRequests.push(fetchFeatures({ from: newFrom, size, featuresMaxBounds }));
+      // Create and populate the queues with requests
+      for (let i = 0; i < numQueues; i++) {
+        const queueRequests = [];
+        for (let j = 0; j < requestsPerQueue; j++) {
+          const pageIndex = i * requestsPerQueue + j;
+          if (pageIndex < numParallelRequests) {
+            const newFrom = from + pageIndex * size;
+            if (pageIndex !== 0) {
+              // Skip the first request
+              queueRequests.push(fetchFeatures({ from: newFrom, size, featuresMaxBounds }));
+            }
           }
         }
+        queues.push(queueRequests);
       }
-      queues.push(queueRequests);
-    }
 
-    // Execute all queues with limited concurrency
-    for (const queue of queues) {
-      const results = await Promise.all(queue);
-      results.forEach((result) => {
-        recordsFetched += result.data.features.length;
-        items.push(...result.data.features);
-      });
-    }
+      // Execute all queues with limited concurrency
+      for (const queue of queues) {
+        const results = await Promise.all(queue);
+        results.forEach((result) => {
+          recordsFetched += result.data.features.length;
+          items.push(...result.data.features);
+        });
+      }
 
-    res = {
-      data: {
-        features: items,
-      },
-    };*/
+      res = {
+        data: {
+          features: items,
+        },
+      };
+    }
   }
 
   if (initPolygons) {
@@ -499,6 +504,7 @@ export const getFeaturesBundle = async ({
   useTimerangeData,
   filter,
   bundleUrl,
+  apiPaginate,
 }: {
   initPolygons?: boolean;
   polygonLayers: PolygonLayer[];
@@ -507,6 +513,7 @@ export const getFeaturesBundle = async ({
   useTimerangeData?: boolean;
   filter?: { key: string; value: string; hideIconOnly?: boolean };
   bundleUrl: string;
+  apiPaginate?: boolean;
 }) => {
   const res = await fetch(`${bundleUrl}/features.json`);
   const data = await res.json();

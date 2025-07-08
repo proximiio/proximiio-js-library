@@ -261,6 +261,7 @@ export interface Options {
   poiIconSize?: (string | number | string[])[] | number | any;
   disableUnavailablePois?: boolean;
   arrivalThreshold?: number;
+  apiPaginate?: boolean;
 }
 
 export interface PaddingOptions {
@@ -464,6 +465,7 @@ export class Map {
     autoRestartAnimationAfterFloorChange: false,
     disableUnavailablePois: false,
     arrivalThreshold: 3,
+    apiPaginate: false,
     // poiIconSize: ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.5],
   };
   private routeFactory: any;
@@ -585,6 +587,7 @@ export class Map {
           useTimerangeData: this.defaultOptions.useTimerangeData,
           filter: this.defaultOptions.defaultFilter,
           bundleUrl: this.defaultOptions.bundleUrl,
+          apiPaginate: this.defaultOptions.apiPaginate,
         }).catch((error) => this.handleControllerError(error))
       : await getFeatures({
           initPolygons: this.defaultOptions.initPolygons,
@@ -599,6 +602,7 @@ export class Map {
           filter: this.defaultOptions.defaultFilter,
           featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
           localSources: this.defaultOptions.localSources,
+          apiPaginate: this.defaultOptions.apiPaginate,
         }).catch((error) => this.handleControllerError(error));
     const amenities = useBundle
       ? await getAmenitiesBundle({
@@ -955,6 +959,7 @@ export class Map {
             useTimerangeData: this.defaultOptions.useTimerangeData,
             filter: this.defaultOptions.defaultFilter,
             bundleUrl: this.defaultOptions.bundleUrl,
+            apiPaginate: this.defaultOptions.apiPaginate,
           })
         : await getFeatures({
             initPolygons: this.defaultOptions.initPolygons,
@@ -969,6 +974,7 @@ export class Map {
             filter: this.defaultOptions.defaultFilter,
             featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
             localSources: this.defaultOptions.localSources,
+            apiPaginate: this.defaultOptions.apiPaginate,
           }).catch((error) => this.handleControllerError(error));
       if (features) {
         const optimizedFeatures = new FeatureCollection({ features: optimizeFeatures(features.features) });
