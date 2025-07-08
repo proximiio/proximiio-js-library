@@ -3673,6 +3673,7 @@ export class Map {
     this.onRouteCancelListener.next('route cancelled');
     this.currentStep = 0;
     this.currentStop = 0;
+    this.customPositionBearing = undefined;
   }
 
   private centerOnPoi(poi: any) {
@@ -4807,6 +4808,8 @@ export class Map {
       this.useCustomPosition = false;
       this.customPosition = null;
       this.startPoint = null;
+      this.previousBearing = undefined;
+      this.customPositionBearing = undefined;
 
       if (this.state.style.sources['custom-position-point']) {
         this.state.style.removeSource('custom-position-point');
