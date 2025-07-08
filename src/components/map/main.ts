@@ -53,7 +53,7 @@ import center from '@turf/center';
 import along from '@turf/along';
 import lineSplit from '@turf/line-split';
 import nearestPoint from '@turf/nearest-point';
-import bearing from '@turf/bearing';
+import turfBearing from '@turf/bearing';
 import circle from '@turf/circle';
 import { isNumber, lineString, point, feature, featureCollection, polygon as turfPolygon } from '@turf/helpers';
 import WayfindingLogger from '../logger/wayfinding';
@@ -4104,7 +4104,7 @@ export class Map {
               const currentP = point(newCoords);
 
               const currentBearing = this.map.getBearing();
-              const nextBearing = prevPoint && currentP ? bearing(prevPoint, currentP) : currentBearing;
+              const nextBearing = prevPoint && currentP ? turfBearing(prevPoint, currentP) : currentBearing;
               let newBearing = currentBearing;
 
               if (Math.abs(currentBearing - nextBearing) >= 6) {
@@ -4469,7 +4469,7 @@ export class Map {
       if (dist < minDist) {
         minDist = dist;
         closestSegment = lineString([featurePoint.geometry.coordinates, snapped.geometry.coordinates]);
-        finalBearing = bearing(snapped, featurePoint);
+        finalBearing = turfBearing(snapped, featurePoint);
         snapped.id = 'snapped-path-point';
         snapped.properties.bearing = finalBearing;
         snapped.properties.level = f.properties.level;
@@ -4595,15 +4595,18 @@ export class Map {
   private previousBearing = undefined;
   private floorChangeBuffer = [];
   private lastFloorChangeTimestamp = 0;
+  private customPositionBearing = undefined;
   private onSetCustomPosition({
     coordinates,
     level,
+    bearing,
     recenter = true,
     iconSize = 1.5,
     arrowSize = 1.25,
   }: {
     coordinates: [number, number];
     level: number;
+    bearing?: number;
     recenter?: boolean;
     iconSize?: number;
     arrowSize?: number;
@@ -4635,7 +4638,8 @@ export class Map {
     const shouldSwitchFloor =
       mostFrequentLevel !== this.state.floor.level &&
       count >= FLOOR_CONFIRMATION_THRESHOLD &&
-      now - this.lastFloorChangeTimestamp > FLOOR_CHANGE_COOLDOWN_MS;
+      now - this.lastFloorChangeTimestamp > FLOOR_CHANGE_COOLDOWN_MS &&
+      recenter;
 
     if (shouldSwitchFloor) {
       this.setFloorByLevel(mostFrequentLevel);
@@ -4665,13 +4669,19 @@ export class Map {
       const from = this.customPosition?.coordinates;
       const to = coordinates;
 
+      if (bearing && !this.customPositionBearing && recenter) {
+        this.customPositionBearing = bearing;
+        this.setInitialBearing(bearing);
+        this.map.setBearing(bearing);
+      }
+
       if (from) {
         const fromPoint = point(from);
         const toPoint = point(to);
         const movedDistance = distance(fromPoint, toPoint, { units: 'meters' });
 
         if (movedDistance > 2) {
-          const userBearing = bearing(fromPoint, toPoint);
+          const userBearing = turfBearing(fromPoint, toPoint);
 
           if (this.previousBearing === undefined || Math.abs(this.previousBearing - userBearing) > 10) {
             this.previousBearing = userBearing;
@@ -4681,6 +4691,11 @@ export class Map {
 
           if (recenter) {
             this.map.flyTo({ center: coordinates, padding: this.defaultOptions.fitBoundsPadding });
+            if (userBearing && !this.customPositionBearing) {
+              this.customPositionBearing = userBearing;
+              this.setInitialBearing(userBearing);
+              this.map.setBearing(userBearing);
+            }
           }
         }
       }
@@ -6558,17 +6573,19 @@ export class Map {
   public setCustomPosition({
     coordinates,
     level,
+    bearing,
     recenter = true,
     iconSize,
     arrowSize,
   }: {
     coordinates: [number, number];
     level: number;
+    bearing?: number;
     recenter?: boolean;
     iconSize?: number;
     arrowSize?: number;
   }) {
-    this.onSetCustomPosition({ coordinates, level, recenter, iconSize, arrowSize });
+    this.onSetCustomPosition({ coordinates, level, bearing, recenter, iconSize, arrowSize });
   }
 
   /**
