@@ -81,8 +81,8 @@ export const getFeatures = async ({
       res = await axios.get(url);
     } else {
       const items = [] as Feature[];
-      let from = 0;
-      let size = 250;
+      const from = 0;
+      const size = 250;
       let totalRecords = 0;
       let recordsFetched = 0;
 
