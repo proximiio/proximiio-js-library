@@ -36,6 +36,8 @@ import {
   routeStartSvg,
   routeFinishSvg,
   createHeadingArrow,
+  staticDot,
+  headingArc,
 } from './icons';
 import { LngLatBoundsLike, MapLibreEvent } from 'maplibre-gl';
 import { getFloors, getFloorsBundle, getPlaceFloors, getPlaceFloorsBundle } from '../../controllers/floors';
@@ -796,6 +798,20 @@ export class Map {
         pulsingDot({
           rgbValues: this.defaultOptions.kioskSettings.pointColor,
           pointOutline: this.defaultOptions.kioskSettings.pointOutline,
+        }),
+        { pixelRatio: 2 },
+      );
+      map.addImage(
+        'static-dot',
+        staticDot({
+          rgbValues: this.defaultOptions.kioskSettings.pointColor,
+        }),
+        { pixelRatio: 2 },
+      );
+      map.addImage(
+        'heading-arc',
+        headingArc({
+          rgbValues: this.defaultOptions.kioskSettings.pointColor,
         }),
         { pixelRatio: 2 },
       );
@@ -3513,10 +3529,10 @@ export class Map {
         map.setFilter('custom-position-point-layer', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('custom-position-point-layer').filter = filter;
       }
-      if (map.getLayer('heading-arrow-layer')) {
+      if (map.getLayer('heading-icon-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
-        map.setFilter('heading-arrow-layer', filter as maplibregl.FilterSpecification);
-        this.state.style.getLayer('heading-arrow-layer').filter = filter;
+        map.setFilter('heading-icon-layer', filter as maplibregl.FilterSpecification);
+        this.state.style.getLayer('heading-icon-layer').filter = filter;
       }
       if (this.defaultOptions.showLevelDirectionIcon && map.getLayer('direction-halo-layer')) {
         const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
@@ -4609,14 +4625,16 @@ export class Map {
     bearing,
     recenter = true,
     iconSize = 1.5,
-    arrowSize = 1.25,
+    directionIconSize = 1.25,
+    followBearing = false,
   }: {
     coordinates: [number, number];
     level: number;
     bearing?: number;
     recenter?: boolean;
     iconSize?: number;
-    arrowSize?: number;
+    directionIconSize?: number;
+    followBearing?: boolean;
   }) {
     // Initialize debounce/cooldown tracking
     this.floorChangeBuffer = this.floorChangeBuffer || [];
@@ -4676,10 +4694,16 @@ export class Map {
       const from = this.customPosition?.coordinates;
       const to = coordinates;
 
-      if (bearing && !this.customPositionBearing && recenter) {
+      if (bearing && (!this.customPositionBearing || followBearing) && recenter) {
         this.customPositionBearing = bearing;
         this.setInitialBearing(bearing);
-        this.map.setBearing(bearing);
+        setTimeout(() => {
+          this.map.flyTo({
+            bearing: bearing,
+            duration: 200,
+            essential: true,
+          });
+        }, 100);
       }
 
       if (from) {
@@ -4688,7 +4712,7 @@ export class Map {
         const movedDistance = distance(fromPoint, toPoint, { units: 'meters' });
 
         if (movedDistance > 2) {
-          const userBearing = turfBearing(fromPoint, toPoint);
+          const userBearing = bearing || turfBearing(fromPoint, toPoint);
 
           if (this.previousBearing === undefined || Math.abs(this.previousBearing - userBearing) > 10) {
             this.previousBearing = userBearing;
@@ -4698,11 +4722,18 @@ export class Map {
 
           if (recenter) {
             this.map.flyTo({ center: coordinates, padding: this.defaultOptions.fitBoundsPadding });
-            if (userBearing && !this.customPositionBearing) {
+            if (userBearing && (!this.customPositionBearing || followBearing)) {
               this.customPositionBearing = userBearing;
               this.setInitialBearing(userBearing);
-              this.map.setBearing(userBearing);
             }
+            setTimeout(() => {
+              this.map.flyTo({
+                center: coordinates,
+                bearing: userBearing,
+                duration: 200,
+                essential: true,
+              });
+            }, 100);
           }
         }
       }
@@ -4742,7 +4773,7 @@ export class Map {
           source: 'custom-position-point',
           layout: {
             'icon-size': iconSize,
-            'icon-image': 'pulsing-dot',
+            'icon-image': 'static-dot',
             'icon-allow-overlap': true,
           },
           filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
@@ -4750,12 +4781,12 @@ export class Map {
 
         if (this.defaultOptions.routeAnimation.showCompassDirection) {
           this.state.style.addLayer({
-            id: 'heading-arrow-layer',
+            id: 'heading-icon-layer',
             type: 'symbol',
             source: 'custom-position-point',
             layout: {
-              'icon-image': 'heading-arrow',
-              'icon-size': arrowSize,
+              'icon-image': 'heading-arc',
+              'icon-size': directionIconSize,
               'icon-rotate': ['get', 'bearing'],
               'icon-rotation-alignment': 'map',
               'icon-allow-overlap': true,
@@ -4825,8 +4856,8 @@ export class Map {
         this.state.style.removeLayer('custom-position-point-layer');
       }
 
-      if (this.state.style.getLayer('heading-arrow-layer')) {
-        this.state.style.removeLayer('heading-arrow-layer');
+      if (this.state.style.getLayer('heading-icon-layer')) {
+        this.state.style.removeLayer('heading-icon-layer');
       }
 
       this.onDeleteFeature('custom-position');
@@ -6590,16 +6621,18 @@ export class Map {
     bearing,
     recenter = true,
     iconSize,
-    arrowSize,
+    directionIconSize,
+    followBearing = false,
   }: {
     coordinates: [number, number];
     level: number;
     bearing?: number;
     recenter?: boolean;
     iconSize?: number;
-    arrowSize?: number;
+    directionIconSize?: number;
+    followBearing?: boolean;
   }) {
-    this.onSetCustomPosition({ coordinates, level, bearing, recenter, iconSize, arrowSize });
+    this.onSetCustomPosition({ coordinates, level, bearing, recenter, iconSize, directionIconSize, followBearing });
   }
 
   /**
