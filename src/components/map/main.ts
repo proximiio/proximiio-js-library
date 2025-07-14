@@ -4699,7 +4699,7 @@ export class Map {
         this.setInitialBearing(bearing);
         setTimeout(() => {
           this.map.flyTo({
-            bearing: bearing,
+            bearing,
             duration: 200,
             essential: true,
           });
