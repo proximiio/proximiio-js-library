@@ -4702,6 +4702,7 @@ export class Map {
             bearing,
             duration: 200,
             essential: true,
+            padding: this.defaultOptions.fitBoundsPadding,
           });
         }, 100);
       }
@@ -4721,7 +4722,6 @@ export class Map {
           }
 
           if (recenter) {
-            this.map.flyTo({ center: coordinates, padding: this.defaultOptions.fitBoundsPadding });
             if (userBearing && (!this.customPositionBearing || followBearing)) {
               this.customPositionBearing = userBearing;
               this.setInitialBearing(userBearing);
@@ -4732,6 +4732,7 @@ export class Map {
                 bearing: userBearing,
                 duration: 200,
                 essential: true,
+                padding: this.defaultOptions.fitBoundsPadding,
               });
             }, 100);
           }
