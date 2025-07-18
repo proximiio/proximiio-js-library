@@ -3859,7 +3859,8 @@ export class Map {
       this.routingSource.route &&
       this.routingSource.route[`path-part-${this.currentStep}`] &&
       this.routingSource.levelPoints[this.state.floor.level] &&
-      !this.routingSource.preview
+      !this.routingSource.preview &&
+      !this.useCustomPosition
     ) {
       const route =
         this.routingSource.route[`path-part-${this.currentStep}`] &&
@@ -4834,6 +4835,8 @@ export class Map {
         }
       }
 
+      this.handleCustomRouteProgress();
+
       this.onPositionSetListener.next({
         coordinates,
         level,
@@ -4922,6 +4925,66 @@ export class Map {
     };
 
     this.customPositionAnimationFrameId = requestAnimationFrame(step);
+  }
+
+  private handleCustomRouteProgress() {
+    if (this.routingSource?.lines && this.useCustomPosition && this.customPosition.coordinates) {
+      const lines = this.routingSource.lines;
+      const level = this.state.floor.level;
+      const routePoints = lines
+        .filter((i: any) => i.properties.level === level)
+        .map((i: any) => i.geometry.coordinates)
+        .filter(Boolean)
+        .flat();
+
+      if (routePoints.length < 2) {
+        // If the path segment is too short, stop processing
+        return;
+      }
+
+      const routeLine = lineString(routePoints, {
+        level, // Attach the appropriate level to the LineString metadata
+      });
+
+      const customPositionPoint = point(this.customPosition.coordinates);
+      const snappedPoint = nearestPointOnLine(routeLine, customPositionPoint);
+      const snappedPointOnVertex = [...new Set(routePoints)].findIndex(
+        (i) => i[0] === snappedPoint.geometry.coordinates[0] && i[1] === snappedPoint.geometry.coordinates[1],
+      );
+      const targetCoord = snappedPoint.geometry.coordinates;
+      const splitterSize = 0.0000002; // small enough not to mess with precision
+      // Create a square polygon around the target point
+      const splitter = turfPolygon([
+        [
+          [targetCoord[0] - splitterSize, targetCoord[1] - splitterSize],
+          [targetCoord[0] + splitterSize, targetCoord[1] - splitterSize],
+          [targetCoord[0] + splitterSize, targetCoord[1] + splitterSize],
+          [targetCoord[0] - splitterSize, targetCoord[1] + splitterSize],
+          [targetCoord[0] - splitterSize, targetCoord[1] - splitterSize], // close the polygon
+        ],
+      ]);
+
+      const routeLineUntilPosition = lineSplit(
+        lineString([...new Set(routePoints)], {
+          level,
+        }),
+        snappedPointOnVertex >= 0 ? splitter : snappedPoint,
+      ).features[0] as any;
+
+      if (this.defaultOptions.routeAnimation.showTailSegment) {
+        routeLineUntilPosition.geometry.coordinates.push(this.customPosition.coordinates);
+      }
+
+      const routeProgress = (this.currentStep / this.routingSource.steps.length) * 100;
+
+      if (this.defaultOptions.routeAnimation.lineProgress) {
+        routeLineUntilPosition.properties.color =
+          routeProgress < 30 ? '#FF4136' : routeProgress < 60 ? '#FF851B' : '#2ECC40';
+      }
+
+      // @ts-ignore
+      this.map.getSource('lineAlong').setData(routeLineUntilPosition);
+    }
   }
 
   /**
