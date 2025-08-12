@@ -4730,7 +4730,7 @@ export class Map {
             setTimeout(() => {
               this.map.flyTo({
                 center: coordinates,
-                bearing: userBearing,
+                bearing: followBearing ? userBearing : this.map.getBearing(),
                 duration: 200,
                 essential: true,
                 padding: this.defaultOptions.fitBoundsPadding,
