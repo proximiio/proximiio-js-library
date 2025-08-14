@@ -3530,7 +3530,7 @@ export class Map {
         this.state.style.getLayer('custom-position-point-layer').filter = filter;
       }
       if (map.getLayer('heading-icon-layer')) {
-        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level]];
+        const filter = ['all', ['==', ['to-number', ['get', 'level']], floor.level], ['has', 'bearing']];
         map.setFilter('heading-icon-layer', filter as maplibregl.FilterSpecification);
         this.state.style.getLayer('heading-icon-layer').filter = filter;
       }
@@ -5022,7 +5022,7 @@ export class Map {
             essential: true,
             padding: this.defaultOptions.fitBoundsPadding,
           });
-        }, 100);
+        }, 500);
       }
 
       // @ts-ignore
