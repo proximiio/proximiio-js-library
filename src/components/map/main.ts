@@ -4367,7 +4367,7 @@ export class Map {
   }
 
   private handleControllerError = (err) => {
-    this.onMapFailedListener.next({ message: JSON.stringify(err) });
+    this.onMapFailedListener.next({ message: err.message ? err.message : JSON.stringify(err) });
   };
 
   private InjectCSS = ({ id, css }: { id: string; css: string }) => {
