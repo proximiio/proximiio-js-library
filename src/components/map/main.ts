@@ -68,6 +68,7 @@ import { Protocol, PMTiles } from 'pmtiles';
 import distance from '@turf/distance';
 import nearestPointOnLine from '@turf/nearest-point-on-line';
 import getCurrentStepIndex from './getCurrentStep';
+import bearing from '@turf/bearing';
 
 export interface State {
   readonly initializing: boolean;
@@ -4628,6 +4629,7 @@ export class Map {
     iconSize = 1.5,
     directionIconSize = 1.25,
     followBearing = false,
+    followRouteBearing = false,
   }: {
     coordinates: [number, number];
     level: number;
@@ -4636,6 +4638,7 @@ export class Map {
     iconSize?: number;
     directionIconSize?: number;
     followBearing?: boolean;
+    followRouteBearing?: boolean;
   }) {
     // Initialize debounce/cooldown tracking
     this.floorChangeBuffer = this.floorChangeBuffer || [];
@@ -4747,7 +4750,7 @@ export class Map {
 
       if (this.state.style.sources['custom-position-point']) {
         // Animate between positions
-        this.animateCustomPosition(from, to, level, this.previousBearing);
+        this.animateCustomPosition({ from, to, level, userBearing: this.previousBearing, followRouteBearing });
         this.customPosition = { coordinates, level };
 
         this.onUpdateFeature(
@@ -4835,7 +4838,7 @@ export class Map {
         }
       }
 
-      this.handleCustomRouteProgress();
+      this.handleCustomRouteProgress(followRouteBearing);
 
       this.onPositionSetListener.next({
         coordinates,
@@ -4874,7 +4877,19 @@ export class Map {
   private customPostionAnimationStartTime: number | null = null;
   private customPostionAnimationDuration = 1000;
 
-  private animateCustomPosition(from: [number, number], to: [number, number], level: number, userBearing: number) {
+  private animateCustomPosition({
+    from,
+    to,
+    level,
+    userBearing,
+    followRouteBearing,
+  }: {
+    from: [number, number];
+    to: [number, number];
+    level: number;
+    userBearing: number;
+    followRouteBearing: boolean;
+  }) {
     // Cancel any ongoing animation
     if (this.customPositionAnimationFrameId !== null) {
       cancelAnimationFrame(this.customPositionAnimationFrameId);
@@ -4898,12 +4913,13 @@ export class Map {
 
       const source = this.map.getSource('custom-position-point') as maplibregl.GeoJSONSource;
       if (source) {
+        const sourceFeature = this.state.style.sources['custom-position-point'].data.features[0];
         source.setData({
           type: 'FeatureCollection',
           features: [
             {
               type: 'Feature',
-              properties: { level, bearing: userBearing },
+              properties: { level, bearing: followRouteBearing ? sourceFeature.properties.bearing : userBearing },
               geometry: {
                 type: 'Point',
                 coordinates: current,
@@ -4911,10 +4927,9 @@ export class Map {
             },
           ],
         });
-        const sourceFeature = this.state.style.sources['custom-position-point'].data.features[0];
         sourceFeature.geometry.coordinates = current;
         sourceFeature.properties.level = level;
-        sourceFeature.properties.bearing = userBearing;
+        if (!followRouteBearing) sourceFeature.properties.bearing = userBearing;
       }
 
       if (progress < 1) {
@@ -4927,7 +4942,7 @@ export class Map {
     this.customPositionAnimationFrameId = requestAnimationFrame(step);
   }
 
-  private handleCustomRouteProgress() {
+  private handleCustomRouteProgress(followRouteBearing: boolean) {
     if (this.routingSource?.lines && this.useCustomPosition && this.customPosition.coordinates) {
       const lines = this.routingSource.lines;
       const level = this.state.floor.level;
@@ -4980,6 +4995,25 @@ export class Map {
       if (this.defaultOptions.routeAnimation.lineProgress) {
         routeLineUntilPosition.properties.color =
           routeProgress < 30 ? '#FF4136' : routeProgress < 60 ? '#FF851B' : '#2ECC40';
+      }
+
+      if (followRouteBearing) {
+        const routeBearing = bearing(
+          routeLineUntilPosition.geometry.coordinates[routeLineUntilPosition.geometry.coordinates.length - 2],
+          snappedPoint,
+        );
+        if (this.defaultOptions.routeAnimation.showCompassDirection) {
+          const customPositioFeature = this.state.style.sources['custom-position-point'].data.features[0];
+          customPositioFeature.properties.bearing = routeBearing;
+        }
+        setTimeout(() => {
+          this.map.flyTo({
+            bearing: routeBearing,
+            duration: 200,
+            essential: true,
+            padding: this.defaultOptions.fitBoundsPadding,
+          });
+        }, 100);
       }
 
       // @ts-ignore
@@ -6687,6 +6721,7 @@ export class Map {
     iconSize,
     directionIconSize,
     followBearing = false,
+    followRouteBearing = false,
   }: {
     coordinates: [number, number];
     level: number;
@@ -6695,8 +6730,18 @@ export class Map {
     iconSize?: number;
     directionIconSize?: number;
     followBearing?: boolean;
+    followRouteBearing?: boolean;
   }) {
-    this.onSetCustomPosition({ coordinates, level, bearing, recenter, iconSize, directionIconSize, followBearing });
+    this.onSetCustomPosition({
+      coordinates,
+      level,
+      bearing,
+      recenter,
+      iconSize,
+      directionIconSize,
+      followBearing,
+      followRouteBearing,
+    });
   }
 
   /**
