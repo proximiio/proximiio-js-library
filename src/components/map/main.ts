@@ -68,7 +68,6 @@ import { Protocol, PMTiles } from 'pmtiles';
 import distance from '@turf/distance';
 import nearestPointOnLine from '@turf/nearest-point-on-line';
 import getCurrentStepIndex from './getCurrentStep';
-import bearing from '@turf/bearing';
 
 export interface State {
   readonly initializing: boolean;
@@ -4998,7 +4997,7 @@ export class Map {
       }
 
       if (followRouteBearing) {
-        const routeBearing = bearing(
+        const routeBearing = turfBearing(
           routeLineUntilPosition.geometry.coordinates[routeLineUntilPosition.geometry.coordinates.length - 2],
           snappedPoint,
         );
