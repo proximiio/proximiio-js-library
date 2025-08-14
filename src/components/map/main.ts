@@ -4895,6 +4895,16 @@ export class Map {
       this.customPositionAnimationFrameId = null;
     }
 
+    // Distance-based duration
+    const distMeters = distance(from, to) * 1000;
+    const minDuration = 300; // ms
+    const durationPerMeter = 50; // ms per meter
+    const maxDuration = 3000; // ms
+    this.customPostionAnimationDuration = Math.min(
+      maxDuration,
+      Math.max(minDuration, minDuration + distMeters * durationPerMeter),
+    );
+
     const startTime = performance.now();
     this.customPostionAnimationStartTime = startTime;
 
