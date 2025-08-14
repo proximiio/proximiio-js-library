@@ -309,7 +309,7 @@ export class Map {
   private onMapLoadListener = new CustomSubject<boolean>();
   private onMapReadyListener = new CustomSubject<boolean>();
   private onMainSourceLoadedListener = new CustomSubject<boolean>();
-  private onMapFailedListener = new CustomSubject<boolean>();
+  private onMapFailedListener = new CustomSubject<{ message: string }>();
   private onPlaceSelectListener = new CustomSubject<PlaceModel>();
   private onFloorSelectListener = new CustomSubject<FloorModel>();
   private onRouteFoundListener = new CustomSubject<any>();
@@ -739,7 +739,7 @@ export class Map {
       });
 
       this.map.on('error', (e) => {
-        this.onMapFailedListener.next(true);
+        this.onMapFailedListener.next({ message: e.message });
       });
 
       if (this.defaultOptions.allowNewFeatureModal) {
@@ -4367,7 +4367,7 @@ export class Map {
   }
 
   private handleControllerError = (err) => {
-    this.onMapFailedListener.next(true);
+    this.onMapFailedListener.next({ message: JSON.stringify(err) });
   };
 
   private InjectCSS = ({ id, css }: { id: string; css: string }) => {
@@ -5073,8 +5073,8 @@ export class Map {
    *  @returns returns map failed listener
    *  @example
    *  const map = new Proximiio.Map();
-   *  map.getMapFailedListener().subscribe(failed => {
-   *    console.log('map failed', failed);
+   *  map.getMapFailedListener().subscribe(error => {
+   *    console.log('map failed', error.message);
    *  });
    */
   public getMapFailedListener() {
