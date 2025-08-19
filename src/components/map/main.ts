@@ -57,7 +57,7 @@ import lineSplit from '@turf/line-split';
 import nearestPoint from '@turf/nearest-point';
 import turfBearing from '@turf/bearing';
 import circle from '@turf/circle';
-import { isNumber, lineString, point, feature, featureCollection, polygon as turfPolygon } from '@turf/helpers';
+import { isNumber, lineString, point, feature, featureCollection, polygon as turfPolygon, points } from '@turf/helpers';
 import WayfindingLogger from '../logger/wayfinding';
 import { translations } from './i18n';
 import { WayfindingConfigModel } from '../../models/wayfinding';
@@ -262,8 +262,12 @@ export interface Options {
   autoRestartAnimationAfterFloorChange?: boolean;
   poiIconSize?: (string | number | string[])[] | number | any;
   disableUnavailablePois?: boolean;
-  arrivalThreshold?: number;
   apiPaginate?: boolean;
+  customPositionOptions?: {
+    arrivalThreshold?: number;
+    minDistanceToChange?: number;
+    aggregatePositionsLimit?: number;
+  };
 }
 
 export interface PaddingOptions {
@@ -466,8 +470,12 @@ export class Map {
     autoLevelChange: false,
     autoRestartAnimationAfterFloorChange: false,
     disableUnavailablePois: false,
-    arrivalThreshold: 3,
     apiPaginate: false,
+    customPositionOptions: {
+      arrivalThreshold: 3,
+      minDistanceToChange: 2,
+      aggregatePositionsLimit: 1,
+    },
     // poiIconSize: ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.5],
   };
   private routeFactory: any;
@@ -504,10 +512,12 @@ export class Map {
     const urlParams = { ...this.defaultOptions.urlParams, ...options.urlParams };
     const polygonsOptions = { ...this.defaultOptions.polygonsOptions, ...options.polygonsOptions };
     const routeAnimation = { ...this.defaultOptions.routeAnimation, ...options.routeAnimation };
+    const customPositionOptions = { ...this.defaultOptions.customPositionOptions, ...options.customPositionOptions };
     this.defaultOptions = { ...this.defaultOptions, ...options };
     this.defaultOptions.urlParams = urlParams;
     this.defaultOptions.polygonsOptions = polygonsOptions;
     this.defaultOptions.routeAnimation = routeAnimation;
+    this.defaultOptions.customPositionOptions = customPositionOptions;
     this.state = globalState;
 
     if (this.defaultOptions.isKiosk && this.defaultOptions.useGpsLocation) {
@@ -4696,6 +4706,9 @@ export class Map {
 
       const from = this.customPosition?.coordinates;
       const to = coordinates;
+      const fromPoint = from ? point(from) : undefined;
+      const toPoint = point(to);
+      const movedDistance = from ? distance(fromPoint, toPoint, { units: 'meters' }) : 0;
 
       if (bearing && (!this.customPositionBearing || followBearing) && recenter) {
         this.customPositionBearing = bearing;
@@ -4710,12 +4723,9 @@ export class Map {
         }, 100);
       }
 
+      // do an update for additional position sets
       if (from) {
-        const fromPoint = point(from);
-        const toPoint = point(to);
-        const movedDistance = distance(fromPoint, toPoint, { units: 'meters' });
-
-        if (movedDistance > 2) {
+        if (movedDistance > this.defaultOptions.customPositionOptions.minDistanceToChange) {
           const userBearing = bearing || turfBearing(fromPoint, toPoint);
 
           if (this.previousBearing === undefined || Math.abs(this.previousBearing - userBearing) > 10) {
@@ -4739,30 +4749,33 @@ export class Map {
               });
             }, 100);
           }
+
+          if (bearing) {
+            this.previousBearing = bearing;
+            positionFeature.properties.bearing = bearing;
+          }
+
+          if (this.state.style.sources['custom-position-point']) {
+            // Animate between positions
+            this.animateCustomPosition({ from, to, level, userBearing: this.previousBearing, followRouteBearing });
+            this.customPosition = { coordinates, level };
+
+            this.onUpdateFeature(
+              'custom-position',
+              undefined,
+              level,
+              coordinates[1],
+              coordinates[0],
+              undefined,
+              undefined,
+              floor?.id,
+            );
+          }
         }
       }
 
-      if (bearing) {
-        this.previousBearing = bearing;
-        positionFeature.properties.bearing = bearing;
-      }
-
-      if (this.state.style.sources['custom-position-point']) {
-        // Animate between positions
-        this.animateCustomPosition({ from, to, level, userBearing: this.previousBearing, followRouteBearing });
-        this.customPosition = { coordinates, level };
-
-        this.onUpdateFeature(
-          'custom-position',
-          undefined,
-          level,
-          coordinates[1],
-          coordinates[0],
-          undefined,
-          undefined,
-          floor?.id,
-        );
-      } else {
+      // do initial setup
+      if (!this.state.style.sources['custom-position-point']) {
         this.state.style.addSource('custom-position-point', {
           type: 'geojson',
           data: {
@@ -4820,29 +4833,33 @@ export class Map {
         this.customPosition = { coordinates, level };
       }
 
-      if (this.routingSource && this.routingSource.route) {
-        const stepIndex = getCurrentStepIndex({
-          userPosition: coordinates,
-          steps: this.routingSource.steps,
-          lastKnownStepIndex: this.currentStep,
-          thresholdMeters: this.defaultOptions.routeAnimation.stepChangeThreshold,
-        });
-        this.setNavStep(stepIndex);
+      // handle additional events if the moved distance is big enough
+      if (movedDistance > this.defaultOptions.customPositionOptions.minDistanceToChange) {
+        if (this.routingSource && this.routingSource.route) {
+          const stepIndex = getCurrentStepIndex({
+            userPosition: coordinates,
+            steps: this.routingSource.steps,
+            lastKnownStepIndex: this.currentStep,
+            thresholdMeters: this.defaultOptions.routeAnimation.stepChangeThreshold,
+          });
+          this.setNavStep(stepIndex);
 
-        if (this.routingSource.finish?.geometry?.coordinates) {
-          const distanceToFinish = distance(this.routingSource.finish.geometry.coordinates, point(coordinates)) * 1000;
-          if (distanceToFinish <= this.defaultOptions.arrivalThreshold) {
-            this.onArrivalListener.next(true);
+          if (this.routingSource.finish?.geometry?.coordinates) {
+            const distanceToFinish =
+              distance(this.routingSource.finish.geometry.coordinates, point(coordinates)) * 1000;
+            if (distanceToFinish <= this.defaultOptions.customPositionOptions.arrivalThreshold) {
+              this.onArrivalListener.next(true);
+            }
           }
         }
+
+        this.handleCustomRouteProgress(followRouteBearing);
+
+        this.onPositionSetListener.next({
+          coordinates,
+          level,
+        });
       }
-
-      this.handleCustomRouteProgress(followRouteBearing);
-
-      this.onPositionSetListener.next({
-        coordinates,
-        level,
-      });
     }
   }
 
@@ -6722,6 +6739,7 @@ export class Map {
    *    map.onSetCustomPosition({ coordinates: [17.833135351538658, 48.60678469647394], level: 0});
    *  });
    */
+  private positionsList = [];
   public setCustomPosition({
     coordinates,
     level,
@@ -6741,16 +6759,22 @@ export class Map {
     followBearing?: boolean;
     followRouteBearing?: boolean;
   }) {
-    this.onSetCustomPosition({
-      coordinates,
-      level,
-      bearing,
-      recenter,
-      iconSize,
-      directionIconSize,
-      followBearing,
-      followRouteBearing,
-    });
+    this.positionsList.push(coordinates);
+    if (this.positionsList.length >= this.defaultOptions.customPositionOptions.aggregatePositionsLimit) {
+      const positionPoints = points(this.positionsList);
+      const centerOfPoints = center(positionPoints);
+      this.onSetCustomPosition({
+        coordinates: centerOfPoints.geometry.coordinates as [number, number],
+        level,
+        bearing,
+        recenter,
+        iconSize,
+        directionIconSize,
+        followBearing,
+        followRouteBearing,
+      });
+      this.positionsList = [];
+    }
   }
 
   /**
