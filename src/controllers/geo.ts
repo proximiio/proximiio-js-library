@@ -9,7 +9,7 @@ import {
 import Feature, { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 import { globalState, PolygonLayer } from '../components/map/main';
-import { FeatureCollection as FCModel, Feature as FModel } from '@turf/helpers';
+import { FeatureCollection as FCModel, feature, Feature as FModel } from '@turf/helpers';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import pointOnFeature from '@turf/point-on-feature';
 import length from '@turf/length';
@@ -504,7 +504,7 @@ export const getFeaturesBundle = async ({
   useTimerangeData,
   filter,
   bundleUrl,
-  apiPaginate,
+  bundlePaginate,
 }: {
   initPolygons?: boolean;
   polygonLayers: PolygonLayer[];
@@ -513,10 +513,64 @@ export const getFeaturesBundle = async ({
   useTimerangeData?: boolean;
   filter?: { key: string; value: string; hideIconOnly?: boolean };
   bundleUrl: string;
-  apiPaginate?: boolean;
+  bundlePaginate?: boolean;
 }) => {
-  const res = await fetch(`${bundleUrl}/features.json`);
-  const data = await res.json();
+  let data = {
+    features: [],
+    count: 0,
+    type: 'FeatureCollection',
+  };
+  if (!bundlePaginate) {
+    const res = await fetch(`${bundleUrl}/features.json`);
+    data = await res.json();
+  } else {
+    // --- Paginated version ---
+    const items: any[] = [];
+    const pageSize = 250;
+
+    // 1. Fetch first page (contains total count)
+    const firstRes = await fetch(`${bundleUrl}/features-1.json`);
+    const firstData = await firstRes.json();
+    const totalRecords: number = firstData.count;
+    items.push(...firstData.features);
+
+    // 2. Calculate total pages
+    const numPages = Math.ceil(totalRecords / pageSize);
+
+    // 3. Decide concurrency level
+    const numQueues = 8; // number of parallel queues
+    const requestsPerQueue = Math.ceil((numPages - 1) / numQueues);
+
+    // 4. Build request queues
+    const queues: Promise<any>[][] = [];
+    for (let i = 0; i < numQueues; i++) {
+      const queueRequests: Promise<any>[] = [];
+      for (let j = 0; j < requestsPerQueue; j++) {
+        const pageIndex = i * requestsPerQueue + j + 2; // start at 2 because page 1 is already fetched
+        if (pageIndex <= numPages) {
+          queueRequests.push(fetch(`${bundleUrl}/features-${pageIndex}.json`).then((res) => res.json()));
+        }
+      }
+      if (queueRequests.length > 0) {
+        queues.push(queueRequests);
+      }
+    }
+
+    // 5. Execute queues sequentially (but each queue runs in parallel)
+    for (const queue of queues) {
+      const results = await Promise.all(queue);
+      results.forEach((page) => {
+        items.push(...page.features);
+      });
+    }
+
+    data = {
+      count: totalRecords,
+      features: items,
+      type: 'FeatureCollection',
+    };
+  }
+
   if (initPolygons) {
     const featuresToAdd: any[] = [];
 

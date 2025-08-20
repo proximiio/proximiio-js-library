@@ -267,6 +267,7 @@ export interface Options {
   poiIconSize?: (string | number | string[])[] | number | any;
   disableUnavailablePois?: boolean;
   apiPaginate?: boolean;
+  bundlePaginate?: boolean;
   customPositionOptions?: {
     arrivalThreshold?: number;
     minDistanceToChange?: number;
@@ -476,6 +477,7 @@ export class Map {
     autoRestartAnimationAfterFloorChange: false,
     disableUnavailablePois: false,
     apiPaginate: false,
+    bundlePaginate: false,
     customPositionOptions: {
       arrivalThreshold: 3,
       minDistanceToChange: 2,
@@ -714,7 +716,7 @@ export class Map {
           useTimerangeData: this.defaultOptions.useTimerangeData,
           filter: this.defaultOptions.defaultFilter,
           bundleUrl: this.defaultOptions.bundleUrl,
-          apiPaginate: this.defaultOptions.apiPaginate,
+          bundlePaginate: this.defaultOptions.bundlePaginate,
         }).catch((error) => this.handleControllerError(error))
       : await getFeatures({
           initPolygons: this.defaultOptions.initPolygons,
@@ -1006,7 +1008,7 @@ export class Map {
             useTimerangeData: this.defaultOptions.useTimerangeData,
             filter: this.defaultOptions.defaultFilter,
             bundleUrl: this.defaultOptions.bundleUrl,
-            apiPaginate: this.defaultOptions.apiPaginate,
+            bundlePaginate: this.defaultOptions.bundlePaginate,
           })
         : await getFeatures({
             initPolygons: this.defaultOptions.initPolygons,
