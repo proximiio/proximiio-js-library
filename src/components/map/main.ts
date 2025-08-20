@@ -69,6 +69,8 @@ import { Protocol, PMTiles } from 'pmtiles';
 import distance from '@turf/distance';
 import nearestPointOnLine from '@turf/nearest-point-on-line';
 import getCurrentStepIndex from './getCurrentStep';
+import { getAds, getAdsBundle } from '../../controllers/ads';
+import { AdModel } from '../../models/ad';
 
 export interface State {
   readonly initializing: boolean;
@@ -93,6 +95,7 @@ export interface State {
   readonly textNavigation: any;
   readonly persons: PersonModel[];
   readonly user;
+  readonly ads: AdModel[];
 }
 
 export interface PolygonOptions {
@@ -300,6 +303,7 @@ export const globalState: State = {
   textNavigation: null,
   persons: [],
   user: null,
+  ads: [],
 };
 
 export class Map {
@@ -554,7 +558,7 @@ export class Map {
     this.geojsonSource.on(this.onSourceChange);
     this.syntheticSource.on(this.onSyntheticChange);
     this.routingSource.on(this.onRouteChange);
-    await this.fetch();
+    await this.prepareMap();
   }
 
   private async cancelObservers() {
@@ -563,7 +567,7 @@ export class Map {
     this.state.style.off(this.onStyleChange);
   }
 
-  private async fetch() {
+  private async prepareMap() {
     let placeParam = null;
     const useBundle = !!this.defaultOptions.bundleUrl;
 
@@ -577,6 +581,11 @@ export class Map {
           this.handleControllerError(error),
         )
       : await getPlaces().catch((error) => this.handleControllerError(error));
+    const floors = useBundle
+      ? await getFloorsBundle({ bundleUrl: this.defaultOptions.bundleUrl }).catch((error) =>
+          this.handleControllerError(error),
+        )
+      : await getFloors().catch((error) => this.handleControllerError(error));
     const style = useBundle
       ? await getStyleBundle({ bundleUrl: this.defaultOptions.bundleUrl }).catch((error) =>
           this.handleControllerError(error),
@@ -587,63 +596,8 @@ export class Map {
           this.handleControllerError(error),
         )
       : await getStyles().catch((error) => this.handleControllerError(error));
-    const features = useBundle
-      ? await getFeaturesBundle({
-          initPolygons: this.defaultOptions.initPolygons,
-          polygonLayers: this.defaultOptions.polygonLayers.map((item) => {
-            item.autoAssign = item.autoAssign ?? true;
-            item.initOnLevelchangers = item.initOnLevelchangers ?? false;
-            return item;
-          }),
-          autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
-          hiddenAmenities: this.defaultOptions.hiddenAmenities,
-          useTimerangeData: this.defaultOptions.useTimerangeData,
-          filter: this.defaultOptions.defaultFilter,
-          bundleUrl: this.defaultOptions.bundleUrl,
-          apiPaginate: this.defaultOptions.apiPaginate,
-        }).catch((error) => this.handleControllerError(error))
-      : await getFeatures({
-          initPolygons: this.defaultOptions.initPolygons,
-          polygonLayers: this.defaultOptions.polygonLayers.map((item) => {
-            item.autoAssign = item.autoAssign ?? true;
-            item.initOnLevelchangers = item.initOnLevelchangers ?? false;
-            return item;
-          }),
-          autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
-          hiddenAmenities: this.defaultOptions.hiddenAmenities,
-          useTimerangeData: this.defaultOptions.useTimerangeData,
-          filter: this.defaultOptions.defaultFilter,
-          featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
-          localSources: this.defaultOptions.localSources,
-          apiPaginate: this.defaultOptions.apiPaginate,
-        }).catch((error) => this.handleControllerError(error));
-    const amenities = useBundle
-      ? await getAmenitiesBundle({
-          bundleUrl: this.defaultOptions.bundleUrl,
-          amenityIdProperty: this.defaultOptions.amenityIdProperty,
-        }).catch((error) => this.handleControllerError(error))
-      : await getAmenities({
-          amenityIdProperty: this.defaultOptions.amenityIdProperty,
-          localSources: this.defaultOptions.localSources,
-        }).catch((error) => this.handleControllerError(error));
-    const floors = useBundle
-      ? await getFloorsBundle({ bundleUrl: this.defaultOptions.bundleUrl }).catch((error) =>
-          this.handleControllerError(error),
-        )
-      : await getFloors().catch((error) => this.handleControllerError(error));
-    const kiosks = useBundle
-      ? await getKiosksBundle({ bundleUrl: this.defaultOptions.bundleUrl }).catch((error) =>
-          this.handleControllerError(error),
-        )
-      : await getKiosks().catch((error) => this.handleControllerError(error));
 
-    if (places && features && floors && style && kiosks) {
-      const optimizedFeatures = new FeatureCollection({ features: optimizeFeatures(features.features) });
-      const levelChangers = features.features.filter(
-        (f) =>
-          f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
-      );
-      // const user = await Auth.getCurrentUser();
+    if (places && floors && style) {
       const defaultPlace = placeParam
         ? places.data.find((p) => p.id === placeParam || p.name === placeParam)
         : places.data.find((p) => p.id === this.defaultOptions.defaultPlaceId);
@@ -689,44 +643,23 @@ export class Map {
       if (this.defaultOptions.routeWithDetails !== null && this.defaultOptions.routeWithDetails !== undefined) {
         this.routingSource.routing.routeWithDetails = this.defaultOptions.routeWithDetails;
       }
-      if (this.defaultOptions.landmarkTBTNavigation) {
-        this.routingSource.setLandmarkTBT(this.defaultOptions.landmarkTBTNavigation);
-        this.routingSource.setPois(
-          optimizedFeatures.features.filter(
-            (f) => f.geometry.coordinates && f.geometry.type === 'Point' && f.properties.type === 'poi',
-          ),
-        );
-        this.routingSource.setLevelChangers(levelChangers);
-      }
-      this.geojsonSource.fetch(optimizedFeatures);
-      this.routingSource.routing.setData(new FeatureCollection(features));
       this.prepareStyle(style);
       this.imageSourceManager.enabled = this.defaultOptions.showRasterFloorplans;
       this.imageSourceManager.belowLayer = style.usesPrefixes() ? 'proximiio-floors' : 'floors';
       this.imageSourceManager.initialize({ floors: floors.data });
       this.state = {
         ...this.state,
-        initializing: false,
         place,
         places: places.data,
         floor,
         floors: floors.data,
         allFloors: floors.data,
-        kiosks: kiosks.data,
         style,
         styles,
-        amenities,
-        features,
-        optimizedFeatures,
-        allFeatures: new FeatureCollection(features),
-        levelChangers: new FeatureCollection({ features: levelChangers }),
         latitude: centerVar[1],
         longitude: centerVar[0],
-        zoom: this.defaultOptions.zoomLevel ? this.defaultOptions.zoomLevel : this.defaultOptions.mapboxOptions?.zoom,
         noPlaces: places.data.length === 0,
-        // user,
       };
-      this.onDataFetchedListener.next(true);
       style.on(this.onStyleChange);
 
       if (this.defaultOptions.pmTilesUrl) {
@@ -746,6 +679,7 @@ export class Map {
       this.map.on('load', async (e) => {
         this.onMapLoadListener.next(true);
         this.map.setCenter(centerVar);
+        await this.fetch();
         await this.onMapReady(e);
       });
 
@@ -761,6 +695,92 @@ export class Map {
           },
         );
       }
+    }
+  }
+
+  private async fetch() {
+    const useBundle = !!this.defaultOptions.bundleUrl;
+
+    const features = useBundle
+      ? await getFeaturesBundle({
+          initPolygons: this.defaultOptions.initPolygons,
+          polygonLayers: this.defaultOptions.polygonLayers.map((item) => {
+            item.autoAssign = item.autoAssign ?? true;
+            item.initOnLevelchangers = item.initOnLevelchangers ?? false;
+            return item;
+          }),
+          autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
+          hiddenAmenities: this.defaultOptions.hiddenAmenities,
+          useTimerangeData: this.defaultOptions.useTimerangeData,
+          filter: this.defaultOptions.defaultFilter,
+          bundleUrl: this.defaultOptions.bundleUrl,
+          apiPaginate: this.defaultOptions.apiPaginate,
+        }).catch((error) => this.handleControllerError(error))
+      : await getFeatures({
+          initPolygons: this.defaultOptions.initPolygons,
+          polygonLayers: this.defaultOptions.polygonLayers.map((item) => {
+            item.autoAssign = item.autoAssign ?? true;
+            item.initOnLevelchangers = item.initOnLevelchangers ?? false;
+            return item;
+          }),
+          autoLabelLines: this.defaultOptions.polygonsOptions.autoLabelLines,
+          hiddenAmenities: this.defaultOptions.hiddenAmenities,
+          useTimerangeData: this.defaultOptions.useTimerangeData,
+          filter: this.defaultOptions.defaultFilter,
+          featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
+          localSources: this.defaultOptions.localSources,
+          apiPaginate: this.defaultOptions.apiPaginate,
+        }).catch((error) => this.handleControllerError(error));
+    const amenities = useBundle
+      ? await getAmenitiesBundle({
+          bundleUrl: this.defaultOptions.bundleUrl,
+          amenityIdProperty: this.defaultOptions.amenityIdProperty,
+        }).catch((error) => this.handleControllerError(error))
+      : await getAmenities({
+          amenityIdProperty: this.defaultOptions.amenityIdProperty,
+          localSources: this.defaultOptions.localSources,
+        }).catch((error) => this.handleControllerError(error));
+    const kiosks = useBundle
+      ? await getKiosksBundle({ bundleUrl: this.defaultOptions.bundleUrl }).catch((error) =>
+          this.handleControllerError(error),
+        )
+      : await getKiosks().catch((error) => this.handleControllerError(error));
+    const ads = useBundle
+      ? await getAdsBundle({ bundleUrl: this.defaultOptions.bundleUrl }).catch((error) =>
+          this.handleControllerError(error),
+        )
+      : await getAds().catch((error) => this.handleControllerError(error));
+
+    if (features && kiosks && ads) {
+      const optimizedFeatures = new FeatureCollection({ features: optimizeFeatures(features.features) });
+      const levelChangers = features.features.filter(
+        (f) =>
+          f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
+      );
+      if (this.defaultOptions.landmarkTBTNavigation) {
+        this.routingSource.setLandmarkTBT(this.defaultOptions.landmarkTBTNavigation);
+        this.routingSource.setPois(
+          optimizedFeatures.features.filter(
+            (f) => f.geometry.coordinates && f.geometry.type === 'Point' && f.properties.type === 'poi',
+          ),
+        );
+        this.routingSource.setLevelChangers(levelChangers);
+      }
+      this.geojsonSource.fetch(optimizedFeatures);
+      this.routingSource.routing.setData(new FeatureCollection(features));
+      this.state = {
+        ...this.state,
+        initializing: false,
+        kiosks: kiosks.data,
+        amenities,
+        features,
+        ads: ads.data,
+        optimizedFeatures,
+        allFeatures: new FeatureCollection(features),
+        levelChangers: new FeatureCollection({ features: levelChangers }),
+        zoom: this.defaultOptions.zoomLevel ? this.defaultOptions.zoomLevel : this.defaultOptions.mapboxOptions?.zoom,
+      };
+      this.onDataFetchedListener.next(true);
     }
   }
 
