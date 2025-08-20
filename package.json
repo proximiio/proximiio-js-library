@@ -55,6 +55,7 @@
     "@turf/line-intersect": "^6.5.0",
     "@turf/line-offset": "^6.5.0",
     "@turf/line-split": "^6.5.0",
+    "@turf/line-slice": "^6.5.0",
     "@turf/midpoint": "^6.5.0",
     "@turf/nearest-point": "^6.5.0",
     "@turf/nearest-point-to-line": "^6.5.0",

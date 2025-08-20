@@ -54,6 +54,7 @@ import length from '@turf/length';
 import center from '@turf/center';
 import along from '@turf/along';
 import lineSplit from '@turf/line-split';
+import lineSlice from '@turf/line-slice';
 import nearestPoint from '@turf/nearest-point';
 import turfBearing from '@turf/bearing';
 import circle from '@turf/circle';
@@ -3701,6 +3702,7 @@ export class Map {
     this.removeRouteMarkers();
     this.removeStopMarkers();
     this.removeStartPointOnMap();
+    this.cancelCustomPosition();
     this.routingSource.cancel();
     this.onRouteCancelListener.next('route cancelled');
     this.currentStep = 0;
@@ -4989,28 +4991,14 @@ export class Map {
 
       const customPositionPoint = point(this.customPosition.coordinates);
       const snappedPoint = nearestPointOnLine(routeLine, customPositionPoint);
-      const snappedPointOnVertex = [...new Set(routePoints)].findIndex(
-        (i) => i[0] === snappedPoint.geometry.coordinates[0] && i[1] === snappedPoint.geometry.coordinates[1],
-      );
-      const targetCoord = snappedPoint.geometry.coordinates;
-      const splitterSize = 0.0000002; // small enough not to mess with precision
-      // Create a square polygon around the target point
-      const splitter = turfPolygon([
-        [
-          [targetCoord[0] - splitterSize, targetCoord[1] - splitterSize],
-          [targetCoord[0] + splitterSize, targetCoord[1] - splitterSize],
-          [targetCoord[0] + splitterSize, targetCoord[1] + splitterSize],
-          [targetCoord[0] - splitterSize, targetCoord[1] + splitterSize],
-          [targetCoord[0] - splitterSize, targetCoord[1] - splitterSize], // close the polygon
-        ],
-      ]);
 
-      const routeLineUntilPosition = lineSplit(
+      const routeLineUntilPosition = lineSlice(
+        routePoints[0],
+        snappedPoint,
         lineString([...new Set(routePoints)], {
           level,
         }),
-        snappedPointOnVertex >= 0 ? splitter : snappedPoint,
-      ).features[0] as any;
+      );
 
       if (this.defaultOptions.routeAnimation.showTailSegment) {
         routeLineUntilPosition.geometry.coordinates.push(this.customPosition.coordinates);
