@@ -9,7 +9,7 @@ import {
 import Feature, { FeatureCollection } from '../models/feature';
 import { AmenityModel } from '../models/amenity';
 import { globalState, PolygonLayer } from '../components/map/main';
-import { FeatureCollection as FCModel, feature, Feature as FModel } from '@turf/helpers';
+import { FeatureCollection as FCModel, Feature as FModel } from '@turf/helpers';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import pointOnFeature from '@turf/point-on-feature';
 import length from '@turf/length';
