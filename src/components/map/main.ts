@@ -272,6 +272,9 @@ export interface Options {
     arrivalThreshold?: number;
     minDistanceToChange?: number;
     aggregatePositionsLimit?: number;
+    animationMinDuration?: number;
+    animationMaxDuration?: number;
+    animationDurationPerMeter?: number;
   };
 }
 
@@ -482,6 +485,9 @@ export class Map {
       arrivalThreshold: 3,
       minDistanceToChange: 2,
       aggregatePositionsLimit: 1,
+      animationMinDuration: 300,
+      animationMaxDuration: 3000,
+      animationDurationPerMeter: 50,
     },
     // poiIconSize: ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.5],
   };
@@ -4938,9 +4944,9 @@ export class Map {
 
     // Distance-based duration
     const distMeters = distance(from, to) * 1000;
-    const minDuration = 300; // ms
-    const durationPerMeter = 50; // ms per meter
-    const maxDuration = 3000; // ms
+    const minDuration = this.defaultOptions.customPositionOptions.animationMinDuration;
+    const durationPerMeter = this.defaultOptions.customPositionOptions.animationDurationPerMeter;
+    const maxDuration = this.defaultOptions.customPositionOptions.animationMaxDuration;
     this.customPostionAnimationDuration = Math.min(
       maxDuration,
       Math.max(minDuration, minDuration + distMeters * durationPerMeter),
