@@ -684,6 +684,10 @@ export class Map {
         style: this.state.style,
       });
 
+      if (this.defaultOptions.useRasterTiles) {
+        this.initRasterTiles();
+      }
+
       this.map.on('load', async (e) => {
         this.onMapLoadListener.next(true);
         this.map.setCenter(centerVar);
@@ -878,9 +882,6 @@ export class Map {
         this.defaultOptions.defaultFloorLevel,
       );
 
-      if (this.defaultOptions.useRasterTiles) {
-        this.initRasterTiles();
-      }
       if (this.defaultOptions.initPolygons) {
         this.initPolygons();
       }
