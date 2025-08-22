@@ -272,6 +272,7 @@ export interface Options {
     arrivalThreshold?: number;
     minDistanceToChange?: number;
     aggregatePositionsLimit?: number;
+    aggregationResult?: 'center' | 'nearest';
     animationMinDuration?: number;
     animationMaxDuration?: number;
     animationDurationPerMeter?: number;
@@ -485,6 +486,7 @@ export class Map {
       arrivalThreshold: 3,
       minDistanceToChange: 2,
       aggregatePositionsLimit: 1,
+      aggregationResult: 'center',
       animationMinDuration: 300,
       animationMaxDuration: 3000,
       animationDurationPerMeter: 50,
@@ -6779,9 +6781,22 @@ export class Map {
     this.positionsList.push(coordinates);
     if (this.positionsList.length >= this.defaultOptions.customPositionOptions.aggregatePositionsLimit) {
       const positionPoints = points(this.positionsList);
-      const centerOfPoints = center(positionPoints);
+      let resultPoint = point(this.positionsList[this.positionsList.length - 1]);
+
+      if (
+        this.defaultOptions.customPositionOptions.aggregationResult === 'center' ||
+        (this.defaultOptions.customPositionOptions.aggregationResult === 'nearest' && !this.customPosition)
+      ) {
+        resultPoint = center(positionPoints);
+      }
+
+      if (this.defaultOptions.customPositionOptions.aggregationResult === 'nearest' && this.customPosition) {
+        resultPoint = nearestPoint(this.customPosition.coordinates, positionPoints);
+        console.log('pick the nearest');
+      }
+
       this.onSetCustomPosition({
-        coordinates: centerOfPoints.geometry.coordinates as [number, number],
+        coordinates: resultPoint.geometry.coordinates as [number, number],
         level,
         bearing,
         recenter,
