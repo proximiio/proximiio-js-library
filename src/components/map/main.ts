@@ -210,6 +210,7 @@ export interface Options {
     cityRouteMaxDuration?: number;
     autoStart?: boolean;
     autoContinue?: boolean;
+    autoContinueCityRoute?: boolean;
     cityRouteZoom?: number;
     mallRouteZoom?: number;
     mallEntryLevel?: number;
@@ -450,6 +451,7 @@ export class Map {
       cityRouteMaxDuration: 5,
       autoStart: true,
       autoContinue: true,
+      autoContinueCityRoute: false,
       cityRouteZoom: 15,
       mallRouteZoom: 18,
       mallEntryLevel: 0,
@@ -4043,12 +4045,18 @@ export class Map {
           if (t >= 1) {
             if (!this.useCustomPosition) {
               // Stop the animation if we reached the end
-              if (this.defaultOptions.routeAnimation.looping && route.properties.source === 'mallRoute') {
+              if (
+                this.defaultOptions.routeAnimation.looping &&
+                (route.properties.source === 'mallRoute' || this.defaultOptions.routeAnimation.autoContinueCityRoute)
+              ) {
                 this.animationTimeout = setTimeout(() => {
                   this.restartRouteAnimation({ delay: 0, recenter: true });
                 }, 2000);
               }
-              if (this.defaultOptions.autoLevelChange && route.properties.source === 'mallRoute') {
+              if (
+                this.defaultOptions.autoLevelChange &&
+                (route.properties.source === 'mallRoute' || this.defaultOptions.routeAnimation.autoContinueCityRoute)
+              ) {
                 if (this.routingSource.route && Object.keys(this.routingSource.route).length - 1 === this.currentStep) {
                   if (this.routingSource.stops && this.routingSource.stops?.length !== this.currentStop) {
                     this.setStop('next');
@@ -4056,7 +4064,10 @@ export class Map {
                   return;
                 }
                 setTimeout(() => {
-                  if (this.defaultOptions.routeAnimation.autoContinue) {
+                  if (
+                    this.defaultOptions.routeAnimation.autoContinue &&
+                    this.defaultOptions.routeAnimation.autoContinueCityRoute
+                  ) {
                     this.setNavStep('next');
                   }
                   if (
@@ -6792,7 +6803,6 @@ export class Map {
 
       if (this.defaultOptions.customPositionOptions.aggregationResult === 'nearest' && this.customPosition) {
         resultPoint = nearestPoint(this.customPosition.coordinates, positionPoints);
-        console.log('pick the nearest');
       }
 
       this.onSetCustomPosition({
