@@ -123,11 +123,27 @@ export default class RoutingSource extends DataSource {
         route = this.routing.route({ start, finish, stops, landmarkTBT: this.landmarkTBT });
       } else if (this.navigationType === 'combined' && connectingPoint) {
         if (startAtMall) {
+          const entranceId = start.properties.metadata?.entrance;
+          const entranceFeature = this.pois?.find((f) => f.id === entranceId || f.properties.id === entranceId);
           cityRoute = await this.routing.cityRoute({ start: connectingPoint, finish, language: this.language });
-          mallRoute = this.routing.route({ start, finish: connectingPoint, stops, landmarkTBT: this.landmarkTBT });
+          mallRoute = this.routing.route({
+            start,
+            finish: connectingPoint,
+            stops,
+            landmarkTBT: this.landmarkTBT,
+            priorityEntrance: entranceFeature,
+          });
         } else {
+          const entranceId = finish.properties.metadata?.entrance;
+          const entranceFeature = this.pois?.find((f) => f.id === entranceId || f.properties.id === entranceId);
           cityRoute = await this.routing.cityRoute({ start, finish: connectingPoint, language: this.language });
-          mallRoute = this.routing.route({ start: connectingPoint, finish, stops, landmarkTBT: this.landmarkTBT });
+          mallRoute = this.routing.route({
+            start: connectingPoint,
+            finish,
+            stops,
+            landmarkTBT: this.landmarkTBT,
+            priorityEntrance: entranceFeature,
+          });
         }
       }
 
