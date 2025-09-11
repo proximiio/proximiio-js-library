@@ -64,9 +64,15 @@ declare const _default: {
         getAds: () => Promise<{
             data: import("./models/ad").AdModel[];
         }>;
+        getAdsBundle: ({ bundleUrl, }: {
+            bundleUrl: string;
+        }) => Promise<{
+            data: import("./models/ad").AdModel[];
+            total: number;
+        }>;
     };
     Geo: {
-        getFeatures: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, }: {
+        getFeatures: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, apiPaginate, }: {
             initPolygons?: boolean;
             polygonLayers: import("./components/map/main").PolygonLayer[];
             autoLabelLines?: boolean;
@@ -81,6 +87,7 @@ declare const _default: {
             localSources?: {
                 features?: import("./models/feature").FeatureCollection;
             };
+            apiPaginate?: boolean;
         }) => Promise<import("./models/feature").FeatureCollection>;
         addFeatures: (featureCollection: import("@turf/helpers").FeatureCollection<import("@turf/helpers").Geometry | import("@turf/helpers").GeometryCollection, {
             [name: string]: any;

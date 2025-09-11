@@ -10,6 +10,7 @@ import { MapboxOptions } from '../../models/mapbox-options';
 import PersonModel from '../../models/person';
 import { WayfindingConfigModel } from '../../models/wayfinding';
 import { KioskModel } from '../../models/kiosk';
+import { AdModel } from '../../models/ad';
 export interface State {
     readonly initializing: boolean;
     readonly floor: FloorModel;
@@ -33,6 +34,7 @@ export interface State {
     readonly textNavigation: any;
     readonly persons: PersonModel[];
     readonly user: any;
+    readonly ads: AdModel[];
 }
 export interface PolygonOptions {
     defaultPolygonColor?: string;
@@ -144,6 +146,7 @@ export interface Options {
         cityRouteMaxDuration?: number;
         autoStart?: boolean;
         autoContinue?: boolean;
+        autoContinueCityRoute?: boolean;
         cityRouteZoom?: number;
         mallRouteZoom?: number;
         mallEntryLevel?: number;
@@ -200,6 +203,17 @@ export interface Options {
     autoRestartAnimationAfterFloorChange?: boolean;
     poiIconSize?: (string | number | string[])[] | number | any;
     disableUnavailablePois?: boolean;
+    apiPaginate?: boolean;
+    bundlePaginate?: boolean;
+    customPositionOptions?: {
+        arrivalThreshold?: number;
+        minDistanceToChange?: number;
+        aggregatePositionsLimit?: number;
+        aggregationResult?: 'center' | 'nearest';
+        animationMinDuration?: number;
+        animationMaxDuration?: number;
+        animationDurationPerMeter?: number;
+    };
 }
 export interface PaddingOptions {
     bottom: number;
@@ -234,6 +248,8 @@ export declare class Map {
     private onPersonUpdateListener;
     private onStepSetListener;
     private onStopSetListener;
+    private onPositionSetListener;
+    private onArrivalListener;
     private defaultOptions;
     private routeFactory;
     private startPoint?;
@@ -262,6 +278,7 @@ export declare class Map {
     constructor(options: Options);
     private initialize;
     private cancelObservers;
+    private prepareMap;
     private fetch;
     private onMapReady;
     private onRefetch;
@@ -359,12 +376,14 @@ export declare class Map {
     private previousBearing;
     private floorChangeBuffer;
     private lastFloorChangeTimestamp;
+    private customPositionBearing;
     private onSetCustomPosition;
     private onCancelCustomPosition;
     private customPositionAnimationFrameId;
     private customPostionAnimationStartTime;
     private customPostionAnimationDuration;
     private animateCustomPosition;
+    private handleCustomRouteProgress;
     /**
      *  @memberof Map
      *  @name getMapboxInstance
@@ -433,11 +452,13 @@ export declare class Map {
      *  @returns returns map failed listener
      *  @example
      *  const map = new Proximiio.Map();
-     *  map.getMapFailedListener().subscribe(failed => {
-     *    console.log('map failed', failed);
+     *  map.getMapFailedListener().subscribe(error => {
+     *    console.log('map failed', error.message);
      *  });
      */
-    getMapFailedListener(): CustomSubject<boolean>;
+    getMapFailedListener(): CustomSubject<{
+        message: string;
+    }>;
     /**
      * This method will set an active place, load floors etc. Have to be called after map is ready, see getMapReadyListener.
      *  @memberof Map
@@ -1421,12 +1442,16 @@ export declare class Map {
      *    map.onSetCustomPosition({ coordinates: [17.833135351538658, 48.60678469647394], level: 0});
      *  });
      */
-    setCustomPosition({ coordinates, level, recenter, iconSize, arrowSize, }: {
+    private positionsList;
+    setCustomPosition({ coordinates, level, bearing, recenter, iconSize, directionIconSize, followBearing, followRouteBearing, }: {
         coordinates: [number, number];
         level: number;
+        bearing?: number;
         recenter?: boolean;
         iconSize?: number;
-        arrowSize?: number;
+        directionIconSize?: number;
+        followBearing?: boolean;
+        followRouteBearing?: boolean;
     }): void;
     /**
      * Method for setting custom position
@@ -1455,4 +1480,29 @@ export declare class Map {
      *  });
      */
     cancelCustomPosition(): void;
+    /**
+     *  @memberof Map
+     *  @name getPositionSetListener
+     *  @returns returns position set listener
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getPositionSetListener().subscribe({coordinates, level} => {
+     *    console.log('custom position set', coordinates, level);
+     *  });
+     */
+    getPositionSetListener(): CustomSubject<{
+        coordinates: number[];
+        level: number;
+    }>;
+    /**
+     *  @memberof Map
+     *  @name getArrivalListener
+     *  @returns returns event when custom position reach the destination
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getArrivalListener().subscribe(() => {
+     *    console.log('you have reached your destination');
+     *  });
+     */
+    getArrivalListener(): CustomSubject<boolean>;
 }

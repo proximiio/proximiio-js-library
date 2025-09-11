@@ -3,7 +3,7 @@ import { AmenityModel } from '../models/amenity';
 import { PolygonLayer } from '../components/map/main';
 import { FeatureCollection as FCModel, Feature as FModel } from '@turf/helpers';
 import { LngLatBoundsLike } from 'maplibre-gl';
-export declare const getFeatures: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, }: {
+export declare const getFeatures: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, apiPaginate, }: {
     initPolygons?: boolean;
     polygonLayers: PolygonLayer[];
     autoLabelLines?: boolean;
@@ -18,8 +18,9 @@ export declare const getFeatures: ({ initPolygons, polygonLayers, autoLabelLines
     localSources?: {
         features?: FeatureCollection;
     };
+    apiPaginate?: boolean;
 }) => Promise<FeatureCollection>;
-export declare const getFeaturesBundle: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, bundleUrl, }: {
+export declare const getFeaturesBundle: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, bundleUrl, bundlePaginate, }: {
     initPolygons?: boolean;
     polygonLayers: PolygonLayer[];
     autoLabelLines?: boolean;
@@ -31,6 +32,7 @@ export declare const getFeaturesBundle: ({ initPolygons, polygonLayers, autoLabe
         hideIconOnly?: boolean;
     };
     bundleUrl: string;
+    bundlePaginate?: boolean;
 }) => Promise<FeatureCollection>;
 export declare const getAmenities: ({ amenityIdProperty, localSources, }: {
     amenityIdProperty?: string;
@@ -52,7 +54,7 @@ export declare const getFeatureByIdBundle: ({ bundleUrl, featureId, }: {
     featureId: string;
 }) => Promise<Feature>;
 declare const _default: {
-    getFeatures: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, }: {
+    getFeatures: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, apiPaginate, }: {
         initPolygons?: boolean;
         polygonLayers: PolygonLayer[];
         autoLabelLines?: boolean;
@@ -67,6 +69,7 @@ declare const _default: {
         localSources?: {
             features?: FeatureCollection;
         };
+        apiPaginate?: boolean;
     }) => Promise<FeatureCollection>;
     addFeatures: (featureCollection: FCModel<import("@turf/helpers").Geometry | import("@turf/helpers").GeometryCollection, {
         [name: string]: any;

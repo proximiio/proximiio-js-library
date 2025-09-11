@@ -9,11 +9,12 @@ export default class Routing {
     setData(collection: FeatureCollection): void;
     toggleOnlyAccessible(onlyAccessible: any): void;
     setConfig(config: WayfindingConfigModel): void;
-    route({ start, finish, stops, landmarkTBT, }: {
+    route({ start, finish, stops, landmarkTBT, priorityEntrance, }: {
         start: Feature;
         finish?: Feature;
         stops?: Feature[];
         landmarkTBT?: boolean;
+        priorityEntrance?: Feature;
     }): {
         paths: any;
         points: any;

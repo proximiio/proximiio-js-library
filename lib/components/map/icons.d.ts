@@ -39,3 +39,21 @@ export declare const createHeadingArrow: ({ arrowSize, rgbValues }: {
     onAdd(map: any, gl: any): void;
     render(gl: WebGLRenderingContext, matrix: number[]): boolean;
 };
+export declare const staticDot: ({ rgbValues }: {
+    rgbValues?: string;
+}) => {
+    width: number;
+    height: number;
+    data: Uint8Array;
+    onAdd(map: any, gl: any): void;
+    render(gl: any, matrix: any): boolean;
+};
+export declare const headingArc: ({ rgbValues }: {
+    rgbValues?: string;
+}) => {
+    width: number;
+    height: number;
+    data: Uint8Array;
+    onAdd(map: any, gl: any): void;
+    render(gl: any, matrix: any): boolean;
+};
