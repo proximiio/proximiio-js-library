@@ -24,6 +24,12 @@ const compareResults = (pois: SortedPoiItemModel[], visionTextResults: string[])
       });
     });
 
+    visionTextResults.forEach((ocrWord) => {
+      if (poi.id === ocrWord || poi.properties.id === ocrWord) {
+        totalScore += 99;
+      }
+    });
+
     // Assign the total score to the store object
     poi.score = totalScore;
   });

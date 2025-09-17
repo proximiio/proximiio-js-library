@@ -1,3 +1,4 @@
+import jsQR, { QRCode } from 'jsqr';
 import { InjectCSS, calculateDimensions } from '../../common';
 import { SortedPoiItemModel } from '../../models/sortedPoiItemModel';
 import { compareResults } from './comparator';
@@ -466,7 +467,7 @@ class ImageDetection {
       spinner.style.display = 'none';
     };
 
-    const analyzeScreenshot = async (imageSrc: string) => {
+    const analyzeScreenshot = async ({ imageSrc, qrCode }: { imageSrc: string; qrCode?: QRCode }) => {
       output = [];
       try {
         const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${options.gVisionApiKey}`, {
@@ -516,6 +517,10 @@ class ImageDetection {
           output.push(...data.responses[0].logoAnnotations.map((i) => i.description));
         }
 
+        if (qrCode) {
+          output.push(qrCode.data);
+        }
+
         if (output.length > 0) {
           const comparationResults = compareResults(options.pois, output);
           comparationResults.sort((a, b) => b.score - a.score);
@@ -544,10 +549,15 @@ class ImageDetection {
     const doScreenshot = async () => {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const qrCode = jsQR(imageData.data, canvas.width, canvas.height);
+
       const imageSrc = canvas.toDataURL('image/jpeg');
       displayLoading();
-      await analyzeScreenshot(imageSrc);
+      await analyzeScreenshot({ imageSrc, qrCode });
       screenshot.src = imageSrc;
       stopStream();
     };
