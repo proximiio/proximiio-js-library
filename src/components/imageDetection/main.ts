@@ -40,6 +40,7 @@ class ImageDetection {
     let selectedOutput: SortedPoiItemModel;
     let streamStarted = false;
     let stream: MediaStream;
+    let qrResultOutput = null;
 
     const css = `
       :root {
@@ -81,6 +82,12 @@ class ImageDetection {
       #close-button:dir(rtl) {
         left: 20px;
       }
+
+      #gvision-capture-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
       
       #gvision-capture-container.hidden {
         display: none;
@@ -103,6 +110,22 @@ class ImageDetection {
       
       #gvision-capture-container > canvas {
         display: none;
+      }
+      
+      #qr-results {
+        position: fixed;
+        z-index: 1000;
+        top: 80%;
+        background-color: hsl(var(--main-color));
+        border: 0;
+        color: white;
+        padding: .25rem 1rem;
+        border-radius: 100px;
+        font-size: 12px;
+        max-width: 180px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
       }
       
       #capture-button {
@@ -337,7 +360,15 @@ class ImageDetection {
     videoContainer.appendChild(video);
 
     const canvas = document.createElement('canvas');
+    videoContainer.appendChild(canvas);
+
     container.appendChild(videoContainer);
+
+    const qrResultContainer = document.createElement('div');
+    qrResultContainer.id = 'qr-results';
+    qrResultContainer.innerText = 'scanning...';
+    qrResultContainer.hidden = true;
+    videoContainer.appendChild(qrResultContainer);
 
     const captureButton = document.createElement('button');
     captureButton.id = 'capture-button';
@@ -467,7 +498,7 @@ class ImageDetection {
       spinner.style.display = 'none';
     };
 
-    const analyzeScreenshot = async ({ imageSrc, qrCode }: { imageSrc: string; qrCode?: QRCode }) => {
+    const analyzeScreenshot = async ({ imageSrc }: { imageSrc: string }) => {
       output = [];
       try {
         const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${options.gVisionApiKey}`, {
@@ -517,8 +548,8 @@ class ImageDetection {
           output.push(...data.responses[0].logoAnnotations.map((i) => i.description));
         }
 
-        if (qrCode) {
-          output.push(qrCode.data);
+        if (qrResultOutput) {
+          output.push(qrResultOutput);
         }
 
         if (output.length > 0) {
@@ -552,22 +583,64 @@ class ImageDetection {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(video, 0, 0);
 
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const qrCode = jsQR(imageData.data, canvas.width, canvas.height);
+      displayLoading();
 
       const imageSrc = canvas.toDataURL('image/jpeg');
-      displayLoading();
-      await analyzeScreenshot({ imageSrc, qrCode });
+      await analyzeScreenshot({ imageSrc });
       screenshot.src = imageSrc;
+
       stopStream();
+      cancelAnimationFrame(animationFrameId);
     };
 
     captureButton.onclick = doScreenshot;
 
+    const handleQrResult = async () => {
+      displayLoading();
+      if (qrResultOutput) {
+        output.push(qrResultOutput);
+      }
+
+      if (output.length > 0) {
+        const comparationResults = compareResults(options.pois, output);
+        comparationResults.sort((a, b) => b.score - a.score);
+        output = comparationResults.slice(0, options.returnResults ? options.returnResults : 3);
+        output = output.filter((i) => i.score > 0);
+      }
+      showResults();
+      stopStream();
+      cancelAnimationFrame(animationFrameId);
+    };
+    qrResultContainer.onclick = handleQrResult;
+
+    let animationFrameId;
     const handleStream = () => {
       video.srcObject = stream;
       streamStarted = true;
+      animationFrameId = requestAnimationFrame(tick);
     };
+
+    function tick() {
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: 'dontInvert',
+        });
+        if (code) {
+          qrResultOutput = code.data;
+          qrResultContainer.innerText = qrResultOutput;
+          qrResultContainer.hidden = false;
+        } else {
+          animationFrameId = requestAnimationFrame(tick);
+        }
+      } else {
+        animationFrameId = requestAnimationFrame(tick);
+      }
+    }
 
     const startStream = async (constraints: MediaStreamConstraints) => {
       stream = await navigator.mediaDevices.getUserMedia(constraints);

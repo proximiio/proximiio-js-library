@@ -13,6 +13,7 @@ export default class Routing {
   wayfinding: any;
   forceFloorLevel: number;
   routeWithDetails: boolean;
+  config: WayfindingConfigModel;
 
   constructor() {
     this.data = new FeatureCollection({});
@@ -59,6 +60,7 @@ export default class Routing {
   }
 
   setConfig(config: WayfindingConfigModel) {
+    this.config = config;
     this.wayfinding.setConfiguration(config);
   }
 
@@ -106,8 +108,28 @@ export default class Routing {
     } else {
       if (this.routeWithDetails) {
         if (priorityEntrance) {
-          const res1 = this.wayfinding.runAStarWithDetails(start, priorityEntrance);
-          const res2 = this.wayfinding.runAStarWithDetails(priorityEntrance, finish);
+          let res1 = this.wayfinding.runAStarWithDetails(start, priorityEntrance);
+          if (!res1.path) {
+            this.wayfinding.setConfiguration({ avoidElevators: false, avoidRamps: false });
+            res1 = this.wayfinding.runAStarWithDetails(start, priorityEntrance);
+            this.wayfinding.setConfiguration({
+              avoidElevators: this.config.avoidElevators,
+              avoidRamps: this.config.avoidRamps,
+            });
+          }
+          let res2 = this.wayfinding.runAStarWithDetails(priorityEntrance, finish);
+          if (!res2.path) {
+            this.wayfinding.setConfiguration({ avoidElevators: false, avoidRamps: false });
+            res2 = this.wayfinding.runAStarWithDetails(priorityEntrance, finish);
+            this.wayfinding.setConfiguration({
+              avoidElevators: this.config.avoidElevators,
+              avoidRamps: this.config.avoidRamps,
+            });
+          }
+
+          if (!res1.path || !res2.path) {
+            return null;
+          }
 
           res1.path.splice(res1.path.length - 1, 1);
           res2.path.splice(0, 2);
@@ -133,8 +155,28 @@ export default class Routing {
         }
       } else {
         if (priorityEntrance) {
-          const res1 = this.wayfinding.runAStar(start, priorityEntrance);
-          const res2 = this.wayfinding.runAStar(priorityEntrance, finish);
+          let res1 = this.wayfinding.runAStar(start, priorityEntrance);
+          if (!res1.path) {
+            this.wayfinding.setConfiguration({ avoidElevators: false, avoidRamps: false });
+            res1 = this.wayfinding.runAStar(start, priorityEntrance);
+            this.wayfinding.setConfiguration({
+              avoidElevators: this.config.avoidElevators,
+              avoidRamps: this.config.avoidRamps,
+            });
+          }
+          let res2 = this.wayfinding.runAStar(priorityEntrance, finish);
+          if (!res2.path) {
+            this.wayfinding.setConfiguration({ avoidElevators: false, avoidRamps: false });
+            res2 = this.wayfinding.runAStar(priorityEntrance, finish);
+            this.wayfinding.setConfiguration({
+              avoidElevators: this.config.avoidElevators,
+              avoidRamps: this.config.avoidRamps,
+            });
+          }
+
+          if (!res1.path || !res2.path) {
+            return null;
+          }
 
           res1.path.splice(res1.path.length - 1, 1);
           res2.path.splice(0, 2);
