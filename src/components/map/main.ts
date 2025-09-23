@@ -784,6 +784,7 @@ export class Map {
       }
       this.geojsonSource.fetch(optimizedFeatures);
       this.routingSource.routing.setData(new FeatureCollection(features));
+      this.prepareStyle(this.state.style);
       this.state = {
         ...this.state,
         initializing: false,
