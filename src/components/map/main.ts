@@ -277,6 +277,9 @@ export interface Options {
     animationMinDuration?: number;
     animationMaxDuration?: number;
     animationDurationPerMeter?: number;
+    aggregateFloorChange?: boolean;
+    aggregateFloorChangeLimit?: number;
+    floorChangeCooldown?: number;
   };
 }
 
@@ -492,6 +495,9 @@ export class Map {
       animationMinDuration: 300,
       animationMaxDuration: 3000,
       animationDurationPerMeter: 50,
+      aggregateFloorChange: true,
+      aggregateFloorChangeLimit: 3,
+      floorChangeCooldown: 5000,
     },
     // poiIconSize: ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.5],
   };
@@ -4715,14 +4721,20 @@ export class Map {
     const mostFrequentLevel = getMostFrequent(this.floorChangeBuffer);
     const count = this.floorChangeBuffer.filter((lvl) => lvl === mostFrequentLevel).length;
 
-    const FLOOR_CONFIRMATION_THRESHOLD = 3;
-    const FLOOR_CHANGE_COOLDOWN_MS = 5000;
+    const FLOOR_CONFIRMATION_THRESHOLD = this.defaultOptions.customPositionOptions.aggregateFloorChangeLimit;
+    const FLOOR_CHANGE_COOLDOWN_MS = this.defaultOptions.customPositionOptions.floorChangeCooldown;
 
-    const shouldSwitchFloor =
-      mostFrequentLevel !== this.state.floor.level &&
-      count >= FLOOR_CONFIRMATION_THRESHOLD &&
-      now - this.lastFloorChangeTimestamp > FLOOR_CHANGE_COOLDOWN_MS &&
-      recenter;
+    let shouldSwitchFloor =
+      level !== this.state.floor.level && now - this.lastFloorChangeTimestamp > FLOOR_CHANGE_COOLDOWN_MS;
+    // && recenter;
+
+    if (this.defaultOptions.customPositionOptions.aggregateFloorChange) {
+      shouldSwitchFloor =
+        mostFrequentLevel !== this.state.floor.level &&
+        count >= FLOOR_CONFIRMATION_THRESHOLD &&
+        now - this.lastFloorChangeTimestamp > FLOOR_CHANGE_COOLDOWN_MS;
+      // && recenter;
+    }
 
     if (shouldSwitchFloor) {
       this.setFloorByLevel(mostFrequentLevel);
