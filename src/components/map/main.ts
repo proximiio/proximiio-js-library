@@ -4072,8 +4072,9 @@ export class Map {
                 }
                 setTimeout(() => {
                   if (
-                    this.defaultOptions.routeAnimation.autoContinue &&
-                    this.defaultOptions.routeAnimation.autoContinueCityRoute
+                    (this.defaultOptions.routeAnimation.autoContinue && route.properties.source === 'mallRoute') ||
+                    (this.defaultOptions.routeAnimation.autoContinueCityRoute &&
+                      route.properties.source === 'cityRoute')
                   ) {
                     this.setNavStep('next');
                   }
