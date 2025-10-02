@@ -6894,6 +6894,11 @@ export class Map {
   public getArrivalListener() {
     return this.onArrivalListener;
   }
+
+  public initGpsMode() {
+    this.defaultOptions.useGpsLocation = true;
+    this.initGeoLocation();
+  }
 }
 /* TODO
  * - check clusters
