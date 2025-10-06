@@ -364,7 +364,7 @@ export default class Routing {
       const paths = {};
       for (const [index, val] of route.legs[0].steps.entries()) {
         paths[`path-part-${index}`] = new Feature(
-          lineString(val.geometry.coordinates, { level: start.properties.level, source: 'cityRoute' }),
+          lineString(val.geometry.coordinates, { level: start.properties.level, source: 'cityRoute', step: index }),
         );
       }
 
