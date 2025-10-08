@@ -461,7 +461,16 @@ const map = new Proximiio.Map({
 
    // Only features within defined bounds will be retrieved from API, optional
    // [[topleft lng, lat], [bottomright lng, lat]]
-   featuresMaxBounds: [[-73.9876, 40.7661], [-73.9397, 40.8002]]
+   featuresMaxBounds: [[-73.9876, 40.7661], [-73.9397, 40.8002]],
+
+   // If defined map data will be fetched from the defined url
+   bundleUrl: 'https://your-data.com/bundle',
+
+   // Map features will be fetched with parallel request queue from the bundle url
+   bundlePaginate: true,
+
+   // Map features will be fetched with parallel request queue from the api
+   apiPaginate: true
 });
 ```
 
