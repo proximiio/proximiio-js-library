@@ -242,6 +242,7 @@ export interface Options {
     autoTrigger?: boolean;
     autoLocate?: boolean;
     position?: 'top-right' | 'top-left' | 'bottom-left' | 'bottom-right';
+    zoom?: number;
   };
   language?: string;
   routeColor?: string;
@@ -476,6 +477,7 @@ export class Map {
       autoTrigger: true,
       autoLocate: true,
       position: 'top-right',
+      zoom: 17,
     },
     language: 'en',
     routeWithDetails: true,
@@ -1315,6 +1317,9 @@ export class Map {
         },
         showAccuracyCircle: false,
         trackUserLocation: true,
+        fitBoundsOptions: {
+          maxZoom: this.defaultOptions.geolocationControlOptions.zoom,
+        },
       });
 
       this.map.addControl(geolocate, this.defaultOptions.geolocationControlOptions.position);
@@ -1345,6 +1350,10 @@ export class Map {
         this.startPoint = point([data.coords.longitude, data.coords.latitude], {
           level: this.state.floor.level,
         }) as Feature;
+        this.map.flyTo({
+          center: [data.coords.longitude, data.coords.latitude],
+          zoom: this.defaultOptions.geolocationControlOptions.zoom,
+        });
       });
     }
   }
