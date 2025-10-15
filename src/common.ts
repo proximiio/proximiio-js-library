@@ -328,7 +328,10 @@ const isLevelChanger = (poi: Feature) => {
 };
 
 const pointInBounds = (point: [number, number], bounds: LngLatBoundsLike): boolean => {
-  let minLng: number, minLat: number, maxLng: number, maxLat: number;
+  let minLng: number;
+  let minLat: number;
+  let maxLng: number;
+  let maxLat: number;
 
   // Normalize bounds to [minLng, minLat, maxLng, maxLat]
   if (Array.isArray(bounds[0])) {
