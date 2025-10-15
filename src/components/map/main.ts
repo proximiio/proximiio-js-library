@@ -1368,8 +1368,9 @@ export class Map {
       });
 
       geolocate.on('trackuserlocationstart', (data) => {
-        const position = data.target._lastKnownPosition.coords;
+        const position = data.target?._lastKnownPosition?.coords;
         if (
+          position &&
           this.defaultOptions.geolocationControlOptions.maxBounds &&
           !pointInBounds(
             [position.longitude, position.latitude],
