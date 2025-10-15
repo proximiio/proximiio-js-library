@@ -4,6 +4,7 @@ import { lineString } from '@turf/helpers';
 import booleanWithin from '@turf/boolean-within';
 import Feature from './models/feature';
 import { POI_TYPE } from './models/poi_type';
+import { LngLatBounds, LngLatBoundsLike, LngLatLike } from 'maplibre-gl';
 
 export const axios = Axios.create({
   baseURL: 'https://api.proximi.fi',
@@ -326,6 +327,35 @@ const isLevelChanger = (poi: Feature) => {
   return isElevator(poi) || isEscalator(poi) || isStairCase(poi) || isRamp(poi);
 };
 
+const pointInBounds = (point: [number, number], bounds: LngLatBoundsLike): boolean => {
+  let minLng: number, minLat: number, maxLng: number, maxLat: number;
+
+  // Normalize bounds to [minLng, minLat, maxLng, maxLat]
+  if (Array.isArray(bounds[0])) {
+    // [[west, south], [east, north]]
+    const b = bounds as [LngLatLike, LngLatLike];
+    minLng = Math.min(b[0][0], b[1][0]);
+    minLat = Math.min(b[0][1], b[1][1]);
+    maxLng = Math.max(b[0][0], b[1][0]);
+    maxLat = Math.max(b[0][1], b[1][1]);
+  } else if (Array.isArray(bounds) && bounds.length === 4) {
+    // [west, south, east, north]
+    [minLng, minLat, maxLng, maxLat] = bounds as [number, number, number, number];
+  } else if (typeof (bounds as any).getWest === 'function') {
+    // Mapbox's LngLatBounds instance
+    const b = bounds as LngLatBounds;
+    minLng = b.getWest();
+    minLat = b.getSouth();
+    maxLng = b.getEast();
+    maxLat = b.getNorth();
+  } else {
+    throw new Error('Invalid bounds format');
+  }
+
+  const [lng, lat] = point;
+  return lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat;
+};
+
 export {
   calculateDimensions,
   convertToRTL,
@@ -335,4 +365,5 @@ export {
   validateLabelLine,
   optimizeFeatures,
   isLevelChanger,
+  pointInBounds,
 };

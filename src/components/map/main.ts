@@ -5,7 +5,7 @@ import maplibregl, {
   Popup,
   SymbolLayerSpecification,
 } from 'maplibre-gl';
-import { axios, optimizeFeatures } from '../../common';
+import { axios, optimizeFeatures, pointInBounds } from '../../common';
 import {
   addFeatures,
   deleteFeatures,
@@ -243,6 +243,7 @@ export interface Options {
     autoLocate?: boolean;
     position?: 'top-right' | 'top-left' | 'bottom-left' | 'bottom-right';
     zoom?: number;
+    maxBounds?: LngLatBoundsLike;
   };
   language?: string;
   routeColor?: string;
@@ -1347,6 +1348,16 @@ export class Map {
       }
 
       geolocate.on('geolocate', (data) => {
+        if (
+          this.defaultOptions.geolocationControlOptions.maxBounds &&
+          !pointInBounds(
+            [data.coords.longitude, data.coords.latitude],
+            this.defaultOptions.geolocationControlOptions.maxBounds,
+          )
+        ) {
+          this.map.stop();
+          return;
+        }
         this.startPoint = point([data.coords.longitude, data.coords.latitude], {
           level: this.state.floor.level,
         }) as Feature;
@@ -1354,6 +1365,20 @@ export class Map {
           center: [data.coords.longitude, data.coords.latitude],
           zoom: this.defaultOptions.geolocationControlOptions.zoom,
         });
+      });
+
+      geolocate.on('trackuserlocationstart', (data) => {
+        const position = data.target._lastKnownPosition.coords;
+        if (
+          this.defaultOptions.geolocationControlOptions.maxBounds &&
+          !pointInBounds(
+            [position.longitude, position.latitude],
+            this.defaultOptions.geolocationControlOptions.maxBounds,
+          )
+        ) {
+          this.map.stop();
+          return;
+        }
       });
     }
   }
