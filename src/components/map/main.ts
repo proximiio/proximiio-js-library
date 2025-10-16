@@ -2686,9 +2686,11 @@ export class Map {
   }
 
   private onSetFeatureFilter(query: string, inverted?: boolean) {
-    const features = this.state.allFeatures.features.filter(
-      (f) => f.properties.id === query || f.id === query || f.properties.title === query,
-    );
+    const features = this.state.allFeatures.features.filter((f) => {
+      const normalizedQuery = query.trim().toLowerCase();
+      const normalizedTitle = f.properties?.title?.trim().toLowerCase();
+      return f.properties.id === query || f.id === query || normalizedQuery === normalizedTitle;
+    });
     for (const f of features) {
       if (inverted && this.hiddenFeatures.findIndex((i) => i === f.properties.id) === -1) {
         this.hiddenFeatures.push(f.properties.id);
@@ -2700,9 +2702,11 @@ export class Map {
   }
 
   private onRemoveFeatureFilter(query: string, inverted?: boolean) {
-    const features = this.state.allFeatures.features.filter(
-      (f) => f.properties.id === query || f.id === query || f.properties.title === query,
-    );
+    const features = this.state.allFeatures.features.filter((f) => {
+      const normalizedQuery = query.trim().toLowerCase();
+      const normalizedTitle = f.properties?.title?.trim().toLowerCase();
+      return f.properties.id === query || f.id === query || normalizedQuery === normalizedTitle;
+    });
     for (const f of features) {
       if (inverted && this.hiddenFeatures.findIndex((i) => i === f.properties.id) !== -1) {
         this.hiddenFeatures.splice(
