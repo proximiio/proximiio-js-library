@@ -6934,6 +6934,15 @@ export class Map {
     this.defaultOptions.useGpsLocation = true;
     this.initGeoLocation();
   }
+
+  public enableRouteAnimation() {
+    this.defaultOptions.routeAnimation.enabled = true;
+    this.initAnimatedRoute();
+  }
+
+  public disableRouteAnimation() {
+    this.defaultOptions.routeAnimation.enabled = false;
+  }
 }
 /* TODO
  * - check clusters
