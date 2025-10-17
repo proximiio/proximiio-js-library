@@ -1664,39 +1664,45 @@ export class Map {
           this.state.style.removeLayer('proximiio-routing-line-remaining');
           this.state.style.addLayer(routingLineLayer, 'proximiio-paths');
         }
-        this.state.style.addSource('lineAlong', {
-          type: 'geojson',
-          data: {
-            type: 'FeatureCollection',
-            features: [],
-          },
-        });
-
-        this.state.style.addLayer(
-          {
-            id: 'lineAlong',
-            type: 'line',
-            source: 'lineAlong',
-            minzoom: this.defaultOptions.routeAnimation.minzoom,
-            maxzoom: this.defaultOptions.routeAnimation.maxzoom,
-            paint: {
-              'line-width': this.defaultOptions.routeAnimation.lineWidth,
-              'line-color': this.defaultOptions.routeAnimation.lineProgress
-                ? ['get', 'color']
-                : this.defaultOptions.routeAnimation.lineColor,
-              'line-opacity': this.defaultOptions.routeAnimation.lineOpacity,
+        if (!this.state.style.getSource('lineAlong')) {
+          this.state.style.addSource('lineAlong', {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: [],
             },
-          },
-          'proximiio-routing-line-remaining',
-        );
+          });
+        }
 
-        this.state.style.addSource('pointAlong', {
-          type: 'geojson',
-          data: {
-            type: 'FeatureCollection',
-            features: [],
-          },
-        });
+        if (!this.state.style.getLayer('lineAlong')) {
+          this.state.style.addLayer(
+            {
+              id: 'lineAlong',
+              type: 'line',
+              source: 'lineAlong',
+              minzoom: this.defaultOptions.routeAnimation.minzoom,
+              maxzoom: this.defaultOptions.routeAnimation.maxzoom,
+              paint: {
+                'line-width': this.defaultOptions.routeAnimation.lineWidth,
+                'line-color': this.defaultOptions.routeAnimation.lineProgress
+                  ? ['get', 'color']
+                  : this.defaultOptions.routeAnimation.lineColor,
+                'line-opacity': this.defaultOptions.routeAnimation.lineOpacity,
+              },
+            },
+            'proximiio-routing-line-remaining',
+          );
+        }
+
+        if (!this.state.style.getSource('pointAlong')) {
+          this.state.style.addSource('pointAlong', {
+            type: 'geojson',
+            data: {
+              type: 'FeatureCollection',
+              features: [],
+            },
+          });
+        }
 
         if (this.defaultOptions.routeAnimation.pointIconUrl || this.defaultOptions.routeAnimation.cityPointIconUrl) {
           if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
