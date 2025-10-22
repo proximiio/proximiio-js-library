@@ -2747,6 +2747,15 @@ export class Map {
     this.state.style.showIconLayers();
     this.state.style.notify('filter-change');
   }
+  private onHideLayer(layerId: string) {
+    this.state.style.hideLayer(layerId);
+    this.state.style.notify('filter-change');
+  }
+
+  private onShowLayer(layerId: string) {
+    this.state.style.showLayer(layerId);
+    this.state.style.notify('filter-change');
+  }
 
   private onResetFeatureFilters() {
     this.filteredFeatures = [];
@@ -6420,6 +6429,38 @@ export class Map {
    */
   public showIcons() {
     this.onShowIcons();
+  }
+
+  /**
+   * With this method you can hide layer.
+   *  @memberof Map
+   *  @name hideLayer
+   *  @param layerId {string} id of the layer
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.hideLayer('proximiio-texts');
+   *  });
+   */
+  public hideLayer(layerId: string) {
+    this.onHideLayer(layerId);
+  }
+
+  /**
+   * With this method you can show layer.
+   *  @memberof Map
+   *  @name showLayer
+   *  @param layerId {string} id of the layer
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.showLayer('proximiio-texts');
+   *  });
+   */
+  public showLayer(layerId: string) {
+    this.onShowLayer(layerId);
   }
 
   /**

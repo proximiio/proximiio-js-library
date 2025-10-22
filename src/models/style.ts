@@ -556,6 +556,13 @@ export default class StyleModel {
       }
     });
   }
+  hideLayer(layerId: string) {
+    this.getLayer(layerId).layout.visibility = 'none';
+  }
+
+  showLayer(layerId: string) {
+    this.getLayer(layerId).layout.visibility = 'visible';
+  }
 
   setIconSize(size: (string | number | string[])[] | number | any) {
     if (this.getLayer('proximiio-pois-icons')) {
