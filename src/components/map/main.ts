@@ -1365,6 +1365,12 @@ export class Map {
           center: [data.coords.longitude, data.coords.latitude],
           zoom: this.defaultOptions.geolocationControlOptions.zoom,
         });
+        this.setCustomPosition({
+          coordinates: [data.coords.longitude, data.coords.latitude],
+          level: this.state.floor.level,
+          recenter: false,
+          addPositionIcon: false,
+        })
       });
 
       geolocate.on('trackuserlocationstart', (data) => {
@@ -4745,6 +4751,7 @@ export class Map {
     directionIconSize = 1.25,
     followBearing = false,
     followRouteBearing = false,
+    addPositionIcon = true,
   }: {
     coordinates: [number, number];
     level: number;
@@ -4754,6 +4761,7 @@ export class Map {
     directionIconSize?: number;
     followBearing?: boolean;
     followRouteBearing?: boolean;
+    addPositionIcon?: boolean;
   }) {
     // Initialize debounce/cooldown tracking
     this.floorChangeBuffer = this.floorChangeBuffer || [];
@@ -4904,6 +4912,7 @@ export class Map {
             'icon-size': iconSize,
             'icon-image': 'static-dot',
             'icon-allow-overlap': true,
+            visibility: addPositionIcon ? 'visible' : 'none',
           },
           filter: ['all', ['==', ['to-number', ['get', 'level']], this.state.floor.level]],
         });
@@ -4919,6 +4928,7 @@ export class Map {
               'icon-rotate': ['get', 'bearing'],
               'icon-rotation-alignment': 'map',
               'icon-allow-overlap': true,
+              visibility: addPositionIcon ? 'visible' : 'none',
             },
             filter: [
               'all',
@@ -6879,6 +6889,7 @@ export class Map {
     directionIconSize,
     followBearing = false,
     followRouteBearing = false,
+    addPositionIcon = true,
   }: {
     coordinates: [number, number];
     level: number;
@@ -6888,6 +6899,7 @@ export class Map {
     directionIconSize?: number;
     followBearing?: boolean;
     followRouteBearing?: boolean;
+    addPositionIcon?: boolean;
   }) {
     this.positionsList.push(coordinates);
     if (this.positionsList.length >= this.defaultOptions.customPositionOptions.aggregatePositionsLimit) {
@@ -6914,6 +6926,7 @@ export class Map {
         directionIconSize,
         followBearing,
         followRouteBearing,
+        addPositionIcon,
       });
       this.positionsList = [];
     }
