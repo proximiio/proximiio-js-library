@@ -1370,7 +1370,7 @@ export class Map {
           level: this.state.floor.level,
           recenter: false,
           addPositionIcon: false,
-        })
+        });
       });
 
       geolocate.on('trackuserlocationstart', (data) => {
