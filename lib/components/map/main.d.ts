@@ -178,6 +178,8 @@ export interface Options {
         autoTrigger?: boolean;
         autoLocate?: boolean;
         position?: 'top-right' | 'top-left' | 'bottom-left' | 'bottom-right';
+        zoom?: number;
+        maxBounds?: LngLatBoundsLike;
     };
     language?: string;
     routeColor?: string;
@@ -213,6 +215,9 @@ export interface Options {
         animationMinDuration?: number;
         animationMaxDuration?: number;
         animationDurationPerMeter?: number;
+        aggregateFloorChange?: boolean;
+        aggregateFloorChangeLimit?: number;
+        floorChangeCooldown?: number;
     };
 }
 export interface PaddingOptions {
@@ -310,6 +315,8 @@ export declare class Map {
     private onHidePois;
     private onHideIcons;
     private onShowIcons;
+    private onHideLayer;
+    private onShowLayer;
     private onResetFeatureFilters;
     private onSetAmenityFilter;
     private onRemoveAmenityFilter;
@@ -1136,6 +1143,32 @@ export declare class Map {
      */
     showIcons(): void;
     /**
+     * With this method you can hide layer.
+     *  @memberof Map
+     *  @name hideLayer
+     *  @param layerId {string} id of the layer
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.hideLayer('proximiio-texts');
+     *  });
+     */
+    hideLayer(layerId: string): void;
+    /**
+     * With this method you can show layer.
+     *  @memberof Map
+     *  @name showLayer
+     *  @param layerId {string} id of the layer
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.showLayer('proximiio-texts');
+     *  });
+     */
+    showLayer(layerId: string): void;
+    /**
      * With this method you can show all icons.
      *  @memberof Map
      *  @name setHiddenAmenities
@@ -1443,7 +1476,7 @@ export declare class Map {
      *  });
      */
     private positionsList;
-    setCustomPosition({ coordinates, level, bearing, recenter, iconSize, directionIconSize, followBearing, followRouteBearing, }: {
+    setCustomPosition({ coordinates, level, bearing, recenter, iconSize, directionIconSize, followBearing, followRouteBearing, addPositionIcon, }: {
         coordinates: [number, number];
         level: number;
         bearing?: number;
@@ -1452,6 +1485,7 @@ export declare class Map {
         directionIconSize?: number;
         followBearing?: boolean;
         followRouteBearing?: boolean;
+        addPositionIcon?: boolean;
     }): void;
     /**
      * Method for setting custom position
@@ -1505,4 +1539,7 @@ export declare class Map {
      *  });
      */
     getArrivalListener(): CustomSubject<boolean>;
+    initGpsMode(): void;
+    enableRouteAnimation(): void;
+    disableRouteAnimation(): void;
 }

@@ -5,6 +5,7 @@ export default class Routing {
     wayfinding: any;
     forceFloorLevel: number;
     routeWithDetails: boolean;
+    config: WayfindingConfigModel;
     constructor();
     setData(collection: FeatureCollection): void;
     toggleOnlyAccessible(onlyAccessible: any): void;

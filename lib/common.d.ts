@@ -1,4 +1,5 @@
 import Feature from './models/feature';
+import { LngLatBoundsLike } from 'maplibre-gl';
 export declare const axios: import("axios").AxiosInstance;
 export declare const camelToKebab: (input: string) => string;
 export declare const kebabToCamel: (input: string) => string;
@@ -36,4 +37,5 @@ declare const optimizeFeatures: (features: Feature[]) => {
     properties: any;
 }[];
 declare const isLevelChanger: (poi: Feature) => boolean;
-export { calculateDimensions, convertToRTL, base64toBlob, throttle, filterByAmenity, validateLabelLine, optimizeFeatures, isLevelChanger, };
+declare const pointInBounds: (point: [number, number], bounds: LngLatBoundsLike) => boolean;
+export { calculateDimensions, convertToRTL, base64toBlob, throttle, filterByAmenity, validateLabelLine, optimizeFeatures, isLevelChanger, pointInBounds, };
