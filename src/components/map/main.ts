@@ -2563,7 +2563,9 @@ export class Map {
     id?: string,
     placeId?: string,
     floorId?: string,
-    properties?: object,
+    properties?: {
+      [key: string]: string | number | boolean | null | undefined;
+    },
     isTemporary: boolean = true,
   ) {
     const featureId = id ? id : uuidv4();
@@ -2631,10 +2633,13 @@ export class Map {
     icon?: string,
     placeId?: string,
     floorId?: string,
-    properties?: object,
+    properties?: {
+      [key: string]: string | number | boolean | null | undefined;
+    },
     isTemporary: boolean = true,
   ) {
     const foundFeature = this.state.allFeatures.features.find((f) => f.id === id || f.properties.id === id);
+    const polygonLayer = this.defaultOptions.polygonLayers.find((l) => l.featureType === properties.type);
     if (!foundFeature) {
       console.error(`Update feature failed: Feature with id '${id}' has not been found!`);
       throw new Error(`Update feature failed: Feature with id '${id}' has not been found!`);
@@ -2654,6 +2659,26 @@ export class Map {
       floor_id: floorId ? floorId : featureVar.properties.floor_id,
       ...properties,
     };
+
+    if (polygonLayer) {
+      featureVar.properties = {
+        ...featureVar.properties,
+        dynamic_minZoom: polygonLayer.minZoom,
+        dynamic_maxZoom: polygonLayer.maxZoom,
+        dynamic_selectedHeight: polygonLayer.selectedPolygonHeight,
+        dynamic_hoverHeight: polygonLayer.hoverPolygonHeight,
+        dynamic_activeHeight: polygonLayer.activePolygonHeight || polygonLayer.hoverPolygonHeight,
+        dynamic_disabledHeight: polygonLayer.disabledPolygonHeight,
+        dynamic_defaultHeight: polygonLayer.defaultPolygonHeight,
+        dynamic_base: polygonLayer.base,
+        dynamic_selectedColor: polygonLayer.selectedPolygonColor,
+        dynamic_hoverColor: polygonLayer.hoverPolygonColor,
+        dynamic_activeColor: polygonLayer.activePolygonColor || polygonLayer.hoverPolygonColor,
+        dynamic_disabledColor: polygonLayer.disabledPolygonColor,
+        dynamic_defaultColor: polygonLayer.defaultPolygonColor,
+      };
+    }
+
     if (icon && icon.length > 0) {
       const decodedIcon = await getImageFromBase64(icon);
       this.map.addImage(id, decodedIcon as any);
@@ -6194,7 +6219,9 @@ export class Map {
     id?: string,
     placeId?: string,
     floorId?: string,
-    properties?: object,
+    properties?: {
+      [key: string]: string | number | boolean | null | undefined;
+    },
     isTemporary?: boolean,
   ) {
     return await this.onAddNewFeature(title, +level, +lat, +lng, icon, id, placeId, floorId, properties, isTemporary);
@@ -6231,7 +6258,9 @@ export class Map {
     icon?: string,
     placeId?: string,
     floorId?: string,
-    properties?: object,
+    properties?: {
+      [key: string]: string | number | boolean | null | undefined;
+    },
     isTemporary?: boolean,
   ) {
     return await this.onUpdateFeature(id, title, level, lat, lng, icon, placeId, floorId, properties, isTemporary);
