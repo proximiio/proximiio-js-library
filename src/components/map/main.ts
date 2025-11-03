@@ -1361,10 +1361,12 @@ export class Map {
         this.startPoint = point([data.coords.longitude, data.coords.latitude], {
           level: this.state.floor.level,
         }) as Feature;
-        this.map.flyTo({
-          center: [data.coords.longitude, data.coords.latitude],
-          zoom: this.defaultOptions.geolocationControlOptions.zoom,
-        });
+        if (this.routingSource.route && !this.routingSource.preview) {
+          this.map.flyTo({
+            center: [data.coords.longitude, data.coords.latitude],
+            zoom: this.defaultOptions.geolocationControlOptions.zoom,
+          });
+        }
         this.setCustomPosition({
           coordinates: [data.coords.longitude, data.coords.latitude],
           level: this.state.floor.level,
@@ -1374,6 +1376,10 @@ export class Map {
       });
 
       geolocate.on('trackuserlocationstart', (data) => {
+        if (geolocate._geolocateButton.disabled) {
+          geolocate._geolocateButton.disabled = false;
+        }
+
         const position = data.target?._lastKnownPosition?.coords;
         if (
           position &&
@@ -1385,6 +1391,46 @@ export class Map {
         ) {
           this.map.stop();
           return;
+        }
+      });
+
+      geolocate.on('error', async (e) => {
+        console.log('geolocation error', e);
+        if (!navigator.permissions) return;
+
+        try {
+          const permission = await navigator.permissions.query({ name: 'geolocation' });
+
+          permission.onchange = () => {
+            console.log('geolocation permission state', permission.state);
+            if (permission.state === 'granted') {
+              // Recreate control
+              this.map.removeControl(geolocate);
+              this.initGeoLocation();
+            }
+          };
+
+          const testGeolocation = () => {
+            console.log('test geolocation');
+            navigator.geolocation.getCurrentPosition(
+              () => {
+                // Success: GPS is back on
+                console.log('GPS is back on');
+                this.map.removeControl(geolocate);
+                this.initGeoLocation();
+              },
+              (err) => {
+                console.log('GPS is still off', err);
+                // Still no GPS, retry in a bit
+                setTimeout(testGeolocation, 5000);
+              },
+              { timeout: 2000 },
+            );
+          };
+
+          testGeolocation();
+        } catch (error) {
+          console.log('Permissions API not supported or failed:', error);
         }
       });
     }
