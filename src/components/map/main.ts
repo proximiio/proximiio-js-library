@@ -2530,9 +2530,23 @@ export class Map {
       };
       if (data.title && data.level && data.lat && data.lng) {
         if (edit) {
-          await this.onUpdateFeature(data.id, data.title, +data.level!, +data.lat!, +data.lng!, data.icon);
+          await this.onUpdateFeature({
+            id: data.id,
+            title: data.title,
+            level: +data.level!,
+            lat: +data.lat!,
+            lng: +data.lng!,
+            icon: data.icon,
+          });
         } else {
-          await this.onAddNewFeature(data.title, +data.level!, +data.lat!, +data.lng!, data.icon, data.id);
+          await this.onAddNewFeature({
+            title: data.title,
+            level: +data.level!,
+            lat: +data.lat!,
+            lng: +data.lng!,
+            icon: data.icon,
+            id: data.id,
+          });
         }
         modal.close();
       } else {
@@ -2554,25 +2568,39 @@ export class Map {
     modal.open();
   }
 
-  private async onAddNewFeature(
-    title: string,
-    level: number,
-    lat: number,
-    lng: number,
-    icon?: string,
-    id?: string,
-    placeId?: string,
-    floorId?: string,
+  private async onAddNewFeature({
+    title,
+    level,
+    lat,
+    lng,
+    icon,
+    id,
+    placeId,
+    floorId,
+    properties,
+    isTemporary = true,
+  }: {
+    title: string;
+    level: number;
+    lat: number;
+    lng: number;
+    icon?: string;
+    id?: string;
+    placeId?: string;
+    floorId?: string;
     properties?: {
       [key: string]: string | number | boolean | null | undefined;
-    },
-    isTemporary: boolean = true,
-  ) {
+    };
+    isTemporary?: boolean;
+  }) {
     const featureId = id ? id : uuidv4();
+    const polygonLayer = this.defaultOptions.polygonLayers.find((l) => l.featureType === properties?.type);
+
     if (this.state.allFeatures.features.findIndex((f) => f.id === featureId || f.properties.id === featureId) > 0) {
       console.error(`Create feature failed: Feature with id '${featureId}' already exists!`);
       throw new Error(`Create feature failed: Feature with id '${featureId}' already exists!`);
     }
+
     const featureVar = new Feature({
       type: 'Feature',
       id: featureId,
@@ -2596,6 +2624,25 @@ export class Map {
       },
     });
 
+    if (polygonLayer) {
+      featureVar.properties = {
+        ...featureVar.properties,
+        dynamic_minZoom: polygonLayer.minZoom,
+        dynamic_maxZoom: polygonLayer.maxZoom,
+        dynamic_selectedHeight: polygonLayer.selectedPolygonHeight,
+        dynamic_hoverHeight: polygonLayer.hoverPolygonHeight,
+        dynamic_activeHeight: polygonLayer.activePolygonHeight || polygonLayer.hoverPolygonHeight,
+        dynamic_disabledHeight: polygonLayer.disabledPolygonHeight,
+        dynamic_defaultHeight: polygonLayer.defaultPolygonHeight,
+        dynamic_base: polygonLayer.base,
+        dynamic_selectedColor: polygonLayer.selectedPolygonColor,
+        dynamic_hoverColor: polygonLayer.hoverPolygonColor,
+        dynamic_activeColor: polygonLayer.activePolygonColor || polygonLayer.hoverPolygonColor,
+        dynamic_disabledColor: polygonLayer.disabledPolygonColor,
+        dynamic_defaultColor: polygonLayer.defaultPolygonColor,
+      };
+    }
+
     if (icon && icon.length > 0) {
       const decodedIcon = await getImageFromBase64(icon);
       this.map.addImage(featureId, decodedIcon as any);
@@ -2608,7 +2655,7 @@ export class Map {
       this.state.optimizedFeatures.features.push(featureVar);
       await addFeatures({
         type: 'FeatureCollection',
-        features: [featureVar.json],
+        features: [featureVar.JsonDynamicStrip],
       });
     } else {
       this.state.dynamicFeatures.features.push(featureVar);
@@ -2624,31 +2671,44 @@ export class Map {
     return featureVar;
   }
 
-  private async onUpdateFeature(
-    id: string,
-    title?: string,
-    level?: number,
-    lat?: number,
-    lng?: number,
-    icon?: string,
-    placeId?: string,
-    floorId?: string,
+  private async onUpdateFeature({
+    id,
+    title,
+    level,
+    lat,
+    lng,
+    icon,
+    placeId,
+    floorId,
+    properties,
+    isTemporary = true,
+  }: {
+    id: string;
+    title?: string;
+    level?: number;
+    lat?: number;
+    lng?: number;
+    icon?: string;
+    placeId?: string;
+    floorId?: string;
     properties?: {
       [key: string]: string | number | boolean | null | undefined;
-    },
-    isTemporary: boolean = true,
-  ) {
+    };
+    isTemporary?: boolean;
+  }) {
     const foundFeature = this.state.allFeatures.features.find((f) => f.id === id || f.properties.id === id);
-    const polygonLayer = this.defaultOptions.polygonLayers.find((l) => l.featureType === properties.type);
+    const polygonLayer = this.defaultOptions.polygonLayers.find((l) => l.featureType === properties?.type);
     if (!foundFeature) {
       console.error(`Update feature failed: Feature with id '${id}' has not been found!`);
       throw new Error(`Update feature failed: Feature with id '${id}' has not been found!`);
     }
     const featureVar = new Feature(foundFeature);
-    featureVar.geometry.coordinates = [
-      lng ? lng : featureVar.geometry.coordinates[0],
-      lat ? lat : featureVar.geometry.coordinates[1],
-    ];
+    if (lat && lng) {
+      featureVar.geometry.coordinates = [
+        lng ? lng : featureVar.geometry.coordinates[0],
+        lat ? lat : featureVar.geometry.coordinates[1],
+      ];
+    }
     featureVar.properties = {
       ...featureVar.properties,
       title: title ? title : featureVar.properties.title,
@@ -2698,7 +2758,7 @@ export class Map {
       if (optimizedFeatureIndex) this.state.optimizedFeatures.features[optimizedFeatureIndex] = featureVar;
       await addFeatures({
         type: 'FeatureCollection',
-        features: [featureVar.json],
+        features: [featureVar.JsonDynamicStrip],
       });
     } else {
       const featureIndex = this.state.features.features.findIndex(
@@ -2733,17 +2793,25 @@ export class Map {
     }
 
     if (!isTemporary) {
-      const featureIndex = this.state.optimizedFeatures.features.findIndex(
+      const featureIndex = this.state.features.features.findIndex((x) => x.id === id || x.properties.id === id);
+      const optimizedFeatureIndex = this.state.optimizedFeatures.features.findIndex(
         (x) => x.id === id || x.properties.id === id,
       );
-      this.state.optimizedFeatures.features.splice(featureIndex, 1);
+      if (featureIndex) this.state.features.features.splice(featureIndex, 1);
+      if (optimizedFeatureIndex) this.state.optimizedFeatures.features.splice(optimizedFeatureIndex, 1);
       await deleteFeatures({
         type: 'FeatureCollection',
         features: [foundFeature],
       });
     } else {
+      const featureIndex = this.state.features.features.findIndex((x) => x.id === id || x.properties.id === id);
+      const optimizedFeatureIndex = this.state.optimizedFeatures.features.findIndex(
+        (x) => x.id === id || x.properties.id === id,
+      );
       const dynamicIndex = this.state.dynamicFeatures.features.findIndex((x) => x.id === id || x.properties.id === id);
-      this.state.dynamicFeatures.features.splice(dynamicIndex, 1);
+      if (featureIndex !== -1) this.state.features.features.splice(featureIndex, 1);
+      if (optimizedFeatureIndex !== -1) this.state.optimizedFeatures.features.splice(optimizedFeatureIndex, 1);
+      if (dynamicIndex !== -1) this.state.dynamicFeatures.features.splice(dynamicIndex, 1);
     }
 
     // this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features]; // this is not probably updated with non dynamic feature delete TODO
@@ -4951,16 +5019,13 @@ export class Map {
             this.animateCustomPosition({ from, to, level, userBearing: this.previousBearing, followRouteBearing });
             this.customPosition = { coordinates, level };
 
-            this.onUpdateFeature(
-              'custom-position',
-              undefined,
+            this.onUpdateFeature({
+              id: 'custom-position',
               level,
-              coordinates[1],
-              coordinates[0],
-              undefined,
-              undefined,
-              floor?.id,
-            );
+              lat: coordinates[1],
+              lng: coordinates[0],
+              floorId: floor?.id,
+            });
           }
         }
       }
@@ -5009,17 +5074,15 @@ export class Map {
           });
         }
 
-        this.onAddNewFeature(
-          'Custom position',
+        this.onAddNewFeature({
+          title: 'Custom position',
           level,
-          coordinates[1],
-          coordinates[0],
-          undefined,
-          'custom-position',
-          undefined,
-          floor?.id,
-          { visibility: 'hidden', amenity: 'hidden' },
-        );
+          lat: coordinates[1],
+          lng: coordinates[0],
+          id: 'custom-position',
+          floorId: floor?.id,
+          properties: { visibility: 'hidden', amenity: 'hidden' },
+        });
 
         this.map.setStyle(this.state.style);
 
@@ -6192,7 +6255,7 @@ export class Map {
    * Add new feature to map.
    *  @memberof Map
    *  @name addCustomFeature
-   *  @param title {string} feature title, required
+   *  @param titleOrOptions {string|object} feature title or an options object, required
    *  @param level {number} feature floor level, required
    *  @param lat {number} feature latitude coordinate, required
    *  @param lng {number} feature longitude coordinate, required
@@ -6207,14 +6270,34 @@ export class Map {
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
    *    console.log('map ready', ready);
+   *
+   *    // Old style (still works)
    *    const myFeature = map.addCustomFeature('myPOI', 0, 48.606703739771774, 17.833092384506614);
+   *
+   *    // New style (recommended)
+   *    const myFeature = map.addCustomFeature({title: 'myPOI', level: 0, lat: 48.606703739771774, lng: 17.833092384506614});
    *  });
    */
   public async addCustomFeature(
-    title: string,
-    level: number,
-    lat: number,
-    lng: number,
+    titleOrOptions:
+      | string
+      | {
+          title: string;
+          level: number;
+          lat: number;
+          lng: number;
+          icon?: string;
+          id?: string;
+          placeId?: string;
+          floorId?: string;
+          properties?: {
+            [key: string]: string | number | boolean | null | undefined;
+          };
+          isTemporary?: boolean;
+        },
+    level?: number,
+    lat?: number,
+    lng?: number,
     icon?: string,
     id?: string,
     placeId?: string,
@@ -6224,14 +6307,49 @@ export class Map {
     },
     isTemporary?: boolean,
   ) {
-    return await this.onAddNewFeature(title, +level, +lat, +lng, icon, id, placeId, floorId, properties, isTemporary);
+    let opts: {
+      title: string;
+      level: number;
+      lat: number;
+      lng: number;
+      icon?: string;
+      id?: string;
+      placeId?: string;
+      floorId?: string;
+      properties?: {
+        [key: string]: string | number | boolean | null | undefined;
+      };
+      isTemporary?: boolean;
+    };
+
+    // ✅ Detect which version is used
+    if (typeof titleOrOptions === 'string') {
+      // Old positional arguments style
+      opts = {
+        title: titleOrOptions,
+        level,
+        lat,
+        lng,
+        icon,
+        id,
+        placeId,
+        floorId,
+        properties,
+        isTemporary,
+      };
+    } else {
+      // New destructured object style
+      opts = titleOrOptions;
+    }
+
+    return await this.onAddNewFeature(opts);
   }
 
   /**
    * Update existing map feature.
    *  @memberof Map
    *  @name updateFeature
-   *  @param id {string} feature id
+   *  @param idOrOptions { string | object } Feature ID (string) or an options object
    *  @param title {string} feature title, optional
    *  @param level {number} feature floor level, optional
    *  @param lat {number} feature latitude coordinate, optional
@@ -6246,11 +6364,31 @@ export class Map {
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
    *    console.log('map ready', ready);
+   *
+   *    // Old style (still works)
    *    const myFeature = map.updateFeature('poiId', 'myPOI', 0, 48.606703739771774, 17.833092384506614);
+   *
+   *    // New style (recommended)
+   *    const myFeature = map.updateFeature({id: 'poiId', title: 'myPOI', level: 0, lat: 48.606703739771774, lng:17.833092384506614});
    *  });
    */
   public async updateFeature(
-    id: string,
+    idOrOptions:
+      | string
+      | {
+          id: string;
+          title?: string;
+          level?: number;
+          lat?: number;
+          lng?: number;
+          icon?: string;
+          placeId?: string;
+          floorId?: string;
+          properties?: {
+            [key: string]: string | number | boolean | null | undefined;
+          };
+          isTemporary?: boolean;
+        },
     title?: string,
     level?: number,
     lat?: number,
@@ -6263,7 +6401,42 @@ export class Map {
     },
     isTemporary?: boolean,
   ) {
-    return await this.onUpdateFeature(id, title, level, lat, lng, icon, placeId, floorId, properties, isTemporary);
+    let opts: {
+      id: string;
+      title?: string;
+      level?: number;
+      lat?: number;
+      lng?: number;
+      icon?: string;
+      placeId?: string;
+      floorId?: string;
+      properties?: {
+        [key: string]: string | number | boolean | null | undefined;
+      };
+      isTemporary?: boolean;
+    };
+
+    // ✅ Detect which version is used
+    if (typeof idOrOptions === 'string') {
+      // Old positional arguments style
+      opts = {
+        id: idOrOptions,
+        title,
+        level,
+        lat,
+        lng,
+        icon,
+        placeId,
+        floorId,
+        properties,
+        isTemporary,
+      };
+    } else {
+      // New destructured object style
+      opts = idOrOptions;
+    }
+
+    return await this.onUpdateFeature(opts);
   }
 
   /**

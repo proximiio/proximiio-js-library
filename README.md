@@ -838,7 +838,12 @@ Add new feature to map.
 
 map.getMapReadyListener().subscribe((ready) => {
   console.log('map ready', ready);
-  const myFeature = map.addCustomFeature('myPOI', 0, 48.606703739771774, 17.833092384506614);
+  const myFeature = map.addCustomFeature({
+    title: 'myPOI',
+    level: 0,
+    lat: 48.606703739771774,
+    lng: 17.833092384506614,
+  });
 });
 ```
 
@@ -861,7 +866,13 @@ Update existing map feature.
 
 map.getMapReadyListener().subscribe((ready) => {
   console.log('map ready', ready);
-  const myFeature = map.updateFeature('poiId', 'myPOI', 0, 48.606703739771774, 17.8330923845066);
+  const myFeature = map.updateFeature({
+    id: 'poiId',
+    title: 'myPOI',
+    level: 0,
+    lat: 48.606703739771774,
+    lng: 17.8330923845066,
+  });
 });
 ```
 

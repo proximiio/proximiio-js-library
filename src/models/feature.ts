@@ -186,6 +186,32 @@ export default class Feature extends BaseModel {
     return clone;
   }
 
+  get JsonDynamicStrip() {
+    if (this.properties._dynamic) {
+      delete this.properties._dynamic;
+    }
+    if (this.properties.cameFrom) {
+      delete this.properties.cameFrom;
+    }
+    if (this.properties.fixedPointMap) {
+      delete this.properties.fixedPointMap;
+    }
+    const clone = JSON.parse(JSON.stringify(this));
+    if (clone.properties.metadata && typeof clone.properties.metadata !== 'object') {
+      try {
+        clone.properties.metadata = JSON.parse(clone.properties.metadata);
+      } catch (e) {
+        console.log('feature parsing failed:', clone.properties.metadata);
+      }
+    }
+    Object.keys(clone.properties).forEach((key) => {
+      if (key.includes('dynamic_')) {
+        delete clone.properties[key];
+      }
+    });
+    return clone;
+  }
+
   static point(id: string, latitude: number, longitude: number, properties?: any) {
     return new Feature({
       id,
