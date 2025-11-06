@@ -282,6 +282,7 @@ export interface Options {
     aggregateFloorChange?: boolean;
     aggregateFloorChangeLimit?: number;
     floorChangeCooldown?: number;
+    snapDistanceLimit?: number;
   };
 }
 
@@ -501,6 +502,7 @@ export class Map {
       aggregateFloorChange: true,
       aggregateFloorChangeLimit: 3,
       floorChangeCooldown: 5000,
+      snapDistanceLimit: 5,
     },
     // poiIconSize: ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.5],
   };
@@ -4891,6 +4893,7 @@ export class Map {
     followBearing = false,
     followRouteBearing = false,
     addPositionIcon = true,
+    floorChangeRule = 'always',
   }: {
     coordinates: [number, number];
     level: number;
@@ -4901,6 +4904,7 @@ export class Map {
     followBearing?: boolean;
     followRouteBearing?: boolean;
     addPositionIcon?: boolean;
+    floorChangeRule?: 'always' | 'never' | 'onInit';
   }) {
     // Initialize debounce/cooldown tracking
     this.floorChangeBuffer = this.floorChangeBuffer || [];
@@ -4929,6 +4933,14 @@ export class Map {
     let shouldSwitchFloor =
       level !== this.state.floor.level && now - this.lastFloorChangeTimestamp > FLOOR_CHANGE_COOLDOWN_MS;
     // && recenter;
+
+    if (floorChangeRule === 'onInit' && this.useCustomPosition) {
+      shouldSwitchFloor = false;
+    }
+
+    if (floorChangeRule === 'never') {
+      shouldSwitchFloor = false;
+    }
 
     if (this.defaultOptions.customPositionOptions.aggregateFloorChange) {
       shouldSwitchFloor =
@@ -5168,6 +5180,34 @@ export class Map {
       this.customPositionAnimationFrameId = null;
     }
 
+    // handle snapping
+    if (this.routingSource?.lines && this.defaultOptions.customPositionOptions.snapDistanceLimit > 0) {
+      const lines = this.routingSource.lines;
+      const level = this.state.floor.level;
+      const routePoints = lines
+        .filter((i: any) => i.properties.level === level)
+        .map((i: any) => i.geometry.coordinates)
+        .filter(Boolean)
+        .flat();
+
+      if (routePoints.length < 2) {
+        // If the path segment is too short, stop processing
+        return;
+      }
+
+      const routeLine = lineString(routePoints, {
+        level, // Attach the appropriate level to the LineString metadata
+      });
+
+      const endPositionPoint = point(to);
+      const snappedPoint = nearestPointOnLine(routeLine, endPositionPoint);
+      const distanceToSnappedPoint = distance(endPositionPoint, snappedPoint) * 1000;
+
+      if (distanceToSnappedPoint < this.defaultOptions.customPositionOptions.snapDistanceLimit) {
+        to = snappedPoint.geometry.coordinates as [number, number];
+      }
+    }
+
     // Distance-based duration
     const distMeters = distance(from, to) * 1000;
     const minDuration = this.defaultOptions.customPositionOptions.animationMinDuration;
@@ -5254,6 +5294,8 @@ export class Map {
         }),
       );
 
+      routeLineUntilPosition.geometry.coordinates = [...new Set(routeLineUntilPosition.geometry.coordinates)];
+
       if (this.defaultOptions.routeAnimation.showTailSegment) {
         routeLineUntilPosition.geometry.coordinates.push(this.customPosition.coordinates);
       }
@@ -5265,7 +5307,7 @@ export class Map {
           routeProgress < 30 ? '#FF4136' : routeProgress < 60 ? '#FF851B' : '#2ECC40';
       }
 
-      if (followRouteBearing) {
+      if (followRouteBearing && routeLineUntilPosition.geometry.coordinates.length > 1) {
         const routeBearing = turfBearing(
           routeLineUntilPosition.geometry.coordinates[routeLineUntilPosition.geometry.coordinates.length - 2],
           snappedPoint,
@@ -7138,6 +7180,7 @@ export class Map {
     followBearing = false,
     followRouteBearing = false,
     addPositionIcon = true,
+    floorChangeRule = 'always',
   }: {
     coordinates: [number, number];
     level: number;
@@ -7148,6 +7191,7 @@ export class Map {
     followBearing?: boolean;
     followRouteBearing?: boolean;
     addPositionIcon?: boolean;
+    floorChangeRule?: 'always' | 'never' | 'onInit';
   }) {
     this.positionsList.push(coordinates);
     if (this.positionsList.length >= this.defaultOptions.customPositionOptions.aggregatePositionsLimit) {
@@ -7175,6 +7219,7 @@ export class Map {
         followBearing,
         followRouteBearing,
         addPositionIcon,
+        floorChangeRule,
       });
       this.positionsList = [];
     }
