@@ -124,6 +124,8 @@ export interface PolygonOptions {
   iconMinZoom?: number;
   iconMaxZoom?: number;
   labelFontSize?: (string | number | string[])[] | number | any;
+  labelHaloWidth?: number;
+  labelHaloColor?: string;
   symbolPlacement?: 'point' | 'line' | 'line-center';
   autoLabelLines?: boolean;
   textFont?: string[];
@@ -413,6 +415,8 @@ export class Map {
           // Add more stops as needed based on your data range
         ],
       ],
+      labelHaloWidth: 0,
+      labelHaloColor: '#000000',
       textFont: ['Quicksand Bold', 'Noto Sans Arabic Bold'],
       symbolPlacement: 'line-center',
       autoLabelLines: true,

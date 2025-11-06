@@ -153,6 +153,8 @@ export class PolygonTitlesLayer extends SymbolLayer {
         ['get', 'dynamic_disabledTextColor'],
         ['get', 'dynamic_defaultTextColor'],
       ],
+      'text-halo-color': data.labelHaloColor,
+      'text-halow-width': data.labelHaloWidth,
     });
   }
 }
