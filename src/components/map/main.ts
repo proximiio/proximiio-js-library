@@ -5183,7 +5183,6 @@ export class Map {
     // handle snapping
     if (this.routingSource?.lines && this.defaultOptions.customPositionOptions.snapDistanceLimit > 0) {
       const lines = this.routingSource.lines;
-      const level = this.state.floor.level;
       const routePoints = lines
         .filter((i: any) => i.properties.level === level)
         .map((i: any) => i.geometry.coordinates)
