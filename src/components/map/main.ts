@@ -126,6 +126,7 @@ export interface PolygonOptions {
   labelFontSize?: (string | number | string[])[] | number | any;
   labelHaloWidth?: number;
   labelHaloColor?: string;
+  labelHaloBlur?: number;
   symbolPlacement?: 'point' | 'line' | 'line-center';
   autoLabelLines?: boolean;
   textFont?: string[];
@@ -417,6 +418,7 @@ export class Map {
       ],
       labelHaloWidth: 0,
       labelHaloColor: '#000000',
+      labelHaloBlur: 0,
       textFont: ['Quicksand Bold', 'Noto Sans Arabic Bold'],
       symbolPlacement: 'line-center',
       autoLabelLines: true,

@@ -155,6 +155,7 @@ export class PolygonTitlesLayer extends SymbolLayer {
       ],
       'text-halo-color': data.labelHaloColor,
       'text-halo-width': data.labelHaloWidth,
+      'text-halo-blur': data.labelHaloBlur,
     });
   }
 }
