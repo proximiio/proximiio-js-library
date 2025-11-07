@@ -127,7 +127,24 @@ export interface PolygonOptions {
   labelHaloWidth?: number;
   labelHaloColor?: string;
   labelHaloBlur?: number;
+  labelMaxWidth?: number;
+  labelLineHeight?: number;
+  labelLetterSpacing?: number;
+  labelAnchor?:
+    | 'center'
+    | 'left'
+    | 'right'
+    | 'top'
+    | 'bottom'
+    | 'top-left'
+    | 'top-right'
+    | 'bottom-left'
+    | 'bottom-right';
+  labelIgnorePlacement?: boolean;
+  labelAllowOverlap?: boolean;
+  labelRotationAlignment?: 'map' | 'viewport' | 'viewport-glyph' | 'auto';
   symbolPlacement?: 'point' | 'line' | 'line-center';
+  iconPlacement?: 'point' | 'line' | 'line-center';
   autoLabelLines?: boolean;
   textFont?: string[];
   adaptiveLabelOpacity?: boolean;
@@ -419,8 +436,16 @@ export class Map {
       labelHaloWidth: 0,
       labelHaloColor: '#000000',
       labelHaloBlur: 0,
+      labelMaxWidth: 7,
+      labelLineHeight: 1.2,
+      labelLetterSpacing: 0.005,
+      labelAnchor: 'center',
+      labelAllowOverlap: true,
+      labelIgnorePlacement: true,
+      labelRotationAlignment: 'auto',
       textFont: ['Quicksand Bold', 'Noto Sans Arabic Bold'],
       symbolPlacement: 'line-center',
+      iconPlacement: 'line-center',
       autoLabelLines: true,
       adaptiveLabelOpacity: false,
       adaptiveMaxPitch: 30,

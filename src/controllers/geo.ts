@@ -331,6 +331,13 @@ export const getFeatures = async ({
                 dynamic_disabledTextColor: polygonLayer.disabledLabelColor,
                 dynamic_defaultTextColor: polygonLayer.defaultLabelColor,
               };
+
+              if (polygonLayer.symbolPlacement === 'point') {
+                connectedLabelLine.geometry = {
+                  coordinates: center(connectedLabelLine).geometry.coordinates,
+                  type: 'Point',
+                };
+              }
             }
 
             if (!connectedLabelLine) {
@@ -382,6 +389,14 @@ export const getFeatures = async ({
                     dynamic_defaultTextColor: polygonLayer.defaultLabelColor,
                   };
                   connectedPolygon.properties._dynamic.label_id = labelLineFeature.properties.id;
+
+                  if (polygonLayer.symbolPlacement === 'point') {
+                    labelLineFeature.geometry = {
+                      coordinates: center(labelLineFeature).geometry.coordinates,
+                      type: 'Point',
+                    };
+                  }
+
                   featuresToAdd.push(labelLineFeature);
                 }
               } else if (autoLabelLines) {
@@ -481,6 +496,13 @@ export const getFeatures = async ({
                   dynamic_disabledTextColor: polygonLayer.disabledLabelColor,
                   dynamic_defaultTextColor: polygonLayer.defaultLabelColor,
                 };
+
+                if (polygonLayer.symbolPlacement === 'point') {
+                  labelBorder.geometry = {
+                    coordinates: center(labelBorder).geometry.coordinates,
+                    type: 'Point',
+                  };
+                }
 
                 featuresToAdd.push(labelBorder);
               }
@@ -766,6 +788,13 @@ export const getFeaturesBundle = async ({
                 dynamic_disabledTextColor: polygonLayer.disabledLabelColor,
                 dynamic_defaultTextColor: polygonLayer.defaultLabelColor,
               };
+
+              if (polygonLayer.symbolPlacement === 'point') {
+                connectedLabelLine.geometry = {
+                  coordinates: center(connectedLabelLine).geometry.coordinates,
+                  type: 'Point',
+                };
+              }
             }
 
             if (!connectedLabelLine) {
@@ -818,6 +847,14 @@ export const getFeaturesBundle = async ({
                   };
 
                   connectedPolygon.properties._dynamic.label_id = labelLineFeature.properties.id;
+
+                  if (polygonLayer.symbolPlacement === 'point') {
+                    labelLineFeature.geometry = {
+                      coordinates: center(labelLineFeature).geometry.coordinates,
+                      type: 'Point',
+                    };
+                  }
+
                   featuresToAdd.push(labelLineFeature);
                 }
               } else if (autoLabelLines) {
@@ -917,6 +954,13 @@ export const getFeaturesBundle = async ({
                   dynamic_disabledTextColor: polygonLayer.disabledLabelColor,
                   dynamic_defaultTextColor: polygonLayer.defaultLabelColor,
                 };
+
+                if (polygonLayer.symbolPlacement === 'point') {
+                  labelBorder.geometry = {
+                    coordinates: center(labelBorder).geometry.coordinates,
+                    type: 'Point',
+                  };
+                }
 
                 featuresToAdd.push(labelBorder);
               }

@@ -80,11 +80,12 @@ export class PolygonIconsLayer extends SymbolLayer {
     ];
     this.layout = new LayoutProperties({
       'icon-image': ['get', 'id'],
-      'symbol-placement': data.symbolPlacement,
+      'symbol-placement': data.iconPlacement,
       'icon-size': ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.5],
       'icon-allow-overlap': true,
       'icon-ignore-placement': true,
       'icon-keep-upright': true,
+      'icon-rotation-alignment': data.labelRotationAlignment,
     });
     this.paint = new PaintPropertiesSymbol({
       'icon-opacity': [
@@ -131,14 +132,16 @@ export class PolygonTitlesLayer extends SymbolLayer {
     ];
     this.layout = new LayoutProperties({
       'symbol-placement': data.symbolPlacement,
-      'text-anchor': 'center',
-      'text-ignore-placement': true,
-      'text-allow-overlap': true,
+      'text-anchor': data.labelAnchor,
+      'text-ignore-placement': data.labelIgnorePlacement,
+      'text-allow-overlap': data.labelAllowOverlap,
       'text-field': '{title}',
       'text-font': data.textFont,
       'text-size': data.labelFontSize,
-      'text-letter-spacing': 0.005,
-      'text-max-width': 7,
+      'text-letter-spacing': data.labelLetterSpacing,
+      'text-max-width': data.labelMaxWidth,
+      'text-line-height': data.labelLineHeight,
+      'text-rotation-alignment': data.labelRotationAlignment,
     });
     this.paint = new PaintPropertiesSymbol({
       'text-color': [
