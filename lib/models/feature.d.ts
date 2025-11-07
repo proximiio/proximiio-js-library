@@ -43,6 +43,7 @@ export default class Feature extends BaseModel {
     get getTitle(): any;
     get getTitleWithLevel(): string;
     get json(): any;
+    get JsonDynamicStrip(): any;
     static point(id: string, latitude: number, longitude: number, properties?: any): Feature;
     setTitle(title: string, lang?: string): void;
     hasLevel(level: number): any;

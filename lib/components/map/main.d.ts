@@ -62,7 +62,18 @@ export interface PolygonOptions {
     iconMinZoom?: number;
     iconMaxZoom?: number;
     labelFontSize?: (string | number | string[])[] | number | any;
+    labelHaloWidth?: number;
+    labelHaloColor?: string;
+    labelHaloBlur?: number;
+    labelMaxWidth?: number;
+    labelLineHeight?: number;
+    labelLetterSpacing?: number;
+    labelAnchor?: 'center' | 'left' | 'right' | 'top' | 'bottom' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+    labelIgnorePlacement?: boolean;
+    labelAllowOverlap?: boolean;
+    labelRotationAlignment?: 'map' | 'viewport' | 'viewport-glyph' | 'auto';
     symbolPlacement?: 'point' | 'line' | 'line-center';
+    iconPlacement?: 'point' | 'line' | 'line-center';
     autoLabelLines?: boolean;
     textFont?: string[];
     adaptiveLabelOpacity?: boolean;
@@ -218,6 +229,7 @@ export interface Options {
         aggregateFloorChange?: boolean;
         aggregateFloorChangeLimit?: number;
         floorChangeCooldown?: number;
+        snapDistanceLimit?: number;
     };
 }
 export interface PaddingOptions {
@@ -905,7 +917,7 @@ export declare class Map {
      * Add new feature to map.
      *  @memberof Map
      *  @name addCustomFeature
-     *  @param title {string} feature title, required
+     *  @param titleOrOptions {string|object} feature title or an options object, required
      *  @param level {number} feature floor level, required
      *  @param lat {number} feature latitude coordinate, required
      *  @param lng {number} feature longitude coordinate, required
@@ -920,15 +932,35 @@ export declare class Map {
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
      *    console.log('map ready', ready);
+     *
+     *    // Old style (still works)
      *    const myFeature = map.addCustomFeature('myPOI', 0, 48.606703739771774, 17.833092384506614);
+     *
+     *    // New style (recommended)
+     *    const myFeature = map.addCustomFeature({title: 'myPOI', level: 0, lat: 48.606703739771774, lng: 17.833092384506614});
      *  });
      */
-    addCustomFeature(title: string, level: number, lat: number, lng: number, icon?: string, id?: string, placeId?: string, floorId?: string, properties?: object, isTemporary?: boolean): Promise<Feature>;
+    addCustomFeature(titleOrOptions: string | {
+        title: string;
+        level: number;
+        lat: number;
+        lng: number;
+        icon?: string;
+        id?: string;
+        placeId?: string;
+        floorId?: string;
+        properties?: {
+            [key: string]: string | number | boolean | null | undefined;
+        };
+        isTemporary?: boolean;
+    }, level?: number, lat?: number, lng?: number, icon?: string, id?: string, placeId?: string, floorId?: string, properties?: {
+        [key: string]: string | number | boolean | null | undefined;
+    }, isTemporary?: boolean): Promise<Feature>;
     /**
      * Update existing map feature.
      *  @memberof Map
      *  @name updateFeature
-     *  @param id {string} feature id
+     *  @param idOrOptions { string | object } Feature ID (string) or an options object
      *  @param title {string} feature title, optional
      *  @param level {number} feature floor level, optional
      *  @param lat {number} feature latitude coordinate, optional
@@ -943,10 +975,30 @@ export declare class Map {
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
      *    console.log('map ready', ready);
+     *
+     *    // Old style (still works)
      *    const myFeature = map.updateFeature('poiId', 'myPOI', 0, 48.606703739771774, 17.833092384506614);
+     *
+     *    // New style (recommended)
+     *    const myFeature = map.updateFeature({id: 'poiId', title: 'myPOI', level: 0, lat: 48.606703739771774, lng:17.833092384506614});
      *  });
      */
-    updateFeature(id: string, title?: string, level?: number, lat?: number, lng?: number, icon?: string, placeId?: string, floorId?: string, properties?: object, isTemporary?: boolean): Promise<Feature>;
+    updateFeature(idOrOptions: string | {
+        id: string;
+        title?: string;
+        level?: number;
+        lat?: number;
+        lng?: number;
+        icon?: string;
+        placeId?: string;
+        floorId?: string;
+        properties?: {
+            [key: string]: string | number | boolean | null | undefined;
+        };
+        isTemporary?: boolean;
+    }, title?: string, level?: number, lat?: number, lng?: number, icon?: string, placeId?: string, floorId?: string, properties?: {
+        [key: string]: string | number | boolean | null | undefined;
+    }, isTemporary?: boolean): Promise<Feature>;
     /**
      * Delete existing map feature.
      *  @memberof Map
@@ -1476,7 +1528,7 @@ export declare class Map {
      *  });
      */
     private positionsList;
-    setCustomPosition({ coordinates, level, bearing, recenter, iconSize, directionIconSize, followBearing, followRouteBearing, addPositionIcon, }: {
+    setCustomPosition({ coordinates, level, bearing, recenter, iconSize, directionIconSize, followBearing, followRouteBearing, addPositionIcon, floorChangeRule, }: {
         coordinates: [number, number];
         level: number;
         bearing?: number;
@@ -1486,6 +1538,7 @@ export declare class Map {
         followBearing?: boolean;
         followRouteBearing?: boolean;
         addPositionIcon?: boolean;
+        floorChangeRule?: 'always' | 'never' | 'onInit';
     }): void;
     /**
      * Method for setting custom position
