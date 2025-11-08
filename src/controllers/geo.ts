@@ -306,7 +306,13 @@ export const getFeatures = async ({
               connectedLabelLine.properties.id = connectedLabelLine.id;
               connectedLabelLine.properties._dynamic.id = connectedLabelLine.id;
               connectedLabelLine.properties.type = `${polygonLayer.layerId ? polygonLayer.layerId : 'polygons'}-label`;
+              connectedLabelLine.properties.usecase = `${
+                polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+              }-label`;
               connectedLabelLine.properties._dynamic.type = `${
+                polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+              }-label`;
+              connectedLabelLine.properties._dynamic.usecase = `${
                 polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
               }-label`;
               connectedLabelLine.properties._dynamic.poi_id = feature.properties.id;
@@ -366,7 +372,13 @@ export const getFeatures = async ({
                   labelLineFeature.properties.type = `${
                     polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
                   }-label`;
+                  labelLineFeature.properties.usecase = `${
+                    polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+                  }-label`;
                   labelLineFeature.properties._dynamic.type = `${
+                    polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+                  }-label`;
+                  labelLineFeature.properties._dynamic.usecase = `${
                     polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
                   }-label`;
                   labelLineFeature.properties._dynamic.length = Math.ceil(length(labelLineFeature) * 1000);
@@ -476,7 +488,11 @@ export const getFeatures = async ({
                 labelBorder.properties.id = `${connectedPolygon.id}9999`;
                 labelBorder.id = `${connectedPolygon.id}9999`;
                 labelBorder.properties.type = `${polygonLayer.layerId ? polygonLayer.layerId : 'polygons'}-label`;
+                labelBorder.properties.usecase = `${polygonLayer.layerId ? polygonLayer.layerId : 'polygons'}-label`;
                 labelBorder.properties._dynamic.type = `${
+                  polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+                }-label`;
+                labelBorder.properties._dynamic.usecase = `${
                   polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
                 }-label`;
                 connectedPolygon.properties._dynamic.label_id = labelBorder.properties.id;
@@ -763,7 +779,13 @@ export const getFeaturesBundle = async ({
               connectedLabelLine.properties.id = connectedLabelLine.id;
               connectedLabelLine.properties._dynamic.id = connectedLabelLine.id;
               connectedLabelLine.properties.type = `${polygonLayer.layerId ? polygonLayer.layerId : 'polygons'}-label`;
+              connectedLabelLine.properties.usecase = `${
+                polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+              }-label`;
               connectedLabelLine.properties._dynamic.type = `${
+                polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+              }-label`;
+              connectedLabelLine.properties._dynamic.usecase = `${
                 polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
               }-label`;
               connectedLabelLine.properties._dynamic.poi_id = feature.properties.id;
@@ -823,7 +845,13 @@ export const getFeaturesBundle = async ({
                   labelLineFeature.properties.type = `${
                     polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
                   }-label`;
+                  labelLineFeature.properties.usecase = `${
+                    polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+                  }-label`;
                   labelLineFeature.properties._dynamic.type = `${
+                    polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+                  }-label`;
+                  labelLineFeature.properties._dynamic.usecase = `${
                     polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
                   }-label`;
                   labelLineFeature.properties._dynamic.length = Math.ceil(length(labelLineFeature) * 1000);
@@ -934,7 +962,11 @@ export const getFeaturesBundle = async ({
                 labelBorder.properties.id = `${connectedPolygon.id}9999`;
                 labelBorder.id = `${connectedPolygon.id}9999`;
                 labelBorder.properties.type = `${polygonLayer.layerId ? polygonLayer.layerId : 'polygons'}-label`;
+                labelBorder.properties.usecase = `${polygonLayer.layerId ? polygonLayer.layerId : 'polygons'}-label`;
                 labelBorder.properties._dynamic.type = `${
+                  polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
+                }-label`;
+                labelBorder.properties._dynamic.usecase = `${
                   polygonLayer.layerId ? polygonLayer.layerId : 'polygons'
                 }-label`;
                 connectedPolygon.properties._dynamic.label_id = labelBorder.properties.id;
