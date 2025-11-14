@@ -28,10 +28,11 @@ const getCurrentStepIndex = ({
   // Only check steps ahead of current one to avoid regressions
   for (let i = 0 /*lastKnownStepIndex*/; i < steps.length; i++) {
     const step = steps[i];
-    if (!step.lineStringFeatureFromLastStep) {
+    if (step.navMode === 'mall' && !step.lineStringFeatureFromLastStep) {
       return;
     }
-    const lineCoords = step.lineStringFeatureFromLastStep.geometry.coordinates;
+    const lineCoords =
+      step.navMode === 'mall' ? step.lineStringFeatureFromLastStep.geometry.coordinates : step.geometry.coordinates;
     const line = lineString(lineCoords);
 
     // Calculate shortest distance from user to this step's path
