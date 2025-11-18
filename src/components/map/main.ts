@@ -5268,7 +5268,7 @@ export class Map {
           features: [
             {
               type: 'Feature',
-              properties: { level, bearing: followRouteBearing ? sourceFeature.properties.bearing : undefined },
+              properties: { level, bearing: sourceFeature.properties.bearing },
               geometry: {
                 type: 'Point',
                 coordinates: current,
@@ -5278,7 +5278,7 @@ export class Map {
         });
         sourceFeature.geometry.coordinates = current;
         sourceFeature.properties.level = level;
-        // if (!followRouteBearing) sourceFeature.properties.bearing = userBearing;
+        if (!followRouteBearing) sourceFeature.properties.bearing = this.customPositionHeading;
       }
 
       if (progress < 1) {
