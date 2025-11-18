@@ -296,6 +296,7 @@ export interface Options {
     minDistanceToChange?: number;
     aggregatePositionsLimit?: number;
     aggregationResult?: 'center' | 'nearest';
+    enableAnimation?: boolean;
     animationMinDuration?: number;
     animationMaxDuration?: number;
     animationDurationPerMeter?: number;
@@ -527,6 +528,7 @@ export class Map {
       minDistanceToChange: 2,
       aggregatePositionsLimit: 1,
       aggregationResult: 'center',
+      enableAnimation: true,
       animationMinDuration: 300,
       animationMaxDuration: 3000,
       animationDurationPerMeter: 50,
@@ -5233,6 +5235,30 @@ export class Map {
       if (distanceToSnappedPoint < this.defaultOptions.customPositionOptions.snapDistanceLimit) {
         to = snappedPoint.geometry.coordinates as [number, number];
       }
+    }
+
+    if (!this.defaultOptions.customPositionOptions.enableAnimation) {
+      const source = this.map.getSource('custom-position-point') as maplibregl.GeoJSONSource;
+      if (source) {
+        const sourceFeature = this.state.style.sources['custom-position-point'].data.features[0];
+        source.setData({
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              properties: { level, bearing: sourceFeature.properties.bearing },
+              geometry: {
+                type: 'Point',
+                coordinates: to,
+              },
+            },
+          ],
+        });
+        sourceFeature.geometry.coordinates = to;
+        sourceFeature.properties.level = level;
+        if (!followRouteBearing) sourceFeature.properties.bearing = this.customPositionHeading;
+      }
+      return;
     }
 
     // Distance-based duration
