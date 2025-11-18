@@ -3979,7 +3979,7 @@ export class Map {
     this.onRouteCancelListener.next('route cancelled');
     this.currentStep = 0;
     this.currentStop = 0;
-    this.customPositionBearing = undefined;
+    this.customPositionHeading = undefined;
   }
 
   private centerOnPoi(poi: any) {
@@ -4910,29 +4910,23 @@ export class Map {
     }
   };
 
-  private previousBearing = undefined;
   private floorChangeBuffer = [];
   private lastFloorChangeTimestamp = 0;
-  private customPositionBearing = undefined;
   private onSetCustomPosition({
     coordinates,
     level,
-    bearing,
     recenter = true,
     iconSize = 1.5,
     directionIconSize = 1.25,
-    followBearing = false,
     followRouteBearing = false,
     addPositionIcon = true,
     floorChangeRule = 'always',
   }: {
     coordinates: [number, number];
     level: number;
-    bearing?: number;
     recenter?: boolean;
     iconSize?: number;
     directionIconSize?: number;
-    followBearing?: boolean;
     followRouteBearing?: boolean;
     addPositionIcon?: boolean;
     floorChangeRule?: 'always' | 'never' | 'onInit';
@@ -5012,45 +5006,16 @@ export class Map {
       const toPoint = point(to);
       const movedDistance = from ? distance(fromPoint, toPoint, { units: 'meters' }) : 0;
 
-      if (bearing && (!this.customPositionBearing || followBearing)) {
-        this.customPositionBearing = bearing;
-        this.setInitialBearing(bearing);
-        positionFeature.properties.bearing = bearing;
-        if (recenter) {
-          setTimeout(() => {
-            this.map.flyTo({
-              bearing,
-              duration: 200,
-              essential: true,
-              padding: this.defaultOptions.fitBoundsPadding,
-            });
-          }, 100);
-        }
-      }
-
       // do an update for additional position sets
       if (from) {
         if (
           this.defaultOptions.customPositionOptions.minDistanceToChange === 0 ||
           movedDistance > this.defaultOptions.customPositionOptions.minDistanceToChange
         ) {
-          const userBearing = bearing || turfBearing(fromPoint, toPoint);
-
-          if (this.previousBearing === undefined || Math.abs(this.previousBearing - userBearing) > 10) {
-            this.previousBearing = userBearing;
-
-            positionFeature.properties.bearing = userBearing;
-          }
-
           if (recenter) {
-            if (userBearing && (!this.customPositionBearing || followBearing)) {
-              this.customPositionBearing = userBearing;
-              this.setInitialBearing(userBearing);
-            }
             setTimeout(() => {
               this.map.flyTo({
                 center: coordinates,
-                bearing: followBearing ? userBearing : this.map.getBearing(),
                 duration: 200,
                 essential: true,
                 padding: this.defaultOptions.fitBoundsPadding,
@@ -5058,14 +5023,9 @@ export class Map {
             }, 100);
           }
 
-          if (bearing) {
-            this.previousBearing = bearing;
-            positionFeature.properties.bearing = bearing;
-          }
-
           if (this.state.style.sources['custom-position-point']) {
             // Animate between positions
-            this.animateCustomPosition({ from, to, level, userBearing: this.previousBearing, followRouteBearing });
+            this.animateCustomPosition({ from, to, level, followRouteBearing });
             this.customPosition = { coordinates, level };
 
             this.onUpdateFeature({
@@ -5139,7 +5099,10 @@ export class Map {
       }
 
       // handle additional events if the moved distance is big enough
-      if (movedDistance > this.defaultOptions.customPositionOptions.minDistanceToChange) {
+      if (
+        this.defaultOptions.customPositionOptions.minDistanceToChange === 0 ||
+        movedDistance > this.defaultOptions.customPositionOptions.minDistanceToChange
+      ) {
         if (this.routingSource && this.routingSource.route) {
           const stepIndex = getCurrentStepIndex({
             userPosition: coordinates,
@@ -5168,13 +5131,43 @@ export class Map {
     }
   }
 
+  private previousHeading = undefined;
+  private customPositionHeading = undefined;
+  private onSetCustomPositionHeading({ heading, followBearing = false }: { heading: number; followBearing?: boolean }) {
+    if (this.customPosition) {
+      this.customPositionHeading = heading;
+      this.setInitialBearing(heading);
+
+      const source = this.map.getSource('custom-position-point') as maplibregl.GeoJSONSource;
+      if (source) {
+        const sourceFeature = this.state.style.sources['custom-position-point'].data.features[0];
+        sourceFeature.properties.bearing = heading;
+        source.setData({
+          type: 'FeatureCollection',
+          features: [sourceFeature],
+        });
+      }
+
+      if (followBearing) {
+        setTimeout(() => {
+          this.map.flyTo({
+            bearing: heading,
+            duration: 200,
+            essential: true,
+            padding: this.defaultOptions.fitBoundsPadding,
+          });
+        }, 100);
+      }
+    }
+  }
+
   private onCancelCustomPosition() {
     if (this.useCustomPosition) {
       this.useCustomPosition = false;
       this.customPosition = null;
       this.startPoint = null;
-      this.previousBearing = undefined;
-      this.customPositionBearing = undefined;
+      this.previousHeading = undefined;
+      this.customPositionHeading = undefined;
 
       if (this.state.style.sources['custom-position-point']) {
         this.state.style.removeSource('custom-position-point');
@@ -5202,13 +5195,11 @@ export class Map {
     from,
     to,
     level,
-    userBearing,
     followRouteBearing,
   }: {
     from: [number, number];
     to: [number, number];
     level: number;
-    userBearing: number;
     followRouteBearing: boolean;
   }) {
     // Cancel any ongoing animation
@@ -5277,7 +5268,7 @@ export class Map {
           features: [
             {
               type: 'Feature',
-              properties: { level, bearing: followRouteBearing ? sourceFeature.properties.bearing : userBearing },
+              properties: { level, bearing: followRouteBearing ? sourceFeature.properties.bearing : undefined },
               geometry: {
                 type: 'Point',
                 coordinates: current,
@@ -5287,7 +5278,7 @@ export class Map {
         });
         sourceFeature.geometry.coordinates = current;
         sourceFeature.properties.level = level;
-        if (!followRouteBearing) sourceFeature.properties.bearing = userBearing;
+        // if (!followRouteBearing) sourceFeature.properties.bearing = userBearing;
       }
 
       if (progress < 1) {
@@ -5349,8 +5340,8 @@ export class Map {
           snappedPoint,
         );
         if (this.defaultOptions.routeAnimation.showCompassDirection) {
-          const customPositioFeature = this.state.style.sources['custom-position-point'].data.features[0];
-          customPositioFeature.properties.bearing = routeBearing;
+          const customPositionFeature = this.state.style.sources['custom-position-point'].data.features[0];
+          customPositionFeature.properties.bearing = routeBearing;
         }
         setTimeout(() => {
           this.map.flyTo({
@@ -7209,22 +7200,18 @@ export class Map {
   public setCustomPosition({
     coordinates,
     level,
-    bearing,
     recenter = true,
     iconSize,
     directionIconSize,
-    followBearing = false,
     followRouteBearing = false,
     addPositionIcon = true,
     floorChangeRule = 'always',
   }: {
     coordinates: [number, number];
     level: number;
-    bearing?: number;
     recenter?: boolean;
     iconSize?: number;
     directionIconSize?: number;
-    followBearing?: boolean;
     followRouteBearing?: boolean;
     addPositionIcon?: boolean;
     floorChangeRule?: 'always' | 'never' | 'onInit';
@@ -7248,11 +7235,9 @@ export class Map {
       this.onSetCustomPosition({
         coordinates: resultPoint.geometry.coordinates as [number, number],
         level,
-        bearing,
         recenter,
         iconSize,
         directionIconSize,
-        followBearing,
         followRouteBearing,
         addPositionIcon,
         floorChangeRule,
@@ -7307,6 +7292,25 @@ export class Map {
    */
   public getPositionSetListener() {
     return this.onPositionSetListener;
+  }
+
+  /**
+   * Method for setting custom position heading
+   *  @memberof Map
+   *  @name setCustomPositionHeading
+   *  @param heading {number} heading angle for custom position.
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *    map.setCustomPositionHeading({ heading: 20});
+   *  });
+   */
+  public setCustomPositionHeading({ heading, followBearing = false }: { heading: number; followBearing?: boolean }) {
+    this.onSetCustomPositionHeading({
+      heading,
+      followBearing,
+    });
   }
 
   /**
