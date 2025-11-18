@@ -5012,22 +5012,28 @@ export class Map {
       const toPoint = point(to);
       const movedDistance = from ? distance(fromPoint, toPoint, { units: 'meters' }) : 0;
 
-      if (bearing && (!this.customPositionBearing || followBearing) && recenter) {
+      if (bearing && (!this.customPositionBearing || followBearing)) {
         this.customPositionBearing = bearing;
         this.setInitialBearing(bearing);
-        setTimeout(() => {
-          this.map.flyTo({
-            bearing,
-            duration: 200,
-            essential: true,
-            padding: this.defaultOptions.fitBoundsPadding,
-          });
-        }, 100);
+        positionFeature.properties.bearing = bearing;
+        if (recenter) {
+          setTimeout(() => {
+            this.map.flyTo({
+              bearing,
+              duration: 200,
+              essential: true,
+              padding: this.defaultOptions.fitBoundsPadding,
+            });
+          }, 100);
+        }
       }
 
       // do an update for additional position sets
       if (from) {
-        if (movedDistance > this.defaultOptions.customPositionOptions.minDistanceToChange) {
+        if (
+          this.defaultOptions.customPositionOptions.minDistanceToChange === 0 ||
+          movedDistance > this.defaultOptions.customPositionOptions.minDistanceToChange
+        ) {
           const userBearing = bearing || turfBearing(fromPoint, toPoint);
 
           if (this.previousBearing === undefined || Math.abs(this.previousBearing - userBearing) > 10) {
