@@ -5167,9 +5167,12 @@ export class Map {
     if (this.useCustomPosition) {
       this.useCustomPosition = false;
       this.customPosition = null;
-      this.startPoint = null;
       this.previousHeading = undefined;
       this.customPositionHeading = undefined;
+
+      if (!this.defaultOptions.useGpsLocation) {
+        this.startPoint = null;
+      }
 
       if (this.state.style.sources['custom-position-point']) {
         this.state.style.removeSource('custom-position-point');
