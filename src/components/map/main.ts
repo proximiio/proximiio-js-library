@@ -5237,6 +5237,7 @@ export class Map {
 
       if (distanceToSnappedPoint < this.defaultOptions.customPositionOptions.snapDistanceLimit) {
         to = snappedPoint.geometry.coordinates as [number, number];
+        this.customPosition.coordinates = to;
       }
     }
 
