@@ -296,6 +296,7 @@ export interface Options {
     minDistanceToChange?: number;
     aggregatePositionsLimit?: number;
     aggregationResult?: 'center' | 'nearest';
+    disableAggregationWhileRouting?: boolean;
     enableAnimation?: boolean;
     animationMinDuration?: number;
     animationMaxDuration?: number;
@@ -526,8 +527,9 @@ export class Map {
     customPositionOptions: {
       arrivalThreshold: 3,
       minDistanceToChange: 2,
-      aggregatePositionsLimit: 1,
+      aggregatePositionsLimit: 0,
       aggregationResult: 'center',
+      disableAggregationWhileRouting: false,
       enableAnimation: true,
       animationMinDuration: 300,
       animationMaxDuration: 3000,
@@ -7246,7 +7248,10 @@ export class Map {
     floorChangeRule?: 'always' | 'never' | 'onInit';
   }) {
     this.positionsList.push(coordinates);
-    if (this.positionsList.length >= this.defaultOptions.customPositionOptions.aggregatePositionsLimit) {
+    if (
+      this.positionsList.length >= this.defaultOptions.customPositionOptions.aggregatePositionsLimit ||
+      (this.routingSource?.lines && this.defaultOptions.customPositionOptions.disableAggregationWhileRouting)
+    ) {
       const positionPoints = points(this.positionsList);
       let resultPoint = point(this.positionsList[this.positionsList.length - 1]);
 
