@@ -4933,6 +4933,33 @@ export class Map {
     addPositionIcon?: boolean;
     floorChangeRule?: 'always' | 'never' | 'onInit';
   }) {
+    // handle snapping
+    if (this.routingSource?.lines && this.defaultOptions.customPositionOptions.snapDistanceLimit > 0) {
+      const lines = this.routingSource.lines;
+      const routePoints = lines
+        .filter((i: any) => i.properties.level === level)
+        .map((i: any) => i.geometry.coordinates)
+        .filter(Boolean)
+        .flat();
+
+      if (routePoints.length < 2) {
+        // If the path segment is too short, stop processing
+        return;
+      }
+
+      const routeLine = lineString(routePoints, {
+        level, // Attach the appropriate level to the LineString metadata
+      });
+
+      const endPositionPoint = point(coordinates);
+      const snappedPoint = nearestPointOnLine(routeLine, endPositionPoint);
+      const distanceToSnappedPoint = distance(endPositionPoint, snappedPoint) * 1000;
+
+      if (distanceToSnappedPoint < this.defaultOptions.customPositionOptions.snapDistanceLimit) {
+        coordinates = snappedPoint.geometry.coordinates as [number, number];
+      }
+    }
+
     // Initialize debounce/cooldown tracking
     this.floorChangeBuffer = this.floorChangeBuffer || [];
     this.lastFloorChangeTimestamp = this.lastFloorChangeTimestamp || 0;
@@ -5211,34 +5238,6 @@ export class Map {
     if (this.customPositionAnimationFrameId !== null) {
       cancelAnimationFrame(this.customPositionAnimationFrameId);
       this.customPositionAnimationFrameId = null;
-    }
-
-    // handle snapping
-    if (this.routingSource?.lines && this.defaultOptions.customPositionOptions.snapDistanceLimit > 0) {
-      const lines = this.routingSource.lines;
-      const routePoints = lines
-        .filter((i: any) => i.properties.level === level)
-        .map((i: any) => i.geometry.coordinates)
-        .filter(Boolean)
-        .flat();
-
-      if (routePoints.length < 2) {
-        // If the path segment is too short, stop processing
-        return;
-      }
-
-      const routeLine = lineString(routePoints, {
-        level, // Attach the appropriate level to the LineString metadata
-      });
-
-      const endPositionPoint = point(to);
-      const snappedPoint = nearestPointOnLine(routeLine, endPositionPoint);
-      const distanceToSnappedPoint = distance(endPositionPoint, snappedPoint) * 1000;
-
-      if (distanceToSnappedPoint < this.defaultOptions.customPositionOptions.snapDistanceLimit) {
-        to = snappedPoint.geometry.coordinates as [number, number];
-        this.customPosition.coordinates = to;
-      }
     }
 
     if (!this.defaultOptions.customPositionOptions.enableAnimation) {
