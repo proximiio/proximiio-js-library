@@ -4965,18 +4965,20 @@ export class Map {
           const dist = pointToLineDistance(point(coordinates), path);
           if (dist < minDist) {
             minDist = dist;
-            nearestPath = feature;
+            nearestPath = path;
           }
         }
         routeLine = nearestPath;
       }
 
-      const endPositionPoint = point(coordinates);
-      const snappedPoint = nearestPointOnLine(routeLine, endPositionPoint);
-      const distanceToSnappedPoint = distance(endPositionPoint, snappedPoint) * 1000;
+      if (routeLine) {
+        const endPositionPoint = point(coordinates);
+        const snappedPoint = nearestPointOnLine(routeLine, endPositionPoint);
+        const distanceToSnappedPoint = distance(endPositionPoint, snappedPoint) * 1000;
 
-      if (distanceToSnappedPoint < this.defaultOptions.customPositionOptions.snapDistanceLimit) {
-        coordinates = snappedPoint.geometry.coordinates as [number, number];
+        if (distanceToSnappedPoint < this.defaultOptions.customPositionOptions.snapDistanceLimit) {
+          coordinates = snappedPoint.geometry.coordinates as [number, number];
+        }
       }
     }
 
