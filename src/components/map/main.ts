@@ -4961,11 +4961,11 @@ export class Map {
         );
         let nearestPath = null;
         let minDist = Infinity;
-        for (const feature of lineStrings.features) {
-          const dist = pointToLineDistance(target, feature);
+        for (const path of paths) {
+          const dist = pointToLineDistance(point(coordinates), path);
           if (dist < minDist) {
             minDist = dist;
-            nearestLine = feature;
+            nearestPath = feature;
           }
         }
         routeLine = nearestPath;
