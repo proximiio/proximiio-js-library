@@ -71,6 +71,7 @@ import nearestPointOnLine from '@turf/nearest-point-on-line';
 import getCurrentStepIndex from './getCurrentStep';
 import { getAds, getAdsBundle } from '../../controllers/ads';
 import { AdModel } from '../../models/ad';
+import pointToLineDistance from '@turf/point-to-line-distance';
 
 export interface State {
   readonly initializing: boolean;
@@ -4936,22 +4937,39 @@ export class Map {
     floorChangeRule?: 'always' | 'never' | 'onInit';
   }) {
     // handle snapping
-    if (this.routingSource?.lines && this.defaultOptions.customPositionOptions.snapDistanceLimit > 0) {
-      const lines = this.routingSource.lines;
-      const routePoints = lines
-        .filter((i: any) => i.properties.level === level)
-        .map((i: any) => i.geometry.coordinates)
-        .filter(Boolean)
-        .flat();
+    if (this.defaultOptions.customPositionOptions.snapDistanceLimit > 0) {
+      let routeLine;
+      if (this.routingSource?.lines) {
+        const lines = this.routingSource.lines;
+        const routePoints = lines
+          .filter((i: any) => i.properties.level === level)
+          .map((i: any) => i.geometry.coordinates)
+          .filter(Boolean)
+          .flat();
 
-      if (routePoints.length < 2) {
-        // If the path segment is too short, stop processing
-        return;
+        if (routePoints.length < 2) {
+          // If the path segment is too short, stop processing
+          return;
+        }
+
+        routeLine = lineString(routePoints, {
+          level, // Attach the appropriate level to the LineString metadata
+        });
+      } else {
+        const paths = this.state.allFeatures.features.filter(
+          (path) => path.properties.class === 'path' && path.properties.level === level,
+        );
+        let nearestPath = null;
+        let minDist = Infinity;
+        for (const feature of lineStrings.features) {
+          const dist = pointToLineDistance(target, feature);
+          if (dist < minDist) {
+            minDist = dist;
+            nearestLine = feature;
+          }
+        }
+        routeLine = nearestPath;
       }
-
-      const routeLine = lineString(routePoints, {
-        level, // Attach the appropriate level to the LineString metadata
-      });
 
       const endPositionPoint = point(coordinates);
       const snappedPoint = nearestPointOnLine(routeLine, endPositionPoint);
