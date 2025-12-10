@@ -306,6 +306,7 @@ export interface Options {
     aggregateFloorChangeLimit?: number;
     floorChangeCooldown?: number;
     snapDistanceLimit?: number;
+    snappingRule?: 'always' | 'while-routing' | 'never';
   };
 }
 
@@ -539,6 +540,7 @@ export class Map {
       aggregateFloorChangeLimit: 3,
       floorChangeCooldown: 5000,
       snapDistanceLimit: 5,
+      snappingRule: 'while-routing',
     },
     // poiIconSize: ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.5],
   };
@@ -4937,7 +4939,10 @@ export class Map {
     floorChangeRule?: 'always' | 'never' | 'onInit';
   }) {
     // handle snapping
-    if (this.defaultOptions.customPositionOptions.snapDistanceLimit > 0) {
+    if (
+      this.defaultOptions.customPositionOptions.snapDistanceLimit > 0 &&
+      this.defaultOptions.customPositionOptions.snappingRule !== 'never'
+    ) {
       let routeLine;
       if (this.routingSource?.lines) {
         const lines = this.routingSource.lines;
@@ -4955,7 +4960,7 @@ export class Map {
         routeLine = lineString(routePoints, {
           level, // Attach the appropriate level to the LineString metadata
         });
-      } else {
+      } else if (this.defaultOptions.customPositionOptions.snappingRule === 'always') {
         const paths = this.state.allFeatures.features.filter(
           (path) => path.properties.class === 'path' && path.properties.level === level,
         );
