@@ -155,6 +155,8 @@ export interface PolygonOptions {
   iconImage?: string;
   iconImageDefaultVisible?: boolean;
   layerId?: string;
+  scaleFactor?: number;
+  typesToScale?: string[];
 }
 
 export interface PolygonLayer extends PolygonOptions {
@@ -780,6 +782,8 @@ export class Map {
           filter: this.defaultOptions.defaultFilter,
           bundleUrl: this.defaultOptions.bundleUrl,
           bundlePaginate: this.defaultOptions.bundlePaginate,
+          polygonScaleFactor: this.defaultOptions.polygonsOptions.scaleFactor,
+          polygonTypesToScale: this.defaultOptions.polygonsOptions.typesToScale,
         }).catch((error) => this.handleControllerError(error))
       : await getFeatures({
           initPolygons: this.defaultOptions.initPolygons,
@@ -795,6 +799,8 @@ export class Map {
           featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
           localSources: this.defaultOptions.localSources,
           apiPaginate: this.defaultOptions.apiPaginate,
+          polygonScaleFactor: this.defaultOptions.polygonsOptions.scaleFactor,
+          polygonTypesToScale: this.defaultOptions.polygonsOptions.typesToScale,
         }).catch((error) => this.handleControllerError(error));
     const amenities = useBundle
       ? await getAmenitiesBundle({
@@ -1070,6 +1076,8 @@ export class Map {
             filter: this.defaultOptions.defaultFilter,
             bundleUrl: this.defaultOptions.bundleUrl,
             bundlePaginate: this.defaultOptions.bundlePaginate,
+            polygonScaleFactor: this.defaultOptions.polygonsOptions.scaleFactor,
+            polygonTypesToScale: this.defaultOptions.polygonsOptions.typesToScale,
           })
         : await getFeatures({
             initPolygons: this.defaultOptions.initPolygons,
@@ -1085,6 +1093,8 @@ export class Map {
             featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
             localSources: this.defaultOptions.localSources,
             apiPaginate: this.defaultOptions.apiPaginate,
+            polygonScaleFactor: this.defaultOptions.polygonsOptions.scaleFactor,
+            polygonTypesToScale: this.defaultOptions.polygonsOptions.typesToScale,
           }).catch((error) => this.handleControllerError(error));
       if (features) {
         const optimizedFeatures = new FeatureCollection({ features: optimizeFeatures(features.features) });

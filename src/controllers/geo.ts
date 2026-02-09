@@ -54,6 +54,8 @@ export const getFeatures = async ({
   featuresMaxBounds,
   localSources,
   apiPaginate,
+  polygonScaleFactor,
+  polygonTypesToScale,
 }: {
   initPolygons?: boolean;
   polygonLayers: PolygonLayer[];
@@ -66,6 +68,8 @@ export const getFeatures = async ({
     features?: FeatureCollection;
   };
   apiPaginate?: boolean;
+  polygonScaleFactor?: number;
+  polygonTypesToScale?: string[];
 }) => {
   let url = '/v7/geo/features';
   if (featuresMaxBounds) {
@@ -135,6 +139,18 @@ export const getFeatures = async ({
         },
       };
     }
+  }
+
+  if (polygonScaleFactor !== 1 && polygonTypesToScale?.length > 0) {
+    res.data.features = res.data.features.map((feature) => {
+      if (polygonTypesToScale?.includes(feature.properties.type)) {
+        feature.properties._scale = polygonScaleFactor;
+        const scaledPolygon = transformScale(feature, polygonScaleFactor);
+        feature.geometry = scaledPolygon.geometry;
+        console.log('scaledPolygon', feature);
+      }
+      return feature;
+    });
   }
 
   if (initPolygons) {
@@ -543,6 +559,8 @@ export const getFeaturesBundle = async ({
   filter,
   bundleUrl,
   bundlePaginate,
+  polygonScaleFactor,
+  polygonTypesToScale,
 }: {
   initPolygons?: boolean;
   polygonLayers: PolygonLayer[];
@@ -552,6 +570,8 @@ export const getFeaturesBundle = async ({
   filter?: { key: string; value: string; hideIconOnly?: boolean };
   bundleUrl: string;
   bundlePaginate?: boolean;
+  polygonScaleFactor?: number;
+  polygonTypesToScale?: string[];
 }) => {
   let data = {
     features: [],
@@ -607,6 +627,17 @@ export const getFeaturesBundle = async ({
       features: items,
       type: 'FeatureCollection',
     };
+  }
+
+  if (polygonScaleFactor !== 1 && polygonTypesToScale?.length > 0) {
+    data.features = data.features.map((feature) => {
+      if (polygonTypesToScale?.includes(feature.properties.type)) {
+        feature.properties._scale = polygonScaleFactor;
+        const scaledPolygon = transformScale(feature, polygonScaleFactor);
+        feature.geometry = scaledPolygon.geometry;
+      }
+      return feature;
+    });
   }
 
   if (initPolygons) {
