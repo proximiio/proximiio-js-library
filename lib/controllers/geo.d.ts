@@ -3,7 +3,7 @@ import { AmenityModel } from '../models/amenity';
 import { PolygonLayer } from '../components/map/main';
 import { FeatureCollection as FCModel, Feature as FModel } from '@turf/helpers';
 import { LngLatBoundsLike } from 'maplibre-gl';
-export declare const getFeatures: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, apiPaginate, }: {
+export declare const getFeatures: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, apiPaginate, polygonScaleFactor, polygonTypesToScale, }: {
     initPolygons?: boolean;
     polygonLayers: PolygonLayer[];
     autoLabelLines?: boolean;
@@ -19,8 +19,10 @@ export declare const getFeatures: ({ initPolygons, polygonLayers, autoLabelLines
         features?: FeatureCollection;
     };
     apiPaginate?: boolean;
+    polygonScaleFactor?: number;
+    polygonTypesToScale?: string[];
 }) => Promise<FeatureCollection>;
-export declare const getFeaturesBundle: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, bundleUrl, bundlePaginate, }: {
+export declare const getFeaturesBundle: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, bundleUrl, bundlePaginate, polygonScaleFactor, polygonTypesToScale, }: {
     initPolygons?: boolean;
     polygonLayers: PolygonLayer[];
     autoLabelLines?: boolean;
@@ -33,6 +35,8 @@ export declare const getFeaturesBundle: ({ initPolygons, polygonLayers, autoLabe
     };
     bundleUrl: string;
     bundlePaginate?: boolean;
+    polygonScaleFactor?: number;
+    polygonTypesToScale?: string[];
 }) => Promise<FeatureCollection>;
 export declare const getAmenities: ({ amenityIdProperty, localSources, }: {
     amenityIdProperty?: string;
@@ -54,7 +58,7 @@ export declare const getFeatureByIdBundle: ({ bundleUrl, featureId, }: {
     featureId: string;
 }) => Promise<Feature>;
 declare const _default: {
-    getFeatures: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, apiPaginate, }: {
+    getFeatures: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, apiPaginate, polygonScaleFactor, polygonTypesToScale, }: {
         initPolygons?: boolean;
         polygonLayers: PolygonLayer[];
         autoLabelLines?: boolean;
@@ -70,6 +74,8 @@ declare const _default: {
             features?: FeatureCollection;
         };
         apiPaginate?: boolean;
+        polygonScaleFactor?: number;
+        polygonTypesToScale?: string[];
     }) => Promise<FeatureCollection>;
     addFeatures: (featureCollection: FCModel<import("@turf/helpers").Geometry | import("@turf/helpers").GeometryCollection, {
         [name: string]: any;

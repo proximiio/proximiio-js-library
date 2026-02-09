@@ -72,7 +72,7 @@ declare const _default: {
         }>;
     };
     Geo: {
-        getFeatures: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, apiPaginate, }: {
+        getFeatures: ({ initPolygons, polygonLayers, autoLabelLines, hiddenAmenities, useTimerangeData, filter, featuresMaxBounds, localSources, apiPaginate, polygonScaleFactor, polygonTypesToScale, }: {
             initPolygons?: boolean;
             polygonLayers: import("./components/map/main").PolygonLayer[];
             autoLabelLines?: boolean;
@@ -88,6 +88,8 @@ declare const _default: {
                 features?: import("./models/feature").FeatureCollection;
             };
             apiPaginate?: boolean;
+            polygonScaleFactor?: number;
+            polygonTypesToScale?: string[];
         }) => Promise<import("./models/feature").FeatureCollection>;
         addFeatures: (featureCollection: import("@turf/helpers").FeatureCollection<import("@turf/helpers").Geometry | import("@turf/helpers").GeometryCollection, {
             [name: string]: any;

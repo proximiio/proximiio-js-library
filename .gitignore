@@ -38,6 +38,7 @@ npm-debug.log
 yarn-error.log
 testem.log
 /typings
+/.npmrc
 # /lib
 
 # System Files

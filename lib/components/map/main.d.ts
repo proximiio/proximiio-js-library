@@ -83,6 +83,8 @@ export interface PolygonOptions {
     iconImage?: string;
     iconImageDefaultVisible?: boolean;
     layerId?: string;
+    scaleFactor?: number;
+    typesToScale?: string[];
 }
 export interface PolygonLayer extends PolygonOptions {
     featureType: string;
@@ -223,6 +225,8 @@ export interface Options {
         minDistanceToChange?: number;
         aggregatePositionsLimit?: number;
         aggregationResult?: 'center' | 'nearest';
+        disableAggregationWhileRouting?: boolean;
+        enableAnimation?: boolean;
         animationMinDuration?: number;
         animationMaxDuration?: number;
         animationDurationPerMeter?: number;
@@ -230,6 +234,7 @@ export interface Options {
         aggregateFloorChangeLimit?: number;
         floorChangeCooldown?: number;
         snapDistanceLimit?: number;
+        snappingRule?: 'always' | 'while-routing' | 'never';
     };
 }
 export interface PaddingOptions {
@@ -392,11 +397,12 @@ export declare class Map {
     private startPointPopup;
     private displayPointOnMap;
     removeStartPointOnMap: () => void;
-    private previousBearing;
     private floorChangeBuffer;
     private lastFloorChangeTimestamp;
-    private customPositionBearing;
     private onSetCustomPosition;
+    private previousHeading;
+    private customPositionHeading;
+    private onSetCustomPositionHeading;
     private onCancelCustomPosition;
     private customPositionAnimationFrameId;
     private customPostionAnimationStartTime;
@@ -1528,14 +1534,12 @@ export declare class Map {
      *  });
      */
     private positionsList;
-    setCustomPosition({ coordinates, level, bearing, recenter, iconSize, directionIconSize, followBearing, followRouteBearing, addPositionIcon, floorChangeRule, }: {
+    setCustomPosition({ coordinates, level, recenter, iconSize, directionIconSize, followRouteBearing, addPositionIcon, floorChangeRule, }: {
         coordinates: [number, number];
         level: number;
-        bearing?: number;
         recenter?: boolean;
         iconSize?: number;
         directionIconSize?: number;
-        followBearing?: boolean;
         followRouteBearing?: boolean;
         addPositionIcon?: boolean;
         floorChangeRule?: 'always' | 'never' | 'onInit';
@@ -1581,6 +1585,22 @@ export declare class Map {
         coordinates: number[];
         level: number;
     }>;
+    /**
+     * Method for setting custom position heading
+     *  @memberof Map
+     *  @name setCustomPositionHeading
+     *  @param heading {number} heading angle for custom position.
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.setCustomPositionHeading({ heading: 20});
+     *  });
+     */
+    setCustomPositionHeading({ heading, followBearing }: {
+        heading: number;
+        followBearing?: boolean;
+    }): void;
     /**
      *  @memberof Map
      *  @name getArrivalListener
