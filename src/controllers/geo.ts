@@ -143,13 +143,17 @@ export const getFeatures = async ({
 
   if (polygonScaleFactor !== 1 && polygonTypesToScale?.length > 0) {
     res.data.features = res.data.features.map((feature) => {
-      if (polygonTypesToScale?.includes(feature.properties.type)) {
-        feature.properties._scale = polygonScaleFactor;
-        const scaledPolygon = transformScale(feature, polygonScaleFactor);
-        feature.geometry = scaledPolygon.geometry;
-        console.log('scaledPolygon', feature);
+      try {
+        if (polygonTypesToScale?.includes(feature.properties.type) && feature.geometry.coordinates.length > 0) {
+          feature.properties._scale = polygonScaleFactor;
+          const scaledPolygon = transformScale(feature, polygonScaleFactor);
+          feature.geometry = scaledPolygon.geometry;
+        }
+        return feature;
+      } catch (e) {
+        console.error('Scaling failed for feature:', feature, e);
+        return feature; // prevent map from breaking
       }
-      return feature;
     });
   }
 
@@ -631,12 +635,17 @@ export const getFeaturesBundle = async ({
 
   if (polygonScaleFactor !== 1 && polygonTypesToScale?.length > 0) {
     data.features = data.features.map((feature) => {
-      if (polygonTypesToScale?.includes(feature.properties.type)) {
-        feature.properties._scale = polygonScaleFactor;
-        const scaledPolygon = transformScale(feature, polygonScaleFactor);
-        feature.geometry = scaledPolygon.geometry;
+      try {
+        if (polygonTypesToScale?.includes(feature.properties.type) && feature.geometry.coordinates.length > 0) {
+          feature.properties._scale = polygonScaleFactor;
+          const scaledPolygon = transformScale(feature, polygonScaleFactor);
+          feature.geometry = scaledPolygon.geometry;
+        }
+        return feature;
+      } catch (e) {
+        console.error('Scaling failed for feature:', feature, e);
+        return feature; // prevent map from breaking
       }
-      return feature;
     });
   }
 
