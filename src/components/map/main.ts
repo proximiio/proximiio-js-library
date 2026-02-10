@@ -2008,6 +2008,10 @@ export class Map {
           polygonsLayer.setFilterLevel(this.state.floor.level);
           this.state.style.addLayer(polygonsLayer.json, 'proximiio-paths');
 
+          /*const polygonTitlesLineLayer = new PolygonTitlesLineLayer(this.defaultOptions.polygonsOptions);
+          polygonTitlesLineLayer.setFilterLevel(this.state.floor.level);
+          this.state.style.addLayer(polygonTitlesLineLayer.json, 'proximiio-paths');*/
+
           this.map.on('click', `polygons-custom`, (e) => {
             this.onShopClick(e);
           });
@@ -2046,6 +2050,10 @@ export class Map {
             const polygonTitlesLayer = new PolygonTitlesLayer(polygonLayer);
             polygonTitlesLayer.setFilterLevel(this.state.floor.level);
             this.state.style.addLayer(polygonTitlesLayer.json, 'proximiio-paths');
+
+            /*const polygonTitlesLineLayer = new PolygonTitlesLineLayer(polygonLayer);
+            polygonTitlesLineLayer.setFilterLevel(this.state.floor.level);
+            this.state.style.addLayer(polygonTitlesLineLayer.json, 'proximiio-paths');*/
 
             const polygonsLayer = new PolygonsLayer(polygonLayer);
             polygonsLayer.setFilterLevel(this.state.floor.level);
@@ -2099,10 +2107,6 @@ export class Map {
           console.log('No layer clicked.');
         }
       });*/
-
-      // const polygonTitlesLineLayer = new PolygonTitlesLineLayer({ featureType: 'shop' });
-      // polygonTitlesLineLayer.setFilterLevel(this.state.floor.level);
-      // this.state.style.addLayer(polygonTitlesLineLayer.json, 'proximiio-polygons-above-paths');
 
       this.map.on('click', 'proximiio-pois-icons', (ev) => {
         this.onShopClick(ev);
