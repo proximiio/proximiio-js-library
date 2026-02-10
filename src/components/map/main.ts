@@ -155,7 +155,7 @@ export interface PolygonOptions {
   iconImage?: string;
   iconImageDefaultVisible?: boolean;
   layerId?: string;
-  scaleFactor?: number;
+  bufferDistance?: number;
   typesToScale?: string[];
 }
 
@@ -782,7 +782,7 @@ export class Map {
           filter: this.defaultOptions.defaultFilter,
           bundleUrl: this.defaultOptions.bundleUrl,
           bundlePaginate: this.defaultOptions.bundlePaginate,
-          polygonScaleFactor: this.defaultOptions.polygonsOptions.scaleFactor,
+          polygonBufferDistance: this.defaultOptions.polygonsOptions.bufferDistance,
           polygonTypesToScale: this.defaultOptions.polygonsOptions.typesToScale,
         }).catch((error) => this.handleControllerError(error))
       : await getFeatures({
@@ -799,7 +799,7 @@ export class Map {
           featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
           localSources: this.defaultOptions.localSources,
           apiPaginate: this.defaultOptions.apiPaginate,
-          polygonScaleFactor: this.defaultOptions.polygonsOptions.scaleFactor,
+          polygonBufferDistance: this.defaultOptions.polygonsOptions.bufferDistance,
           polygonTypesToScale: this.defaultOptions.polygonsOptions.typesToScale,
         }).catch((error) => this.handleControllerError(error));
     const amenities = useBundle
@@ -1076,7 +1076,7 @@ export class Map {
             filter: this.defaultOptions.defaultFilter,
             bundleUrl: this.defaultOptions.bundleUrl,
             bundlePaginate: this.defaultOptions.bundlePaginate,
-            polygonScaleFactor: this.defaultOptions.polygonsOptions.scaleFactor,
+            polygonBufferDistance: this.defaultOptions.polygonsOptions.bufferDistance,
             polygonTypesToScale: this.defaultOptions.polygonsOptions.typesToScale,
           })
         : await getFeatures({
@@ -1093,7 +1093,7 @@ export class Map {
             featuresMaxBounds: this.defaultOptions.featuresMaxBounds,
             localSources: this.defaultOptions.localSources,
             apiPaginate: this.defaultOptions.apiPaginate,
-            polygonScaleFactor: this.defaultOptions.polygonsOptions.scaleFactor,
+            polygonBufferDistance: this.defaultOptions.polygonsOptions.bufferDistance,
             polygonTypesToScale: this.defaultOptions.polygonsOptions.typesToScale,
           }).catch((error) => this.handleControllerError(error));
       if (features) {

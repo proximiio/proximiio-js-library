@@ -20,6 +20,7 @@ import lineIntersect from '@turf/line-intersect';
 import { lineString } from '@turf/helpers';
 import { LngLatBoundsLike } from 'maplibre-gl';
 import center from '@turf/center';
+import buffer from '@turf/buffer';
 
 async function fetchFeatures({
   from,
@@ -54,7 +55,7 @@ export const getFeatures = async ({
   featuresMaxBounds,
   localSources,
   apiPaginate,
-  polygonScaleFactor,
+  polygonBufferDistance,
   polygonTypesToScale,
 }: {
   initPolygons?: boolean;
@@ -68,7 +69,7 @@ export const getFeatures = async ({
     features?: FeatureCollection;
   };
   apiPaginate?: boolean;
-  polygonScaleFactor?: number;
+  polygonBufferDistance?: number;
   polygonTypesToScale?: string[];
 }) => {
   let url = '/v7/geo/features';
@@ -141,12 +142,12 @@ export const getFeatures = async ({
     }
   }
 
-  if (polygonScaleFactor !== 1 && polygonTypesToScale?.length > 0) {
+  if (polygonBufferDistance !== 0 && polygonTypesToScale?.length > 0) {
     res.data.features = res.data.features.map((feature) => {
       try {
         if (polygonTypesToScale?.includes(feature.properties.type) && feature.geometry.coordinates.length > 0) {
-          feature.properties._scale = polygonScaleFactor;
-          const scaledPolygon = transformScale(feature, polygonScaleFactor);
+          feature.properties._buffer = polygonBufferDistance;
+          const scaledPolygon = buffer(feature, polygonBufferDistance, { units: 'meters' });
           feature.geometry = scaledPolygon.geometry;
         }
         return feature;
@@ -563,7 +564,7 @@ export const getFeaturesBundle = async ({
   filter,
   bundleUrl,
   bundlePaginate,
-  polygonScaleFactor,
+  polygonBufferDistance,
   polygonTypesToScale,
 }: {
   initPolygons?: boolean;
@@ -574,7 +575,7 @@ export const getFeaturesBundle = async ({
   filter?: { key: string; value: string; hideIconOnly?: boolean };
   bundleUrl: string;
   bundlePaginate?: boolean;
-  polygonScaleFactor?: number;
+  polygonBufferDistance?: number;
   polygonTypesToScale?: string[];
 }) => {
   let data = {
@@ -633,12 +634,12 @@ export const getFeaturesBundle = async ({
     };
   }
 
-  if (polygonScaleFactor !== 1 && polygonTypesToScale?.length > 0) {
+  if (polygonBufferDistance !== 0 && polygonTypesToScale?.length > 0) {
     data.features = data.features.map((feature) => {
       try {
         if (polygonTypesToScale?.includes(feature.properties.type) && feature.geometry.coordinates.length > 0) {
-          feature.properties._scale = polygonScaleFactor;
-          const scaledPolygon = transformScale(feature, polygonScaleFactor);
+          feature.properties._buffer = polygonBufferDistance;
+          const scaledPolygon = buffer(feature, polygonBufferDistance, { units: 'meters' });
           feature.geometry = scaledPolygon.geometry;
         }
         return feature;
