@@ -64,7 +64,9 @@ function wind(coords: Position[], outer: boolean): void {
   let area = 0;
 
   for (let i = 0; i < len; i++) {
-    let lower: number, middle: number, upper: number;
+    let lower: number;
+    let middle: number;
+    let upper: number;
 
     if (i === len - 2) {
       lower = len - 2;
