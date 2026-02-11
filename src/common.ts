@@ -280,18 +280,10 @@ const optimizeFeature = (feature: Feature) => {
     delete optimizedProperties.workingHours;
   }
 
-  // Function to recursively shorten coordinates (handling nested arrays)
-  function shortenCoordinates(coords) {
-    if (Array.isArray(coords)) {
-      return coords.map((c) => (Array.isArray(c) ? shortenCoordinates(c) : Number(c.toFixed(8))));
-    }
-    return Number(coords.toFixed(8));
-  }
-
   // Optimize geometry by shortening coordinate precision
   const optimizedGeometry = {
     type: feature.geometry.type,
-    coordinates: shortenCoordinates(feature.geometry.coordinates),
+    coordinates: shortenCoordinates({ coords: feature.geometry.coordinates, decimals: 8 }),
   };
 
   // Return a new optimized feature object
@@ -305,6 +297,15 @@ const optimizeFeature = (feature: Feature) => {
 
 const optimizeFeatures = (features: Feature[]) => {
   return features.map(optimizeFeature);
+};
+
+const shortenCoordinates = ({ coords, decimals }: { coords: number | number[] | number[][]; decimals: number }) => {
+  if (Array.isArray(coords)) {
+    return coords.map((c: number | number[]) =>
+      Array.isArray(c) ? shortenCoordinates({ coords: c, decimals }) : Number(c.toFixed(decimals)),
+    );
+  }
+  return Number(coords.toFixed(decimals));
 };
 
 const isElevator = (poi: Feature) => {
@@ -369,4 +370,5 @@ export {
   optimizeFeatures,
   isLevelChanger,
   pointInBounds,
+  shortenCoordinates,
 };
