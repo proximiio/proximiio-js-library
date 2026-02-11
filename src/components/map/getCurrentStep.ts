@@ -22,11 +22,11 @@ const getCurrentStepIndex = ({
   thresholdMeters?: number;
 }) => {
   const userPoint = point(userPosition);
-  let closestStepIndex = 0; // lastKnownStepIndex;
+  let closestStepIndex = lastKnownStepIndex ? lastKnownStepIndex : 0;
   let minDistance = Infinity;
 
   // Only check steps ahead of current one to avoid regressions
-  for (let i = 0 /*lastKnownStepIndex*/; i < steps.length; i++) {
+  for (let i = lastKnownStepIndex; i < steps.length; i++) {
     const step = steps[i];
     if (step.navMode === 'mall' && !step.lineStringFeatureFromLastStep) {
       return;

@@ -241,6 +241,7 @@ export interface Options {
     showTailSegment?: boolean;
     showCompassDirection?: boolean;
     stepChangeThreshold?: number;
+    stepChangeOnlyForward?: boolean;
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
@@ -502,6 +503,7 @@ export class Map {
       showTailSegment: false,
       showCompassDirection: false,
       stepChangeThreshold: 5,
+      stepChangeOnlyForward: false,
     },
     useRasterTiles: false,
     handleUrlParams: false,
@@ -5177,7 +5179,7 @@ export class Map {
           const stepIndex = getCurrentStepIndex({
             userPosition: coordinates,
             steps: this.routingSource.steps,
-            lastKnownStepIndex: this.currentStep,
+            lastKnownStepIndex: this.defaultOptions.routeAnimation.stepChangeOnlyForward ? this.currentStep : 0,
             thresholdMeters: this.defaultOptions.routeAnimation.stepChangeThreshold,
           });
           this.setNavStep(stepIndex);
