@@ -83,7 +83,7 @@ export interface PolygonOptions {
     iconImage?: string;
     iconImageDefaultVisible?: boolean;
     layerId?: string;
-    scaleFactor?: number;
+    bufferDistance?: number;
     typesToScale?: string[];
 }
 export interface PolygonLayer extends PolygonOptions {

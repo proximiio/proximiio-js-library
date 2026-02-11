@@ -36,6 +36,10 @@ declare const optimizeFeatures: (features: Feature[]) => {
     };
     properties: any;
 }[];
+declare const shortenCoordinates: ({ coords, decimals }: {
+    coords: number | number[] | number[][];
+    decimals: number;
+}) => any;
 declare const isLevelChanger: (poi: Feature) => boolean;
 declare const pointInBounds: (point: [number, number], bounds: LngLatBoundsLike) => boolean;
-export { calculateDimensions, convertToRTL, base64toBlob, throttle, filterByAmenity, validateLabelLine, optimizeFeatures, isLevelChanger, pointInBounds, };
+export { calculateDimensions, convertToRTL, base64toBlob, throttle, filterByAmenity, validateLabelLine, optimizeFeatures, isLevelChanger, pointInBounds, shortenCoordinates, };

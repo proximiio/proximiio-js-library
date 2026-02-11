@@ -12,5 +12,5 @@ export declare class PolygonTitlesLayer extends SymbolLayer {
     constructor(data: PolygonLayer | PolygonOptions);
 }
 export declare class PolygonTitlesLineLayer extends LineLayer {
-    constructor(data: PolygonOptions);
+    constructor(data: PolygonLayer | PolygonOptions);
 }
