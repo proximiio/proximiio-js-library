@@ -160,6 +160,12 @@ export const getFeatures = async ({
     });
   }
 
+  res.data.features = res.data.features.map((feature) => {
+    feature.geometry.coordinates = shortenCoordinates({ coords: feature.geometry.coordinates, decimals: 8 });
+    rewind(feature, false);
+    return feature;
+  });
+
   if (initPolygons) {
     const featuresToAdd: any[] = [];
 
@@ -225,9 +231,6 @@ export const getFeatures = async ({
       const labelLineFeatures = res.data.features.filter((f) => f.properties.type === 'label-line');
 
       res.data.features = res.data.features.map((feature: any, key: number) => {
-        feature.geometry.coordinates = shortenCoordinates({ coords: feature.geometry.coordinates, decimals: 8 });
-        rewind(feature, false);
-
         if (hiddenAmenities && hiddenAmenities.length > 0 && hiddenAmenities.includes(feature.properties.amenity)) {
           feature.properties.hideIcon = 'hide';
         }

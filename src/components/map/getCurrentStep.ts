@@ -22,6 +22,7 @@ const getCurrentStepIndex = ({
   thresholdMeters?: number;
 }) => {
   const userPoint = point(userPosition);
+
   let closestStepIndex = lastKnownStepIndex ? lastKnownStepIndex : 0;
   let minDistance = Infinity;
 
