@@ -60,6 +60,23 @@ declare const _default: {
             kioskId: string;
         }) => Promise<import("./models/kiosk").KioskModel>;
     };
+    Geofences: {
+        getGeofences: (limit?: number, skip?: number, order?: string, dir?: string, filterByIndex?: string, q?: string, filter?: string) => Promise<{
+            data: import("./models/geofence").GeofenceModel[];
+            total: number;
+        }>;
+        getGeofencesBundle: ({ bundleUrl, }: {
+            bundleUrl: string;
+        }) => Promise<{
+            data: import("./models/geofence").GeofenceModel[];
+            total: number;
+        }>;
+        getGeofenceById: (geofenceId: string) => Promise<import("./models/geofence").GeofenceModel>;
+        getGeofenceByIdBundle: ({ bundleUrl, geofenceId, }: {
+            bundleUrl: string;
+            geofenceId: string;
+        }) => Promise<import("./models/geofence").GeofenceModel>;
+    };
     Ads: {
         getAds: () => Promise<{
             data: import("./models/ad").AdModel[];

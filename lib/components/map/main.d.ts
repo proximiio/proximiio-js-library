@@ -167,6 +167,7 @@ export interface Options {
         showTailSegment?: boolean;
         showCompassDirection?: boolean;
         stepChangeThreshold?: number;
+        stepChangeOnlyForward?: boolean;
     };
     useRasterTiles?: boolean;
     rasterTilesOptions?: {
