@@ -478,8 +478,9 @@ export default class StyleModel {
     // tslint:disable-next-line:no-shadowed-variable
     const layer = this.layers.find((layer) => layer.id === 'proximiio-paths' || layer.id === 'paths');
     if (layer) {
-      const updated = new LineLayer(Object.assign({}, layer));
-      updated.layout.visibility = enabled ? 'visible' : 'none';
+      // const updated = new LineLayer(Object.assign({}, layer));
+      // updated.layout.visibility = enabled ? 'visible' : 'none';
+      layer.layout.visibility = enabled ? 'visible' : 'none';
       // this.updateLayer(updated);
     }
   }
