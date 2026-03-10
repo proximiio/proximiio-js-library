@@ -480,7 +480,7 @@ export default class StyleModel {
     if (layer) {
       const updated = new LineLayer(Object.assign({}, layer));
       updated.layout.visibility = enabled ? 'visible' : 'none';
-      this.updateLayer(updated);
+      // this.updateLayer(updated);
     }
   }
 
