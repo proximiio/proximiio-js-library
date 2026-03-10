@@ -311,6 +311,7 @@ export interface Options {
     snapDistanceLimit?: number;
     snappingRule?: 'always' | 'while-routing' | 'never';
   };
+  showPaths?: boolean;
 }
 
 export interface PaddingOptions {
@@ -546,6 +547,7 @@ export class Map {
       snapDistanceLimit: 5,
       snappingRule: 'while-routing',
     },
+    showPaths: false,
     // poiIconSize: ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.5],
   };
   private routeFactory: any;
@@ -862,7 +864,7 @@ export class Map {
     // set paths visible if available
     const map = e.target;
     if (map) {
-      this.state.style?.togglePaths(true);
+      this.state.style?.togglePaths(this.defaultOptions.showPaths);
       // routing layers
       const routingLayer = map.getLayer('routing-line-completed');
       const usePrefixed =
