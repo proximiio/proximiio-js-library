@@ -1,7 +1,7 @@
 // @ts-ignore
 import { Wayfinding } from '../../../lib/assets/wayfinding';
-import Feature, { FeatureCollection } from '../../models/feature';
-import { lineString, point } from '@turf/helpers';
+import Feature from '../../models/feature';
+import { FeatureCollection, lineString, point } from '@turf/helpers';
 import { WayfindingConfigModel } from '../../models/wayfinding';
 import osrmTextInstructionsPackage from 'osrm-text-instructions';
 
@@ -16,7 +16,7 @@ export default class Routing {
   config: WayfindingConfigModel;
 
   constructor() {
-    this.data = new FeatureCollection({});
+    this.data = {} as FeatureCollection;
   }
 
   setData(collection: FeatureCollection) {

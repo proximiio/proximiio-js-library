@@ -827,8 +827,10 @@ export class Map {
       : await getAds().catch((error) => this.handleControllerError(error));
 
     if (features && kiosks && ads) {
-      const optimizedFeatures = new FeatureCollection({ features: optimizeFeatures(features.features) });
-      const levelChangers = features.features.filter(
+      const optimizedFeatures = new FeatureCollection({
+        features: optimizeFeatures(features.modifiedFeatures.features),
+      });
+      const levelChangers = features.modifiedFeatures.features.filter(
         (f) =>
           f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
       );
@@ -842,17 +844,17 @@ export class Map {
         this.routingSource.setLevelChangers(levelChangers);
       }
       this.geojsonSource.fetch(optimizedFeatures);
-      this.routingSource.routing.setData(new FeatureCollection(features));
+      this.routingSource.routing.setData(features.originalFeatures);
       this.prepareStyle(this.state.style);
       this.state = {
         ...this.state,
         initializing: false,
         kiosks: kiosks.data,
         amenities,
-        features,
+        features: features.modifiedFeatures,
         ads: ads.data,
         optimizedFeatures,
-        allFeatures: new FeatureCollection(features),
+        allFeatures: new FeatureCollection(features.modifiedFeatures),
         levelChangers: new FeatureCollection({ features: levelChangers }),
         zoom: this.defaultOptions.zoomLevel ? this.defaultOptions.zoomLevel : this.defaultOptions.mapboxOptions?.zoom,
       };
@@ -1101,16 +1103,18 @@ export class Map {
             polygonTypesToScale: this.defaultOptions.polygonsOptions.typesToScale,
           }).catch((error) => this.handleControllerError(error));
       if (features) {
-        const optimizedFeatures = new FeatureCollection({ features: optimizeFeatures(features.features) });
-        const levelChangers = features.features.filter(
+        const optimizedFeatures = new FeatureCollection({
+          features: optimizeFeatures(features.modifiedFeatures.features),
+        });
+        const levelChangers = features.modifiedFeatures.features.filter(
           (f) =>
             f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
         );
         this.state = {
           ...this.state,
-          features,
+          features: features.modifiedFeatures,
           optimizedFeatures,
-          allFeatures: new FeatureCollection(features),
+          allFeatures: new FeatureCollection(features.modifiedFeatures),
           levelChangers: new FeatureCollection({ features: levelChangers }),
         };
         // this.geojsonSource.fetch(this.state.features);
@@ -2890,7 +2894,7 @@ export class Map {
     });
     this.state.style.setSource('main', this.geojsonSource);
     this.onSourceChange();
-    this.routingSource.routing.setData(this.state.allFeatures);
+    // this.routingSource.routing.setData(this.state.allFeatures);
     this.updateMapSource(this.routingSource);
   }
 

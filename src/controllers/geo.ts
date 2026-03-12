@@ -75,6 +75,7 @@ export const getFeatures = async ({
   polygonTypesToScale?: string[];
 }) => {
   let url = '/v7/geo/features';
+  let originalFeatures;
   if (featuresMaxBounds) {
     url += `/${featuresMaxBounds[0][0]},${featuresMaxBounds[0][1]},${featuresMaxBounds[1][0]},${featuresMaxBounds[1][1]}`;
   }
@@ -143,6 +144,8 @@ export const getFeatures = async ({
       };
     }
   }
+
+  originalFeatures = { ...res.data };
 
   if (polygonBufferDistance !== 0 && polygonTypesToScale?.length > 0) {
     res.data.features = res.data.features.map((feature) => {
@@ -563,7 +566,13 @@ export const getFeatures = async ({
 
     res.data.features = res.data.features.concat(featuresToAdd);
   }
-  return new FeatureCollection(res.data);
+  return {
+    modifiedFeatures: new FeatureCollection(res.data),
+    originalFeatures: {
+      features: originalFeatures.features,
+      type: 'FeatureCollection' as 'FeatureCollection',
+    },
+  };
 };
 
 export const getFeaturesBundle = async ({
@@ -594,6 +603,7 @@ export const getFeaturesBundle = async ({
     count: 0,
     type: 'FeatureCollection',
   };
+  let originalFeatures;
   if (!bundlePaginate) {
     const res = await fetch(`${bundleUrl}/features.json`);
     data = await res.json();
@@ -644,6 +654,8 @@ export const getFeaturesBundle = async ({
       type: 'FeatureCollection',
     };
   }
+
+  originalFeatures = { ...data };
 
   if (polygonBufferDistance !== 0 && polygonTypesToScale?.length > 0) {
     data.features = data.features.map((feature) => {
@@ -1057,7 +1069,13 @@ export const getFeaturesBundle = async ({
 
     data.features = data.features.concat(featuresToAdd);
   }
-  return new FeatureCollection(data);
+  return {
+    modifiedFeatures: new FeatureCollection(data),
+    originalFeatures: {
+      features: originalFeatures.features,
+      type: 'FeatureCollection' as 'FeatureCollection',
+    },
+  };
 };
 
 export const getAmenities = async ({
