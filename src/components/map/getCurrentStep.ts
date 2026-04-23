@@ -34,7 +34,7 @@ const getCurrentStepIndex = ({
     if (step.navMode === 'mall' && !step.lineStringFeatureFromLastStep && !isStartOrLevelChanger) {
       return;
     }
-    //if (step.lineStringFeatureFromLastStep || step.navMode !== 'mall' || isStartOrLevelChanger) {
+
     let pointDistance = 0;
     if (isStartOrLevelChanger) {
       pointDistance = distance(userPoint, point(step.coordinates), { units: 'meters' });
@@ -50,7 +50,6 @@ const getCurrentStepIndex = ({
       minDistance = pointDistance;
       closestStepIndex = i;
     }
-    //}
   }
 
   // Return updated index if user is close enough to a new step, else stick to last one
