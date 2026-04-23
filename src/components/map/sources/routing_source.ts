@@ -40,6 +40,7 @@ export default class RoutingSource extends DataSource {
   fullPath?: Feature;
   isMultipoint = false;
   landmarkTBT: boolean;
+  simplifiedTBT: boolean;
   pois?: Feature[];
   levelChangers?: Feature[];
   initialBearing: number;
@@ -50,6 +51,7 @@ export default class RoutingSource extends DataSource {
     this.routing = new Routing();
     this.navigationType = 'mall';
     this.landmarkTBT = false;
+    this.simplifiedTBT = false;
   }
 
   toggleAccessible(value: any) {
@@ -66,6 +68,10 @@ export default class RoutingSource extends DataSource {
 
   setLandmarkTBT(value: boolean) {
     this.landmarkTBT = value;
+  }
+
+  setSimplifiedTBT(value: boolean) {
+    this.simplifiedTBT = value;
   }
 
   setInitialBearing(initialBearing: number) {
@@ -120,7 +126,13 @@ export default class RoutingSource extends DataSource {
       if (this.navigationType === 'city') {
         route = await this.routing.cityRoute({ start, finish, language: this.language });
       } else if (this.navigationType === 'mall') {
-        route = this.routing.route({ start, finish, stops, landmarkTBT: this.landmarkTBT });
+        route = this.routing.route({
+          start,
+          finish,
+          stops,
+          landmarkTBT: this.landmarkTBT,
+          simplifiedTBT: this.simplifiedTBT,
+        });
       } else if (this.navigationType === 'combined' && connectingPoint) {
         if (startAtMall) {
           const entranceId = start.properties.metadata?.entrance;
@@ -131,6 +143,7 @@ export default class RoutingSource extends DataSource {
             finish: connectingPoint,
             stops,
             landmarkTBT: this.landmarkTBT,
+            simplifiedTBT: this.simplifiedTBT,
             priorityEntrance: entranceFeature,
           });
         } else {
@@ -142,6 +155,7 @@ export default class RoutingSource extends DataSource {
             finish,
             stops,
             landmarkTBT: this.landmarkTBT,
+            simplifiedTBT: this.simplifiedTBT,
             priorityEntrance: entranceFeature,
           });
         }
@@ -163,6 +177,7 @@ export default class RoutingSource extends DataSource {
           points: route?.points,
           language: this.language,
           landMarkNav: this.landmarkTBT,
+          simplifiedTBT: this.simplifiedTBT,
           pois: this.pois,
           levelChangers: this.levelChangers,
           initialBearing: this.initialBearing,
@@ -224,6 +239,7 @@ export default class RoutingSource extends DataSource {
           points: mallRoute?.points,
           language: this.language,
           landMarkNav: this.landmarkTBT,
+          simplifiedTBT: this.simplifiedTBT,
           pois: this.pois,
           levelChangers: this.levelChangers,
           initialBearing: this.initialBearing,

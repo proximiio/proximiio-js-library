@@ -46,6 +46,7 @@ export default class GuidanceStepsGenerator {
   steps: GuidanceStep[];
   language: string;
   landMarkNav: boolean;
+  simplifiedTBT: boolean;
   pois?: Feature[];
   levelChangers?: Feature[];
   initialBearing: number;
@@ -54,6 +55,7 @@ export default class GuidanceStepsGenerator {
     points,
     language,
     landMarkNav,
+    simplifiedTBT,
     pois,
     levelChangers,
     initialBearing,
@@ -61,6 +63,7 @@ export default class GuidanceStepsGenerator {
     points: Feature[];
     language: string;
     landMarkNav: boolean;
+    simplifiedTBT: boolean;
     pois?: Feature[];
     levelChangers?: Feature[];
     initialBearing: number;
@@ -73,6 +76,7 @@ export default class GuidanceStepsGenerator {
       this.levelChangers = levelChangers;
       this.initialBearing = initialBearing;
     }
+    this.simplifiedTBT = simplifiedTBT;
     if (this.points && this.points.length > 0) {
       this.generateStepsFromPoints();
     }
@@ -115,6 +119,19 @@ export default class GuidanceStepsGenerator {
           direction === `${Direction.Up}_${LevelChangerTypes[currentPoint.properties.type]}` ||*/
           direction === `${Direction.Exit}_${LevelChangerTypes[currentPoint.properties.type]}` ||
           distanceFromLastStep === 0)
+      ) {
+        return;
+      }
+
+      if (
+        !this.simplifiedTBT &&
+        (direction === Direction.Start ||
+          (direction === Direction.Finish && currentPoint.isPoi) ||
+          direction === Direction.TurnAround) /*||
+          direction === `${Direction.Down}_${LevelChangerTypes[currentPoint.properties.type]}` ||
+          direction === `${Direction.Up}_${LevelChangerTypes[currentPoint.properties.type]}` ||
+          direction === `${Direction.Exit}_${LevelChangerTypes[currentPoint.properties.type]}` ||
+          distanceFromLastStep === 0*/
       ) {
         return;
       }

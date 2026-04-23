@@ -69,12 +69,14 @@ export default class Routing {
     finish,
     stops,
     landmarkTBT = false,
+    simplifiedTBT = false,
     priorityEntrance,
   }: {
     start: Feature;
     finish?: Feature;
     stops?: Feature[];
     landmarkTBT?: boolean;
+    simplifiedTBT?: boolean;
     priorityEntrance?: Feature;
   }) {
     const isMultipoint = stops && stops.length > 1;
@@ -226,7 +228,7 @@ export default class Routing {
             pathPartIndex++;
           }
         }
-      } else {
+      } else if (simplifiedTBT) {
         if (this.forceFloorLevel !== null && this.forceFloorLevel !== undefined) {
           if (typeof pathPoints['path-part-'.concat(pathPartIndex)] === 'undefined') {
             pathPoints['path-part-'.concat(pathPartIndex)] = [];
@@ -243,6 +245,19 @@ export default class Routing {
           if (p.isLevelChanger && p.properties.level !== points[index + 1].properties.level) {
             pathPartIndex++;
           } else if (p.isPoi && p.id === points[index + 1]?.id) {
+            pathPartIndex++;
+          }
+        }
+      } else {
+        if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
+          if (points[index + 1]) {
+            pathPoints[`path-part-${pathPartIndex}`] = [];
+            if (p.isLevelChanger && points[index + 1].isLevelChanger) {
+              const leveledPoint = { ...p, properties: { ...p.properties, level: points[index + 1].properties.level } };
+              pathPoints[`path-part-${pathPartIndex}`].push(p, leveledPoint);
+            } else {
+              pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1]);
+            }
             pathPartIndex++;
           }
         }

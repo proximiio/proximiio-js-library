@@ -1,5 +1,6 @@
 import { lineString, point } from '@turf/helpers';
 import pointToLineDistance from '@turf/point-to-line-distance';
+import distance from '@turf/distance';
 
 /**
  * Find the most appropriate navigation step index based on user's current position.
@@ -29,21 +30,27 @@ const getCurrentStepIndex = ({
   // Only check steps ahead of current one to avoid regressions
   for (let i = lastKnownStepIndex; i < steps.length; i++) {
     const step = steps[i];
-    if (step.navMode === 'mall' && !step.lineStringFeatureFromLastStep) {
+    const isStartOrLevelChanger = step.direction === 'START' || step.levelChangerId;
+    if (step.navMode === 'mall' && !step.lineStringFeatureFromLastStep && !isStartOrLevelChanger) {
       return;
     }
-    const lineCoords =
-      step.navMode === 'mall' ? step.lineStringFeatureFromLastStep.geometry.coordinates : step.geometry.coordinates;
-    const line = lineString(lineCoords);
-
-    // Calculate shortest distance from user to this step's path
-    const distance = pointToLineDistance(userPoint, line, { units: 'meters' });
+    //if (step.lineStringFeatureFromLastStep || step.navMode !== 'mall' || isStartOrLevelChanger) {
+    let pointDistance = 0;
+    if (isStartOrLevelChanger) {
+      pointDistance = distance(userPoint, point(step.coordinates), { units: 'meters' });
+    } else {
+      const lineCoords =
+        step.navMode === 'mall' ? step.lineStringFeatureFromLastStep.geometry.coordinates : step.geometry.coordinates;
+      const line = lineString(lineCoords);
+      pointDistance = pointToLineDistance(userPoint, line, { units: 'meters' });
+    }
 
     // If within threshold and closest so far, consider this as best candidate
-    if (distance < thresholdMeters && distance < minDistance) {
-      minDistance = distance;
+    if (pointDistance < thresholdMeters && pointDistance < minDistance) {
+      minDistance = pointDistance;
       closestStepIndex = i;
     }
+    //}
   }
 
   // Return updated index if user is close enough to a new step, else stick to last one

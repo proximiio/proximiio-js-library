@@ -172,6 +172,7 @@ export interface Options {
   newFeatureModalEvent?: string;
   enableTBTNavigation?: boolean;
   landmarkTBTNavigation?: boolean;
+  useSimplifiedTBTNavigation?: boolean;
   mapboxOptions?: MapboxOptions;
   zoomIntoPlace?: boolean;
   defaultPlaceId?: string;
@@ -380,6 +381,7 @@ export class Map {
     newFeatureModalEvent: 'click',
     enableTBTNavigation: true,
     landmarkTBTNavigation: false,
+    useSimplifiedTBTNavigation: false,
     zoomIntoPlace: true,
     defaultFloorLevel: 0,
     isKiosk: false,
@@ -4187,7 +4189,11 @@ export class Map {
               { level: this.state.floor.level },
             );
       let routeUntilNextStep;
-      if (route.properties.source === 'cityRoute' || this.defaultOptions.landmarkTBTNavigation) {
+      if (
+        route.properties.source === 'cityRoute' ||
+        this.defaultOptions.landmarkTBTNavigation ||
+        !this.defaultOptions.useSimplifiedTBTNavigation
+      ) {
         // Step 1: Determine the current level to filter on
         const level =
           route.properties.source === 'cityRoute'
@@ -4341,7 +4347,8 @@ export class Map {
                   }
                   if (
                     this.defaultOptions.autoRestartAnimationAfterFloorChange &&
-                    !this.defaultOptions.landmarkTBTNavigation
+                    !this.defaultOptions.landmarkTBTNavigation &&
+                    !this.defaultOptions.useSimplifiedTBTNavigation
                   ) {
                     this.restartRouteAnimation({ delay: 0, recenter: true });
                   }
@@ -4361,7 +4368,9 @@ export class Map {
 
           // cut the line at the point
           const lineAlong = lineSplit(
-            route.properties.source === 'cityRoute' || this.defaultOptions.landmarkTBTNavigation
+            route.properties.source === 'cityRoute' ||
+              this.defaultOptions.landmarkTBTNavigation ||
+              !this.defaultOptions.useSimplifiedTBTNavigation
               ? routeUntilNextStep
               : route,
             currentPoint,
@@ -6185,6 +6194,10 @@ export class Map {
         this.setStop(this.routingSource.route[`path-part-${newStep}`].properties?.stop);
       }
 
+      return step;
+    } else if (this.routingSource && this.routingSource.points.length > 0 && this.routingSource.points[newStep]) {
+      this.currentStep = newStep;
+      this.onStepSetListener.next(this.currentStep);
       return step;
     } else {
       console.error(`Route not found`);
