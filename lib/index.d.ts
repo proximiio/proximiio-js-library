@@ -8,8 +8,8 @@ import StoreFeedback from './components/feedback/store';
 import VisitorFeedback from './components/feedback/visitor';
 declare const _default: {
     Auth: {
-        login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any, any>>;
-        loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any, any>>;
+        login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any, any, {}>>;
+        loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any, any, {}>>;
         setToken: (token: string) => Promise<string>;
         getUserConfig: () => Promise<any>;
         getCurrentUser: () => Promise<any>;
@@ -107,7 +107,13 @@ declare const _default: {
             apiPaginate?: boolean;
             polygonBufferDistance?: number;
             polygonTypesToScale?: string[];
-        }) => Promise<import("./models/feature").FeatureCollection>;
+        }) => Promise<{
+            modifiedFeatures: import("./models/feature").FeatureCollection;
+            originalFeatures: {
+                features: any;
+                type: "FeatureCollection";
+            };
+        }>;
         addFeatures: (featureCollection: import("@turf/helpers").FeatureCollection<import("@turf/helpers").Geometry | import("@turf/helpers").GeometryCollection, {
             [name: string]: any;
         }>) => Promise<void>;

@@ -1,4 +1,5 @@
-import Feature, { FeatureCollection } from '../../models/feature';
+import Feature from '../../models/feature';
+import { FeatureCollection } from '@turf/helpers';
 import { WayfindingConfigModel } from '../../models/wayfinding';
 export default class Routing {
     data: FeatureCollection;
@@ -10,11 +11,12 @@ export default class Routing {
     setData(collection: FeatureCollection): void;
     toggleOnlyAccessible(onlyAccessible: any): void;
     setConfig(config: WayfindingConfigModel): void;
-    route({ start, finish, stops, landmarkTBT, priorityEntrance, }: {
+    route({ start, finish, stops, landmarkTBT, simplifiedTBT, priorityEntrance, }: {
         start: Feature;
         finish?: Feature;
         stops?: Feature[];
         landmarkTBT?: boolean;
+        simplifiedTBT?: boolean;
         priorityEntrance?: Feature;
     }): {
         paths: any;

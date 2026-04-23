@@ -5,13 +5,15 @@ export default class GuidanceStepsGenerator {
     steps: GuidanceStep[];
     language: string;
     landMarkNav: boolean;
+    simplifiedTBT: boolean;
     pois?: Feature[];
     levelChangers?: Feature[];
     initialBearing: number;
-    constructor({ points, language, landMarkNav, pois, levelChangers, initialBearing, }: {
+    constructor({ points, language, landMarkNav, simplifiedTBT, pois, levelChangers, initialBearing, }: {
         points: Feature[];
         language: string;
         landMarkNav: boolean;
+        simplifiedTBT: boolean;
         pois?: Feature[];
         levelChangers?: Feature[];
         initialBearing: number;

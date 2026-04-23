@@ -12,7 +12,7 @@
  *      console.log('login failed', err);
  *    })
  */
-export declare const login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any, any>>;
+export declare const login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any, any, {}>>;
 /**
  *  @memberof Auth
  *  @name loginWithToken
@@ -26,7 +26,7 @@ export declare const login: (email: string, password: string) => Promise<import(
  *      console.log('login failed', err);
  *    })
  */
-export declare const loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any, any>>;
+export declare const loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any, any, {}>>;
 /**
  *  @memberof Auth
  *  @name setToken
@@ -52,8 +52,8 @@ export declare const setToken: (token: string) => Promise<string>;
 export declare const getUserConfig: () => Promise<any>;
 export declare const getCurrentUser: () => Promise<any>;
 declare const _default: {
-    login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any, any>>;
-    loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any, any>>;
+    login: (email: string, password: string) => Promise<import("axios").AxiosResponse<any, any, {}>>;
+    loginWithToken: (token: string) => Promise<import("axios").AxiosResponse<any, any, {}>>;
     setToken: (token: string) => Promise<string>;
     getUserConfig: () => Promise<any>;
     getCurrentUser: () => Promise<any>;

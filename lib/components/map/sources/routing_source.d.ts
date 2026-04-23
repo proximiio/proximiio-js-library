@@ -36,6 +36,7 @@ export default class RoutingSource extends DataSource {
     fullPath?: Feature;
     isMultipoint: boolean;
     landmarkTBT: boolean;
+    simplifiedTBT: boolean;
     pois?: Feature[];
     levelChangers?: Feature[];
     initialBearing: number;
@@ -44,6 +45,7 @@ export default class RoutingSource extends DataSource {
     setConfig(config: WayfindingConfigModel): void;
     setNavigationType(type: 'mall' | 'city' | 'combined'): void;
     setLandmarkTBT(value: boolean): void;
+    setSimplifiedTBT(value: boolean): void;
     setInitialBearing(initialBearing: number): void;
     setPois(pois: Feature[]): void;
     setLevelChangers(levelChangers: Feature[]): void;

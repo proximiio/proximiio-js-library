@@ -98,6 +98,7 @@ export interface Options {
     newFeatureModalEvent?: string;
     enableTBTNavigation?: boolean;
     landmarkTBTNavigation?: boolean;
+    useSimplifiedTBTNavigation?: boolean;
     mapboxOptions?: MapboxOptions;
     zoomIntoPlace?: boolean;
     defaultPlaceId?: string;
@@ -237,6 +238,7 @@ export interface Options {
         snapDistanceLimit?: number;
         snappingRule?: 'always' | 'while-routing' | 'never';
     };
+    showPaths?: boolean;
 }
 export interface PaddingOptions {
     bottom: number;
