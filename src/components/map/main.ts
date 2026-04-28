@@ -1926,6 +1926,18 @@ export class Map {
       let tileUrl = this.defaultOptions.rasterTilesOptions?.tilesUrl
         ? this.defaultOptions.rasterTilesOptions?.tilesUrl
         : metadata['proximiio:raster:tileurl'];
+
+      if (
+        !tileUrl ||
+        tileUrl === '' ||
+        tileUrl === 'undefined' ||
+        tileUrl === 'null' ||
+        tileUrl === null ||
+        tileUrl === undefined ||
+        tileUrl.length === 0
+      ) {
+        return;
+      }
       const isLeveled = () => {
         return tileUrl.match(/{LEVEL}/g) !== null;
       };
