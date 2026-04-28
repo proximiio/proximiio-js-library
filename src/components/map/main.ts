@@ -170,6 +170,8 @@ export interface Options {
   selector?: string;
   allowNewFeatureModal?: boolean;
   newFeatureModalEvent?: string;
+  enableTBTNavigation?: boolean;
+  landmarkTBTNavigation?: boolean;
   stepsNavigation?:
     | 'disabled'
     | 'simple'
@@ -600,6 +602,14 @@ export class Map {
 
     if (this.defaultOptions.isKiosk && this.defaultOptions.useGpsLocation) {
       throw new Error(`It's not possible to use both isKiosk and useGpsLocation options as enabled!`);
+    }
+
+    if (this.defaultOptions.enableTBTNavigation) {
+      console.log(`enableTBTNavigation property is deprecated, please use stepsNavigation instead!`);
+    }
+
+    if (this.defaultOptions.landmarkTBTNavigation) {
+      console.log(`landmarkTBTNavigation property is deprecated, please use stepsNavigation instead!`);
     }
 
     if (!this.defaultOptions.polygonLayers || this.defaultOptions.polygonLayers.length === 0) {

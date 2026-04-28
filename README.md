@@ -139,8 +139,9 @@ const map = new Proximiio.Map({
    newFeatureModalEvent: 'click',
 
    // Optional, you'll receive turn-by-turn text navigation object in found route
-   // listener response, default: true
-   enableTBTNavigation: true,
+   // listener response, default: 'full'
+   // possible values: 'disabled', 'simple', 'simple-levelChangers', 'full', 'full-levelChangers', 'landmark', 'landmark-levelChangers';
+   stepsNavigation: 'full',
 
    // Optional, you can pass mapbox initial options like center or zoom here,
    // all options can be found at https://docs.mapbox.com/mapbox-gl-js/api/map/
