@@ -366,7 +366,7 @@ const getFloorName = ({ floor, language }: { floor: FloorModel; language: string
     if (floor.metadata && (floor.metadata['title_' + language] as string)) {
       return floor.metadata['title_' + language] as string;
     }
-    if (floor.name.length === 1 && Number(parseInt(floor.name))) {
+    if ((floor.name.length === 1 && Number(parseInt(floor.name)), 0)) {
       return `L${floor.name}`;
     }
     return floor.name;
