@@ -33,4 +33,5 @@ export interface GuidanceStep {
   totalDistance?: number;
   destinationLevel?: number;
   destinationFloor?: FloorModel;
+  instruction?: string;
 }

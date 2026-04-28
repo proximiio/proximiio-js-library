@@ -146,7 +146,6 @@ export default class GuidanceStepsGenerator {
   private capitalize = (s: string) => s && String(s[0]).toUpperCase() + String(s).slice(1);
 
   private generateStepsFromPoints() {
-    console.log('generateStepsFromPoints', this.points);
     this.steps = this.points.map((point: Feature, index: number) => {
       const previousPoint = this.points[index - 1] ? new Feature(this.points[index - 1]) : null;
       const secondPreviousPoint = this.points[index - 2] ? new Feature(this.points[index - 2]) : null;
@@ -242,8 +241,6 @@ export default class GuidanceStepsGenerator {
       };
     });
 
-    console.log('steps', this.steps);
-
     if (this.simpleSteps) {
       let previousIndex = 0;
       this.steps = this.steps
@@ -317,7 +314,7 @@ export default class GuidanceStepsGenerator {
       ? getFloorName({ floor: step.destinationFloor, language: this.language })
       : String(step.destinationLevel);
 
-    if (this.levelChangersSteps && step.levelChangerId) {
+    if (this.levelChangersSteps && step.levelChangerId && !step.distanceFromLastStep) {
       return this.generateLevelChangerStepInstruction({ step, t });
     }
 

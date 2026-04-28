@@ -205,8 +205,6 @@ export default class Routing {
     const pathPoints = {} as any;
     let pathPartIndex: any = 0;
 
-    console.log('points', points);
-
     points.forEach((p: Feature | any, index: number) => {
       if (stepsNavigation === 'landmark' || stepsNavigation === 'landmark-levelChangers') {
         if (stepsNavigation === 'landmark') {
