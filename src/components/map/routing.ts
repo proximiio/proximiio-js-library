@@ -68,15 +68,20 @@ export default class Routing {
     start,
     finish,
     stops,
-    landmarkTBT = false,
-    simplifiedTBT = false,
+    stepsNavigation = 'full',
     priorityEntrance,
   }: {
     start: Feature;
     finish?: Feature;
     stops?: Feature[];
-    landmarkTBT?: boolean;
-    simplifiedTBT?: boolean;
+    stepsNavigation?:
+      | 'disabled'
+      | 'simple'
+      | 'simple-levelChangers'
+      | 'full'
+      | 'full-levelChangers'
+      | 'landmark'
+      | 'landmark-levelChangers';
     priorityEntrance?: Feature;
   }) {
     const isMultipoint = stops && stops.length > 1;
@@ -200,35 +205,63 @@ export default class Routing {
     const pathPoints = {} as any;
     let pathPartIndex: any = 0;
 
+    console.log('points', points);
+
     points.forEach((p: Feature | any, index: number) => {
-      if (landmarkTBT) {
-        if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
-          if (p.isLevelChanger && p.properties.level !== points[index + 1].properties.level) {
-            return;
-          } else if (p.isPoi && p.id === points[index + 1]?.id) {
-            return;
-          } else if (points[index + 1]?.isPoi) {
-            // do not add another path part if next poi is finish
-            return;
-          } /* else if (points[index + 1]?.isLevelChanger) {
-            // do not add another path part if next poi is levelChanger
-            return;
-          }*/
-          if (points[index + 1]) {
-            pathPoints[`path-part-${pathPartIndex}`] = [];
-            if (points[index + 2] && points[index + 2].isPoi) {
-              // if second next poi is path destination, add three points to path part as there won't be another path part added
-              pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1], points[index + 2]);
-            } /* else if (points[index + 2] && points[index + 2].isLevelChanger) {
-              // if second next poi is level changer, add three points to path part as there won't be another path part added
-              pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1], points[index + 2]);
-            }*/ else {
-              pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1]);
+      if (stepsNavigation === 'landmark' || stepsNavigation === 'landmark-levelChangers') {
+        if (stepsNavigation === 'landmark') {
+          if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
+            if (p.isLevelChanger && p.properties.level !== points[index + 1].properties.level) {
+              return;
+            } else if (p.isPoi && p.id === points[index + 1]?.id) {
+              return;
+            } else if (points[index + 1]?.isPoi) {
+              // do not add another path part if next poi is finish
+              return;
             }
-            pathPartIndex++;
+            if (points[index + 1]) {
+              pathPoints[`path-part-${pathPartIndex}`] = [];
+              if (points[index + 2] && points[index + 2].isPoi) {
+                // if second next poi is path destination, add three points to path part as there won't be another path part added
+                pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1], points[index + 2]);
+              } else {
+                pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1]);
+              }
+              pathPartIndex++;
+            }
+          }
+        } else {
+          if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
+            if (p.isPoi && p.id === points[index + 1]?.id) {
+              return;
+            } else if (points[index + 1]?.isPoi) {
+              // do not add another path part if next poi is finish
+              return;
+            }
+            if (points[index + 1]) {
+              pathPoints[`path-part-${pathPartIndex}`] = [];
+
+              if (p.isLevelChanger && points[index + 1]?.isLevelChanger) {
+                pathPoints[`path-part-${pathPartIndex}`].push(p, p);
+              } else if (p.isLevelChanger && !points[index + 1]?.isLevelChanger) {
+                pathPoints[`path-part-${pathPartIndex}`].push(p, p);
+                pathPartIndex++;
+                if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
+                  pathPoints[`path-part-${pathPartIndex}`] = [];
+                  pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1]);
+                }
+              } else if (points[index + 2] && points[index + 2].isPoi) {
+                // if second next poi is path destination, add three points to path part as there won't be another path part added
+                pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1], points[index + 2]);
+              } else {
+                pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1]);
+              }
+
+              pathPartIndex++;
+            }
           }
         }
-      } else if (simplifiedTBT) {
+      } else if (stepsNavigation === 'simple' || stepsNavigation === 'simple-levelChangers') {
         if (this.forceFloorLevel !== null && this.forceFloorLevel !== undefined) {
           if (typeof pathPoints['path-part-'.concat(pathPartIndex)] === 'undefined') {
             pathPoints['path-part-'.concat(pathPartIndex)] = [];
@@ -242,23 +275,70 @@ export default class Routing {
             pathPoints[`path-part-${pathPartIndex}`] = [];
           }
           pathPoints[`path-part-${pathPartIndex}`].push(p);
-          if (p.isLevelChanger && p.properties.level !== points[index + 1].properties.level) {
-            pathPartIndex++;
-          } else if (p.isPoi && p.id === points[index + 1]?.id) {
-            pathPartIndex++;
+          if (stepsNavigation === 'simple') {
+            if (p.isLevelChanger && p.properties.level !== points[index + 1].properties.level) {
+              pathPartIndex++;
+            } else if (p.isPoi && p.id === points[index + 1]?.id) {
+              pathPartIndex++;
+            }
+          } else {
+            if (p.isLevelChanger && points[index + 1]?.isLevelChanger) {
+              pathPartIndex++;
+              if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
+                pathPoints[`path-part-${pathPartIndex}`] = [];
+              }
+              pathPoints[`path-part-${pathPartIndex}`].push(p, p);
+              pathPartIndex++;
+            }
+            if (p.isLevelChanger && !points[index + 1]?.isLevelChanger) {
+              pathPoints[`path-part-${pathPartIndex}`].push(p);
+              pathPartIndex++;
+              if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
+                pathPoints[`path-part-${pathPartIndex}`] = [p];
+              }
+            }
+            if (p.isPoi && p.id === points[index + 1]?.id) {
+              pathPartIndex++;
+            }
           }
         }
-      } else {
-        if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
-          if (points[index + 1]) {
-            pathPoints[`path-part-${pathPartIndex}`] = [];
-            if (p.isLevelChanger && points[index + 1].isLevelChanger) {
-              const leveledPoint = { ...p, properties: { ...p.properties, level: points[index + 1].properties.level } };
-              pathPoints[`path-part-${pathPartIndex}`].push(p, leveledPoint);
-            } else {
-              pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1]);
+      } else if (stepsNavigation === 'full' || stepsNavigation === 'full-levelChangers') {
+        if (stepsNavigation === 'full') {
+          if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
+            if (p.isLevelChanger && p.properties.level !== points[index + 1].properties.level) {
+              return;
+            } else if (p.isPoi && p.id === points[index + 1]?.id) {
+              return;
             }
-            pathPartIndex++;
+            if (points[index + 1]) {
+              pathPoints[`path-part-${pathPartIndex}`] = [];
+              pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1]);
+              pathPartIndex++;
+            }
+          }
+        } else {
+          if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
+            if (p.isPoi && p.id === points[index + 1]?.id) {
+              return;
+            }
+            if (points[index + 1]) {
+              pathPoints[`path-part-${pathPartIndex}`] = [];
+
+              if (p.isLevelChanger && points[index + 1]?.isLevelChanger) {
+                pathPoints[`path-part-${pathPartIndex}`].push(p, p);
+              } else if (p.isLevelChanger && !points[index + 1]?.isLevelChanger) {
+                pathPoints[`path-part-${pathPartIndex}`].push(p, p);
+                pathPartIndex++;
+                if (typeof pathPoints[`path-part-${pathPartIndex}`] === 'undefined') {
+                  pathPoints[`path-part-${pathPartIndex}`] = [];
+                  pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1]);
+                }
+              } else {
+                pathPoints[`path-part-${pathPartIndex}`].push(p, points[index + 1]);
+              }
+
+              pathPartIndex++;
+            }
           }
         }
       }

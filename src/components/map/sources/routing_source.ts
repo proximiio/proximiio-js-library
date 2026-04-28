@@ -4,6 +4,7 @@ import Routing from '../routing';
 import { GuidanceStep, WayfindingConfigModel } from '../../../models/wayfinding';
 import GuidanceStepsGenerator from '../guidanceStepsGenerator';
 import combineRoutes from '../combineRoutes';
+import { FloorModel } from '../../../models/floor';
 
 interface ChangeContainer {
   action: string;
@@ -39,19 +40,26 @@ export default class RoutingSource extends DataSource {
   navigationType: 'mall' | 'city' | 'combined';
   fullPath?: Feature;
   isMultipoint = false;
-  landmarkTBT: boolean;
-  simplifiedTBT: boolean;
+  stepsNavigation?:
+    | 'disabled'
+    | 'simple'
+    | 'simple-levelChangers'
+    | 'full'
+    | 'full-levelChangers'
+    | 'landmark'
+    | 'landmark-levelChangers';
   pois?: Feature[];
   levelChangers?: Feature[];
   initialBearing: number;
+  floors: FloorModel[];
+  currentFloor: FloorModel;
 
   constructor() {
     super('route');
     this.changes = [];
     this.routing = new Routing();
     this.navigationType = 'mall';
-    this.landmarkTBT = false;
-    this.simplifiedTBT = false;
+    this.stepsNavigation = 'full';
   }
 
   toggleAccessible(value: any) {
@@ -66,12 +74,17 @@ export default class RoutingSource extends DataSource {
     this.navigationType = type;
   }
 
-  setLandmarkTBT(value: boolean) {
-    this.landmarkTBT = value;
-  }
-
-  setSimplifiedTBT(value: boolean) {
-    this.simplifiedTBT = value;
+  setStepsNavigation(
+    value:
+      | 'disabled'
+      | 'simple'
+      | 'simple-levelChangers'
+      | 'full'
+      | 'full-levelChangers'
+      | 'landmark'
+      | 'landmark-levelChangers',
+  ) {
+    this.stepsNavigation = value;
   }
 
   setInitialBearing(initialBearing: number) {
@@ -84,6 +97,14 @@ export default class RoutingSource extends DataSource {
 
   setLevelChangers(levelChangers: Feature[]) {
     this.levelChangers = levelChangers;
+  }
+
+  setFloors(floors: FloorModel[]) {
+    this.floors = floors;
+  }
+
+  setCurrentFloor(currentFloor: FloorModel) {
+    this.currentFloor = currentFloor;
   }
 
   async update({
@@ -130,8 +151,7 @@ export default class RoutingSource extends DataSource {
           start,
           finish,
           stops,
-          landmarkTBT: this.landmarkTBT,
-          simplifiedTBT: this.simplifiedTBT,
+          stepsNavigation: this.stepsNavigation,
         });
       } else if (this.navigationType === 'combined' && connectingPoint) {
         if (startAtMall) {
@@ -142,8 +162,7 @@ export default class RoutingSource extends DataSource {
             start,
             finish: connectingPoint,
             stops,
-            landmarkTBT: this.landmarkTBT,
-            simplifiedTBT: this.simplifiedTBT,
+            stepsNavigation: this.stepsNavigation,
             priorityEntrance: entranceFeature,
           });
         } else {
@@ -154,8 +173,7 @@ export default class RoutingSource extends DataSource {
             start: connectingPoint,
             finish,
             stops,
-            landmarkTBT: this.landmarkTBT,
-            simplifiedTBT: this.simplifiedTBT,
+            stepsNavigation: this.stepsNavigation,
             priorityEntrance: entranceFeature,
           });
         }
@@ -176,11 +194,12 @@ export default class RoutingSource extends DataSource {
         const guidanceStepsGenerator = new GuidanceStepsGenerator({
           points: route?.points,
           language: this.language,
-          landMarkNav: this.landmarkTBT,
-          simplifiedTBT: this.simplifiedTBT,
+          stepsNavigation: this.stepsNavigation,
           pois: this.pois,
           levelChangers: this.levelChangers,
           initialBearing: this.initialBearing,
+          floors: this.floors,
+          currentFloor: this.currentFloor,
         });
         if (guidanceStepsGenerator.steps) {
           this.steps = guidanceStepsGenerator.steps
@@ -238,11 +257,12 @@ export default class RoutingSource extends DataSource {
         const mallStepsGenerator = new GuidanceStepsGenerator({
           points: mallRoute?.points,
           language: this.language,
-          landMarkNav: this.landmarkTBT,
-          simplifiedTBT: this.simplifiedTBT,
+          stepsNavigation: this.stepsNavigation,
           pois: this.pois,
           levelChangers: this.levelChangers,
           initialBearing: this.initialBearing,
+          floors: this.floors,
+          currentFloor: this.currentFloor,
         });
         if (mallStepsGenerator.steps) {
           const mallSteps = mallStepsGenerator.steps.filter((i) => i !== undefined);

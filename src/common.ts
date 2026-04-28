@@ -5,6 +5,7 @@ import booleanWithin from '@turf/boolean-within';
 import Feature from './models/feature';
 import { POI_TYPE } from './models/poi_type';
 import { LngLatBounds, LngLatBoundsLike, LngLatLike } from 'maplibre-gl';
+import { FloorModel } from './models/floor';
 
 export const axios = Axios.create({
   baseURL: 'https://api.proximi.fi',
@@ -360,6 +361,18 @@ const pointInBounds = (point: [number, number], bounds: LngLatBoundsLike): boole
   return lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat;
 };
 
+const getFloorName = ({ floor, language }: { floor: FloorModel; language: string }) => {
+  if (floor) {
+    if (floor.metadata && (floor.metadata['title_' + language] as string)) {
+      return floor.metadata['title_' + language] as string;
+    }
+    if (floor.name.length === 1 && Number(parseInt(floor.name))) {
+      return `L${floor.name}`;
+    }
+    return floor.name;
+  }
+};
+
 export {
   calculateDimensions,
   convertToRTL,
@@ -371,4 +384,5 @@ export {
   isLevelChanger,
   pointInBounds,
   shortenCoordinates,
+  getFloorName,
 };

@@ -170,9 +170,14 @@ export interface Options {
   selector?: string;
   allowNewFeatureModal?: boolean;
   newFeatureModalEvent?: string;
-  enableTBTNavigation?: boolean;
-  landmarkTBTNavigation?: boolean;
-  useSimplifiedTBTNavigation?: boolean;
+  stepsNavigation?:
+    | 'disabled'
+    | 'simple'
+    | 'simple-levelChangers'
+    | 'full'
+    | 'full-levelChangers'
+    | 'landmark'
+    | 'landmark-levelChangers';
   mapboxOptions?: MapboxOptions;
   zoomIntoPlace?: boolean;
   defaultPlaceId?: string;
@@ -379,9 +384,7 @@ export class Map {
     selector: 'proximiioMap',
     allowNewFeatureModal: false,
     newFeatureModalEvent: 'click',
-    enableTBTNavigation: true,
-    landmarkTBTNavigation: false,
-    useSimplifiedTBTNavigation: false,
+    stepsNavigation: 'full',
     zoomIntoPlace: true,
     defaultFloorLevel: 0,
     isKiosk: false,
@@ -576,6 +579,7 @@ export class Map {
   private stops = [] as Feature[];
   private useCustomPosition = false;
   private customPosition: { coordinates: [number, number]; level: number } = null;
+  private fullStepsNavigation = false;
 
   constructor(options: Options) {
     // fix centering in case of kiosk with defined pitch/bearing/etc. in mapbox options
@@ -605,6 +609,12 @@ export class Map {
         return { ...this.defaultOptions.polygonsOptions, ...layer };
       });
     }
+
+    this.fullStepsNavigation =
+      this.defaultOptions.stepsNavigation === 'landmark' ||
+      this.defaultOptions.stepsNavigation === 'landmark-levelChangers' ||
+      this.defaultOptions.stepsNavigation === 'full' ||
+      this.defaultOptions.stepsNavigation === 'full-levelChangers';
 
     // @ts-ignore
     maplibregl.setRTLTextPlugin(
@@ -836,15 +846,14 @@ export class Map {
         (f) =>
           f.properties.type === 'elevator' || f.properties.type === 'escalator' || f.properties.type === 'staircase',
       );
-      if (this.defaultOptions.landmarkTBTNavigation) {
-        this.routingSource.setLandmarkTBT(this.defaultOptions.landmarkTBTNavigation);
-        this.routingSource.setPois(
-          optimizedFeatures.features.filter(
-            (f) => f.geometry.coordinates && f.geometry.type === 'Point' && f.properties.type === 'poi',
-          ),
-        );
-        this.routingSource.setLevelChangers(levelChangers);
-      }
+      this.routingSource.setStepsNavigation(this.defaultOptions.stepsNavigation);
+      this.routingSource.setPois(
+        optimizedFeatures.features.filter(
+          (f) => f.geometry.coordinates && f.geometry.type === 'Point' && f.properties.type === 'poi',
+        ),
+      );
+      this.routingSource.setLevelChangers(levelChangers);
+      this.routingSource.setFloors(this.state.floors);
       this.geojsonSource.fetch(optimizedFeatures);
       this.routingSource.routing.setData(features.originalFeatures);
       this.prepareStyle(this.state.style);
@@ -3495,7 +3504,7 @@ export class Map {
 
         this.onRouteFoundListener.next({
           route: this.routingSource.route,
-          TBTNav: this.defaultOptions.enableTBTNavigation ? textNavigation : null,
+          TBTNav: this.defaultOptions.stepsNavigation !== 'disabled' ? textNavigation : null,
           details: this.defaultOptions.routeWithDetails ? this.routingSource.details : null,
           start: this.startPoint,
           end: this.endPoint,
@@ -3562,7 +3571,7 @@ export class Map {
 
         this.onRouteFoundListener.next({
           route: this.routingSource.route,
-          TBTNav: this.defaultOptions.enableTBTNavigation ? textNavigation : null,
+          TBTNav: this.defaultOptions.stepsNavigation !== 'disabled' ? textNavigation : null,
           details: this.defaultOptions.routeWithDetails ? this.routingSource.details : null,
           start: this.startPoint,
           end: this.endPoint,
@@ -3897,6 +3906,7 @@ export class Map {
     }
     this.addStopMarkers();
     this.updateCluster();
+    this.routingSource.setCurrentFloor(floor);
     this.onFloorSelectListener.next(floor);
   }
 
@@ -4174,6 +4184,8 @@ export class Map {
       this.routingSource.route &&
       this.routingSource.route[`path-part-${this.currentStep}`] &&
       this.routingSource.levelPoints[this.state.floor.level] &&
+      JSON.stringify(this.routingSource.route[`path-part-${this.currentStep}`].geometry.coordinates[0]) !==
+        JSON.stringify(this.routingSource.route[`path-part-${this.currentStep}`].geometry.coordinates[1]) &&
       !this.routingSource.preview &&
       !this.useCustomPosition
     ) {
@@ -4189,11 +4201,7 @@ export class Map {
               { level: this.state.floor.level },
             );
       let routeUntilNextStep;
-      if (
-        route.properties.source === 'cityRoute' ||
-        this.defaultOptions.landmarkTBTNavigation ||
-        !this.defaultOptions.useSimplifiedTBTNavigation
-      ) {
+      if (route.properties.source === 'cityRoute' || this.fullStepsNavigation) {
         // Step 1: Determine the current level to filter on
         const level =
           route.properties.source === 'cityRoute'
@@ -4345,11 +4353,7 @@ export class Map {
                   ) {
                     this.setNavStep('next');
                   }
-                  if (
-                    this.defaultOptions.autoRestartAnimationAfterFloorChange &&
-                    !this.defaultOptions.landmarkTBTNavigation &&
-                    !this.defaultOptions.useSimplifiedTBTNavigation
-                  ) {
+                  if (this.defaultOptions.autoRestartAnimationAfterFloorChange && !this.fullStepsNavigation) {
                     this.restartRouteAnimation({ delay: 0, recenter: true });
                   }
                 }, 2000);
@@ -4368,11 +4372,7 @@ export class Map {
 
           // cut the line at the point
           const lineAlong = lineSplit(
-            route.properties.source === 'cityRoute' ||
-              this.defaultOptions.landmarkTBTNavigation ||
-              !this.defaultOptions.useSimplifiedTBTNavigation
-              ? routeUntilNextStep
-              : route,
+            route.properties.source === 'cityRoute' || this.fullStepsNavigation ? routeUntilNextStep : route,
             currentPoint,
           ).features[0];
 
@@ -6169,7 +6169,7 @@ export class Map {
         this.setFloorByLevel(route.properties.level);
         this.animateRoute();
       } else {
-        if (this.routingSource.isMultipoint || this.defaultOptions.enableTBTNavigation) {
+        if (this.routingSource.isMultipoint || this.defaultOptions.stepsNavigation !== 'disabled') {
           this.animateRoute();
         }
         this.centerOnRoute(this.routingSource.route[`path-part-${newStep}`]);

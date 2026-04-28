@@ -1,4 +1,5 @@
 import { Feature } from '@turf/helpers';
+import { FloorModel } from './floor';
 
 export interface WayfindingConfigModel {
   avoidElevators: boolean;
@@ -24,4 +25,12 @@ export interface GuidanceStep {
   levelChangerDestinationLevel?: number;
   lineStringFeatureFromLastStep?: Feature;
   navMode?: 'city' | 'mall';
+  stepsUntil?: GuidanceStep[];
+  maneuver?: {
+    type: string;
+  };
+  distance?: number;
+  totalDistance?: number;
+  destinationLevel?: number;
+  destinationFloor?: FloorModel;
 }

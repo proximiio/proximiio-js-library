@@ -5,6 +5,8 @@ import distance from '@turf/distance';
 import { feature, FeatureCollection, lineString } from '@turf/helpers';
 import { translations } from './i18n';
 import nearestPoint from '@turf/nearest-point';
+import { FloorModel } from '../../models/floor';
+import { getFloorName } from '../../common';
 
 enum Direction {
   Start = 'START',
@@ -22,6 +24,11 @@ enum Direction {
   ExitEscalator = 'EXIT_ESCALATOR',
   ExitElevator = 'EXIT_ELEVATOR',
   ExitRamp = 'EXIT_RAMP',
+  At = 'AT',
+  AtStaircase = 'AT_STAIRS',
+  AtEscalator = 'AT_ESCALATOR',
+  AtElevator = 'AT_ELEVATOR',
+  AtRamp = 'AT_RAMP',
   Up = 'UP',
   Down = 'DOWN',
   Left = 'LEFT',
@@ -41,43 +48,97 @@ enum LevelChangerTypes {
   ramp = 'RAMP',
 }
 
+interface GenerateInstructionParams {
+  previousPoint?: Feature;
+  secondPreviousPoint?: Feature;
+  currentPoint?: Feature;
+  nextPoint?: Feature;
+  secondNextPoint?: Feature;
+  direction?: Direction | string;
+  distanceFromLastStep?: number;
+  step?: GuidanceStep;
+}
+
 export default class GuidanceStepsGenerator {
   points: Feature[];
   steps: GuidanceStep[];
   language: string;
-  landMarkNav: boolean;
-  simplifiedTBT: boolean;
+  stepsNavigation:
+    | 'disabled'
+    | 'simple'
+    | 'simple-levelChangers'
+    | 'full'
+    | 'full-levelChangers'
+    | 'landmark'
+    | 'landmark-levelChangers';
   pois?: Feature[];
   levelChangers?: Feature[];
   initialBearing: number;
+  landmarkSteps: boolean;
+  fullSteps: boolean;
+  simpleSteps: boolean;
+  levelChangersSteps: boolean;
+  floors: FloorModel[];
+  currentFloor: FloorModel;
 
   constructor({
     points,
     language,
-    landMarkNav,
-    simplifiedTBT,
+    stepsNavigation,
     pois,
     levelChangers,
     initialBearing,
+    floors,
+    currentFloor,
   }: {
     points: Feature[];
     language: string;
-    landMarkNav: boolean;
-    simplifiedTBT: boolean;
+    stepsNavigation:
+      | 'disabled'
+      | 'simple'
+      | 'simple-levelChangers'
+      | 'full'
+      | 'full-levelChangers'
+      | 'landmark'
+      | 'landmark-levelChangers';
     pois?: Feature[];
     levelChangers?: Feature[];
     initialBearing: number;
+    floors: FloorModel[];
+    currentFloor: FloorModel;
   }) {
     this.points = points;
     this.language = language;
-    if (landMarkNav) {
-      this.landMarkNav = landMarkNav;
+    this.stepsNavigation = stepsNavigation;
+    this.floors = floors;
+    this.currentFloor = currentFloor;
+    this.landmarkSteps = this.stepsNavigation === 'landmark' || this.stepsNavigation === 'landmark-levelChangers';
+    this.fullSteps = this.stepsNavigation === 'full' || this.stepsNavigation === 'full-levelChangers';
+    this.simpleSteps = this.stepsNavigation === 'simple' || this.stepsNavigation === 'simple-levelChangers';
+    this.levelChangersSteps =
+      this.stepsNavigation === 'simple-levelChangers' ||
+      this.stepsNavigation === 'full-levelChangers' ||
+      this.stepsNavigation === 'landmark-levelChangers';
+    if (this.landmarkSteps) {
       this.pois = pois;
       this.levelChangers = levelChangers;
       this.initialBearing = initialBearing;
     }
-    this.simplifiedTBT = simplifiedTBT;
     if (this.points && this.points.length > 0) {
+      if (this.levelChangersSteps) {
+        this.points = this.points.flatMap((point, i) => {
+          const next = this.points[i + 1];
+
+          if (point.isLevelChanger && next?.isLevelChanger && point.properties.level !== next.properties.level) {
+            const transition = new Feature({
+              ...point,
+            });
+            return [point, transition];
+          }
+
+          return [point];
+        });
+      }
       this.generateStepsFromPoints();
     }
   }
@@ -85,6 +146,7 @@ export default class GuidanceStepsGenerator {
   private capitalize = (s: string) => s && String(s[0]).toUpperCase() + String(s).slice(1);
 
   private generateStepsFromPoints() {
+    console.log('generateStepsFromPoints', this.points);
     this.steps = this.points.map((point: Feature, index: number) => {
       const previousPoint = this.points[index - 1] ? new Feature(this.points[index - 1]) : null;
       const secondPreviousPoint = this.points[index - 2] ? new Feature(this.points[index - 2]) : null;
@@ -111,12 +173,10 @@ export default class GuidanceStepsGenerator {
       const extendedData = { ...data, direction, distanceFromLastStep };
 
       if (
-        this.landMarkNav &&
+        this.stepsNavigation === 'landmark' &&
         (direction === Direction.Start ||
           (direction === Direction.Finish && currentPoint.isPoi) ||
           direction === Direction.TurnAround ||
-          /*direction === `${Direction.Down}_${LevelChangerTypes[currentPoint.properties.type]}` ||
-          direction === `${Direction.Up}_${LevelChangerTypes[currentPoint.properties.type]}` ||*/
           direction === `${Direction.Exit}_${LevelChangerTypes[currentPoint.properties.type]}` ||
           distanceFromLastStep === 0)
       ) {
@@ -124,22 +184,35 @@ export default class GuidanceStepsGenerator {
       }
 
       if (
-        !this.simplifiedTBT &&
+        this.stepsNavigation === 'landmark-levelChangers' &&
         (direction === Direction.Start ||
           (direction === Direction.Finish && currentPoint.isPoi) ||
-          direction === Direction.TurnAround) /*||
-          direction === `${Direction.Down}_${LevelChangerTypes[currentPoint.properties.type]}` ||
-          direction === `${Direction.Up}_${LevelChangerTypes[currentPoint.properties.type]}` ||
-          direction === `${Direction.Exit}_${LevelChangerTypes[currentPoint.properties.type]}` ||
-          distanceFromLastStep === 0*/
+          direction === Direction.TurnAround)
       ) {
         return;
       }
 
-      return {
+      if (
+        this.stepsNavigation === 'full' &&
+        (direction === Direction.Start ||
+          direction === Direction.TurnAround ||
+          direction === `${Direction.Exit}_${LevelChangerTypes[currentPoint.properties.type]}` ||
+          distanceFromLastStep === 0)
+      ) {
+        return;
+      }
+
+      if (
+        this.stepsNavigation === 'full-levelChangers' &&
+        (direction === Direction.Start || direction === Direction.TurnAround)
+      ) {
+        return;
+      }
+
+      const step: GuidanceStep = {
         bearingFromLastStep: this.getBearingFromLastStep(data),
         coordinates: [point.geometry.coordinates[0], point.geometry.coordinates[1]],
-        direction: this.landMarkNav
+        direction: this.landmarkSteps
           ? nextStepDirection === Direction.Finish && nextPoint?.isPoi
             ? Direction.Finish
             : direction
@@ -154,108 +227,329 @@ export default class GuidanceStepsGenerator {
             ? nextPoint.properties.level
             : null,
         lineStringFeatureFromLastStep: this.getLineStringFeatureFromLastStep(data),
-        instruction: this.generateInstruction(extendedData), // New attribute
+      };
+
+      const destinationFloor =
+        step.levelChangerDestinationLevel && this.floors.filter((f) => f.level === step.levelChangerDestinationLevel)
+          ? this.floors.filter((f) => f.level === step.levelChangerDestinationLevel)[0]
+          : this.currentFloor;
+
+      step.destinationFloor = destinationFloor;
+
+      return {
+        ...step,
+        instruction: this.generateInstruction({ ...extendedData, step }), // New attribute
       };
     });
+
+    console.log('steps', this.steps);
+
+    if (this.simpleSteps) {
+      let previousIndex = 0;
+      this.steps = this.steps
+        .filter((i, index, array) => {
+          // Get the first part of the direction string
+          const direction = i.direction.split('_')[0];
+          if (this.stepsNavigation === 'simple') {
+            // Check if the current step is a level changer and has a valid direction or is finish
+            if ((i.levelChangerId && (direction === 'UP' || direction === 'DOWN')) || i.direction === 'FINISH') {
+              i.stepsUntil = array.slice(previousIndex, index);
+              previousIndex = index + 1;
+              return i;
+            }
+          } else {
+            if (i.levelChangerId) {
+              i.stepsUntil = array.slice(previousIndex, index);
+              previousIndex = index + 1;
+              return i;
+            }
+            if (i.direction === 'FINISH') {
+              i.stepsUntil = array.slice(previousIndex, index);
+              previousIndex = index + 1;
+              return i;
+            }
+          }
+        })
+        .map((step) => {
+          const stepsUntilDistance =
+            step.stepsUntil && step.stepsUntil.length > 0
+              ? step.stepsUntil!.reduce((total, item) => total + item.distanceFromLastStep, 0)
+              : 0;
+          const totalDistance = step.distanceFromLastStep + stepsUntilDistance;
+
+          const simplifiedStep = {
+            ...step,
+            totalDistance,
+          };
+
+          return {
+            ...simplifiedStep,
+            instruction: this.generateInstruction({ direction: simplifiedStep.direction, step: simplifiedStep }),
+          };
+        });
+    }
   }
 
-  private generateInstruction({
+  private generateInstruction(params: GenerateInstructionParams): string {
+    if (this.simpleSteps) return this.generateSimpleInstruction(params);
+    if (this.fullSteps) return this.generateFullInstruction(params);
+    if (this.landmarkSteps) return this.generateLandmarkInstruction(params);
+    return '';
+  }
+
+  // ─── Simple ───────────────────────────────────────────────────────────────────
+
+  private generateSimpleInstruction({ step, direction }: GenerateInstructionParams): string {
+    if (!step?.totalDistance && !this.levelChangersSteps) return '';
+
+    const t = translations[this.language];
+
+    if (direction === 'FINISH') {
+      return [
+        this.capitalize(t.IN),
+        step.totalDistance ? step.totalDistance.toFixed(0) : 0,
+        t.METERS,
+        this.getDirectionInstruction(direction),
+      ].join(' ');
+    }
+
+    const floorName = step.destinationFloor?.name
+      ? getFloorName({ floor: step.destinationFloor, language: this.language })
+      : String(step.destinationLevel);
+
+    if (this.levelChangersSteps && step.levelChangerId) {
+      return this.generateLevelChangerStepInstruction({ step, t });
+    }
+
+    return [
+      this.capitalize(t.GO),
+      step.totalDistance ? step.totalDistance.toFixed(0) : 0,
+      t.METERS,
+      t.AND_TAKE_THE,
+      t[step.levelChangerType?.toUpperCase()]?.toLowerCase(),
+      t[step.levelChangerDirection],
+      t.TO,
+      floorName,
+      t.FLOOR + '.',
+    ].join(' ');
+  }
+
+  // ─── Full ─────────────────────────────────────────────────────────────────────
+
+  private generateFullInstruction({
+    direction,
+    distanceFromLastStep,
+    step,
+    currentPoint,
+  }: GenerateInstructionParams): string {
+    const t = translations[this.language];
+
+    if (currentPoint?.isLevelChanger && step && step.distanceFromLastStep) {
+      return this.generateFullLevelChangerInstruction({ step, t });
+    }
+
+    if (direction === Direction.Start) {
+      return this.getDirectionInstruction(direction);
+    }
+
+    if (direction === Direction.Finish) {
+      return [
+        this.capitalize(t.IN),
+        distanceFromLastStep.toFixed(0),
+        t.METERS + ',',
+        this.getDirectionInstruction(direction),
+      ].join(' ');
+    }
+
+    if (distanceFromLastStep > 0) {
+      return [
+        this.capitalize(t.IN),
+        distanceFromLastStep.toFixed(0),
+        t.METERS + ',',
+        this.getDirectionInstruction(direction),
+      ].join(' ');
+    }
+
+    if (this.levelChangersSteps && step.levelChangerId) {
+      return this.generateLevelChangerStepInstruction({ step, t });
+    }
+
+    // Fallback: no distance yet (first step or distance not available)
+    return this.capitalize(this.getDirectionInstruction(direction));
+  }
+
+  private generateFullLevelChangerInstruction({
+    step,
+    t,
+  }: {
+    step: GuidanceStep;
+    t: (typeof translations)[keyof typeof translations];
+  }): string {
+    const floorName = step.destinationFloor?.name
+      ? getFloorName({ floor: step.destinationFloor, language: this.language })
+      : String(step.destinationLevel);
+
+    return [
+      this.capitalize(t.IN),
+      step.distanceFromLastStep.toFixed(0),
+      t.METERS + ',',
+      t.TAKE_THE,
+      t[step.levelChangerType.toUpperCase()].toLowerCase(),
+      t[step.levelChangerDirection],
+      t.TO,
+      floorName,
+      t.FLOOR + '.',
+    ].join(' ');
+  }
+
+  private generateLevelChangerStepInstruction({
+    step,
+    t,
+  }: {
+    step: GuidanceStep;
+    t: (typeof translations)[keyof typeof translations];
+  }): string {
+    const floorName = step.destinationFloor?.name
+      ? getFloorName({ floor: step.destinationFloor, language: this.language })
+      : String(step.destinationLevel);
+
+    const stepDirection = step.direction.split('_')[0];
+    // at level changer step
+    if (stepDirection === 'UP' || stepDirection === 'DOWN') {
+      return [
+        this.capitalize(t.YOU_ARE_AT_THE),
+        t[step.levelChangerType?.toUpperCase()]?.toLowerCase() + ',',
+        t.GO,
+        t[step.levelChangerDirection],
+        t.VIA,
+        t[step.levelChangerType?.toUpperCase()]?.toLowerCase(),
+        t.TO,
+        floorName,
+        t.FLOOR + '.',
+      ].join(' ');
+    }
+    // exit level changer step
+    if (stepDirection === 'EXIT') {
+      return [
+        this.capitalize(t.EXIT_THE),
+        t[step.levelChangerType?.toUpperCase()]?.toLowerCase() + ',',
+        t.YOU_ARE_AT.toLowerCase(),
+        floorName,
+        t.FLOOR + '.',
+      ].join(' ');
+    }
+  }
+
+  // ─── Landmark ────────────────────────────────────────────────────────────────
+
+  private generateLandmarkInstruction(params: GenerateInstructionParams): string {
+    const parts: string[] = [];
+
+    parts.push(...this.getLandmarkLevelChangerPrefix(params));
+    parts.push(...this.getLandmarkInitialBearingPrefix(params));
+    parts.push(...this.getLandmarkDistancePrefix(params));
+
+    const { direction } = params;
+
+    if (direction === Direction.TurnAround || direction === Direction.Start || direction === Direction.Finish) {
+      parts.push(this.getDirectionInstruction(direction));
+      return parts.join(' ');
+    }
+
+    parts.push(...this.getLandmarkDirectionWithContext(params));
+    return parts.join(' ');
+  }
+
+  private getLandmarkLevelChangerPrefix({ previousPoint, currentPoint, step }: GenerateInstructionParams): string[] {
+    if (!previousPoint?.isLevelChanger) return [];
+    if (this.levelChangersSteps && step?.levelChangerId) return [];
+
+    const levelChangerFeature = this.levelChangers.find((f) => f.id === previousPoint.id);
+    const levelChangeDirection = this.getStepDirection({
+      previousPoint: levelChangerFeature,
+      currentPoint: previousPoint,
+      nextPoint: currentPoint,
+      levelChangerDirection: true,
+    });
+
+    return [this.capitalize(this.getDirectionInstruction(levelChangeDirection))];
+  }
+
+  private getLandmarkInitialBearingPrefix({
     previousPoint,
     secondPreviousPoint,
+    currentPoint,
+    step,
+  }: GenerateInstructionParams): string[] {
+    if (secondPreviousPoint || !this.initialBearing) return [];
+    if (this.levelChangersSteps && step?.levelChangerId) return [];
+
+    const bearingVar =
+      bearing(previousPoint.geometry.coordinates, currentPoint.geometry.coordinates) - this.initialBearing;
+
+    const dir = this.getDirectionFromBearing(bearingVar);
+    return [this.getDirectionInstruction(dir)];
+  }
+
+  private getLandmarkDistancePrefix({ distanceFromLastStep, currentPoint, step }: GenerateInstructionParams): string[] {
+    if (!distanceFromLastStep || distanceFromLastStep <= 0) return [];
+    if (this.levelChangersSteps && currentPoint?.isLevelChanger) return [];
+    if (this.levelChangersSteps && step?.levelChangerId) return [];
+
+    const t = translations[this.language];
+    return [this.capitalize(t.IN), distanceFromLastStep.toFixed(0), t.METERS];
+  }
+
+  private getLandmarkDirectionWithContext({
     currentPoint,
     nextPoint,
     secondNextPoint,
     direction,
-    distanceFromLastStep,
-  }: {
-    previousPoint: Feature;
-    secondPreviousPoint: Feature;
-    currentPoint: Feature;
-    nextPoint: Feature;
-    secondNextPoint: Feature;
-    direction: Direction | string;
-    distanceFromLastStep: number;
-  }) {
-    let instruction = '';
+    step,
+  }: GenerateInstructionParams): string[] {
+    const t = translations[this.language];
 
-    if (this.landMarkNav && previousPoint.isLevelChanger) {
-      const levelChangerFeature = this.levelChangers.find((f) => f.id === previousPoint.id);
-      const levelChangeDirection = this.getStepDirection({
-        previousPoint: levelChangerFeature,
-        currentPoint: previousPoint,
-        nextPoint: currentPoint,
-        levelChangerDirection: true,
-      });
-      instruction += `${this.capitalize(this.getDirectionInstruction(levelChangeDirection))} `;
+    const nextPointDirection = this.getStepDirection({
+      previousPoint: currentPoint,
+      currentPoint: nextPoint,
+      nextPoint: secondNextPoint,
+    });
+
+    // Approaching a POI destination
+    if (nextPointDirection === Direction.Finish && nextPoint?.isPoi) {
+      const title = nextPoint.properties.title_i18n?.[this.language] ?? nextPoint.properties.title;
+      return [t.DESTINATION, title, t.navInstructions[direction]];
     }
 
-    if (this.landMarkNav && !secondPreviousPoint && this.initialBearing) {
-      // if first step
-      const bearingVar =
-        bearing(previousPoint.geometry.coordinates, currentPoint.geometry.coordinates) - this.initialBearing;
+    const directionInstruction = this.getDirectionInstruction(direction);
 
-      const dir = this.getDirectionFromBearing(bearingVar);
-      instruction += `${this.getDirectionInstruction(dir)} `;
-    }
+    // Exiting a level changer
+    if (currentPoint?.isLevelChanger) {
+      const floorName = step.destinationFloor?.name
+        ? getFloorName({ floor: step.destinationFloor, language: this.language })
+        : String(step.destinationLevel);
 
-    if (distanceFromLastStep > 0) {
-      instruction += `${this.capitalize(translations[this.language].IN)} ${distanceFromLastStep.toFixed(0)} ${
-        translations[this.language].METERS
-      } `;
-    }
-
-    if (direction === Direction.TurnAround || direction === Direction.Start || direction === Direction.Finish) {
-      instruction += this.getDirectionInstruction(direction);
-      return instruction;
-    }
-
-    if (this.landMarkNav) {
-      const featureCollection = {
-        type: 'FeatureCollection',
-        features: this.pois.filter((f: Feature) => f.properties.level === currentPoint.properties.level),
-      };
-
-      const nextPointDirection = this.getStepDirection({
-        previousPoint: currentPoint,
-        currentPoint: nextPoint,
-        nextPoint: secondNextPoint,
-      });
-
-      if (nextPointDirection === Direction.Finish && nextPoint.isPoi) {
-        instruction += `${translations[this.language].DESTINATION} ${
-          nextPoint.properties.title_i18n && nextPoint.properties.title_i18n[this.language]
-            ? nextPoint.properties.title_i18n[this.language]
-            : nextPoint.properties.title
-        } ${translations[this.language].navInstructions[direction]}`;
-        return instruction;
+      if (this.levelChangersSteps) {
+        if (step.distanceFromLastStep > 0) {
+          return [this.generateFullLevelChangerInstruction({ step, t })];
+        } else {
+          return [this.generateLevelChangerStepInstruction({ step, t })];
+        }
+      } else {
+        // Trim trailing punctuation from direction instruction before appending floor
+        return [`${directionInstruction.replace(/[.,]$/, '')} ${t.TO} ${floorName} ${t.FLOOR}.`];
       }
-
-      /*if (nextPoint.isLevelChanger) {
-        instruction += `${this.getDirectionInstruction(nextPointDirection).slice(0, -1)} ${
-          translations[this.language].TO_FLOOR
-        } ${secondNextPoint.properties.level}`;
-        return instruction;
-      }*/
-
-      instruction += this.getDirectionInstruction(direction);
-
-      if (currentPoint.isLevelChanger) {
-        instruction = instruction.slice(0, -1);
-        instruction += ` ${translations[this.language].TO_FLOOR} ${nextPoint.properties.level}`;
-        return instruction;
-      }
-
-      const nearestPoi = nearestPoint(currentPoint.geometry.coordinates, featureCollection as any);
-      instruction = `${instruction.slice(0, -1)} ${translations[this.language].BY} ${
-        nearestPoi.properties.title_i18n && nearestPoi.properties.title_i18n[this.language]
-          ? nearestPoi.properties.title_i18n[this.language]
-          : nearestPoi.properties.title
-      }`;
-    } else {
-      instruction += this.getDirectionInstruction(direction);
     }
 
-    return instruction;
+    // Standard landmark: direction + nearest POI
+    const floorPois = {
+      type: 'FeatureCollection' as const,
+      features: this.pois.filter((f: Feature) => f.properties.level === currentPoint.properties.level),
+    };
+    const nearestPoi = nearestPoint(currentPoint.geometry.coordinates, floorPois as any);
+    const poiTitle = nearestPoi.properties.title_i18n?.[this.language] ?? nearestPoi.properties.title;
+
+    return [`${directionInstruction.replace(/[.,]$/, '')} ${t.BY} ${poiTitle}`];
   }
 
   private getDirectionInstruction(direction: string): string {
