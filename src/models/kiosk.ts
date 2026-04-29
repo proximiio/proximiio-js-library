@@ -12,6 +12,7 @@ export class KioskModel extends BaseModel {
   pitch?: number;
   bounds?: [[number, number], [number, number]];
   floor_id?: string;
+  parkingKiosk?: boolean;
 
   constructor(data: any) {
     super(data);
@@ -23,9 +24,13 @@ export class KioskModel extends BaseModel {
     this.pitch = data.pitch;
     this.bounds = data.bounds;
     this.floor_id = data.floor_id;
+    this.parkingKiosk = data.parkingKiosk ? data.parkingKiosk : false;
   }
 
   get hasLocation() {
     return !isNaN(this.coordinates.lat) && !isNaN(this.coordinates.lng);
+  }
+  get isParkingKiosk() {
+    return this.parkingKiosk;
   }
 }
