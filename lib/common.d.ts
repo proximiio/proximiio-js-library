@@ -1,5 +1,6 @@
 import Feature from './models/feature';
 import { LngLatBoundsLike } from 'maplibre-gl';
+import { FloorModel } from './models/floor';
 export declare const axios: import("axios").AxiosInstance;
 export declare const camelToKebab: (input: string) => string;
 export declare const kebabToCamel: (input: string) => string;
@@ -42,4 +43,8 @@ declare const shortenCoordinates: ({ coords, decimals }: {
 }) => any;
 declare const isLevelChanger: (poi: Feature) => boolean;
 declare const pointInBounds: (point: [number, number], bounds: LngLatBoundsLike) => boolean;
-export { calculateDimensions, convertToRTL, base64toBlob, throttle, filterByAmenity, validateLabelLine, optimizeFeatures, isLevelChanger, pointInBounds, shortenCoordinates, };
+declare const getFloorName: ({ floor, language }: {
+    floor: FloorModel;
+    language: string;
+}) => string;
+export { calculateDimensions, convertToRTL, base64toBlob, throttle, filterByAmenity, validateLabelLine, optimizeFeatures, isLevelChanger, pointInBounds, shortenCoordinates, getFloorName, };

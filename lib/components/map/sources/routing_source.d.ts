@@ -2,6 +2,7 @@ import DataSource from './data_source';
 import Feature from '../../../models/feature';
 import Routing from '../routing';
 import { GuidanceStep, WayfindingConfigModel } from '../../../models/wayfinding';
+import { FloorModel } from '../../../models/floor';
 interface ChangeContainer {
     action: string;
     feature: Feature;
@@ -35,20 +36,22 @@ export default class RoutingSource extends DataSource {
     navigationType: 'mall' | 'city' | 'combined';
     fullPath?: Feature;
     isMultipoint: boolean;
-    landmarkTBT: boolean;
-    simplifiedTBT: boolean;
+    stepsNavigation?: 'disabled' | 'simple' | 'simple-levelChangers' | 'full' | 'full-levelChangers' | 'landmark' | 'landmark-levelChangers';
     pois?: Feature[];
     levelChangers?: Feature[];
     initialBearing: number;
+    floors: FloorModel[];
+    currentFloor: FloorModel;
     constructor();
     toggleAccessible(value: any): void;
     setConfig(config: WayfindingConfigModel): void;
     setNavigationType(type: 'mall' | 'city' | 'combined'): void;
-    setLandmarkTBT(value: boolean): void;
-    setSimplifiedTBT(value: boolean): void;
+    setStepsNavigation(value: 'disabled' | 'simple' | 'simple-levelChangers' | 'full' | 'full-levelChangers' | 'landmark' | 'landmark-levelChangers'): void;
     setInitialBearing(initialBearing: number): void;
     setPois(pois: Feature[]): void;
     setLevelChangers(levelChangers: Feature[]): void;
+    setFloors(floors: FloorModel[]): void;
+    setCurrentFloor(currentFloor: FloorModel): void;
     update({ start, connectingPoint, finish, stops, preview, language, }: {
         start?: Feature;
         connectingPoint?: Feature;

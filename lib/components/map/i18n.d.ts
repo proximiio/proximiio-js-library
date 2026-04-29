@@ -37,6 +37,14 @@ export declare const translations: {
         FLOOR: string;
         BY: string;
         IS_ON_YOUR: string;
+        GO: string;
+        AND_TAKE_THE: string;
+        WALK: string;
+        TAKE_THE: string;
+        YOU_ARE_AT: string;
+        YOU_ARE_AT_THE: string;
+        VIA: string;
+        EXIT_THE: string;
         navInstructions: {
             STRAIGHT: string;
             TURN_AROUND: string;
@@ -86,6 +94,14 @@ export declare const translations: {
         FLOOR: string;
         BY: string;
         IS_ON_YOUR: string;
+        GO: string;
+        AND_TAKE_THE: string;
+        WALK: string;
+        TAKE_THE: string;
+        YOU_ARE_AT: string;
+        YOU_ARE_AT_THE: string;
+        VIA: string;
+        EXIT_THE: string;
         navInstructions: {
             STRAIGHT: string;
             TURN_AROUND: string;
@@ -135,6 +151,14 @@ export declare const translations: {
         FLOOR: string;
         BY: string;
         IS_ON_YOUR: string;
+        GO: string;
+        AND_TAKE_THE: string;
+        WALK: string;
+        TAKE_THE: string;
+        YOU_ARE_AT: string;
+        YOU_ARE_AT_THE: string;
+        VIA: string;
+        EXIT_THE: string;
         navInstructions: {
             STRAIGHT: string;
             TURN_AROUND: string;
@@ -184,6 +208,14 @@ export declare const translations: {
         FLOOR: string;
         BY: string;
         IS_ON_YOUR: string;
+        GO: string;
+        AND_TAKE_THE: string;
+        WALK: string;
+        TAKE_THE: string;
+        YOU_ARE_AT: string;
+        YOU_ARE_AT_THE: string;
+        VIA: string;
+        EXIT_THE: string;
         navInstructions: {
             STRAIGHT: string;
             TURN_AROUND: string;
@@ -233,6 +265,14 @@ export declare const translations: {
         FLOOR: string;
         BY: string;
         IS_ON_YOUR: string;
+        GO: string;
+        AND_TAKE_THE: string;
+        WALK: string;
+        TAKE_THE: string;
+        YOU_ARE_AT: string;
+        YOU_ARE_AT_THE: string;
+        VIA: string;
+        EXIT_THE: string;
         navInstructions: {
             STRAIGHT: string;
             TURN_AROUND: string;
@@ -282,6 +322,14 @@ export declare const translations: {
         FLOOR: string;
         BY: string;
         IS_ON_YOUR: string;
+        GO: string;
+        AND_TAKE_THE: string;
+        WALK: string;
+        TAKE_THE: string;
+        YOU_ARE_AT: string;
+        YOU_ARE_AT_THE: string;
+        VIA: string;
+        EXIT_THE: string;
         navInstructions: {
             STRAIGHT: string;
             TURN_AROUND: string;
@@ -331,6 +379,14 @@ export declare const translations: {
         FLOOR: string;
         BY: string;
         IS_ON_YOUR: string;
+        GO: string;
+        AND_TAKE_THE: string;
+        WALK: string;
+        TAKE_THE: string;
+        YOU_ARE_AT: string;
+        YOU_ARE_AT_THE: string;
+        VIA: string;
+        EXIT_THE: string;
         navInstructions: {
             STRAIGHT: string;
             TURN_AROUND: string;

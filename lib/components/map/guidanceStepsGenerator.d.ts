@@ -1,26 +1,42 @@
 import Feature from '../../models/feature';
 import { GuidanceStep } from '../../models/wayfinding';
+import { FloorModel } from '../../models/floor';
 export default class GuidanceStepsGenerator {
     points: Feature[];
     steps: GuidanceStep[];
     language: string;
-    landMarkNav: boolean;
-    simplifiedTBT: boolean;
+    stepsNavigation: 'disabled' | 'simple' | 'simple-levelChangers' | 'full' | 'full-levelChangers' | 'landmark' | 'landmark-levelChangers';
     pois?: Feature[];
     levelChangers?: Feature[];
     initialBearing: number;
-    constructor({ points, language, landMarkNav, simplifiedTBT, pois, levelChangers, initialBearing, }: {
+    landmarkSteps: boolean;
+    fullSteps: boolean;
+    simpleSteps: boolean;
+    levelChangersSteps: boolean;
+    floors: FloorModel[];
+    currentFloor: FloorModel;
+    constructor({ points, language, stepsNavigation, pois, levelChangers, initialBearing, floors, currentFloor, }: {
         points: Feature[];
         language: string;
-        landMarkNav: boolean;
-        simplifiedTBT: boolean;
+        stepsNavigation: 'disabled' | 'simple' | 'simple-levelChangers' | 'full' | 'full-levelChangers' | 'landmark' | 'landmark-levelChangers';
         pois?: Feature[];
         levelChangers?: Feature[];
         initialBearing: number;
+        floors: FloorModel[];
+        currentFloor: FloorModel;
     });
     private capitalize;
     private generateStepsFromPoints;
     private generateInstruction;
+    private generateSimpleInstruction;
+    private generateFullInstruction;
+    private generateFullLevelChangerInstruction;
+    private generateLevelChangerStepInstruction;
+    private generateLandmarkInstruction;
+    private getLandmarkLevelChangerPrefix;
+    private getLandmarkInitialBearingPrefix;
+    private getLandmarkDistancePrefix;
+    private getLandmarkDirectionWithContext;
     private getDirectionInstruction;
     private getBearingFromLastStep;
     private getStepDirection;

@@ -98,7 +98,7 @@ export interface Options {
     newFeatureModalEvent?: string;
     enableTBTNavigation?: boolean;
     landmarkTBTNavigation?: boolean;
-    useSimplifiedTBTNavigation?: boolean;
+    stepsNavigation?: 'disabled' | 'simple' | 'simple-levelChangers' | 'full' | 'full-levelChangers' | 'landmark' | 'landmark-levelChangers';
     mapboxOptions?: MapboxOptions;
     zoomIntoPlace?: boolean;
     defaultPlaceId?: string;
@@ -300,6 +300,7 @@ export declare class Map {
     private stops;
     private useCustomPosition;
     private customPosition;
+    private fullStepsNavigation;
     constructor(options: Options);
     private initialize;
     private cancelObservers;
