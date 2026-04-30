@@ -373,7 +373,7 @@ export class Map {
   private onRouteFailedListener = new CustomSubject();
   private onRouteCancelListener = new CustomSubject();
   private onFeatureAddListener = new CustomSubject<Feature>();
-  private onFeatureUpdateListener = new CustomSubject<Feature>();
+  private onFeatureUpdateListener = new CustomSubject<Feature | Feature[]>();
   private onFeatureDeleteListener = new CustomSubject<Feature>();
   private onPolygonClickListener = new CustomSubject<Feature>();
   private onPoiClickListener = new CustomSubject<Feature>();
@@ -2766,6 +2766,49 @@ export class Map {
     return featureVar;
   }
 
+  private async onUpdateFeaturesBatch({
+    features,
+    isTemporary = true,
+  }: {
+    features: {
+      id: string;
+      title?: string;
+      level?: number;
+      lat?: number;
+      lng?: number;
+      icon?: string;
+      placeId?: string;
+      floorId?: string;
+      properties?: {
+        [key: string]: string | number | boolean | null | undefined;
+      };
+    }[];
+    isTemporary?: boolean;
+  }) {
+    const featureVars = await Promise.all(features.map((f) => this.updateFeatureData({ ...f, isTemporary })));
+
+    for (const feature of featureVars) {
+      if (feature.properties.images && feature.properties.images.length > 0) {
+        const decodedIcon = await getImageFromBase64(feature.properties.images[0]);
+        this.map.addImage(feature.id, decodedIcon as any);
+        this.amenityIds.push(feature.id);
+        this.filteredAmenities.push(feature.id);
+      }
+      this.filterOutFeatures();
+      this.geojsonSource.update(feature);
+    }
+
+    if (!isTemporary) {
+      await addFeatures({
+        type: 'FeatureCollection',
+        features: featureVars.map((f) => f.JsonDynamicStrip),
+      });
+    }
+    this.onFeaturesChange();
+    this.onFeatureUpdateListener.next(featureVars);
+    return featureVars;
+  }
+
   private async onUpdateFeature({
     id,
     title,
@@ -2791,6 +2834,65 @@ export class Map {
     };
     isTemporary?: boolean;
   }) {
+    const featureVar = await this.updateFeatureData({
+      id,
+      title,
+      level,
+      lat,
+      lng,
+      icon,
+      placeId,
+      floorId,
+      properties,
+      isTemporary,
+    });
+
+    if (icon && icon.length > 0) {
+      const decodedIcon = await getImageFromBase64(icon);
+      this.map.addImage(id, decodedIcon as any);
+      this.amenityIds.push(id);
+      this.filteredAmenities.push(id);
+      this.filterOutFeatures();
+    }
+
+    if (!isTemporary) {
+      await addFeatures({
+        type: 'FeatureCollection',
+        features: [featureVar.JsonDynamicStrip],
+      });
+    }
+
+    this.geojsonSource.update(featureVar);
+    this.onFeaturesChange();
+    this.onFeatureUpdateListener.next(featureVar);
+    return featureVar;
+  }
+
+  private async updateFeatureData({
+    id,
+    title,
+    level,
+    lat,
+    lng,
+    icon,
+    placeId,
+    floorId,
+    properties,
+    isTemporary = true,
+  }: {
+    id: string;
+    title?: string;
+    level?: number;
+    lat?: number;
+    lng?: number;
+    icon?: string;
+    placeId?: string;
+    floorId?: string;
+    properties?: {
+      [key: string]: string | number | boolean | null | undefined;
+    };
+    isTemporary?: boolean;
+  }): Promise<Feature> {
     const foundFeature = this.state.allFeatures.features.find((f) => f.id === id || f.properties.id === id);
     const polygonLayer = this.defaultOptions.polygonLayers.find((l) => l.featureType === properties?.type);
     if (!foundFeature) {
@@ -2834,49 +2936,22 @@ export class Map {
       };
     }
 
-    if (icon && icon.length > 0) {
-      const decodedIcon = await getImageFromBase64(icon);
-      this.map.addImage(id, decodedIcon as any);
-      this.amenityIds.push(id);
-      this.filteredAmenities.push(id);
-      this.filterOutFeatures();
-    }
+    const featureIndex = this.state.features.features.findIndex(
+      (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
+    );
+    const optimizedFeatureIndex = this.state.optimizedFeatures.features.findIndex(
+      (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
+    );
+    if (featureIndex !== -1) this.state.features.features[featureIndex] = featureVar;
+    if (optimizedFeatureIndex !== -1) this.state.optimizedFeatures.features[optimizedFeatureIndex] = featureVar;
 
-    if (!isTemporary) {
-      const featureIndex = this.state.features.features.findIndex(
-        (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
-      );
-      const optimizedFeatureIndex = this.state.optimizedFeatures.features.findIndex(
-        (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
-      );
-      if (featureIndex) this.state.features.features[featureIndex] = featureVar;
-      if (optimizedFeatureIndex) this.state.optimizedFeatures.features[optimizedFeatureIndex] = featureVar;
-      await addFeatures({
-        type: 'FeatureCollection',
-        features: [featureVar.JsonDynamicStrip],
-      });
-    } else {
-      const featureIndex = this.state.features.features.findIndex(
-        (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
-      );
-      const optimizedFeatureIndex = this.state.optimizedFeatures.features.findIndex(
-        (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
-      );
+    if (isTemporary) {
       const dynamicIndex = this.state.dynamicFeatures.features.findIndex(
         (x) => x.id === featureVar.id || x.properties.id === featureVar.id,
       );
-      if (featureIndex !== -1) this.state.features.features[featureIndex] = featureVar;
-      if (optimizedFeatureIndex !== -1) this.state.optimizedFeatures.features[optimizedFeatureIndex] = featureVar;
       if (dynamicIndex !== -1) this.state.dynamicFeatures.features[dynamicIndex] = featureVar;
     }
 
-    // this.state.allFeatures.features = [...this.state.features.features, ...this.state.dynamicFeatures.features]; // this is not probably updated with non dynamic feature update TODO
-    this.geojsonSource.update(featureVar);
-    // this.onSourceChange();
-    // this.routingSource.routing.setData(this.state.allFeatures);
-    // this.updateMapSource(this.routingSource);
-    this.onFeaturesChange();
-    this.onFeatureUpdateListener.next(featureVar);
     return featureVar;
   }
 
@@ -6619,6 +6694,49 @@ export class Map {
     }
 
     return await this.onUpdateFeature(opts);
+  }
+
+  /**
+   * Update existing map features in batch.
+   *  @memberof Map
+   *  @name updateFeatures
+   *  @param features { array } Array of feature objects
+   *  @param feature.id { string } Feature ID (string)
+   *  @param feature.title {string} feature title, optional
+   *  @param feature.level {number} feature floor level, optional
+   *  @param feature.lat {number} feature latitude coordinate, optional
+   *  @param feature.lng {number} feature longitude coordinate, optional
+   *  @param feature.icon {string} feature icon image in base64 format, optional
+   *  @param feature.placeId {string} feature place_id, optional
+   *  @param feature.floorId {string} feature floor_id, optional
+   *  @param feature.properties {object} feature properties, optional
+   *  @param isTemporary {boolean} will update feature just temporary, it's not saved to db, optional, default
+   *  @return <Promise>{Feature} newly added feature
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    console.log('map ready', ready);
+   *
+   *    map.updateFeatures({features: [{id: 'poiId', title: 'myPOI', level: 0, lat: 48.606703739771774, lng:17.833092384506614}, {id: 'poiId2', title: 'myPOI 2', level: 0, lat: 48.606803739771774, lng:17.833022384506614}], isTemporary: true});
+   *  });
+   */
+  public async updateFeatures(options: {
+    features: {
+      id: string;
+      title?: string;
+      level?: number;
+      lat?: number;
+      lng?: number;
+      icon?: string;
+      placeId?: string;
+      floorId?: string;
+      properties?: {
+        [key: string]: string | number | boolean | null | undefined;
+      };
+    }[];
+    isTemporary?: boolean;
+  }) {
+    return await this.onUpdateFeaturesBatch(options);
   }
 
   /**
