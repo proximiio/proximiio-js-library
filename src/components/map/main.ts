@@ -2788,8 +2788,9 @@ export class Map {
     const featureVars = await Promise.all(features.map((f) => this.updateFeatureData({ ...f, isTemporary })));
 
     for (const feature of featureVars) {
-      if (feature.properties.images && feature.properties.images.length > 0) {
-        const decodedIcon = await getImageFromBase64(feature.properties.images[0]);
+      const newIcon = features.find((f) => f.id === feature.id)?.icon;
+      if (newIcon && newIcon.length > 0) {
+        const decodedIcon = await getImageFromBase64(newIcon);
         this.map.addImage(feature.id, decodedIcon as any);
         this.amenityIds.push(feature.id);
         this.filteredAmenities.push(feature.id);

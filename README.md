@@ -863,7 +863,7 @@ Update existing map feature.
 // @param floorId {string} feature floor_id, optional
 // @param properties {object} feature properties, optional
 // @param isTemporary {boolean} will update feature just temporary, it's not saved to db, optional, default
-// @return <Promise>{Feature} newly added feature
+// @return <Promise>{Feature} updated feature
 
 map.getMapReadyListener().subscribe((ready) => {
   console.log('map ready', ready);
@@ -873,6 +873,47 @@ map.getMapReadyListener().subscribe((ready) => {
     level: 0,
     lat: 48.606703739771774,
     lng: 17.8330923845066,
+  });
+});
+```
+
+##### Update Features
+
+Update existing map features in batch.
+
+```javascript
+// @param features {array} Array of feature objects
+// @param feature.id {string} feature id
+// @param feature.title {string} feature title, optional
+// @param feature.level {number} feature floor level, optional
+// @param feature.lat {number} feature latitude coordinate, optional
+// @param feature.lng {number} feature longitude coordinate, optional
+// @param feature.icon {string} feature icon image in base64 format, optional
+// @param feature.placeId {string} feature place_id, optional
+// @param feature.floorId {string} feature floor_id, optional
+// @param feature.properties {object} feature properties, optional
+// @param isTemporary {boolean} will update feature just temporary, it's not saved to db, optional, default
+// @return <Promise>{Feature} updates features
+
+map.getMapReadyListener().subscribe((ready) => {
+  console.log('map ready', ready);
+  const myFeature = map.updateFeatures({
+    features: [
+      {
+        id: 'poiId',
+        title: 'myPOI',
+        level: 0,
+        lat: 48.606703739771774,
+        lng: 17.8330923845066,
+      },
+      {
+        id: 'poiId 2',
+        title: 'myPOI 2',
+        level: 0,
+        lat: 48.606705739771774,
+        lng: 17.8330933845066,
+      },
+    ],
   });
 });
 ```
