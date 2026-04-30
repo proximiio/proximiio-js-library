@@ -2787,16 +2787,16 @@ export class Map {
   }) {
     const featureVars = await Promise.all(features.map((f) => this.updateFeatureData({ ...f, isTemporary })));
 
-    for (const feature of featureVars) {
-      const newIcon = features.find((f) => f.id === feature.id)?.icon;
+    for (const featureVar of featureVars) {
+      const newIcon = features.find((f) => f.id === featureVar.id)?.icon;
       if (newIcon && newIcon.length > 0) {
         const decodedIcon = await getImageFromBase64(newIcon);
-        this.map.addImage(feature.id, decodedIcon as any);
-        this.amenityIds.push(feature.id);
-        this.filteredAmenities.push(feature.id);
+        this.map.addImage(featureVar.id, decodedIcon as any);
+        this.amenityIds.push(featureVar.id);
+        this.filteredAmenities.push(featureVar.id);
       }
       this.filterOutFeatures();
-      this.geojsonSource.update(feature);
+      this.geojsonSource.update(featureVar);
     }
 
     if (!isTemporary) {
