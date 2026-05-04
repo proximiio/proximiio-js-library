@@ -193,6 +193,7 @@ export interface Options {
     pointColor?: string;
     pointOutline?: boolean;
     labelFont?: string | string[];
+    parkingKiosk?: boolean;
   };
   initPolygons?: boolean;
   polygonsOptions?: PolygonOptions;
@@ -1296,12 +1297,13 @@ export class Map {
     }
   }
 
-  private onSetKiosk(lat: number, lng: number, level: number) {
+  private onSetKiosk(lat: number, lng: number, level: number, parkingKiosk: boolean = false) {
     if (this.map && this.defaultOptions.isKiosk) {
       this.defaultOptions.kioskSettings = {
         ...this.defaultOptions.kioskSettings,
         coordinates: [lng, lat],
         level,
+        parkingKiosk,
       };
 
       this.startPoint = point(this.defaultOptions.kioskSettings.coordinates, {
@@ -2212,6 +2214,9 @@ export class Map {
   private onShopClick(
     e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] | undefined } & object,
   ) {
+    if (this.defaultOptions.isKiosk && this.defaultOptions.kioskSettings.parkingKiosk) {
+      return;
+    }
     if (
       !this.defaultOptions.blockFeatureClickWhileRouting ||
       (this.defaultOptions.blockFeatureClickWhileRouting &&
@@ -6835,13 +6840,13 @@ export class Map {
    *    map.setKiosk(48.606703739771774, 17.833092384506614, 0);
    *  });
    */
-  public setKiosk(lat: number, lng: number, level: number) {
+  public setKiosk(lat: number, lng: number, level: number, parkingKiosk: boolean = false) {
     if (!this.defaultOptions.isKiosk) {
       this.defaultOptions.isKiosk = true;
       this.initKiosk();
     }
     if (this.defaultOptions.isKiosk) {
-      this.onSetKiosk(lat, lng, level);
+      this.onSetKiosk(lat, lng, level, parkingKiosk);
     } else {
       throw new Error(`Map is not initiated as kiosk`);
     }
