@@ -4287,8 +4287,6 @@ export class Map {
       this.routingSource.route &&
       this.routingSource.route[`path-part-${this.currentStep}`] &&
       this.routingSource.levelPoints[this.state.floor.level] &&
-      JSON.stringify(this.routingSource.route[`path-part-${this.currentStep}`].geometry.coordinates[0]) !==
-        JSON.stringify(this.routingSource.route[`path-part-${this.currentStep}`].geometry.coordinates[1]) &&
       !this.routingSource.preview &&
       !this.useCustomPosition
     ) {
@@ -4425,9 +4423,12 @@ export class Map {
           if (!startTime) startTime = currentTime;
           const elapsedTime = currentTime - startTime;
 
-          const t = elapsedTime / totalDuration;
+          const t = elapsedTime / (totalDuration > 0 ? totalDuration : 3);
+
+          console.log('animate the position', t, elapsedTime, totalDuration);
 
           if (t >= 1) {
+            console.log('t >= 1, should continue on next step');
             if (!this.useCustomPosition) {
               // Stop the animation if we reached the end
               if (

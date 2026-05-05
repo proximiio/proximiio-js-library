@@ -323,7 +323,7 @@ export default class GuidanceStepsGenerator {
       step.totalDistance ? step.totalDistance.toFixed(0) : 0,
       t.METERS,
       t.AND_TAKE_THE,
-      t[step.levelChangerType?.toUpperCase()]?.toLowerCase(),
+      t[LevelChangerTypes[step.levelChangerType]]?.toLowerCase(),
       t[step.levelChangerDirection],
       t.TO,
       floorName,
@@ -391,7 +391,7 @@ export default class GuidanceStepsGenerator {
       step.distanceFromLastStep.toFixed(0),
       t.METERS + ',',
       t.TAKE_THE,
-      t[step.levelChangerType.toUpperCase()].toLowerCase(),
+      t[LevelChangerTypes[step.levelChangerType]]?.toLowerCase(),
       t[step.levelChangerDirection],
       t.TO,
       floorName,
@@ -415,11 +415,11 @@ export default class GuidanceStepsGenerator {
     if (stepDirection === 'UP' || stepDirection === 'DOWN') {
       return [
         this.capitalize(t.YOU_ARE_AT_THE),
-        t[step.levelChangerType?.toUpperCase()]?.toLowerCase() + ',',
+        t[LevelChangerTypes[step.levelChangerType]]?.toLowerCase() + ',',
         t.GO,
         t[step.levelChangerDirection],
         t.VIA,
-        t[step.levelChangerType?.toUpperCase()]?.toLowerCase(),
+        t[LevelChangerTypes[step.levelChangerType]]?.toLowerCase(),
         t.TO,
         floorName,
         t.FLOOR + '.',
@@ -429,7 +429,7 @@ export default class GuidanceStepsGenerator {
     if (stepDirection === 'EXIT') {
       return [
         this.capitalize(t.EXIT_THE),
-        t[step.levelChangerType?.toUpperCase()]?.toLowerCase() + ',',
+        t[LevelChangerTypes[step.levelChangerType]]?.toLowerCase() + ',',
         t.YOU_ARE_AT.toLowerCase(),
         floorName,
         t.FLOOR + '.',
