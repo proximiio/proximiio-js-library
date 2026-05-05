@@ -4425,10 +4425,7 @@ export class Map {
 
           const t = elapsedTime / (totalDuration > 0 ? totalDuration : 3);
 
-          console.log('animate the position', t, elapsedTime, totalDuration);
-
           if (t >= 1) {
-            console.log('t >= 1, should continue on next step');
             if (!this.useCustomPosition) {
               // Stop the animation if we reached the end
               if (
