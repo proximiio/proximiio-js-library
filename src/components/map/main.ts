@@ -2800,7 +2800,6 @@ export class Map {
         this.amenityIds.push(featureVar.id);
         this.filteredAmenities.push(featureVar.id);
       }
-      this.filterOutFeatures();
       this.geojsonSource.update(featureVar);
     }
 
@@ -2810,6 +2809,7 @@ export class Map {
         features: featureVars.map((f) => f.JsonDynamicStrip),
       });
     }
+    this.filterOutFeatures();
     this.onFeaturesChange();
     this.onFeatureUpdateListener.next(featureVars);
     return featureVars;
