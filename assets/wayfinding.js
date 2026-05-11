@@ -847,19 +847,25 @@ export class Wayfinding {
     return path;
   }
   _calculateWallOffsetPointList(currentPoint, previousPoint) {
-    const pointList = this._getPointList();
+    let pointList = this._getPointList();
     let currentPointIndex = pointList.indexOf(currentPoint);
-    const previousPointIndex = pointList.indexOf(previousPoint);
-    const offsetPointList = [];
+    let previousPointIndex = pointList.indexOf(previousPoint);
+    let offsetPointList = [];
     let currentOffsetPoint = currentPoint;
     // a) offset current point
     if (currentPointIndex >= 0 && this.wallOffsets[currentPointIndex]) {
       currentOffsetPoint = this.wallOffsets[currentPointIndex];
     }
     offsetPointList.push(currentOffsetPoint);
+
+    const visitedIndices = new Set(); // <-- track visited offset indices
+    if (currentPointIndex >= 0) {
+      visitedIndices.add(currentPointIndex);
+    }
+
     let potentialOffsetPoints;
     do {
-      const line = turf.lineString([previousPoint.geometry.coordinates, currentOffsetPoint.geometry.coordinates]);
+      let line = turf.lineString([previousPoint.geometry.coordinates, currentOffsetPoint.geometry.coordinates]);
       potentialOffsetPoints = [];
       this.wallOffsetLineList.forEach((wallOffsetLine, index) => {
         // Do not process wall offsets from another floor
@@ -870,9 +876,13 @@ export class Wayfinding {
         if (index === previousPointIndex || index === currentPointIndex) {
           return;
         }
-        const intersection = turf.lineIntersect(line, wallOffsetLine);
+        // Do not process already visited offset points  // <-- skip visited
+        if (visitedIndices.has(index)) {
+          return;
+        }
+        let intersection = turf.lineIntersect(line, wallOffsetLine);
         if (intersection.features.length > 0) {
-          const offsetPoint = this.wallOffsets[index];
+          let offsetPoint = this.wallOffsets[index];
           // store distance to previousPoint
           offsetPoint.properties.distance = this._distance(intersection.features[0], currentOffsetPoint);
           offsetPoint.properties.offsetIndex = index;
@@ -883,9 +893,11 @@ export class Wayfinding {
         potentialOffsetPoints.sort((a, b) => a.properties.distance - b.properties.distance);
         currentOffsetPoint = potentialOffsetPoints[0];
         currentPointIndex = currentOffsetPoint.properties.offsetIndex;
+        visitedIndices.add(currentPointIndex); // <-- mark as visited
         offsetPointList.push(currentOffsetPoint);
       }
     } while (potentialOffsetPoints.length > 0);
+
     return offsetPointList.reverse();
   }
   _getIntersectingOffsetPoints(current, previous) {
@@ -1203,56 +1215,53 @@ export class Wayfinding {
   _getNeighbours(point, startPoint, endPoint) {
     let neighbours = [];
     if (point === startPoint) {
-      const levelPoints = this._getPointList().filter((proposedPoint) =>
+      let levelPoints = this._getPointList().filter((proposedPoint) =>
         this._isPointOnLevel(proposedPoint, point.properties.level),
       );
       neighbours = this._findNeighbours(point, startPoint, endPoint, levelPoints);
       neighbours = neighbours.filter((neighbourPoint) => {
-        const level = point.properties.level;
-        const revolvingDoorBlock =
+        //                if (neighbourPoint === endPoint) {
+        //                    console.log('testing endPoint');
+        //                }
+        let level = point.properties.level;
+        let revolvingDoorBlock =
           this.configuration.avoidRevolvingDoors &&
           this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.REVOLVING_DOOR);
-        const ticketGateBlock =
+        let ticketGateBlock =
           this.configuration.avoidTicketGates &&
           this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.TICKET_GATE);
-        const isCrossingTwoPolygon = this._checkIfCrossingTwoPolygon(point, neighbourPoint);
-        return !revolvingDoorBlock && !ticketGateBlock && !isCrossingTwoPolygon;
+        return !revolvingDoorBlock && !ticketGateBlock;
       });
     } else {
       // Gather neighbours over all levels
-      const points = this._getPointList();
-      const pointIndex = points.indexOf(point);
-      if (pointIndex >= 0) {
-        this.floorData.forEach((_, level) => {
-          const levelNeighbourMap = this.neighbourMap[level];
-          if (levelNeighbourMap.hasOwnProperty(pointIndex)) {
-            levelNeighbourMap[pointIndex].forEach((neighbourIndex) => {
-              const neighbourPoint = points[neighbourIndex];
-              const revolvingDoorBlock =
-                this.configuration.avoidRevolvingDoors &&
-                this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.REVOLVING_DOOR);
-              const ticketGateBlock =
-                this.configuration.avoidTicketGates &&
-                this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.TICKET_GATE);
-              const isCrossingTwoPolygon = this._checkIfCrossingTwoPolygon(point, neighbourPoint);
-              if (
-                !neighbours.includes(neighbourPoint) &&
-                !revolvingDoorBlock &&
-                !ticketGateBlock &&
-                !isCrossingTwoPolygon
-              ) {
-                neighbours.push(neighbourPoint);
-              }
-            });
-          }
-        });
-      }
+      let points = this._getPointList();
+      let pointIndex = points.indexOf(point);
+      this.floorData.forEach((_, level) => {
+        let levelNeighbourMap = this.neighbourMap[level];
+        if (Object.prototype.hasOwnProperty.call(levelNeighbourMap, pointIndex)) {
+          levelNeighbourMap[pointIndex].forEach((neighbourIndex) => {
+            let neighbourPoint = points[neighbourIndex];
+
+            let revolvingDoorBlock =
+              this.configuration.avoidRevolvingDoors &&
+              this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.REVOLVING_DOOR);
+            let ticketGateBlock =
+              this.configuration.avoidTicketGates &&
+              this._testAccessibilityPoiNeighbourhood(point, neighbourPoint, level, this.POI_TYPE.TICKET_GATE);
+
+            if (!neighbours.includes(neighbourPoint) && !revolvingDoorBlock && !ticketGateBlock) {
+              neighbours.push(neighbourPoint);
+            }
+          });
+        }
+      });
+
       // Test if endpoint is neighbour
       if (
         (point.properties.level !== undefined && point.properties.level === endPoint.properties.level) ||
         (point.properties.fixedPointMap != undefined && point.properties.fixedPointMap.has(endPoint.properties.level))
       ) {
-        const revolvingDoorBlock =
+        let revolvingDoorBlock =
           this.configuration.avoidRevolvingDoors &&
           this._testAccessibilityPoiNeighbourhood(
             point,
@@ -1260,7 +1269,7 @@ export class Wayfinding {
             endPoint.properties.level,
             this.POI_TYPE.REVOLVING_DOOR,
           );
-        const ticketGateBlock =
+        let ticketGateBlock =
           this.configuration.avoidTicketGates &&
           this._testAccessibilityPoiNeighbourhood(
             point,
@@ -1268,8 +1277,8 @@ export class Wayfinding {
             endPoint.properties.level,
             this.POI_TYPE.TICKET_GATE,
           );
-        const isCrossingTwoPolygon = this._checkIfCrossingTwoPolygon(point, endPoint);
-        if (!revolvingDoorBlock && !ticketGateBlock && !isCrossingTwoPolygon) {
+
+        if (!revolvingDoorBlock && !ticketGateBlock) {
           // Endpoint is fixed on corridor
           if (endPoint.properties.onCorridor) {
             if (endPoint.properties.neighbours.includes(point)) {
@@ -1282,9 +1291,10 @@ export class Wayfinding {
             ) {
               neighbours.push(endPoint);
             }
+
             // End point is not on corridor, therefore should be in the area
           } else {
-            const unwrapped = this._unwrapLevelChangerPoint(point, endPoint.properties.level);
+            let unwrapped = this._unwrapLevelChangerPoint(point, endPoint.properties.level);
             let allowedIntersections = 1;
             if (unwrapped.properties.isCorridorPoint || unwrapped.properties.onCorridor) {
               allowedIntersections--;
@@ -1296,7 +1306,9 @@ export class Wayfinding {
         }
       }
     }
-    return neighbours.filter((neighbour) => {
+
+    const beforeFilterCount = neighbours.length;
+    const filteredNeighbours = neighbours.filter((neighbour) => {
       if (this.configuration.avoidElevators && neighbour.properties.type === this.POI_TYPE.ELEVATOR) {
         return false;
       } else if (this.configuration.avoidEscalators && neighbour.properties.type === this.POI_TYPE.ESCALATOR) {
@@ -1307,11 +1319,11 @@ export class Wayfinding {
         return false;
       } else if (this.configuration.avoidRamps && neighbour.properties.ramp) {
         return false;
-      } else if (this.configuration.avoidHills && neighbour.properties.hill) {
-        return false;
       }
       return true;
     });
+
+    return filteredNeighbours;
   }
   /**
    *
@@ -1682,58 +1694,59 @@ export class Wayfinding {
     return this._getFixPointInArea(endPoint);
   }
   _getFixPointInArea(point) {
-    const floorData = this.floorData.get(point.properties.level);
+    let floorData = this.floorData.get(point.properties.level);
+
+    if (!floorData) {
+      return point;
+    }
+
     // If point is located without accessible area, do nothing
-    let pointFound = undefined;
-    if (floorData?.areas.length > 0) {
-      floorData.areas.forEach((polygon) => {
-        if (turf.booleanContains(polygon, point)) {
-          pointFound = point;
-          return;
-        }
-      });
+    let areaList = floorData.areas;
+    for (let index in areaList) {
+      let polygon = areaList[index];
+      if (turf.booleanContains(polygon, point)) {
+        return point;
+      }
     }
-    if (pointFound !== undefined) {
-      return pointFound;
-    }
+
     // Find nearest wall to stick to
     let bestWall = null;
     let bestWallDistance = Infinity;
-    if (floorData?.wallFeatures.length > 0) {
-      floorData.wallFeatures.forEach((wall) => {
-        const distance = turf.pointToLineDistance(point.geometry.coordinates, wall, { units: this.UNIT_TYPE });
-        if (distance <= bestWallDistance) {
-          bestWall = wall;
-          bestWallDistance = distance;
-        }
-      });
-    }
-    const levelCorridorFeatures = this.corridorLineFeatures.filter(
+    floorData.wallFeatures.forEach((wall) => {
+      let distance = turf.pointToLineDistance(point.geometry.coordinates, wall, { units: 'meters' });
+      if (distance < bestWallDistance) {
+        bestWall = wall;
+        bestWallDistance = distance;
+      }
+    });
+
+    let levelCorridorFeatures = this.corridorLineFeatures.filter(
       (corridorLine) => corridorLine.properties.level === point.properties.level,
     );
     let bestCorridorIndex = null;
     let bestCorridorDistance = Infinity;
     levelCorridorFeatures.forEach((corridor) => {
-      const corridorIndex = this.corridorLineFeatures.indexOf(corridor);
-      const corridorDistance = turf.pointToLineDistance(point.geometry.coordinates, corridor, {
-        units: this.UNIT_TYPE,
-      });
+      let corridorIndex = this.corridorLineFeatures.indexOf(corridor);
+      let corridorDistance = turf.pointToLineDistance(point.geometry.coordinates, corridor, { units: 'meters' });
       if (corridorDistance < bestCorridorDistance) {
         bestCorridorIndex = corridorIndex;
         bestCorridorDistance = corridorDistance;
       }
     });
+
     // Test if area or corridor is closer, create appropriate fixed point
     if (bestWall === null && bestCorridorIndex === null) {
       // could not find neither close area or corridor
       return point;
     } else {
       let fixedPoint;
+
       // Corridor is closer
-      if (bestCorridorIndex !== undefined && bestCorridorDistance < bestWallDistance) {
+      if (bestCorridorIndex !== null && bestCorridorDistance < bestWallDistance) {
         // Create fixed point on line itself
-        const line = this.corridorLineFeatures[bestCorridorIndex];
+        let line = this.corridorLineFeatures[bestCorridorIndex];
         fixedPoint = turf.nearestPointOnLine(line, point);
+
         // Mark this fixed point is on corridor, preset neighbours
         fixedPoint.properties.onCorridor = true;
         fixedPoint.properties.corridorIndex = bestCorridorIndex;
@@ -1754,11 +1767,11 @@ export class Wayfinding {
         } else if (this.corridorLineFeatures[bestCorridorIndex].properties.swapDirection != true) {
           fixedPoint.properties.neighbours.push(this.corridorLinePointPairs[bestCorridorIndex][0]);
           // include only intersection points after this point
-          const distance = this._distance(fixedPoint, this.corridorLinePointPairs[bestCorridorIndex][0]);
-          const pointsBefore = line.properties.intersectionPointList.filter(
+          let distance = this._distance(fixedPoint, this.corridorLinePointPairs[bestCorridorIndex][0]);
+          let pointsBefore = line.properties.intersectionPointList.filter(
             (point) => this._distance(point, this.corridorLinePointPairs[bestCorridorIndex][0]) < distance,
           );
-          const pointsAfter = line.properties.intersectionPointList.filter(
+          let pointsAfter = line.properties.intersectionPointList.filter(
             (point) => this._distance(point, this.corridorLinePointPairs[bestCorridorIndex][0]) >= distance,
           );
           fixedPoint.properties.neighbours.push(...pointsAfter);
@@ -1766,11 +1779,11 @@ export class Wayfinding {
         } else {
           fixedPoint.properties.neighbours.push(this.corridorLinePointPairs[bestCorridorIndex][1]);
           // include only intersection points before this point
-          const distance = this._distance(fixedPoint, this.corridorLinePointPairs[bestCorridorIndex][0]);
-          const pointsBefore = line.properties.intersectionPointList.filter(
+          let distance = this._distance(fixedPoint, this.corridorLinePointPairs[bestCorridorIndex][0]);
+          let pointsBefore = line.properties.intersectionPointList.filter(
             (point) => this._distance(point, this.corridorLinePointPairs[bestCorridorIndex][0]) <= distance,
           );
-          const pointsAfter = line.properties.intersectionPointList.filter(
+          let pointsAfter = line.properties.intersectionPointList.filter(
             (point) => this._distance(point, this.corridorLinePointPairs[bestCorridorIndex][0]) > distance,
           );
           fixedPoint.properties.neighbours.push(...pointsBefore);
@@ -1779,12 +1792,16 @@ export class Wayfinding {
         // Wall is closer
       } else if (bestWall !== null) {
         // Create fixed point inside area
-        const nearestPoint = turf.nearestPointOnLine(bestWall, point);
-        const bearing = turf.bearing(point, nearestPoint);
-        fixedPoint = turf.destination(point.geometry.coordinates, bestWallDistance + 0.05, bearing, this.UNIT_TYPE);
+        let nearestPoint = turf.nearestPointOnLine(bestWall, point);
+        let bearing = turf.bearing(point, nearestPoint);
+        fixedPoint = turf.destination(point.geometry.coordinates, bestWallDistance + 0.05, bearing, {
+          units: 'meters',
+        });
       }
+
       // Mark level of fixed point
       fixedPoint.properties.level = point.properties.level;
+
       // Return created point
       return fixedPoint;
     }

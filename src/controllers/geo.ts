@@ -145,7 +145,7 @@ export const getFeatures = async ({
     }
   }
 
-  originalFeatures = { ...res.data };
+  originalFeatures = JSON.parse(JSON.stringify(res.data));
 
   if (polygonBufferDistance !== 0 && polygonTypesToScale?.length > 0) {
     res.data.features = res.data.features.map((feature) => {
@@ -164,7 +164,7 @@ export const getFeatures = async ({
   }
 
   res.data.features = res.data.features.map((feature) => {
-    feature.geometry.coordinates = shortenCoordinates({ coords: feature.geometry.coordinates, decimals: 8 });
+    feature.geometry.coordinates = shortenCoordinates({ coords: feature.geometry.coordinates, decimals: 10 });
     rewind(feature, false);
     return feature;
   });
