@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.17.0] - 2026-05-11
+
+### Fixed
+
+- `Wayfinding.runAStar` no longer returns phantom routes for some POI pairs. The previous
+  algorithm could return a path containing a waypoint outside the venue's coordinate bounds
+  (e.g. Ticket Sale → Dino Safari produced a 7.5 km route with a node 3.7 km south of the
+  venue; same query now returns ~580 m). It could also return `undefined` for valid pairs
+  where a route actually exists (e.g. Ticket Sale → Ice Cream, Dino Safari → Ticket Sale).
+  The core A* / corridor-fix logic in `assets/wayfinding.js` has been replaced with the
+  proven-correct implementation from the maptap codebase. The public API is preserved:
+  `runAStar`, `runAStarWithDetails`, `calculatePath`, `calculateDistance`, `calculateTime`,
+  `extractAllLevels`, `isPathElevator`, `isPathEscalator`, `isPathStaircase`, `isPathFlat`,
+  `setConfiguration`, `preprocess`.
+- All `turf.destination(...)` call sites are now consistent with `@turf/destination` v6's
+  options-object signature (`{ units: 'meters' }`) rather than the legacy turf-3.x string form.
+
 ## [1.11.38] - 2024-04-14
 
 ### Added
