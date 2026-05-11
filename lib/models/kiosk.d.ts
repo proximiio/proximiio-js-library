@@ -11,6 +11,8 @@ export declare class KioskModel extends BaseModel {
     pitch?: number;
     bounds?: [[number, number], [number, number]];
     floor_id?: string;
+    parkingKiosk?: boolean;
     constructor(data: any);
     get hasLocation(): boolean;
+    get isParkingKiosk(): boolean;
 }

@@ -112,6 +112,7 @@ export interface Options {
         pointColor?: string;
         pointOutline?: boolean;
         labelFont?: string | string[];
+        parkingKiosk?: boolean;
     };
     initPolygons?: boolean;
     polygonsOptions?: PolygonOptions;
@@ -328,7 +329,9 @@ export declare class Map {
     private initUrlParams;
     private featureDialog;
     private onAddNewFeature;
+    private onUpdateFeaturesBatch;
     private onUpdateFeature;
+    private updateFeatureData;
     private onDeleteFeature;
     private onFeaturesChange;
     private onSetFeatureFilter;
@@ -1010,6 +1013,46 @@ export declare class Map {
         [key: string]: string | number | boolean | null | undefined;
     }, isTemporary?: boolean): Promise<Feature>;
     /**
+     * Update existing map features in batch.
+     *  @memberof Map
+     *  @name updateFeatures
+     *  @param features { array } Array of feature objects
+     *  @param feature.id { string } Feature ID (string)
+     *  @param feature.title {string} feature title, optional
+     *  @param feature.level {number} feature floor level, optional
+     *  @param feature.lat {number} feature latitude coordinate, optional
+     *  @param feature.lng {number} feature longitude coordinate, optional
+     *  @param feature.icon {string} feature icon image in base64 format, optional
+     *  @param feature.placeId {string} feature place_id, optional
+     *  @param feature.floorId {string} feature floor_id, optional
+     *  @param feature.properties {object} feature properties, optional
+     *  @param isTemporary {boolean} will update feature just temporary, it's not saved to db, optional, default
+     *  @return <Promise>{Feature} newly added feature
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *
+     *    map.updateFeatures({features: [{id: 'poiId', title: 'myPOI', level: 0, lat: 48.606703739771774, lng:17.833092384506614}, {id: 'poiId2', title: 'myPOI 2', level: 0, lat: 48.606803739771774, lng:17.833022384506614}], isTemporary: true});
+     *  });
+     */
+    updateFeatures(options: {
+        features: {
+            id: string;
+            title?: string;
+            level?: number;
+            lat?: number;
+            lng?: number;
+            icon?: string;
+            placeId?: string;
+            floorId?: string;
+            properties?: {
+                [key: string]: string | number | boolean | null | undefined;
+            };
+        }[];
+        isTemporary?: boolean;
+    }): Promise<Feature[]>;
+    /**
      * Delete existing map feature.
      *  @memberof Map
      *  @name deleteFeature
@@ -1057,7 +1100,7 @@ export declare class Map {
      *    console.log('feature updated', feature);
      *  });
      */
-    getFeatureUpdateListener(): CustomSubject<Feature>;
+    getFeatureUpdateListener(): CustomSubject<Feature | Feature[]>;
     /**
      *  @memberof Map
      *  @name getFeatureDeleteListener
@@ -1089,7 +1132,7 @@ export declare class Map {
      *    map.setKiosk(48.606703739771774, 17.833092384506614, 0);
      *  });
      */
-    setKiosk(lat: number, lng: number, level: number): void;
+    setKiosk(lat: number, lng: number, level: number, parkingKiosk?: boolean): void;
     /**
      * This method will stop kiosk behaviour.
      *  @memberof Map
