@@ -302,12 +302,21 @@ export default class GuidanceStepsGenerator {
     const t = translations[this.language];
 
     if (direction === 'FINISH') {
-      return [
-        this.capitalize(t.IN),
-        step.totalDistance ? step.totalDistance.toFixed(0) : 0,
-        t.METERS,
-        this.getDirectionInstruction(direction),
-      ].join(' ');
+      if (this.language === 'fi') {
+        return [
+          step.totalDistance ? step.totalDistance.toFixed(0) : 0,
+          t.METERS,
+          this.capitalize(t.IN),
+          this.getDirectionInstruction(direction),
+        ].join(' ');
+      } else {
+        return [
+          this.capitalize(t.IN),
+          step.totalDistance ? step.totalDistance.toFixed(0) : 0,
+          t.METERS,
+          this.getDirectionInstruction(direction),
+        ].join(' ');
+      }
     }
 
     const floorName = step.destinationFloor?.name
@@ -350,21 +359,39 @@ export default class GuidanceStepsGenerator {
     }
 
     if (direction === Direction.Finish) {
-      return [
-        this.capitalize(t.IN),
-        distanceFromLastStep.toFixed(0),
-        t.METERS + ',',
-        this.getDirectionInstruction(direction),
-      ].join(' ');
+      if (this.language === 'fi') {
+        return [
+          step.totalDistance ? step.totalDistance.toFixed(0) : 0,
+          t.METERS,
+          this.capitalize(t.IN),
+          this.getDirectionInstruction(direction),
+        ].join(' ');
+      } else {
+        return [
+          this.capitalize(t.IN),
+          step.totalDistance ? step.totalDistance.toFixed(0) : 0,
+          t.METERS,
+          this.getDirectionInstruction(direction),
+        ].join(' ');
+      }
     }
 
     if (distanceFromLastStep > 0) {
-      return [
-        this.capitalize(t.IN),
-        distanceFromLastStep.toFixed(0),
-        t.METERS + ',',
-        this.getDirectionInstruction(direction),
-      ].join(' ');
+      if (this.language === 'fi') {
+        return [
+          step.totalDistance ? step.totalDistance.toFixed(0) : 0,
+          t.METERS,
+          this.capitalize(t.IN),
+          this.getDirectionInstruction(direction),
+        ].join(' ');
+      } else {
+        return [
+          this.capitalize(t.IN),
+          step.totalDistance ? step.totalDistance.toFixed(0) : 0,
+          t.METERS,
+          this.getDirectionInstruction(direction),
+        ].join(' ');
+      }
     }
 
     if (this.levelChangersSteps && step.levelChangerId) {
