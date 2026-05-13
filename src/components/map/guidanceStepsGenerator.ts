@@ -306,7 +306,7 @@ export default class GuidanceStepsGenerator {
         return [
           step.totalDistance ? step.totalDistance.toFixed(0) : 0,
           t.METERS,
-          this.capitalize(t.IN),
+          t.IN,
           this.getDirectionInstruction(direction),
         ].join(' ');
       } else {
@@ -363,7 +363,7 @@ export default class GuidanceStepsGenerator {
         return [
           step.totalDistance ? step.totalDistance.toFixed(0) : 0,
           t.METERS,
-          this.capitalize(t.IN),
+          t.IN,
           this.getDirectionInstruction(direction),
         ].join(' ');
       } else {
@@ -381,7 +381,7 @@ export default class GuidanceStepsGenerator {
         return [
           step.totalDistance ? step.totalDistance.toFixed(0) : 0,
           t.METERS,
-          this.capitalize(t.IN),
+          t.IN,
           this.getDirectionInstruction(direction),
         ].join(' ');
       } else {
