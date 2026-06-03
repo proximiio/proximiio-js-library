@@ -4484,9 +4484,13 @@ export class Map {
           // Update the point position
           // @ts-ignore
           const pointData = this.map.getSource('pointAlong')._data;
-          const currentCoords = pointData.features[0]
-            ? pointData.features[0].geometry.coordinates
-            : currentPoint.geometry.coordinates;
+          if (!pointData.features) {
+            pointData.features = [];
+          }
+          const currentCoords =
+            pointData.features.length > 0 && pointData.features[0]
+              ? pointData.features[0].geometry.coordinates
+              : currentPoint.geometry.coordinates;
           const newCoords = currentPoint.geometry.coordinates;
           pointData.features[0] = point(
             this.defaultOptions.routeAnimation.iconUseLerp
@@ -4714,6 +4718,9 @@ export class Map {
 
       // @ts-ignore
       const pointData = this.map.getSource('pointAlong')._data;
+      if (!pointData.features) {
+        pointData.features = [];
+      }
       const newCoords = this.routingSource.finish.geometry.coordinates;
       pointData.features[0] = point(newCoords);
 
