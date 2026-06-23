@@ -789,6 +789,14 @@ export class Map {
           },
         );
       }
+    } else {
+      // Required data (places/floors/style) could not be loaded - e.g. offline with an empty
+      // cache. Without it the map is never created and no map-ready event is ever emitted, so
+      // emit an explicit failure instead of leaving the consumer stuck on a loading screen.
+      const missing = [!places && 'places', !floors && 'floors', !style && 'style'].filter(Boolean).join(', ');
+      this.onMapFailedListener.next({
+        message: `Map initialization aborted: required data (${missing}) could not be loaded.`,
+      });
     }
   }
 
@@ -849,7 +857,7 @@ export class Map {
         )
       : await getAds().catch((error) => this.handleControllerError(error));
 
-    if (features && kiosks && ads) {
+    if (features) {
       const optimizedFeatures = new FeatureCollection({
         features: optimizeFeatures(features.modifiedFeatures.features),
       });
@@ -871,16 +879,23 @@ export class Map {
       this.state = {
         ...this.state,
         initializing: false,
-        kiosks: kiosks.data,
+        kiosks: kiosks?.data ?? [],
         amenities,
         features: features.modifiedFeatures,
-        ads: ads.data,
+        ads: ads?.data ?? [],
         optimizedFeatures,
         allFeatures: new FeatureCollection(features.modifiedFeatures),
         levelChangers: new FeatureCollection({ features: levelChangers }),
         zoom: this.defaultOptions.zoomLevel ? this.defaultOptions.zoomLevel : this.defaultOptions.mapboxOptions?.zoom,
       };
       this.onDataFetchedListener.next(true);
+    } else {
+      // Features are required to build the map data; kiosks/ads are optional and default to empty
+      // above so a single missing optional bundle (e.g. offline) no longer blocks the whole step.
+      // If features themselves failed there is nothing to render - surface it explicitly.
+      this.onMapFailedListener.next({
+        message: `Map data could not be loaded: features are unavailable.`,
+      });
     }
   }
 
@@ -4806,8 +4821,9 @@ export class Map {
     this.routingSource.setInitialBearing(bearingValue);
   }
 
-  private handleControllerError = (err) => {
+  private handleControllerError = (err): undefined => {
     this.onMapFailedListener.next({ message: err.message ? err.message : JSON.stringify(err) });
+    return undefined;
   };
 
   private InjectCSS = ({ id, css }: { id: string; css: string }) => {
