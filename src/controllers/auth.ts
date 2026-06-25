@@ -31,7 +31,7 @@ export const login = async (email: string, password: string) => {
     const loginRes = await axios.post(`core_auth/login`, authData);
     if (loginRes.data) {
       console.info(`Logged in successfully as ${loginRes.data.user.email}`);
-      axios.defaults.headers.common.Authorization = loginRes.data.token;
+      axios.defaults.headers.common.Authorization = `Bearer ${loginRes.data.token}`;
       loggedUser = loginRes;
     }
     return loginRes;
@@ -60,7 +60,7 @@ export const loginWithToken = async (token: string) => {
     if (!token) {
       throw new Error(`Please provide your token`);
     }
-    axios.defaults.headers.common.Authorization = token;
+    axios.defaults.headers.common.Authorization = `Bearer ${token}`;
 
     const currentUser = await axios.get(`core/current_user`);
     if (currentUser.data) {
@@ -85,7 +85,7 @@ export const loginWithToken = async (token: string) => {
  */
 
 export const setToken = async (token: string) => {
-  axios.defaults.headers.common.Authorization = token;
+  axios.defaults.headers.common.Authorization = `Bearer ${token}`;
   return `Token set successfully: ${token}`;
 };
 
