@@ -446,6 +446,15 @@ const map = new Proximiio.Map({
    // If set to true only features inside defined time range in metadata.dateStart and metadata.dateEnd will be shown
    useTimerangeData: false,
 
+   // If set to true, routing will avoid paths that are closed according to their working hours
+   // (properties._workingHoursEnabled + properties.workingHours), evaluated against the device's local time.
+   // Paths marked properties.available: false are always avoided, regardless of this option.
+   useWorkingHours: false,
+
+   // If set to true (together with useWorkingHours), routing to a destination POI that is currently
+   // closed according to its working hours will be refused instead of computed
+   excludeClosedPois: false,
+
    // If enabled we automatically send analytics from routing to our API, default: true
    sendAnalytics: true,
 

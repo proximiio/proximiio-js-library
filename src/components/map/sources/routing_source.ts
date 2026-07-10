@@ -1,6 +1,6 @@
 import DataSource from './data_source';
 import Feature, { FeatureCollection } from '../../../models/feature';
-import Routing from '../routing';
+import Routing, { RoutingWorkingHoursOptions } from '../routing';
 import { GuidanceStep, WayfindingConfigModel } from '../../../models/wayfinding';
 import GuidanceStepsGenerator from '../guidanceStepsGenerator';
 import combineRoutes from '../combineRoutes';
@@ -68,6 +68,10 @@ export default class RoutingSource extends DataSource {
 
   setConfig(config: WayfindingConfigModel) {
     this.routing.setConfig(config);
+  }
+
+  setWorkingHoursOptions(options: RoutingWorkingHoursOptions) {
+    this.routing.setWorkingHoursOptions(options);
   }
 
   setNavigationType(type: 'mall' | 'city' | 'combined') {
@@ -177,6 +181,11 @@ export default class RoutingSource extends DataSource {
             priorityEntrance: entranceFeature,
           });
         }
+      }
+
+      // @ts-ignore
+      if (route?.destinationOpen === false) {
+        this.notify('destination-closed');
       }
 
       // @ts-ignore

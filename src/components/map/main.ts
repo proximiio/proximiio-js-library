@@ -286,6 +286,8 @@ export interface Options {
   blockFeatureClickWhileRouting?: boolean;
   hiddenAmenities?: string[];
   useTimerangeData?: boolean;
+  useWorkingHours?: boolean;
+  excludeClosedPois?: boolean;
   sendAnalytics?: boolean;
   defaultFilter?: {
     key: string;
@@ -533,6 +535,8 @@ export class Map {
     routeWithDetails: true,
     blockFeatureClickWhileRouting: false,
     useTimerangeData: false,
+    useWorkingHours: false,
+    excludeClosedPois: false,
     sendAnalytics: true,
     autoLevelChange: false,
     autoRestartAnimationAfterFloorChange: false,
@@ -874,7 +878,10 @@ export class Map {
       this.routingSource.setLevelChangers(levelChangers);
       this.routingSource.setFloors(this.state.floors);
       this.geojsonSource.fetch(optimizedFeatures);
-      this.routingSource.routing.setData(features.originalFeatures);
+      this.routingSource.routing.setData(features.originalFeatures, {
+        useWorkingHours: this.defaultOptions.useWorkingHours,
+        excludeClosedPois: this.defaultOptions.excludeClosedPois,
+      });
       this.prepareStyle(this.state.style);
       this.state = {
         ...this.state,

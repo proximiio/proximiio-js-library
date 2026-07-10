@@ -4,23 +4,47 @@ import Feature from '../../models/feature';
 import { FeatureCollection, lineString, point } from '@turf/helpers';
 import { WayfindingConfigModel } from '../../models/wayfinding';
 import osrmTextInstructionsPackage from 'osrm-text-instructions';
+import { isOpenAt, nowClientTime } from './workingHours';
 
 const version = 'v5';
 const osrmTextInstructions = osrmTextInstructionsPackage(version);
 
+export interface RoutingWorkingHoursOptions {
+  useWorkingHours?: boolean;
+  excludeClosedPois?: boolean;
+  /** Override "now" for previewing a route at a different time. Defaults to the device's current time. */
+  datetime?: Date;
+}
+
 export default class Routing {
   data: FeatureCollection;
+  rawData: FeatureCollection;
   wayfinding: any;
   forceFloorLevel: number;
   routeWithDetails: boolean;
   config: WayfindingConfigModel;
+  workingHoursOptions: RoutingWorkingHoursOptions = {};
 
   constructor() {
     this.data = {} as FeatureCollection;
   }
 
-  setData(collection: FeatureCollection) {
-    this.data = collection;
+  private filterRoutableFeatures(collection: FeatureCollection): FeatureCollection {
+    const time = nowClientTime(this.workingHoursOptions.datetime);
+    const features = (collection.features || []).filter((f: any) => {
+      if (f.properties?.class !== 'path') return true;
+      // Unavailable paths are always avoided, independently of any option.
+      if (f.properties.available === false) return false;
+      if (this.workingHoursOptions.useWorkingHours && !isOpenAt(f.properties, time)) return false;
+      return true;
+    });
+    return { ...collection, features } as FeatureCollection;
+  }
+
+  setData(collection: FeatureCollection, options?: RoutingWorkingHoursOptions) {
+    this.rawData = collection;
+    this.workingHoursOptions = { ...this.workingHoursOptions, ...options };
+    this.data = this.filterRoutableFeatures(this.rawData);
     this.wayfinding = new Wayfinding(this.data);
     this.wayfinding.preprocess();
     // pathfinding.load(neighbourList, wallOffsets);
@@ -29,6 +53,15 @@ export default class Routing {
     // avoidNarrowPaths: true,
     // avoidRevolvingDoors: true
     // });
+  }
+
+  setWorkingHoursOptions(options: RoutingWorkingHoursOptions) {
+    this.workingHoursOptions = { ...this.workingHoursOptions, ...options };
+    if (this.rawData) {
+      this.data = this.filterRoutableFeatures(this.rawData);
+      this.wayfinding = new Wayfinding(this.data);
+      this.wayfinding.preprocess();
+    }
   }
 
   toggleOnlyAccessible(onlyAccessible: any) {
@@ -84,6 +117,13 @@ export default class Routing {
       | 'landmark-levelChangers';
     priorityEntrance?: Feature;
   }) {
+    const time = nowClientTime(this.workingHoursOptions.datetime);
+    const destinationOpen =
+      this.workingHoursOptions.useWorkingHours && finish ? isOpenAt(finish.properties, time) : undefined;
+    if (destinationOpen === false && this.workingHoursOptions.excludeClosedPois) {
+      return { destinationOpen: false };
+    }
+
     const isMultipoint = stops && stops.length > 1;
     let points = null;
     let details = null;
@@ -411,7 +451,16 @@ export default class Routing {
       levelPoints[point.properties.level].push(point);
     });
 
-    return { paths, points, route: {}, fullPath: {} as Feature, levelPaths, levelPoints, details };
+    return {
+      paths,
+      points,
+      route: {},
+      fullPath: {} as Feature,
+      levelPaths,
+      levelPoints,
+      details,
+      ...(destinationOpen !== undefined && { destinationOpen }),
+    };
   }
 
   async cityRoute({ start, finish, language = 'en' }: { start: Feature; finish: Feature; language?: string }) {
