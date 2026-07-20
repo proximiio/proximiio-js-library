@@ -229,7 +229,8 @@ export default class GuidanceStepsGenerator {
       };
 
       const destinationFloor =
-        step.levelChangerDestinationLevel && this.floors.filter((f) => f.level === step.levelChangerDestinationLevel)
+        (step.levelChangerDestinationLevel !== null || step.levelChangerDestinationLevel !== undefined) &&
+        this.floors.filter((f) => f.level === step.levelChangerDestinationLevel)
           ? this.floors.filter((f) => f.level === step.levelChangerDestinationLevel)[0]
           : this.currentFloor;
 

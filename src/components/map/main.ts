@@ -876,7 +876,11 @@ export class Map {
         ),
       );
       this.routingSource.setLevelChangers(levelChangers);
-      this.routingSource.setFloors(this.state.floors);
+      this.routingSource.setFloors(
+        this.defaultOptions.defaultPlaceId
+          ? this.state.floors.filter((f) => f.placeId === this.defaultOptions.defaultPlaceId)
+          : this.state.floors,
+      );
       this.geojsonSource.fetch(optimizedFeatures);
       this.routingSource.routing.setData(features.originalFeatures, {
         useWorkingHours: this.defaultOptions.useWorkingHours,
@@ -6300,10 +6304,10 @@ export class Map {
         this.setFloorByLevel(route.properties.level);
         this.animateRoute();
       } else {
+        this.centerOnRoute(this.routingSource.route[`path-part-${newStep}`]);
         if (this.routingSource.isMultipoint || this.defaultOptions.stepsNavigation !== 'disabled') {
           this.animateRoute();
         }
-        this.centerOnRoute(this.routingSource.route[`path-part-${newStep}`]);
       }
       if (
         this.routingSource.navigationType === 'combined' &&
@@ -6383,8 +6387,8 @@ export class Map {
 
     if (newStopRoute) {
       this.currentStop = newStop;
-      this.animateRoute();
       this.centerOnRoute(newStopRoute);
+      this.animateRoute();
       this.onStopSetListener.next(this.currentStop);
       this.setNavStep(newStopRoute.properties.step);
       return this.currentStop;
