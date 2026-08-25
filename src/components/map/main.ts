@@ -1333,8 +1333,8 @@ export class Map {
     lat: number;
     lng: number;
     level: number;
-    parkingKiosk: boolean;
-    useAsRouteStart: boolean;
+    parkingKiosk?: boolean;
+    useAsRouteStart?: boolean;
   }) {
     if (this.map && this.defaultOptions.isKiosk) {
       this.defaultOptions.kioskSettings = {
@@ -6903,8 +6903,8 @@ export class Map {
           lat: number;
           lng: number;
           level: number;
-          parkingKiosk: boolean;
-          useAsRouteStart: boolean;
+          parkingKiosk?: boolean;
+          useAsRouteStart?: boolean;
         },
     lng?: number,
     level?: number,
@@ -6915,8 +6915,8 @@ export class Map {
       lat: number;
       lng: number;
       level: number;
-      parkingKiosk: boolean;
-      useAsRouteStart: boolean;
+      parkingKiosk?: boolean;
+      useAsRouteStart?: boolean;
     };
 
     // ✅ Detect which version is used
