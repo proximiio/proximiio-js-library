@@ -6906,10 +6906,10 @@ export class Map {
           parkingKiosk: boolean;
           useAsRouteStart: boolean;
         },
-    lng: number,
-    level: number,
-    parkingKiosk: boolean = false,
-    useAsRouteStart: boolean = true,
+    lng?: number,
+    level?: number,
+    parkingKiosk?: boolean,
+    useAsRouteStart?: boolean,
   ) {
     let opts: {
       lat: number;
