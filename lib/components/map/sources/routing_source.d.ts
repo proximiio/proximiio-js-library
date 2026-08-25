@@ -1,6 +1,6 @@
 import DataSource from './data_source';
 import Feature from '../../../models/feature';
-import Routing from '../routing';
+import Routing, { RoutingWorkingHoursOptions } from '../routing';
 import { GuidanceStep, WayfindingConfigModel } from '../../../models/wayfinding';
 import { FloorModel } from '../../../models/floor';
 interface ChangeContainer {
@@ -45,6 +45,7 @@ export default class RoutingSource extends DataSource {
     constructor();
     toggleAccessible(value: any): void;
     setConfig(config: WayfindingConfigModel): void;
+    setWorkingHoursOptions(options: RoutingWorkingHoursOptions): void;
     setNavigationType(type: 'mall' | 'city' | 'combined'): void;
     setStepsNavigation(value: 'disabled' | 'simple' | 'simple-levelChangers' | 'full' | 'full-levelChangers' | 'landmark' | 'landmark-levelChangers'): void;
     setInitialBearing(initialBearing: number): void;

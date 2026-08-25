@@ -205,6 +205,8 @@ export interface Options {
     blockFeatureClickWhileRouting?: boolean;
     hiddenAmenities?: string[];
     useTimerangeData?: boolean;
+    useWorkingHours?: boolean;
+    excludeClosedPois?: boolean;
     sendAnalytics?: boolean;
     defaultFilter?: {
         key: string;
@@ -1116,9 +1118,12 @@ export declare class Map {
      * This method will set new kiosk settings.
      *  @memberof Map
      *  @name setKiosk
+     *  @param latOrOptions { number | object } latitude coordinate for kiosk position (number) or an options object
      *  @param lat {number} latitude coordinate for kiosk position
      *  @param lng {number} longitude coordinate for kiosk position
      *  @param level {number} floor level for kiosk position
+     *  @param parkingKiosk {boolean} use as parking kiosk
+     *  @param useAsStartPoint {boolean} use as start point
      *  @example
      *  const map = new Proximiio.Map({
      *    isKiosk: true,
@@ -1129,10 +1134,21 @@ export declare class Map {
      *  });
      *  map.getMapReadyListener().subscribe(ready => {
      *    console.log('map ready', ready);
+     *
+     *    // Old style (still works)
      *    map.setKiosk(48.606703739771774, 17.833092384506614, 0);
+     *
+     *    // New style (recommended)
+     *    map.setKiosk({lat: 48.606703739771774, lng: 17.833092384506614, level: 0});
      *  });
      */
-    setKiosk(lat: number, lng: number, level: number, parkingKiosk?: boolean): void;
+    setKiosk(latOrOptions: number | {
+        lat: number;
+        lng: number;
+        level: number;
+        parkingKiosk: boolean;
+        useAsRouteStart: boolean;
+    }, lng: number, level: number, parkingKiosk?: boolean, useAsRouteStart?: boolean): void;
     /**
      * This method will stop kiosk behaviour.
      *  @memberof Map

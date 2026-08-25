@@ -12,7 +12,9 @@ export declare class KioskModel extends BaseModel {
     bounds?: [[number, number], [number, number]];
     floor_id?: string;
     parkingKiosk?: boolean;
+    useAsRouteStart?: boolean;
     constructor(data: any);
     get hasLocation(): boolean;
     get isParkingKiosk(): boolean;
+    get isAsRouteStart(): any;
 }
