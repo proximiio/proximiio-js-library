@@ -13,6 +13,7 @@ export class KioskModel extends BaseModel {
   bounds?: [[number, number], [number, number]];
   floor_id?: string;
   parkingKiosk?: boolean;
+  useAsRouteStart?: boolean;
 
   constructor(data: any) {
     super(data);
@@ -25,6 +26,7 @@ export class KioskModel extends BaseModel {
     this.bounds = data.bounds;
     this.floor_id = data.floor_id;
     this.parkingKiosk = data.parkingKiosk ? data.parkingKiosk : false;
+    this.useAsRouteStart = data.useAsRouteStart ? data.useAsRouteStart : true;
   }
 
   get hasLocation() {
@@ -32,5 +34,9 @@ export class KioskModel extends BaseModel {
   }
   get isParkingKiosk() {
     return this.parkingKiosk;
+  }
+
+  get isAsRouteStart() {
+    return this.isAsRouteStart;
   }
 }

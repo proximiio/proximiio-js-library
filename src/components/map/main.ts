@@ -1323,7 +1323,19 @@ export class Map {
     }
   }
 
-  private onSetKiosk(lat: number, lng: number, level: number, parkingKiosk: boolean = false) {
+  private onSetKiosk({
+    lat,
+    lng,
+    level,
+    parkingKiosk = false,
+    useAsRouteStart = true,
+  }: {
+    lat: number;
+    lng: number;
+    level: number;
+    parkingKiosk: boolean;
+    useAsRouteStart: boolean;
+  }) {
     if (this.map && this.defaultOptions.isKiosk) {
       this.defaultOptions.kioskSettings = {
         ...this.defaultOptions.kioskSettings,
@@ -1332,25 +1344,29 @@ export class Map {
         parkingKiosk,
       };
 
-      this.startPoint = point(this.defaultOptions.kioskSettings.coordinates, {
+      const kioskPoint = point(this.defaultOptions.kioskSettings.coordinates, {
         level: this.defaultOptions.kioskSettings.level,
       }) as Feature;
+
+      if (useAsRouteStart) {
+        this.startPoint = kioskPoint;
+      }
 
       if (this.defaultOptions.kioskSettings.showPoint) {
         this.state.style.sources['my-location'].data = {
           type: 'FeatureCollection',
-          features: [this.startPoint as any],
+          features: [kioskPoint as any],
         };
         this.map.setFilter('my-location-layer', ['all', ['==', ['to-number', ['get', 'level']], level]]);
       }
 
       if (this.defaultOptions.routeAnimation.type === 'puck') {
         const startPointCircle = circle(
-          this.startPoint.geometry.coordinates,
+          kioskPoint.geometry.coordinates,
           this.defaultOptions.routeAnimation.puckRadius ? this.defaultOptions.routeAnimation.puckRadius : 0.002,
         );
         const startPointCircleHalo = circle(
-          this.startPoint.geometry.coordinates,
+          kioskPoint.geometry.coordinates,
           this.defaultOptions.routeAnimation.puckRadius ? this.defaultOptions.routeAnimation.puckRadius + 0.001 : 0.003,
         );
         this.state.style.sources['start-point'].data = {
@@ -1366,11 +1382,11 @@ export class Map {
       }
 
       if (this.kioskPopup) {
-        this.kioskPopup.setLngLat(this.startPoint.geometry.coordinates);
+        this.kioskPopup.setLngLat(kioskPoint.geometry.coordinates);
       }
 
       this.map.setStyle(this.state.style);
-      this.centerOnPoi(this.startPoint);
+      this.centerOnPoi(kioskPoint);
     }
   }
 
@@ -6856,9 +6872,12 @@ export class Map {
    * This method will set new kiosk settings.
    *  @memberof Map
    *  @name setKiosk
+   *  @param latOrOptions { number | object } latitude coordinate for kiosk position (number) or an options object
    *  @param lat {number} latitude coordinate for kiosk position
    *  @param lng {number} longitude coordinate for kiosk position
    *  @param level {number} floor level for kiosk position
+   *  @param parkingKiosk {boolean} use as parking kiosk
+   *  @param useAsStartPoint {boolean} use as start point
    *  @example
    *  const map = new Proximiio.Map({
    *    isKiosk: true,
@@ -6869,16 +6888,58 @@ export class Map {
    *  });
    *  map.getMapReadyListener().subscribe(ready => {
    *    console.log('map ready', ready);
+   *
+   *    // Old style (still works)
    *    map.setKiosk(48.606703739771774, 17.833092384506614, 0);
+   *
+   *    // New style (recommended)
+   *    map.setKiosk({lat: 48.606703739771774, lng: 17.833092384506614, level: 0});
    *  });
    */
-  public setKiosk(lat: number, lng: number, level: number, parkingKiosk: boolean = false) {
+  public setKiosk(
+    latOrOptions:
+      | number
+      | {
+          lat: number;
+          lng: number;
+          level: number;
+          parkingKiosk: boolean;
+          useAsRouteStart: boolean;
+        },
+    lng: number,
+    level: number,
+    parkingKiosk: boolean = false,
+    useAsRouteStart: boolean = true,
+  ) {
+    let opts: {
+      lat: number;
+      lng: number;
+      level: number;
+      parkingKiosk: boolean;
+      useAsRouteStart: boolean;
+    };
+
+    // ✅ Detect which version is used
+    if (typeof latOrOptions === 'number') {
+      // Old positional arguments style
+      opts = {
+        lat: latOrOptions,
+        lng,
+        level,
+        parkingKiosk,
+        useAsRouteStart,
+      };
+    } else {
+      // New destructured object style
+      opts = latOrOptions;
+    }
+
     if (!this.defaultOptions.isKiosk) {
       this.defaultOptions.isKiosk = true;
       this.initKiosk();
     }
     if (this.defaultOptions.isKiosk) {
-      this.onSetKiosk(lat, lng, level, parkingKiosk);
+      this.onSetKiosk(opts);
     } else {
       throw new Error(`Map is not initiated as kiosk`);
     }
