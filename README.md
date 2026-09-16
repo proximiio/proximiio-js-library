@@ -356,6 +356,15 @@ const map = new Proximiio.Map({
 
       // Optional, default: 0.6, opacity of the line animated along the route
       lineOpacity: 0.6
+
+      // Optional, default: true, if enabled animation will be automatically continued to next step
+      autoContinue: true
+
+      // Optional, default: false, if enabled animation will be automatically continued to next step
+      autoContinueCityRoute: false
+
+      // Optional, default: 2000, delay before automatically continuing to next step in milliseconds
+      autoContinueDelay: 2000
    },
 
    // Optional, default: false, this will add raster tile source and layer

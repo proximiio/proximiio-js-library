@@ -243,6 +243,7 @@ export interface Options {
     autoStart?: boolean;
     autoContinue?: boolean;
     autoContinueCityRoute?: boolean;
+    autoContinueDelay?: number;
     cityRouteZoom?: number;
     mallRouteZoom?: number;
     mallEntryLevel?: number;
@@ -507,6 +508,7 @@ export class Map {
       autoStart: true,
       autoContinue: true,
       autoContinueCityRoute: false,
+      autoContinueDelay: 2000,
       cityRouteZoom: 15,
       mallRouteZoom: 18,
       mallEntryLevel: 0,
@@ -4479,7 +4481,8 @@ export class Map {
                 }, 2000);
               }
               if (
-                this.defaultOptions.autoLevelChange &&
+                (this.defaultOptions.autoLevelChange ||
+                  (this.defaultOptions.routeAnimation.autoContinue && this.fullStepsNavigation)) &&
                 (route.properties.source === 'mallRoute' || this.defaultOptions.routeAnimation.autoContinueCityRoute)
               ) {
                 if (this.routingSource.route && Object.keys(this.routingSource.route).length - 1 === this.currentStep) {
@@ -4499,7 +4502,7 @@ export class Map {
                   if (this.defaultOptions.autoRestartAnimationAfterFloorChange && !this.fullStepsNavigation) {
                     this.restartRouteAnimation({ delay: 0, recenter: true });
                   }
-                }, 2000);
+                }, this.defaultOptions.routeAnimation.autoContinueDelay);
               }
               return;
             }
