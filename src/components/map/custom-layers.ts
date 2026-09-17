@@ -79,7 +79,7 @@ export class PolygonIconsLayer extends SymbolLayer {
       ['any', ['!', ['has', 'available']], ['==', ['get', 'available'], true]],
     ];
     this.layout = new LayoutProperties({
-      'icon-image': ['get', 'id'],
+      'icon-image': data.iconImage ? data.iconImage : ['get', 'id'],
       'symbol-placement': data.iconPlacement,
       'icon-size': ['interpolate', ['exponential', 0.5], ['zoom'], 17, 0.1, 22, 0.5],
       'icon-allow-overlap': true,

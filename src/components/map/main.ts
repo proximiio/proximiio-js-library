@@ -17,7 +17,7 @@ import {
 } from '../../controllers/geo';
 import { PlaceModel } from '../../models/place';
 import { FloorModel } from '../../models/floor';
-import StyleModel from '../../models/style';
+import StyleModel, { StyleOverrides, StyleResetOptions } from '../../models/style';
 import GeoJSONSource from './sources/geojson_source';
 import SyntheticSource from './sources/synthetic_source';
 import Feature, { FeatureCollection, Geometry } from '../../models/feature';
@@ -153,7 +153,8 @@ export interface PolygonOptions {
   adaptiveMaxPitch?: number;
   drawRouteUnderPolygons?: boolean;
   handleDisabledPolygons?: boolean;
-  iconImage?: string;
+  /** icon-image of the polygon icons layer, e.g. '{amenity}' or an expression, default ['get', 'id'] */
+  iconImage?: string | ExpressionSpecification;
   iconImageDefaultVisible?: boolean;
   layerId?: string;
   bufferDistance?: number;
@@ -207,7 +208,9 @@ export interface Options {
   levelDirectionPopupImage?: string;
   levelDirectionOutlineColor?: string;
   showRasterFloorplans?: boolean;
+  /** @deprecated use routeAnimation.enabled */
   animatedRoute?: boolean;
+  /** @deprecated use routeAnimation.looping */
   animationLooping?: boolean;
   routeAnimation?: {
     enabled?: boolean;
@@ -215,8 +218,10 @@ export interface Options {
     looping?: boolean;
     followRoute?: boolean;
     followRouteAngle?: boolean;
+    /** fixed animation duration of each route part in seconds, overrides durationMultiplier */
     duration?: number;
     durationMultiplier?: number;
+    /** maximum number of animation updates per second */
     fps?: number;
     pointIconUrl?: string;
     pointIconSize?: number;
@@ -267,6 +272,8 @@ export interface Options {
   };
   handleUrlParams?: boolean;
   urlParams?: {
+    startFeature?: string;
+    /** @deprecated misspelled, use startFeature */
     startFeauture?: string;
     destinationFeature?: string;
     defaultPlace?: string;
@@ -481,7 +488,6 @@ export class Map {
     levelDirectionOutlineColor: '#000',
     showRasterFloorplans: false,
     animatedRoute: false,
-    animationLooping: true,
     routeAnimation: {
       enabled: false,
       type: 'dash',
@@ -523,7 +529,7 @@ export class Map {
     useRasterTiles: false,
     handleUrlParams: false,
     urlParams: {
-      startFeauture: 'startFeature',
+      startFeature: 'startFeature',
       destinationFeature: 'destinationFeature',
       defaultPlace: 'defaultPlace',
       autoRouting: true,
@@ -601,6 +607,9 @@ export class Map {
     const urlParams = { ...this.defaultOptions.urlParams, ...options.urlParams };
     const polygonsOptions = { ...this.defaultOptions.polygonsOptions, ...options.polygonsOptions };
     const routeAnimation = { ...this.defaultOptions.routeAnimation, ...options.routeAnimation };
+    if (options.animationLooping !== undefined && options.routeAnimation?.looping === undefined) {
+      routeAnimation.looping = options.animationLooping;
+    }
     const customPositionOptions = { ...this.defaultOptions.customPositionOptions, ...options.customPositionOptions };
     this.defaultOptions = { ...this.defaultOptions, ...options };
     this.defaultOptions.urlParams = urlParams;
@@ -619,6 +628,14 @@ export class Map {
 
     if (this.defaultOptions.landmarkTBTNavigation) {
       console.log(`landmarkTBTNavigation property is deprecated, please use stepsNavigation instead!`);
+    }
+
+    if (options.animationLooping !== undefined) {
+      console.log(`animationLooping property is deprecated, please use routeAnimation.looping instead!`);
+    }
+
+    if (options.urlParams?.startFeauture !== undefined) {
+      console.log(`urlParams.startFeauture property is deprecated, please use urlParams.startFeature instead!`);
     }
 
     if (!this.defaultOptions.polygonLayers || this.defaultOptions.polygonLayers.length === 0) {
@@ -736,10 +753,13 @@ export class Map {
         }
       }
       if (this.defaultOptions.routeGradient) {
-        const routeLayer = style.layers.find((l) => l.id === 'proximiio-routing-line-remaining');
-        if (routeLayer) {
-          routeLayer.paint['line-gradient'] = this.defaultOptions.routeGradient;
-        }
+        style.applyOverrides({
+          layers: {
+            'proximiio-routing-line-remaining': { paint: { 'line-gradient': this.defaultOptions.routeGradient } },
+          },
+          // lineMetrics is required for 'line-gradient'
+          sources: { route: { lineMetrics: true } },
+        });
       }
       if (this.defaultOptions.forceFloorLevel !== null && this.defaultOptions.forceFloorLevel !== undefined) {
         this.routingSource.routing.forceFloorLevel = this.defaultOptions.forceFloorLevel;
@@ -2595,7 +2615,9 @@ export class Map {
 
   private initUrlParams() {
     const urlParams = new URLSearchParams(window.location.search);
-    const startParam = urlParams.get(this.defaultOptions.urlParams.startFeauture);
+    const startParam = urlParams.get(
+      this.defaultOptions.urlParams.startFeauture ?? this.defaultOptions.urlParams.startFeature,
+    );
     const destinationParam = urlParams.get(this.defaultOptions.urlParams.destinationFeature);
     const placeParam = urlParams.get(this.defaultOptions.urlParams.defaultPlace);
     const defaultPlace = placeParam
@@ -3462,7 +3484,7 @@ export class Map {
     this.handlePoiVisibility();
   }
 
-  private onEnablePolygonPreventedIcons() {
+  private onHidePolygonPreventedIcons() {
     // @ts-ignore
     const mainSourceData = this.map.getSource('main')._data;
     mainSourceData.features = mainSourceData.features.map((f) => {
@@ -3475,12 +3497,18 @@ export class Map {
     this.map.getSource('main').setData(mainSourceData);
   }
 
-  private onDisablePolygonPreventedIcons() {
+  private onShowPolygonPreventedIcons() {
+    const activeAmenity = this.activePolygonsAmenity;
+    // without an active amenity filter icons of all amenities are shown
+    const matchesActiveAmenity = (amenity: string) =>
+      !activeAmenity ||
+      activeAmenity === 'nonexisting' ||
+      (Array.isArray(activeAmenity) ? activeAmenity.includes(amenity) : activeAmenity === amenity);
     // @ts-ignore
     const mainSourceData = this.map.getSource('main')._data;
     mainSourceData.features = mainSourceData.features.map((f) => {
       if (
-        (this.activePolygonsAmenity === 'nonexisting' || this.activePolygonsAmenity.includes(f.properties.amenity)) &&
+        matchesActiveAmenity(f.properties.amenity) &&
         (f.properties?.metadata?.prevent_polygon === true || f.properties?.metadata?.prevent_polygon === 'true')
       ) {
         f.properties.hideIcon = 'show';
@@ -3492,7 +3520,7 @@ export class Map {
   }
 
   private onSetHiddenAmenities(amenities: string[]) {
-    this.defaultOptions.hiddenAmenities = [...this.defaultOptions.hiddenAmenities, ...amenities];
+    this.defaultOptions.hiddenAmenities = [...(this.defaultOptions.hiddenAmenities || []), ...amenities];
     this.defaultOptions.hiddenAmenities = [...new Set(this.defaultOptions.hiddenAmenities)];
     // @ts-ignore
     const mainSourceData = this.map.getSource('main')._data;
@@ -3600,6 +3628,10 @@ export class Map {
   }
 
   private prepareStyle(style: StyleModel) {
+    if (style !== this.state.style) {
+      // keep overrides from applyStyle() when a new style instance replaces the current one
+      style.applyOverrides(this.state.style.getOverrides());
+    }
     style.setSource('main', this.geojsonSource);
     style.setSource('synthetic', this.syntheticSource);
     style.setSource('route', this.routingSource);
@@ -4465,6 +4497,14 @@ export class Map {
           totalDuration = this.defaultOptions.routeAnimation.cityRouteMaxDuration * 1000;
         }
 
+        // fixed duration (in seconds) overrides the distance based one
+        if (this.defaultOptions.routeAnimation.duration > 0) {
+          totalDuration = this.defaultOptions.routeAnimation.duration * 1000;
+        }
+
+        const frameInterval =
+          this.defaultOptions.routeAnimation.fps > 0 ? 1000 / this.defaultOptions.routeAnimation.fps : 0;
+        let lastFrameTime;
         let startTime;
 
         if (!this.useCustomPosition) {
@@ -4473,6 +4513,14 @@ export class Map {
 
         const animate = (currentTime) => {
           if (!startTime) startTime = currentTime;
+
+          // limit map updates to routeAnimation.fps, 1ms tolerance for frame timing jitter
+          if (lastFrameTime !== undefined && currentTime - lastFrameTime < frameInterval - 1) {
+            this.animationFrame = requestAnimationFrame(animate);
+            return;
+          }
+          lastFrameTime = currentTime;
+
           const elapsedTime = currentTime - startTime;
 
           const t = elapsedTime / (totalDuration > 0 ? totalDuration : 3);
@@ -5632,6 +5680,58 @@ export class Map {
   }
 
   /**
+   *  Applies persistent changes to style layers and sources. Unlike changes made directly
+   *  on the mapbox instance, they are kept on floor change, route update or any other style refresh.
+   *  Calls are merged, a property value of null restores the original value of that property.
+   *  Filters are not supported as they are managed by the library (e.g. on floor change).
+   *  @memberof Map
+   *  @name applyStyle
+   *  @param overrides {StyleOverrides} changes to apply
+   *  @param overrides.layers {object} paint and layout properties by layer id, layers that are not in the style yet get them once added
+   *  @param overrides.sources {object} source options by source id, e.g. { route: { lineMetrics: true } }
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.applyStyle({
+   *    layers: {
+   *      'proximiio-routing-line-remaining': {
+   *        paint: { 'line-gradient': ['interpolate', ['linear'], ['line-progress'], 0, '#6c6ff5', 1, '#e5485a'] },
+   *      },
+   *    },
+   *    sources: { route: { lineMetrics: true } },
+   *  });
+   *  // restore original line-width only
+   *  map.applyStyle({ layers: { 'proximiio-routing-line-remaining': { paint: { 'line-width': null } } } });
+   */
+  public applyStyle(overrides: StyleOverrides) {
+    this.state.style.applyOverrides(overrides);
+    this.refreshStyle();
+  }
+
+  /**
+   *  Removes changes made by applyStyle and restores original values.
+   *  @memberof Map
+   *  @name resetStyle
+   *  @param options {StyleResetOptions} optional, layer and source ids to reset, all changes are reset when omitted
+   *  @param options.layers {string[]} layer ids to reset
+   *  @param options.sources {string[]} source ids to reset
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.resetStyle(); // reset everything
+   *  map.resetStyle({ layers: ['proximiio-routing-line-remaining'], sources: ['route'] });
+   */
+  public resetStyle(options?: StyleResetOptions) {
+    this.state.style.resetOverrides(options);
+    this.refreshStyle();
+  }
+
+  private refreshStyle() {
+    // map instance exists only after the style is loaded, overrides applied before that are used on load
+    if (this.map) {
+      this.map.setStyle(this.state.style);
+    }
+  }
+
+  /**
    *  @memberof Map
    *  @name getDataFetchedListener
    *  @returns returns map data fetched listener
@@ -5702,7 +5802,7 @@ export class Map {
   }
 
   /**
-   * This method will set an active place, load floors etc. Have to be called after map is ready, see getMapReadyListener.
+   * This method will change the language of POI titles and UI texts. Have to be called after map is ready, see getMapReadyListener.
    *  @memberof Map
    *  @name setLanguage
    *  @param language {string} language code
@@ -7132,7 +7232,7 @@ export class Map {
   }
 
   /**
-   * With this method you can show all icons.
+   * With this method you can hide icons of features with defined amenities, amenities are added to hiddenAmenities option.
    *  @memberof Map
    *  @name setHiddenAmenities
    *  @param amenities {string[]} amenityIds to assign hideIcon property to features
@@ -7148,33 +7248,52 @@ export class Map {
   }
 
   /**
-   * With this method you can enable icons for polygon prevented features.
+   * With this method you can hide icons of polygon prevented features (POIs with metadata.prevent_polygon).
    *  @memberof Map
-   *  @name enablePolygonPreventedIcons
+   *  @name hidePolygonPreventedIcons
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
    *    console.log('map ready', ready);
-   *    map.enablePolygonPreventedIcons();
+   *    map.hidePolygonPreventedIcons();
    *  });
    */
-  public enablePolygonPreventedIcons() {
-    this.onEnablePolygonPreventedIcons();
+  public hidePolygonPreventedIcons() {
+    this.onHidePolygonPreventedIcons();
   }
 
   /**
-   * With this method you can disable icons for polygon prevented features.
+   * With this method you can show icons of polygon prevented features (POIs with metadata.prevent_polygon),
+   * when an amenity filter is active only icons of the filtered amenities are shown.
    *  @memberof Map
-   *  @name disablePolygonPreventedIcons
+   *  @name showPolygonPreventedIcons
    *  @example
    *  const map = new Proximiio.Map();
    *  map.getMapReadyListener().subscribe(ready => {
    *    console.log('map ready', ready);
-   *    map.disablePolygonPreventedIcons();
+   *    map.showPolygonPreventedIcons();
    *  });
    */
+  public showPolygonPreventedIcons() {
+    this.onShowPolygonPreventedIcons();
+  }
+
+  /**
+   * @deprecated the name doesn't match the behavior, it hides the icons, use hidePolygonPreventedIcons instead
+   *  @memberof Map
+   *  @name enablePolygonPreventedIcons
+   */
+  public enablePolygonPreventedIcons() {
+    this.onHidePolygonPreventedIcons();
+  }
+
+  /**
+   * @deprecated the name doesn't match the behavior, it shows the icons, use showPolygonPreventedIcons instead
+   *  @memberof Map
+   *  @name disablePolygonPreventedIcons
+   */
   public disablePolygonPreventedIcons() {
-    this.onDisablePolygonPreventedIcons();
+    this.onShowPolygonPreventedIcons();
   }
 
   /**

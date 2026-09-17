@@ -16,8 +16,87 @@ import { diff } from 'deep-diff';
 import { METADATA_POLYGON_EDITING } from '../components/map/constants';
 import DEFAULT_METADATA from '../components/map/metadata';
 
+type StyleProps = { [property: string]: any };
+
+export interface StyleLayerOverride {
+  paint?: StyleProps;
+  layout?: StyleProps;
+}
+
+/**
+ * Persistent style changes, applied with Map.applyStyle().
+ * Property value null restores the original value of that property.
+ */
+export interface StyleOverrides {
+  layers?: { [layerId: string]: StyleLayerOverride };
+  sources?: { [sourceId: string]: StyleProps };
+}
+
+export interface StyleResetOptions {
+  layers?: string[];
+  sources?: string[];
+}
+
+interface OverrideEntry {
+  values: StyleProps;
+  // property values before the first override, undefined = property was not set
+  originals: StyleProps;
+}
+
+interface StoredOverrides {
+  layers: { [layerId: string]: { paint: OverrideEntry; layout: OverrideEntry } };
+  sources: { [sourceId: string]: OverrideEntry };
+}
+
+const createEntry = (): OverrideEntry => ({ values: {}, originals: {} });
+
+const applyEntry = (target: StyleProps, entry: OverrideEntry) => {
+  Object.keys(entry.values).forEach((key) => {
+    if (!(key in entry.originals)) {
+      entry.originals[key] = target[key];
+    }
+    target[key] = entry.values[key];
+  });
+};
+
+const restoreEntry = (target: StyleProps | undefined, entry: OverrideEntry, keys = Object.keys(entry.values)) => {
+  keys.forEach((key) => {
+    if (target && key in entry.originals) {
+      if (entry.originals[key] === undefined) {
+        delete target[key];
+      } else {
+        target[key] = entry.originals[key];
+      }
+    }
+    delete entry.values[key];
+    delete entry.originals[key];
+  });
+};
+
+const mergeEntry = (target: StyleProps | undefined, entry: OverrideEntry, props: StyleProps = {}) => {
+  const keys = Object.keys(props);
+  restoreEntry(
+    target,
+    entry,
+    keys.filter((key) => props[key] === null),
+  );
+  keys.filter((key) => props[key] !== null).forEach((key) => (entry.values[key] = props[key]));
+  if (target) {
+    applyEntry(target, entry);
+  }
+};
+
+const layerProps = (layer: any, group: 'paint' | 'layout'): StyleProps | undefined => {
+  if (!layer) {
+    return undefined;
+  }
+  layer[group] = layer[group] || {};
+  return layer[group];
+};
+
 export default class StyleModel {
   _observers?: Observer[] = [];
+  _overrides?: StoredOverrides = { layers: {}, sources: {} };
   id: string;
   // tslint:disable-next-line:variable-name
   organization_id: string;
@@ -311,6 +390,7 @@ export default class StyleModel {
     } else {
       this.layers.push(layer);
     }
+    this.applyLayerOverrides(layer);
   }
 
   getLayer(id: string) {
@@ -327,6 +407,7 @@ export default class StyleModel {
 
   addSource(sourceId: string, source: any) {
     this.sources[sourceId] = source;
+    this.applySourceOverrides(sourceId);
   }
 
   removeLayer(id: string) {
@@ -350,6 +431,7 @@ export default class StyleModel {
     if (id === 'main') {
       this.sources[id].promoteId = 'id';
     }
+    this.applySourceOverrides(id);
   }
 
   getSource(sourceId: string): BaseSource {
@@ -359,6 +441,81 @@ export default class StyleModel {
   removeSource(sourceId: string) {
     if (this.sources[sourceId]) {
       delete this.sources[sourceId];
+    }
+  }
+
+  /**
+   * Stores overrides and applies them to the current layers and sources.
+   * They are re-applied whenever a layer is added or a source is (re)set,
+   * so they survive floor changes, route updates and style switches.
+   */
+  applyOverrides(overrides: StyleOverrides) {
+    Object.keys(overrides.layers || {}).forEach((layerId) => {
+      const override = overrides.layers[layerId];
+      const stored = (this._overrides.layers[layerId] = this._overrides.layers[layerId] || {
+        paint: createEntry(),
+        layout: createEntry(),
+      });
+      const layer = this.getLayer(layerId);
+      mergeEntry(layerProps(layer, 'paint'), stored.paint, override.paint);
+      mergeEntry(layerProps(layer, 'layout'), stored.layout, override.layout);
+    });
+    Object.keys(overrides.sources || {}).forEach((sourceId) => {
+      const stored = (this._overrides.sources[sourceId] = this._overrides.sources[sourceId] || createEntry());
+      mergeEntry(this.sources[sourceId], stored, overrides.sources[sourceId]);
+    });
+  }
+
+  /**
+   * Removes overrides and restores original values.
+   * Without options all overrides are removed.
+   */
+  resetOverrides(options?: StyleResetOptions) {
+    const layerIds = options ? options.layers || [] : Object.keys(this._overrides.layers);
+    const sourceIds = options ? options.sources || [] : Object.keys(this._overrides.sources);
+    layerIds.forEach((layerId) => {
+      const stored = this._overrides.layers[layerId];
+      if (stored) {
+        const layer = this.getLayer(layerId);
+        restoreEntry(layer && layer.paint, stored.paint);
+        restoreEntry(layer && layer.layout, stored.layout);
+        delete this._overrides.layers[layerId];
+      }
+    });
+    sourceIds.forEach((sourceId) => {
+      const stored = this._overrides.sources[sourceId];
+      if (stored) {
+        restoreEntry(this.sources[sourceId], stored);
+        delete this._overrides.sources[sourceId];
+      }
+    });
+  }
+
+  /** Currently stored overrides, in the same shape as accepted by applyOverrides */
+  getOverrides(): StyleOverrides {
+    const overrides: StyleOverrides = { layers: {}, sources: {} };
+    Object.keys(this._overrides.layers).forEach((layerId) => {
+      const stored = this._overrides.layers[layerId];
+      overrides.layers[layerId] = { paint: { ...stored.paint.values }, layout: { ...stored.layout.values } };
+    });
+    Object.keys(this._overrides.sources).forEach((sourceId) => {
+      overrides.sources[sourceId] = { ...this._overrides.sources[sourceId].values };
+    });
+    return overrides;
+  }
+
+  applyLayerOverrides(layer: any) {
+    const stored = layer && this._overrides.layers[layer.id];
+    if (stored) {
+      applyEntry(layerProps(layer, 'paint'), stored.paint);
+      applyEntry(layerProps(layer, 'layout'), stored.layout);
+    }
+  }
+
+  applySourceOverrides(sourceId: string) {
+    const stored = this._overrides.sources[sourceId];
+    if (stored && this.sources[sourceId]) {
+      applyEntry(this.sources[sourceId], stored);
     }
   }
 
@@ -523,6 +680,7 @@ export default class StyleModel {
   get json(): any {
     const style = Object.assign({}, this);
     delete style._observers;
+    delete style._overrides;
     delete style.overlay;
     style.layers = this.layers.map((layer) => layer.json);
     return JSON.parse(JSON.stringify(style));
