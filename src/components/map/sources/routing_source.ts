@@ -323,4 +323,9 @@ export default class RoutingSource extends DataSource {
     this.navigationType = 'mall';
     this.notify('feature-updated');
   }
+
+  // lineMetrics is required for 'line-gradient' paint on route layers
+  get source() {
+    return { ...super.source, lineMetrics: true };
+  }
 }

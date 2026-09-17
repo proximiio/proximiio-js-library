@@ -1,4 +1,5 @@
 import maplibregl, {
+  ExpressionSpecification,
   FillExtrusionLayerSpecification,
   LngLatLike,
   Marker,
@@ -281,6 +282,7 @@ export interface Options {
   };
   language?: string;
   routeColor?: string;
+  routeGradient?: ExpressionSpecification;
   forceFloorLevel?: number;
   amenityIdProperty?: string;
   routeWithDetails?: boolean;
@@ -731,6 +733,12 @@ export class Map {
         const routeLayer = style.layers.find((l) => l.id === 'proximiio-routing-line-remaining');
         if (routeLayer) {
           routeLayer.paint['line-color'] = this.defaultOptions.routeColor;
+        }
+      }
+      if (this.defaultOptions.routeGradient) {
+        const routeLayer = style.layers.find((l) => l.id === 'proximiio-routing-line-remaining');
+        if (routeLayer) {
+          routeLayer.paint['line-gradient'] = this.defaultOptions.routeGradient;
         }
       }
       if (this.defaultOptions.forceFloorLevel !== null && this.defaultOptions.forceFloorLevel !== undefined) {

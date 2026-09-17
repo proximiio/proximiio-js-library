@@ -435,6 +435,9 @@ const map = new Proximiio.Map({
    // Optional, define route line color
    routeColor: '#000000',
 
+   // Optional, define route line gradient
+   routeGradient: ['interpolate', ['linear'], ['line-progress'], 0, '#6c6ff5', 1, '#e5485a'], // overrides routeColor
+
    // Optional, define floor number if you want to force routes visible for a single level
    forceFloorLevel: 0,
 
