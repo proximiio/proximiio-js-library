@@ -1078,23 +1078,61 @@ export const getFeaturesBundle = async ({
   };
 };
 
+async function fetchAmenities({ from, size }: { from: number; size: number }) {
+  const url = `/v5/geo/amenities?from=${from}&size=${size}`;
+  try {
+    const { data, headers } = await axios.get(url);
+    return { data, total: parseInt(headers['record-total'], 10) };
+  } catch (error) {
+    console.error('Error fetching amenities:', error);
+    throw error;
+  }
+}
+
 export const getAmenities = async ({
   amenityIdProperty,
   localSources,
+  apiPaginate,
 }: {
   amenityIdProperty?: string;
   localSources?: {
     amenities?: AmenityModel[];
   };
+  apiPaginate?: boolean;
 }) => {
   let res;
   if (localSources?.amenities?.length > 0) {
     res = {
       data: localSources.amenities,
     };
-  } else {
+  } else if (!apiPaginate) {
     const url = '/v5/geo/amenities';
     res = await axios.get(url);
+  } else {
+    const items: any[] = [];
+    const size = 100;
+    const numQueues = 8; // number of parallel requests per batch
+
+    // Fetch the first page together with the total number of records
+    const firstResponse = await fetchAmenities({ from: 0, size });
+    items.push(...firstResponse.data);
+
+    // Fetch remaining pages in batches of parallel requests
+    const numPages = Math.ceil(firstResponse.total / size);
+    for (let batchStart = 1; batchStart < numPages; batchStart += numQueues) {
+      const batch = [];
+      for (let pageIndex = batchStart; pageIndex < batchStart + numQueues && pageIndex < numPages; pageIndex++) {
+        batch.push(fetchAmenities({ from: pageIndex * size, size }));
+      }
+      const results = await Promise.all(batch);
+      results.forEach((result) => {
+        items.push(...result.data);
+      });
+    }
+
+    res = {
+      data: items,
+    };
   }
   return res.data.map((item: any) => {
     if (amenityIdProperty && item[amenityIdProperty] && item.category !== 'default') {

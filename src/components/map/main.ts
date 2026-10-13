@@ -880,6 +880,7 @@ export class Map {
       : await getAmenities({
           amenityIdProperty: this.defaultOptions.amenityIdProperty,
           localSources: this.defaultOptions.localSources,
+          apiPaginate: this.defaultOptions.apiPaginate,
         }).catch((error) => this.handleControllerError(error));
     const kiosks = useBundle
       ? await getKiosksBundle({ bundleUrl: this.defaultOptions.bundleUrl }).catch((error) =>
