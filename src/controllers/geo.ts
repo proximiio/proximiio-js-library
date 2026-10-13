@@ -1107,13 +1107,40 @@ export const getAmenities = async ({
 export const getAmenitiesBundle = async ({
   amenityIdProperty,
   bundleUrl,
+  bundlePaginate,
 }: {
   amenityIdProperty?: string;
   bundleUrl: string;
+  bundlePaginate?: boolean;
 }) => {
   try {
-    const res = await fetch(`${bundleUrl}/amenities.json`);
-    const data = await res.json();
+    let data: any[] = [];
+    if (!bundlePaginate) {
+      const res = await fetch(`${bundleUrl}/amenities.json`);
+      data = await res.json();
+    } else {
+      // --- Paginated version ---
+      const pageSize = 100;
+      const numQueues = 8; // number of parallel requests per batch
+
+      // 1. Fetch first page (contains total count)
+      const firstRes = await fetch(`${bundleUrl}/amenities-1.json`);
+      const firstData = await firstRes.json();
+      data.push(...firstData.amenities);
+
+      // 2. Fetch remaining pages in batches of parallel requests
+      const numPages = Math.ceil(firstData.count / pageSize);
+      for (let batchStart = 2; batchStart <= numPages; batchStart += numQueues) {
+        const batch: Promise<any>[] = [];
+        for (let pageIndex = batchStart; pageIndex < batchStart + numQueues && pageIndex <= numPages; pageIndex++) {
+          batch.push(fetch(`${bundleUrl}/amenities-${pageIndex}.json`).then((res) => res.json()));
+        }
+        const results = await Promise.all(batch);
+        results.forEach((page) => {
+          data.push(...page.amenities);
+        });
+      }
+    }
     return data.map((item: any) => {
       if (amenityIdProperty && item[amenityIdProperty] && item.category !== 'default') {
         item.id = item[amenityIdProperty].toLowerCase();

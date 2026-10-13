@@ -874,6 +874,7 @@ export class Map {
     const amenities = useBundle
       ? await getAmenitiesBundle({
           bundleUrl: this.defaultOptions.bundleUrl,
+          bundlePaginate: this.defaultOptions.bundlePaginate,
           amenityIdProperty: this.defaultOptions.amenityIdProperty,
         }).catch((error) => this.handleControllerError(error))
       : await getAmenities({
