@@ -4323,13 +4323,19 @@ export class Map {
         .filter((f) => f.properties.metadata && f.properties.metadata['anchor-logo'] && f.properties.type !== 'poi')
         .map(async (f) => {
           try {
-            const response = await this.map.loadImage(
-              this.defaultOptions.bundleUrl
-                ? `${this.defaultOptions.bundleUrl}/images/${f.properties.metadata['anchor-logo']}`
-                : `${f.properties.metadata['anchor-logo']}?token=${axios.defaults.headers.common.Authorization}`,
-            );
-            if (response) {
-              this.map.addImage(f.id, response.data);
+            if (this.defaultOptions.bundleUrl) {
+              const response = await this.map.loadImage(
+                `${this.defaultOptions.bundleUrl}/images/${f.properties.metadata['anchor-logo']}`,
+              );
+              if (response) {
+                this.map.addImage(f.id, response.data);
+              }
+            } else {
+              const response = await axios.get(f.properties.metadata['anchor-logo'], {
+                responseType: 'blob',
+              });
+              const image = await createImageBitmap(response.data);
+              this.map.addImage(f.id, image);
             }
           } catch (e) {
             console.log(e);
