@@ -85,7 +85,7 @@ export class PolygonIconsLayer extends SymbolLayer {
       'icon-allow-overlap': true,
       'icon-ignore-placement': true,
       'icon-keep-upright': true,
-      'icon-rotation-alignment': data.labelRotationAlignment,
+      'icon-rotation-alignment': data.iconRotationAlignment ?? data.labelRotationAlignment,
     });
     this.paint = new PaintPropertiesSymbol({
       'icon-opacity': [

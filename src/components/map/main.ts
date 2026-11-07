@@ -147,6 +147,8 @@ export interface PolygonOptions {
   labelRotationAlignment?: 'map' | 'viewport' | 'viewport-glyph' | 'auto';
   symbolPlacement?: 'point' | 'line' | 'line-center';
   iconPlacement?: 'point' | 'line' | 'line-center';
+  // icons only, defaults to labelRotationAlignment (e.g. 'viewport' keeps anchor logos upright)
+  iconRotationAlignment?: 'map' | 'viewport' | 'auto';
   autoLabelLines?: boolean;
   textFont?: string[];
   adaptiveLabelOpacity?: boolean;
