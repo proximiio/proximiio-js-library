@@ -2191,12 +2191,7 @@ export class Map {
         dynamic_defaultTextColor: layer.defaultLabelColor,
       });
     }
-    // a new collection object: MapLibre doesn't render the changed properties
-    // when setData gets the object it already has
-    const source = this.map.getSource(this.geojsonSource.id) as any;
-    if (source) {
-      source.setData({ type: 'FeatureCollection', features });
-    }
+    this.updateMapSource(this.geojsonSource);
   }
 
   // the polygon, icon and label layers of the style made again from the
@@ -3656,7 +3651,7 @@ export class Map {
       return f;
     });
     // @ts-ignore
-    this.map.getSource('main').setData(mainSourceData);
+    this.map.getSource('main').setData(this.plainCollection(mainSourceData));
   }
 
   private onShowPolygonPreventedIcons() {
@@ -3677,7 +3672,7 @@ export class Map {
       return f;
     });
     // @ts-ignore
-    this.map.getSource('main').setData(mainSourceData);
+    this.map.getSource('main').setData(this.plainCollection(mainSourceData));
   }
 
   private onSetHiddenAmenities(amenities: string[]) {
@@ -3691,7 +3686,7 @@ export class Map {
       return f;
     });
     // @ts-ignore
-    this.map.getSource('main').setData(mainSourceData);
+    this.map.getSource('main').setData(this.plainCollection(mainSourceData));
   }
 
   private onDisablePolygons() {
@@ -3962,9 +3957,18 @@ export class Map {
     if (map && map.getSource(source.id)) {
       const mapSource = map.getSource(source.id) as any;
       if (mapSource) {
-        mapSource.setData(source.data);
+        mapSource.setData(this.plainCollection(source.data));
       }
     }
+  }
+
+  // MapLibre 5 sends source data to its worker with its own serialization,
+  // which refuses class instances ("can't serialize object of unregistered
+  // class FeatureCollection"): the source then keeps the old data. A plain
+  // collection of the same features instead.
+  private plainCollection(data: FeatureCollection | any) {
+    if (!data || !Array.isArray(data.features)) return data;
+    return { type: 'FeatureCollection', features: data.features };
   }
 
   private onStyleSelect(style: StyleModel) {
@@ -4114,6 +4118,8 @@ export class Map {
       this.state.style.setLevel(floor.level);
       map.setStyle(this.state.style);
       setTimeout(() => {
+        // the map can be removed (map.remove()) before this runs: no style then
+        if (!(map as any).style) return;
         [...this.state.style.getLayers('main'), ...this.state.style.getLayers('route')].forEach((layer) => {
           if (map.getLayer(layer.id)) {
             map.setFilter(layer.id, layer.filter);
