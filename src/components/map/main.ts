@@ -263,6 +263,7 @@ export interface Options {
   };
   useRasterTiles?: boolean;
   rasterTilesOptions?: {
+    // tile URLs ({z}/{x}/{y}, {LEVEL} = the floor level); one URL as a string works too
     tilesUrl?: string[];
     tileSize?: number;
     minZoom?: number;
@@ -2022,31 +2023,28 @@ export class Map {
     }
   }
 
+  // the raster tile URLs of an option or the style metadata: a URL or a list
+  // of them, without empty ones ("", "null", "undefined")
+  private tileUrls(value: unknown): string[] {
+    const list = Array.isArray(value) ? value : [value];
+    return list.filter(
+      (url): url is string => typeof url === 'string' && url.trim() !== '' && url !== 'null' && url !== 'undefined',
+    );
+  }
+
   private initRasterTiles() {
     if (this.map) {
       const metadata = this.state.style.metadata;
 
-      let tileUrl = this.defaultOptions.rasterTilesOptions?.tilesUrl
-        ? this.defaultOptions.rasterTilesOptions?.tilesUrl
-        : metadata['proximiio:raster:tileurl'];
-
-      if (
-        !tileUrl ||
-        tileUrl === '' ||
-        tileUrl === 'undefined' ||
-        tileUrl === 'null' ||
-        tileUrl === null ||
-        tileUrl === undefined ||
-        tileUrl.length === 0
-      ) {
+      // tilesUrl is a list of URLs (the style metadata has one URL as a string;
+      // a string in tilesUrl works too)
+      const tileUrls = this.tileUrls(this.defaultOptions.rasterTilesOptions?.tilesUrl);
+      const urls = tileUrls.length ? tileUrls : this.tileUrls(metadata['proximiio:raster:tileurl']);
+      if (!urls.length) {
         return;
       }
-      const isLeveled = () => {
-        return tileUrl.match(/{LEVEL}/g) !== null;
-      };
-      if (isLeveled) {
-        tileUrl = tileUrl.replace(/{LEVEL}/g, this.state.floor.level.toString());
-      }
+      const level = this.state.floor.level.toString();
+      const proxy = this.defaultOptions.rasterTilesOptions?.useProxy ? 'https://api.proximi.fi/imageproxy/source=' : '';
 
       if (this.state.style.getLayer('raster-tiles')) {
         this.state.style.removeLayer('raster-tiles');
@@ -2055,11 +2053,7 @@ export class Map {
 
       this.state.style.addSource('raster-tiles', {
         type: 'raster',
-        tiles: [
-          `${
-            this.defaultOptions.rasterTilesOptions?.useProxy ? 'https://api.proximi.fi/imageproxy/source=' : ''
-          }${tileUrl}`,
-        ],
+        tiles: urls.map((url) => `${proxy}${url.replace(/{LEVEL}/g, level)}`),
         tileSize: this.defaultOptions.rasterTilesOptions?.tileSize
           ? this.defaultOptions.rasterTilesOptions.tileSize
           : metadata['proximiio:raster:tilesize']

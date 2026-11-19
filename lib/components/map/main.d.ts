@@ -333,6 +333,7 @@ export declare class Map {
     private addDirectionFeatures;
     private onSetFeaturesHighlight;
     private initAnimatedRoute;
+    private tileUrls;
     private initRasterTiles;
     private onBootPolygons;
     private mergedPolygonLayers;
@@ -385,6 +386,7 @@ export declare class Map {
     private onSourceChange;
     private onSyntheticChange;
     private updateMapSource;
+    private plainCollection;
     private onStyleSelect;
     private handleFilterChange;
     private throttledHandleFilterChange;
