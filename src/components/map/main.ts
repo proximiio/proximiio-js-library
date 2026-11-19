@@ -2191,7 +2191,12 @@ export class Map {
         dynamic_defaultTextColor: layer.defaultLabelColor,
       });
     }
-    this.updateMapSource(this.geojsonSource);
+    // a new collection object: MapLibre doesn't render the changed properties
+    // when setData gets the object it already has
+    const source = this.map.getSource(this.geojsonSource.id) as any;
+    if (source) {
+      source.setData({ type: 'FeatureCollection', features });
+    }
   }
 
   // the polygon, icon and label layers of the style made again from the

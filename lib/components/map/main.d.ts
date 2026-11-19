@@ -275,6 +275,7 @@ export declare class Map {
     private onMapFailedListener;
     private onMapWarningListener;
     private mapIsReady;
+    private polygonLayerOverrides;
     private pointAlongData;
     private onPlaceSelectListener;
     private onFloorSelectListener;
@@ -334,6 +335,10 @@ export declare class Map {
     private initAnimatedRoute;
     private initRasterTiles;
     private onBootPolygons;
+    private mergedPolygonLayers;
+    private polygonStructure;
+    private applyPolygonFeatureProperties;
+    private rebuildPolygonStyleLayers;
     private initPolygons;
     private updateLayerOpacity;
     private onShopClick;
@@ -562,6 +567,28 @@ export declare class Map {
         message: string;
         error?: unknown;
     }>;
+    /**
+     *  Changes the polygon options (colors, heights, zooms, labels, icons…) of a
+     *  map that is ready, without creating it again. `options` are merged into the
+     *  current polygonsOptions; `polygonLayers` replace the current layers (same
+     *  meaning as the constructor options).
+     *  Changes of which features are polygons of which layer (featureType, layerId,
+     *  autoAssign, initOnLevelchangers, symbolPlacement, removeOriginalPolygonsLayer,
+     *  bufferDistance, typesToScale, autoLabelLines, adaptiveLabelOpacity) need the
+     *  data loaded again: then nothing is changed and false is returned, create
+     *  the map again.
+     *  @memberof Map
+     *  @name updatePolygonsOptions
+     *  @param options {PolygonOptions} polygon options to change
+     *  @param polygonLayers {PolygonLayer[]} the polygon layers, optional
+     *  @returns true when applied, false when the map has to be created again
+     *  @example
+     *  const map = new Proximiio.Map({ initPolygons: true });
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    map.updatePolygonsOptions({ defaultPolygonColor: '#00c1d5', labelMinZoom: 17 });
+     *  });
+     */
+    updatePolygonsOptions(options?: PolygonOptions, polygonLayers?: PolygonLayer[]): boolean;
     /**
      * This method will change the language of POI titles and UI texts. Have to be called after map is ready, see getMapReadyListener.
      *  @memberof Map
