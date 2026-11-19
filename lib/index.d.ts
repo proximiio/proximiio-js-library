@@ -123,11 +123,12 @@ declare const _default: {
         deleteFeatures: (featureCollection: import("@turf/helpers").FeatureCollection<import("@turf/helpers").Geometry | import("@turf/helpers").GeometryCollection, {
             [name: string]: any;
         }>) => Promise<void>;
-        getAmenities: ({ amenityIdProperty, localSources, }: {
+        getAmenities: ({ amenityIdProperty, localSources, apiPaginate, }: {
             amenityIdProperty?: string;
             localSources?: {
                 amenities?: import("./models/amenity").AmenityModel[];
             };
+            apiPaginate?: boolean;
         }) => Promise<any>;
         getPois: () => Promise<import("./models/feature").default[]>;
         getFeatureById: (featureId: string) => Promise<import("./models/feature").default>;

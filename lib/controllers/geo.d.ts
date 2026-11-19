@@ -50,16 +50,18 @@ export declare const getFeaturesBundle: ({ initPolygons, polygonLayers, autoLabe
         type: "FeatureCollection";
     };
 }>;
-export declare const getAmenities: ({ amenityIdProperty, localSources, }: {
+export declare const getAmenities: ({ amenityIdProperty, localSources, apiPaginate, }: {
     amenityIdProperty?: string;
     localSources?: {
         amenities?: AmenityModel[];
     };
+    apiPaginate?: boolean;
 }) => Promise<any>;
-export declare const getAmenitiesBundle: ({ amenityIdProperty, bundleUrl, }: {
+export declare const getAmenitiesBundle: ({ amenityIdProperty, bundleUrl, bundlePaginate, }: {
     amenityIdProperty?: string;
     bundleUrl: string;
-}) => Promise<any>;
+    bundlePaginate?: boolean;
+}) => Promise<AmenityModel[]>;
 export declare const getPois: () => Promise<Feature[]>;
 export declare const addFeatures: (featureCollection: FCModel) => Promise<void>;
 export declare const updateFeature: (featureData: FModel, featureId: string) => Promise<void>;
@@ -104,11 +106,12 @@ declare const _default: {
     deleteFeatures: (featureCollection: FCModel<import("@turf/helpers").Geometry | import("@turf/helpers").GeometryCollection, {
         [name: string]: any;
     }>) => Promise<void>;
-    getAmenities: ({ amenityIdProperty, localSources, }: {
+    getAmenities: ({ amenityIdProperty, localSources, apiPaginate, }: {
         amenityIdProperty?: string;
         localSources?: {
             amenities?: AmenityModel[];
         };
+        apiPaginate?: boolean;
     }) => Promise<any>;
     getPois: () => Promise<Feature[]>;
     getFeatureById: (featureId: string) => Promise<Feature>;

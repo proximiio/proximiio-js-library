@@ -1,8 +1,47 @@
 import { Observer } from '../eventable';
 import BaseSource from '../components/map/sources/base_source';
 import BaseLayer from '../components/map/layers/base_layer';
+type StyleProps = {
+    [property: string]: any;
+};
+export interface StyleLayerOverride {
+    paint?: StyleProps;
+    layout?: StyleProps;
+}
+/**
+ * Persistent style changes, applied with Map.applyStyle().
+ * Property value null restores the original value of that property.
+ */
+export interface StyleOverrides {
+    layers?: {
+        [layerId: string]: StyleLayerOverride;
+    };
+    sources?: {
+        [sourceId: string]: StyleProps;
+    };
+}
+export interface StyleResetOptions {
+    layers?: string[];
+    sources?: string[];
+}
+interface OverrideEntry {
+    values: StyleProps;
+    originals: StyleProps;
+}
+interface StoredOverrides {
+    layers: {
+        [layerId: string]: {
+            paint: OverrideEntry;
+            layout: OverrideEntry;
+        };
+    };
+    sources: {
+        [sourceId: string]: OverrideEntry;
+    };
+}
 export default class StyleModel {
     _observers?: Observer[];
+    _overrides?: StoredOverrides;
     id: string;
     organization_id: string;
     version: number;
@@ -39,6 +78,21 @@ export default class StyleModel {
     setSource(id: string, data: BaseSource): void;
     getSource(sourceId: string): BaseSource;
     removeSource(sourceId: string): void;
+    /**
+     * Stores overrides and applies them to the current layers and sources.
+     * They are re-applied whenever a layer is added or a source is (re)set,
+     * so they survive floor changes, route updates and style switches.
+     */
+    applyOverrides(overrides: StyleOverrides): void;
+    /**
+     * Removes overrides and restores original values.
+     * Without options all overrides are removed.
+     */
+    resetOverrides(options?: StyleResetOptions): void;
+    /** Currently stored overrides, in the same shape as accepted by applyOverrides */
+    getOverrides(): StyleOverrides;
+    applyLayerOverrides(layer: any): void;
+    applySourceOverrides(sourceId: string): void;
     setLevel(level: number): void;
     get polygonEditing(): any;
     toggleCluster(): void;
@@ -59,3 +113,4 @@ export default class StyleModel {
     showLayer(layerId: string): void;
     setIconSize(size: (string | number | string[])[] | number | any): void;
 }
+export {};

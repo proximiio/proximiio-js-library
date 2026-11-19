@@ -1,7 +1,7 @@
-import maplibregl from 'maplibre-gl';
+import maplibregl, { ExpressionSpecification } from 'maplibre-gl';
 import { PlaceModel } from '../../models/place';
 import { FloorModel } from '../../models/floor';
-import StyleModel from '../../models/style';
+import StyleModel, { StyleOverrides, StyleResetOptions } from '../../models/style';
 import Feature, { FeatureCollection } from '../../models/feature';
 import { AmenityModel } from '../../models/amenity';
 import { LngLatBoundsLike } from 'maplibre-gl';
@@ -74,13 +74,15 @@ export interface PolygonOptions {
     labelRotationAlignment?: 'map' | 'viewport' | 'viewport-glyph' | 'auto';
     symbolPlacement?: 'point' | 'line' | 'line-center';
     iconPlacement?: 'point' | 'line' | 'line-center';
+    iconRotationAlignment?: 'map' | 'viewport' | 'auto';
     autoLabelLines?: boolean;
     textFont?: string[];
     adaptiveLabelOpacity?: boolean;
     adaptiveMaxPitch?: number;
     drawRouteUnderPolygons?: boolean;
     handleDisabledPolygons?: boolean;
-    iconImage?: string;
+    /** icon-image of the polygon icons layer, e.g. '{amenity}' or an expression, default ['get', 'id'] */
+    iconImage?: string | ExpressionSpecification;
     iconImageDefaultVisible?: boolean;
     layerId?: string;
     bufferDistance?: number;
@@ -125,7 +127,9 @@ export interface Options {
     levelDirectionPopupImage?: string;
     levelDirectionOutlineColor?: string;
     showRasterFloorplans?: boolean;
+    /** @deprecated use routeAnimation.enabled */
     animatedRoute?: boolean;
+    /** @deprecated use routeAnimation.looping */
     animationLooping?: boolean;
     routeAnimation?: {
         enabled?: boolean;
@@ -133,8 +137,10 @@ export interface Options {
         looping?: boolean;
         followRoute?: boolean;
         followRouteAngle?: boolean;
+        /** fixed animation duration of each route part in seconds, overrides durationMultiplier */
         duration?: number;
         durationMultiplier?: number;
+        /** maximum number of animation updates per second */
         fps?: number;
         pointIconUrl?: string;
         pointIconSize?: number;
@@ -162,6 +168,7 @@ export interface Options {
         autoStart?: boolean;
         autoContinue?: boolean;
         autoContinueCityRoute?: boolean;
+        autoContinueDelay?: number;
         cityRouteZoom?: number;
         mallRouteZoom?: number;
         mallEntryLevel?: number;
@@ -184,6 +191,8 @@ export interface Options {
     };
     handleUrlParams?: boolean;
     urlParams?: {
+        startFeature?: string;
+        /** @deprecated misspelled, use startFeature */
         startFeauture?: string;
         destinationFeature?: string;
         defaultPlace?: string;
@@ -199,6 +208,7 @@ export interface Options {
     };
     language?: string;
     routeColor?: string;
+    routeGradient?: ExpressionSpecification;
     forceFloorLevel?: number;
     amenityIdProperty?: string;
     routeWithDetails?: boolean;
@@ -263,6 +273,9 @@ export declare class Map {
     private onMapReadyListener;
     private onMainSourceLoadedListener;
     private onMapFailedListener;
+    private onMapWarningListener;
+    private mapIsReady;
+    private pointAlongData;
     private onPlaceSelectListener;
     private onFloorSelectListener;
     private onRouteFoundListener;
@@ -352,8 +365,10 @@ export declare class Map {
     private setActivePolygons;
     private handlePoiVisibility;
     private onToggleHiddenPois;
-    private onEnablePolygonPreventedIcons;
-    private onDisablePolygonPreventedIcons;
+    private mainSourceData;
+    private setPointAlongData;
+    private onHidePolygonPreventedIcons;
+    private onShowPolygonPreventedIcons;
     private onSetHiddenAmenities;
     private onDisablePolygons;
     private onSetPerson;
@@ -437,6 +452,44 @@ export declare class Map {
      */
     getMapState(): any;
     /**
+     *  Applies persistent changes to style layers and sources. Unlike changes made directly
+     *  on the mapbox instance, they are kept on floor change, route update or any other style refresh.
+     *  Calls are merged, a property value of null restores the original value of that property.
+     *  Filters are not supported as they are managed by the library (e.g. on floor change).
+     *  @memberof Map
+     *  @name applyStyle
+     *  @param overrides {StyleOverrides} changes to apply
+     *  @param overrides.layers {object} paint and layout properties by layer id, layers that are not in the style yet get them once added
+     *  @param overrides.sources {object} source options by source id, e.g. { route: { lineMetrics: true } }
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.applyStyle({
+     *    layers: {
+     *      'proximiio-routing-line-remaining': {
+     *        paint: { 'line-gradient': ['interpolate', ['linear'], ['line-progress'], 0, '#6c6ff5', 1, '#e5485a'] },
+     *      },
+     *    },
+     *    sources: { route: { lineMetrics: true } },
+     *  });
+     *  // restore original line-width only
+     *  map.applyStyle({ layers: { 'proximiio-routing-line-remaining': { paint: { 'line-width': null } } } });
+     */
+    applyStyle(overrides: StyleOverrides): void;
+    /**
+     *  Removes changes made by applyStyle and restores original values.
+     *  @memberof Map
+     *  @name resetStyle
+     *  @param options {StyleResetOptions} optional, layer and source ids to reset, all changes are reset when omitted
+     *  @param options.layers {string[]} layer ids to reset
+     *  @param options.sources {string[]} source ids to reset
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.resetStyle(); // reset everything
+     *  map.resetStyle({ layers: ['proximiio-routing-line-remaining'], sources: ['route'] });
+     */
+    resetStyle(options?: StyleResetOptions): void;
+    private refreshStyle;
+    /**
      *  @memberof Map
      *  @name getDataFetchedListener
      *  @returns returns map data fetched listener
@@ -494,7 +547,23 @@ export declare class Map {
         message: string;
     }>;
     /**
-     * This method will set an active place, load floors etc. Have to be called after map is ready, see getMapReadyListener.
+     *  Errors that don't stop the map: a tile, sprite or image that fails to load,
+     *  or any map error after the map is ready. They are logged too.
+     *  @memberof Map
+     *  @name getMapWarningListener
+     *  @returns returns map warning listener
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapWarningListener().subscribe(warning => {
+     *    console.log('map warning', warning.message);
+     *  });
+     */
+    getMapWarningListener(): CustomSubject<{
+        message: string;
+        error?: unknown;
+    }>;
+    /**
+     * This method will change the language of POI titles and UI texts. Have to be called after map is ready, see getMapReadyListener.
      *  @memberof Map
      *  @name setLanguage
      *  @param language {string} language code
@@ -1146,9 +1215,9 @@ export declare class Map {
         lat: number;
         lng: number;
         level: number;
-        parkingKiosk: boolean;
-        useAsRouteStart: boolean;
-    }, lng: number, level: number, parkingKiosk?: boolean, useAsRouteStart?: boolean): void;
+        parkingKiosk?: boolean;
+        useAsRouteStart?: boolean;
+    }, lng?: number, level?: number, parkingKiosk?: boolean, useAsRouteStart?: boolean): void;
     /**
      * This method will stop kiosk behaviour.
      *  @memberof Map
@@ -1290,7 +1359,7 @@ export declare class Map {
      */
     showLayer(layerId: string): void;
     /**
-     * With this method you can show all icons.
+     * With this method you can hide icons of features with defined amenities, amenities are added to hiddenAmenities option.
      *  @memberof Map
      *  @name setHiddenAmenities
      *  @param amenities {string[]} amenityIds to assign hideIcon property to features
@@ -1303,27 +1372,40 @@ export declare class Map {
      */
     setHiddenAmenities(amenities: string[]): void;
     /**
-     * With this method you can enable icons for polygon prevented features.
+     * With this method you can hide icons of polygon prevented features (POIs with metadata.prevent_polygon).
      *  @memberof Map
-     *  @name enablePolygonPreventedIcons
+     *  @name hidePolygonPreventedIcons
      *  @example
      *  const map = new Proximiio.Map();
      *  map.getMapReadyListener().subscribe(ready => {
      *    console.log('map ready', ready);
-     *    map.enablePolygonPreventedIcons();
+     *    map.hidePolygonPreventedIcons();
      *  });
+     */
+    hidePolygonPreventedIcons(): void;
+    /**
+     * With this method you can show icons of polygon prevented features (POIs with metadata.prevent_polygon),
+     * when an amenity filter is active only icons of the filtered amenities are shown.
+     *  @memberof Map
+     *  @name showPolygonPreventedIcons
+     *  @example
+     *  const map = new Proximiio.Map();
+     *  map.getMapReadyListener().subscribe(ready => {
+     *    console.log('map ready', ready);
+     *    map.showPolygonPreventedIcons();
+     *  });
+     */
+    showPolygonPreventedIcons(): void;
+    /**
+     * @deprecated the name doesn't match the behavior, it hides the icons, use hidePolygonPreventedIcons instead
+     *  @memberof Map
+     *  @name enablePolygonPreventedIcons
      */
     enablePolygonPreventedIcons(): void;
     /**
-     * With this method you can disable icons for polygon prevented features.
+     * @deprecated the name doesn't match the behavior, it shows the icons, use showPolygonPreventedIcons instead
      *  @memberof Map
      *  @name disablePolygonPreventedIcons
-     *  @example
-     *  const map = new Proximiio.Map();
-     *  map.getMapReadyListener().subscribe(ready => {
-     *    console.log('map ready', ready);
-     *    map.disablePolygonPreventedIcons();
-     *  });
      */
     disablePolygonPreventedIcons(): void;
     /**

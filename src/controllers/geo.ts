@@ -575,6 +575,16 @@ export const getFeatures = async ({
   };
 };
 
+// a page of a paginated bundle file, or undefined when it doesn't exist or isn't JSON
+const fetchBundlePage = async (url: string): Promise<any> => {
+  try {
+    const res = await fetch(url);
+    return res.ok ? await res.json() : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 export const getFeaturesBundle = async ({
   initPolygons,
   polygonLayers,
@@ -604,7 +614,14 @@ export const getFeaturesBundle = async ({
     type: 'FeatureCollection',
   };
   let originalFeatures;
-  if (!bundlePaginate) {
+  // 1. With pagination: the first page (contains the total count). A bundle
+  // without features-1.json (a missing object is a 403 / 404 on the CDN) is
+  // loaded from the whole features.json.
+  const firstData = bundlePaginate ? await fetchBundlePage(`${bundleUrl}/features-1.json`) : undefined;
+  if (bundlePaginate && !Array.isArray(firstData?.features)) {
+    console.warn('[proximiio-js-library] the bundle has no paginated features, loading features.json');
+  }
+  if (!Array.isArray(firstData?.features)) {
     const res = await fetch(`${bundleUrl}/features.json`);
     data = await res.json();
   } else {
@@ -612,9 +629,6 @@ export const getFeaturesBundle = async ({
     const items: any[] = [];
     const pageSize = 250;
 
-    // 1. Fetch first page (contains total count)
-    const firstRes = await fetch(`${bundleUrl}/features-1.json`);
-    const firstData = await firstRes.json();
     const totalRecords: number = firstData.count;
     items.push(...firstData.features);
 
@@ -1153,7 +1167,14 @@ export const getAmenitiesBundle = async ({
 }) => {
   try {
     let data: any[] = [];
-    if (!bundlePaginate) {
+    // 1. With pagination: the first page (contains the total count). Not every
+    // bundle has paginated amenities yet: without amenities-1.json (a missing
+    // object is a 403 / 404 on the CDN) the whole amenities.json is loaded.
+    const firstData = bundlePaginate ? await fetchBundlePage(`${bundleUrl}/amenities-1.json`) : undefined;
+    if (bundlePaginate && !Array.isArray(firstData?.amenities)) {
+      console.warn('[proximiio-js-library] the bundle has no paginated amenities, loading amenities.json');
+    }
+    if (!Array.isArray(firstData?.amenities)) {
       const res = await fetch(`${bundleUrl}/amenities.json`);
       data = await res.json();
     } else {
@@ -1161,9 +1182,6 @@ export const getAmenitiesBundle = async ({
       const pageSize = 100;
       const numQueues = 8; // number of parallel requests per batch
 
-      // 1. Fetch first page (contains total count)
-      const firstRes = await fetch(`${bundleUrl}/amenities-1.json`);
-      const firstData = await firstRes.json();
       data.push(...firstData.amenities);
 
       // 2. Fetch remaining pages in batches of parallel requests
