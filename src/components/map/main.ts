@@ -386,6 +386,9 @@ export class Map {
   private onMapWarningListener = new CustomSubject<{ message: string; error?: unknown }>();
   // set when the map is ready: later map errors are warnings, not failures
   private mapIsReady = false;
+  // the polygon layers as given to the constructor / updatePolygonsOptions,
+  // before polygonsOptions are merged into them
+  private polygonLayerOverrides: PolygonLayer[] = [];
   // the data of the animated route point (MapLibre keeps no public copy)
   private pointAlongData: any = { type: 'FeatureCollection', features: [] };
   private onPlaceSelectListener = new CustomSubject<PlaceModel>();
@@ -646,13 +649,11 @@ export class Map {
       console.log(`urlParams.startFeauture property is deprecated, please use urlParams.startFeature instead!`);
     }
 
-    if (!this.defaultOptions.polygonLayers || this.defaultOptions.polygonLayers.length === 0) {
-      this.defaultOptions.polygonLayers = [{ ...this.defaultOptions.polygonsOptions, featureType: 'shop' }];
-    } else {
-      this.defaultOptions.polygonLayers = this.defaultOptions.polygonLayers.map((layer) => {
-        return { ...this.defaultOptions.polygonsOptions, ...layer };
-      });
-    }
+    this.polygonLayerOverrides = (this.defaultOptions.polygonLayers ?? []).map((layer) => ({ ...layer }));
+    this.defaultOptions.polygonLayers = this.mergedPolygonLayers(
+      this.defaultOptions.polygonsOptions,
+      this.polygonLayerOverrides,
+    );
 
     this.fullStepsNavigation =
       this.defaultOptions.stepsNavigation === 'landmark' ||
@@ -2106,6 +2107,122 @@ export class Map {
     await this.onRefetch();
     this.initPolygons();
     this.onFloorSelect(this.state.floor);
+  }
+
+  // every layer gets the polygonsOptions, its own values win; without layers
+  // one "shop" layer
+  private mergedPolygonLayers(polygonsOptions: PolygonOptions, layers: PolygonLayer[]): PolygonLayer[] {
+    if (!layers || layers.length === 0) {
+      return [{ ...polygonsOptions, featureType: 'shop' }];
+    }
+    return layers.map((layer) => ({ ...polygonsOptions, ...layer }));
+  }
+
+  // what decides which features are polygons and labels of which layer: a
+  // change needs the data loaded again (a new map)
+  private polygonStructure(polygonsOptions: PolygonOptions, layers: PolygonLayer[]) {
+    return JSON.stringify({
+      bufferDistance: polygonsOptions.bufferDistance,
+      typesToScale: polygonsOptions.typesToScale,
+      autoLabelLines: polygonsOptions.autoLabelLines,
+      adaptiveLabelOpacity: polygonsOptions.adaptiveLabelOpacity,
+      layers: layers.map((layer) => [
+        layer.featureType,
+        layer.layerId,
+        layer.autoAssign ?? true,
+        layer.initOnLevelchangers ?? false,
+        layer.symbolPlacement,
+        layer.removeOriginalPolygonsLayer,
+      ]),
+    });
+  }
+
+  // the per-feature styling the polygon layers read (dynamic_* properties),
+  // as set when the data is loaded (controllers/geo.ts)
+  private applyPolygonFeatureProperties() {
+    // (the global Map is shadowed by this class, plain objects instead)
+    // polygons: by the layer type geo.ts gave them and their feature type;
+    // labels: by the polygon they belong to
+    const layerByKey: { [key: string]: PolygonLayer } = {};
+    for (const layer of this.defaultOptions.polygonLayers) {
+      const key = `${layer.layerId ? layer.layerId : 'polygons'}-custom|${layer.featureType}`;
+      if (!layerByKey[key]) layerByKey[key] = layer;
+    }
+    const features = this.geojsonSource.data.features as any[];
+    const layerByPolygonId: { [polygonId: string]: PolygonLayer } = {};
+    for (const polygon of features) {
+      const dynamic = polygon.properties?._dynamic;
+      if (!dynamic || typeof dynamic.type !== 'string') continue;
+      const layer = layerByKey[`${dynamic.type}|${polygon.properties.type}`];
+      if (!layer) continue;
+      layerByPolygonId[dynamic.id] = layer;
+      Object.assign(polygon.properties, {
+        dynamic_minZoom: layer.minZoom,
+        dynamic_maxZoom: layer.maxZoom,
+        dynamic_selectedHeight: layer.selectedPolygonHeight,
+        dynamic_hoverHeight: layer.hoverPolygonHeight,
+        dynamic_activeHeight: layer.activePolygonHeight || layer.hoverPolygonHeight,
+        dynamic_disabledHeight: layer.disabledPolygonHeight,
+        dynamic_defaultHeight: layer.defaultPolygonHeight,
+        dynamic_base: layer.base,
+        dynamic_selectedColor: layer.selectedPolygonColor,
+        dynamic_hoverColor: layer.hoverPolygonColor,
+        dynamic_activeColor: layer.activePolygonColor || layer.hoverPolygonColor,
+        dynamic_disabledColor: layer.disabledPolygonColor,
+        dynamic_defaultColor: layer.defaultPolygonColor,
+      });
+    }
+    for (const label of features) {
+      const dynamic = label.properties?._dynamic;
+      if (!dynamic || typeof dynamic.type !== 'string' || !dynamic.type.endsWith('-label')) continue;
+      const layer = layerByPolygonId[dynamic.polygon_id];
+      if (!layer) continue;
+      Object.assign(label.properties, {
+        dynamic_iconMinZoom: layer.iconMinZoom,
+        dynamic_iconMaxZoom: layer.iconMaxZoom,
+        dynamic_labelMinZoom: layer.labelMinZoom,
+        dynamic_labelMaxZoom: layer.labelMaxZoom,
+        dynamic_symbolPlacement: layer.symbolPlacement,
+        dynamic_disabledOpacity: layer.iconImageDefaultVisible || layer.iconImageDefaultVisible === undefined ? 1 : 0,
+        dynamic_selectedTextColor: layer.selectedLabelColor,
+        dynamic_hoverTextColor: layer.hoverLabelColor,
+        dynamic_activeTextColor: layer.activeLabelColor || layer.hoverLabelColor,
+        dynamic_disabledTextColor: layer.disabledLabelColor,
+        dynamic_defaultTextColor: layer.defaultLabelColor,
+      });
+    }
+    this.updateMapSource(this.geojsonSource);
+  }
+
+  // the polygon, icon and label layers of the style made again from the
+  // current options, each in its place, filtered to the current floor
+  private rebuildPolygonStyleLayers() {
+    const layerIds = [
+      ...new Set(this.defaultOptions.polygonLayers.map((layer) => layer.layerId).filter(Boolean)),
+      'polygons',
+    ];
+    const replace = (layer: any) => {
+      layer.setFilterLevel(this.state.floor.level);
+      const index = this.state.style.getLayerIndex(layer.id);
+      if (index >= 0) this.state.style.layers[index] = layer.json;
+    };
+    for (const layerId of layerIds) {
+      const options =
+        layerId === 'polygons'
+          ? this.defaultOptions.polygonsOptions
+          : this.defaultOptions.polygonLayers.find((layer) => layer.layerId === layerId);
+      if (!options) continue;
+      replace(new PolygonIconsLayer(options));
+      replace(new PolygonTitlesLayer(options));
+      replace(new PolygonsLayer(options));
+    }
+    this.map.setStyle(this.state.style);
+    if (this.map.getLayer('direction-popup-layer')) {
+      this.map.setLayoutProperty('direction-popup-layer', 'text-font', this.defaultOptions.polygonsOptions.textFont);
+    }
+    if (this.defaultOptions.polygonsOptions.adaptiveLabelOpacity) {
+      this.updateLayerOpacity();
+    }
   }
 
   private initPolygons() {
@@ -5850,6 +5967,46 @@ export class Map {
    */
   public getMapWarningListener() {
     return this.onMapWarningListener;
+  }
+
+  /**
+   *  Changes the polygon options (colors, heights, zooms, labels, icons…) of a
+   *  map that is ready, without creating it again. `options` are merged into the
+   *  current polygonsOptions; `polygonLayers` replace the current layers (same
+   *  meaning as the constructor options).
+   *  Changes of which features are polygons of which layer (featureType, layerId,
+   *  autoAssign, initOnLevelchangers, symbolPlacement, removeOriginalPolygonsLayer,
+   *  bufferDistance, typesToScale, autoLabelLines, adaptiveLabelOpacity) need the
+   *  data loaded again: then nothing is changed and false is returned, create
+   *  the map again.
+   *  @memberof Map
+   *  @name updatePolygonsOptions
+   *  @param options {PolygonOptions} polygon options to change
+   *  @param polygonLayers {PolygonLayer[]} the polygon layers, optional
+   *  @returns true when applied, false when the map has to be created again
+   *  @example
+   *  const map = new Proximiio.Map({ initPolygons: true });
+   *  map.getMapReadyListener().subscribe(ready => {
+   *    map.updatePolygonsOptions({ defaultPolygonColor: '#00c1d5', labelMinZoom: 17 });
+   *  });
+   */
+  public updatePolygonsOptions(options: PolygonOptions = {}, polygonLayers?: PolygonLayer[]): boolean {
+    if (!this.map || !this.mapIsReady || !this.defaultOptions.initPolygons) return false;
+    const polygonsOptions = { ...this.defaultOptions.polygonsOptions, ...options };
+    const overrides = polygonLayers ? polygonLayers.map((layer) => ({ ...layer })) : this.polygonLayerOverrides;
+    const layers = this.mergedPolygonLayers(polygonsOptions, overrides);
+    if (
+      this.polygonStructure(polygonsOptions, layers) !==
+      this.polygonStructure(this.defaultOptions.polygonsOptions, this.defaultOptions.polygonLayers)
+    ) {
+      return false;
+    }
+    this.defaultOptions.polygonsOptions = polygonsOptions;
+    this.defaultOptions.polygonLayers = layers;
+    this.polygonLayerOverrides = overrides;
+    this.applyPolygonFeatureProperties();
+    this.rebuildPolygonStyleLayers();
+    return true;
   }
 
   /**
