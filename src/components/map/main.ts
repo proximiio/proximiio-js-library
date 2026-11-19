@@ -382,6 +382,12 @@ export class Map {
   private onMapReadyListener = new CustomSubject<boolean>();
   private onMainSourceLoadedListener = new CustomSubject<boolean>();
   private onMapFailedListener = new CustomSubject<{ message: string }>();
+  // errors that don't stop the map (a tile, sprite or image failing to load…)
+  private onMapWarningListener = new CustomSubject<{ message: string; error?: unknown }>();
+  // set when the map is ready: later map errors are warnings, not failures
+  private mapIsReady = false;
+  // the data of the animated route point (MapLibre keeps no public copy)
+  private pointAlongData: any = { type: 'FeatureCollection', features: [] };
   private onPlaceSelectListener = new CustomSubject<PlaceModel>();
   private onFloorSelectListener = new CustomSubject<FloorModel>();
   private onRouteFoundListener = new CustomSubject<any>();
@@ -654,11 +660,19 @@ export class Map {
       this.defaultOptions.stepsNavigation === 'full' ||
       this.defaultOptions.stepsNavigation === 'full-levelChangers';
 
-    // @ts-ignore
-    maplibregl.setRTLTextPlugin(
-      'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
-      true, // Lazy load the plugin
-    );
+    // the RTL text plugin can be set once per page: a second map must not set it again
+    if (maplibregl.getRTLTextPluginStatus() === 'unavailable') {
+      try {
+        maplibregl
+          .setRTLTextPlugin(
+            'https://unpkg.com/@mapbox/mapbox-gl-rtl-text@0.2.3/mapbox-gl-rtl-text.min.js',
+            true, // Lazy load the plugin
+          )
+          .catch((error) => console.warn('[proximiio-js-library] RTL text plugin:', error?.message ?? error));
+      } catch (error) {
+        console.warn('[proximiio-js-library] RTL text plugin:', error?.message ?? error);
+      }
+    }
 
     this.onSourceChange = this.onSourceChange.bind(this);
     this.onSyntheticChange = this.onSyntheticChange.bind(this);
@@ -813,8 +827,17 @@ export class Map {
         await this.onMapReady(e);
       });
 
-      this.map.on('error', (e) => {
-        this.onMapFailedListener.next({ message: e.message });
+      this.map.on('error', (e: any) => {
+        // MapLibre's ErrorEvent carries the error in e.error
+        const message = e?.error?.message ?? e?.message ?? 'Unknown map error';
+        // a tile or source that fails to load, or any error once the map is ready,
+        // doesn't stop the map: report it as a warning, not as a map failure
+        if (this.mapIsReady || e?.sourceId || e?.tile) {
+          console.warn('[proximiio-js-library] map:', message);
+          this.onMapWarningListener.next({ message, error: e?.error });
+          return;
+        }
+        this.onMapFailedListener.next({ message });
       });
 
       if (this.defaultOptions.allowNewFeatureModal) {
@@ -1123,6 +1146,7 @@ export class Map {
         this.state.style.setIconSize(this.defaultOptions.poiIconSize);
       }
 
+      this.mapIsReady = true;
       this.onMapReadyListener.next(true);
 
       setTimeout(() => {
@@ -3488,9 +3512,21 @@ export class Map {
     this.handlePoiVisibility();
   }
 
+  // the data shown by the 'main' source: the library sets it from geojsonSource
+  // (updateMapSource), MapLibre's GeoJSONSource._data is internal and changed shape
+  private mainSourceData(): any {
+    return this.geojsonSource.data;
+  }
+
+  // the animated route point: kept here, then set on the map
+  private setPointAlongData(data: any) {
+    this.pointAlongData = data;
+    const source = this.map.getSource('pointAlong') as any;
+    if (source) source.setData(data);
+  }
+
   private onHidePolygonPreventedIcons() {
-    // @ts-ignore
-    const mainSourceData = this.map.getSource('main')._data;
+    const mainSourceData = this.mainSourceData();
     mainSourceData.features = mainSourceData.features.map((f) => {
       if (f.properties?.metadata?.prevent_polygon === true || f.properties?.metadata?.prevent_polygon === 'true') {
         f.properties.hideIcon = 'hide';
@@ -3508,8 +3544,7 @@ export class Map {
       !activeAmenity ||
       activeAmenity === 'nonexisting' ||
       (Array.isArray(activeAmenity) ? activeAmenity.includes(amenity) : activeAmenity === amenity);
-    // @ts-ignore
-    const mainSourceData = this.map.getSource('main')._data;
+    const mainSourceData = this.mainSourceData();
     mainSourceData.features = mainSourceData.features.map((f) => {
       if (
         matchesActiveAmenity(f.properties.amenity) &&
@@ -3526,8 +3561,7 @@ export class Map {
   private onSetHiddenAmenities(amenities: string[]) {
     this.defaultOptions.hiddenAmenities = [...(this.defaultOptions.hiddenAmenities || []), ...amenities];
     this.defaultOptions.hiddenAmenities = [...new Set(this.defaultOptions.hiddenAmenities)];
-    // @ts-ignore
-    const mainSourceData = this.map.getSource('main')._data;
+    const mainSourceData = this.mainSourceData();
     mainSourceData.features = mainSourceData.features.map((f) => {
       if (amenities.includes(f.properties.amenity)) {
         f.properties.hideIcon = 'hide';
@@ -4182,13 +4216,10 @@ export class Map {
       }
       if (this.defaultOptions.routeAnimation.type === 'point' || this.defaultOptions.routeAnimation.type === 'puck') {
         cancelAnimationFrame(this.animationFrame);
-        if (this.map.getSource('pointAlong')) {
-          // @ts-ignore
-          this.map.getSource('pointAlong').setData({
-            type: 'FeatureCollection',
-            features: [],
-          });
-        }
+        this.setPointAlongData({
+          type: 'FeatureCollection',
+          features: [],
+        });
         if (this.map.getSource('lineAlong')) {
           // @ts-ignore
           this.map.getSource('lineAlong').setData({
@@ -4593,8 +4624,7 @@ export class Map {
           }
 
           // Update the point position
-          // @ts-ignore
-          const pointData = this.map.getSource('pointAlong')._data;
+          const pointData = this.pointAlongData;
           if (!pointData.features) {
             pointData.features = [];
           }
@@ -4625,8 +4655,7 @@ export class Map {
               } else {
                 pointData.features[0].properties.pointIcon =
                   route.properties.source === 'cityRoute' ? 'cityPointIcon' : 'pointIcon';
-                // @ts-ignore
-                this.map.getSource('pointAlong').setData(pointData);
+                this.setPointAlongData(pointData);
               }
             }
 
@@ -4636,7 +4665,7 @@ export class Map {
                 // @ts-ignore
                 .setData(
                   circle(
-                    pointData.geometry.coordinates,
+                    pointData.features[0].geometry.coordinates,
                     this.defaultOptions.routeAnimation.puckRadius
                       ? this.defaultOptions.routeAnimation.puckRadius
                       : 0.002,
@@ -4763,8 +4792,7 @@ export class Map {
 
         cancelAnimationFrame(this.animationFrame);
 
-        // @ts-ignore
-        this.map.getSource('pointAlong').setData({
+        this.setPointAlongData({
           type: 'FeatureCollection',
           features: [],
         });
@@ -4802,8 +4830,7 @@ export class Map {
       cancelAnimationFrame(this.animationFrame);
 
       if (!keepRoute) {
-        // @ts-ignore
-        this.map.getSource('pointAlong').setData({
+        this.setPointAlongData({
           type: 'FeatureCollection',
           features: [],
         });
@@ -4827,8 +4854,7 @@ export class Map {
       cancelAnimationFrame(this.animationFrame);
       clearTimeout(this.animationTimeout);
 
-      // @ts-ignore
-      const pointData = this.map.getSource('pointAlong')._data;
+      const pointData = this.pointAlongData;
       if (!pointData.features) {
         pointData.features = [];
       }
@@ -4840,8 +4866,7 @@ export class Map {
           if (this.defaultOptions.routeAnimation.pointIconAsMarker) {
             this.pointIconMarker.setLngLat(newCoords as [number, number]);
           } else {
-            // @ts-ignore
-            this.map.getSource('pointAlong').setData(pointData);
+            this.setPointAlongData(pointData);
           }
         }
 
@@ -4851,7 +4876,7 @@ export class Map {
             // @ts-ignore
             .setData(
               circle(
-                pointData.geometry.coordinates,
+                pointData.features[0].geometry.coordinates,
                 this.defaultOptions.routeAnimation.puckRadius ? this.defaultOptions.routeAnimation.puckRadius : 0.002,
                 {
                   properties: {
@@ -5809,6 +5834,22 @@ export class Map {
    */
   public getMapFailedListener() {
     return this.onMapFailedListener;
+  }
+
+  /**
+   *  Errors that don't stop the map: a tile, sprite or image that fails to load,
+   *  or any map error after the map is ready. They are logged too.
+   *  @memberof Map
+   *  @name getMapWarningListener
+   *  @returns returns map warning listener
+   *  @example
+   *  const map = new Proximiio.Map();
+   *  map.getMapWarningListener().subscribe(warning => {
+   *    console.log('map warning', warning.message);
+   *  });
+   */
+  public getMapWarningListener() {
+    return this.onMapWarningListener;
   }
 
   /**
